@@ -50,16 +50,22 @@ addToRunTimeSelectionTable
 harmonicSpring::harmonicSpring
 (
     const word& name,
+    const reducedUnits& rU,
     const dictionary& tetherPotentialProperties
 )
 :
-    tetherPotential(name, tetherPotentialProperties),
+    tetherPotential(name, rU, tetherPotentialProperties),
     harmonicSpringCoeffs_
     (
         tetherPotentialProperties.subDict(typeName + "Coeffs")
     ),
     springConstant_(readScalar(harmonicSpringCoeffs_.lookup("springConstant")))
-{}
+{
+    if(rU.runReducedUnits())
+    {
+        springConstant_ /= (rU.refForce()/rU.refLength());
+    }
+}
 
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
@@ -76,14 +82,23 @@ vector harmonicSpring::force(const vector r) const
 }
 
 
-bool harmonicSpring::read(const dictionary& tetherPotentialProperties)
+bool harmonicSpring::read
+(
+    const dictionary& tetherPotentialProperties,
+    const reducedUnits& rU
+)
 {
-    tetherPotential::read(tetherPotentialProperties);
+    tetherPotential::read(tetherPotentialProperties, rU);
 
     harmonicSpringCoeffs_ =
         tetherPotentialProperties.subDict(typeName + "Coeffs");
 
     harmonicSpringCoeffs_.lookup("springConstant") >> springConstant_;
+
+    if(rU.runReducedUnits())
+    {
+        springConstant_ /= (rU.refForce()/rU.refLength());
+    }
 
     return true;
 }

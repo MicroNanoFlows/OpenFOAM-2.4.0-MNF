@@ -38,6 +38,7 @@ SourceFiles
 #include "PtrList.H"
 #include "word.H"
 #include "tetherPotential.H"
+#include "reducedUnits.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -65,11 +66,12 @@ class tetherPotentialList
         ) const;
 
         void readTetherPotentialDict
-        (
-            const List<word>& siteIdList,
-            const dictionary& tetherPotentialDict,
-            const List<word>& tetherSiteIdList
-        );
+		(
+			const List<word>& siteIdList,
+			const dictionary& tetherPotentialDict,
+			const List<word>& tetherSiteIdList,
+			const reducedUnits& rU
+		);
 
         //- Disallow default bitwise assignment
         void operator=(const tetherPotentialList&);
@@ -86,11 +88,12 @@ public:
 
         //- Construct from siteIdList and potental dictionaries
         tetherPotentialList
-        (
-            const List<word>& siteIdList,
-            const dictionary& tetherPotentialDict,
-            const List<word>& tetherSiteIdList
-        );
+		(
+			const List<word>& siteIdList,
+			const dictionary& tetherPotentialDict,
+			const List<word>& tetherSiteIdList,
+			const reducedUnits& rU
+		);
 
 
     //- Destructor
@@ -99,12 +102,13 @@ public:
 
     // Member Functions
 
-        void buildPotentials
-        (
-            const List<word>& siteIdList,
-            const dictionary& tetherPotentialDict,
-            const List<word>& tetherSiteIdList
-        );
+    	void buildPotentials
+		(
+			const List<word>& siteIdList,
+			const dictionary& tetherPotentialDict,
+			const List<word>& tetherSiteIdList,
+			const reducedUnits& rU
+		);
 
         // Access
 

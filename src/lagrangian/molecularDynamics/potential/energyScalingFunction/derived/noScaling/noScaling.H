@@ -62,12 +62,13 @@ public:
     // Constructors
 
         //- Construct from components
-        noScaling
-        (
-            const word& name,
-            const dictionary& energyScalingFunctionProperties,
-            const pairPotential& pairPot
-        );
+    	noScaling
+		(
+			const word& name,
+			const dictionary& energyScalingFunctionProperties,
+			const pairPotential& pairPot,
+			const reducedUnits& rU
+		);
 
 
     //- Destructor
@@ -79,7 +80,11 @@ public:
         void scaleEnergy(scalar& e, const scalar r) const;
 
         //- Read dictionary
-        bool read(const dictionary& energyScalingFunctionProperties);
+        bool read
+		(
+			const dictionary& energyScalingFunctionProperties,
+			const reducedUnits& rU
+		);
 };
 
 

@@ -40,6 +40,7 @@ SourceFiles
 #include "runTimeSelectionTables.H"
 #include "autoPtr.H"
 #include "vector.H"
+#include "reducedUnits.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -78,37 +79,40 @@ public:
 
     // Declare run-time constructor selection table
 
-        declareRunTimeSelectionTable
-        (
-            autoPtr,
-            tetherPotential,
-            dictionary,
-            (
-                const word& name,
-                const dictionary& tetherPotentialProperties
-            ),
-            (name, tetherPotentialProperties)
-        );
+    	declareRunTimeSelectionTable
+		(
+			autoPtr,
+			tetherPotential,
+			dictionary,
+			(
+				const word& name,
+				const reducedUnits& rU,
+				const dictionary& tetherPotentialProperties
+			),
+			(name, rU, tetherPotentialProperties)
+		);
 
 
     // Selectors
 
         //- Return a reference to the selected viscosity model
-        static autoPtr<tetherPotential> New
-        (
-            const word& name,
-            const dictionary& tetherPotentialProperties
-        );
+    	static autoPtr<tetherPotential> New
+		(
+			const word& name,
+			const reducedUnits& rU,
+			const dictionary& tetherPotentialProperties
+		);
 
 
     // Constructors
 
         //- Construct from components
-        tetherPotential
-        (
-            const word& name,
-            const dictionary& tetherPotentialProperties
-        );
+    	tetherPotential
+		(
+			const word& name,
+			const reducedUnits& rU,
+			const dictionary& tetherPotentialProperties
+		);
 
 
     //- Destructor
@@ -128,7 +132,11 @@ public:
         }
 
         //- Read tetherPotential dictionary
-        virtual bool read(const dictionary& tetherPotentialProperties) = 0;
+        virtual bool read
+		(
+			const dictionary& tetherPotentialProperties,
+			const reducedUnits& rU
+		) = 0;
 };
 
 

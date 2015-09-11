@@ -31,17 +31,18 @@ License
 Foam::autoPtr<Foam::pairPotential> Foam::pairPotential::New
 (
     const word& name,
-    const dictionary& propDict
+    const reducedUnits& rU,
+    const dictionary& pairPotentialProperties
 )
 {
-    const word potentialType(propDict.lookup("pairPotential"));
+    word pairPotentialTypeName(pairPotentialProperties.lookup("pairPotential"));
 
     Info<< nl << "Selecting intermolecular pair potential "
-        << potentialType << " for "
+        << pairPotentialTypeName << " for "
         << name << " interaction." << endl;
 
     dictionaryConstructorTable::iterator cstrIter =
-        dictionaryConstructorTablePtr_->find(potentialType);
+        dictionaryConstructorTablePtr_->find(pairPotentialTypeName);
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
@@ -49,13 +50,14 @@ Foam::autoPtr<Foam::pairPotential> Foam::pairPotential::New
         (
             "pairPotential::New()"
         )   << "Unknown pairPotential type "
-            << potentialType << nl << nl
-            << "Valid pairPotentials are:" << nl
-            << dictionaryConstructorTablePtr_->sortedToc()
+            << pairPotentialTypeName << nl << nl
+            << "Valid  pairPotentials are: " << nl
+            << dictionaryConstructorTablePtr_->toc()
             << exit(FatalError);
     }
 
-    return autoPtr<pairPotential>(cstrIter()(name, propDict));
+    return autoPtr<pairPotential>
+        (cstrIter()(name, rU, pairPotentialProperties));
 }
 
 

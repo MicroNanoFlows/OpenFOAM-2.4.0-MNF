@@ -41,6 +41,7 @@ SourceFiles
 #include "pairPotentialList.H"
 #include "electrostaticPotential.H"
 #include "tetherPotentialList.H"
+#include "reducedUnits.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -57,9 +58,13 @@ class potential
 
         const polyMesh& mesh_;
 
+        const reducedUnits& redUnits_;
+
         List<word> idList_;
 
         List<word> siteIdList_;
+
+        List<word> tetherIdList_;
 
         label nPairPotIds_;
 
@@ -76,9 +81,11 @@ class potential
 
     // Private Member Functions
 
-        void setSiteIdList(const dictionary& moleculePropertiesDict);
+        void setSiteIdList(const IOdictionary& moleculePropertiesDict);
 
         void readPotentialDict();
+
+        void setIdList(const IOdictionary& moleculePropertiesDict);
 
         void readMdInitialiseDict
         (
@@ -97,8 +104,21 @@ public:
 
     // Constructors
 
-        //- Construct from mesh reference
-        potential(const polyMesh& mesh);
+        //- Construct to run MD simulation (idList is read in from constant dir)
+		potential
+		(
+			const polyMesh& mesh,
+			const reducedUnits& rU
+		);
+
+		//- Construct for mdInitialise (idList built from all molecules
+		//  defined in moleculesProperties)
+		potential
+		(
+			const polyMesh& mesh,
+			const reducedUnits& rU,
+			const IOdictionary& moleculePropertiesDict
+		);
 
         //- Construct from mdInitialiseDict
         potential

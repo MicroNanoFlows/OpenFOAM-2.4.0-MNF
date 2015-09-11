@@ -33,7 +33,8 @@ void Foam::pairPotentialList::readPairPotentialDict
 (
     const List<word>& idList,
     const dictionary& pairPotentialDict,
-    const polyMesh& mesh
+    const polyMesh& mesh,
+    const reducedUnits& rU
 )
 {
     Info<< nl << "Building pair potentials." << endl;
@@ -105,6 +106,7 @@ void Foam::pairPotentialList::readPairPotentialDict
                 pairPotential::New
                 (
                     pairPotentialName,
+                    rU,
                     pairPotentialDict.subDict(pairPotentialName)
                 )
             );
@@ -145,6 +147,7 @@ void Foam::pairPotentialList::readPairPotentialDict
     electrostaticPotential_ = pairPotential::New
     (
         "electrostatic",
+        rU,
         pairPotentialDict.subDict("electrostatic")
     );
 
@@ -157,7 +160,7 @@ void Foam::pairPotentialList::readPairPotentialDict
     {
         OFstream ppTabFile(mesh.time().path()/"electrostatic");
 
-        if (!electrostaticPotential_->writeEnergyAndForceTables(ppTabFile))
+        if(!electrostaticPotential_->writeEnergyAndForceTables(ppTabFile))
         {
             FatalErrorIn("pairPotentialList::readPairPotentialDict")
                 << "Failed writing to "
@@ -182,12 +185,13 @@ Foam::pairPotentialList::pairPotentialList
 (
     const List<word>& idList,
     const dictionary& pairPotentialDict,
-    const polyMesh& mesh
+    const polyMesh& mesh,
+    const reducedUnits& rU
 )
 :
     PtrList<pairPotential>()
 {
-    buildPotentials(idList, pairPotentialDict, mesh);
+    buildPotentials(idList, pairPotentialDict, mesh, rU);
 }
 
 
@@ -203,14 +207,15 @@ void Foam::pairPotentialList::buildPotentials
 (
     const List<word>& idList,
     const dictionary& pairPotentialDict,
-    const polyMesh& mesh
+    const polyMesh& mesh,
+    const reducedUnits& rU
 )
 {
     setSize(((idList.size()*(idList.size() + 1))/2));
 
     nIds_ = idList.size();
 
-    readPairPotentialDict(idList, pairPotentialDict, mesh);
+    readPairPotentialDict(idList, pairPotentialDict, mesh, rU);
 }
 
 

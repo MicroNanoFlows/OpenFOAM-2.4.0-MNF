@@ -50,10 +50,11 @@ addToRunTimeSelectionTable
 azizChen::azizChen
 (
     const word& name,
+    const reducedUnits& rU,
     const dictionary& azizChen
 )
 :
-    pairPotential(name, azizChen),
+    pairPotential(name, rU, azizChen),
     azizChenCoeffs_(azizChen.subDict(typeName + "Coeffs")),
     epsilon_(readScalar(azizChenCoeffs_.lookup("epsilon"))),
     rm_(readScalar(azizChenCoeffs_.lookup("rm"))),
@@ -65,7 +66,19 @@ azizChen::azizChen
     D_(readScalar(azizChenCoeffs_.lookup("D"))),
     gamma_(readScalar(azizChenCoeffs_.lookup("gamma")))
 {
-    setLookupTables();
+    // temporary error
+    FatalErrorIn("azizChen::azizChen()")
+        << "Check and modify the code for the azizChen model (i.e. you need to make sure that the coefficients are changed to reduced units if you are using reduced units)"
+        << nl << "in: " << "potentialDict"
+        << exit(FatalError);
+
+    // see below too
+    if(rU.runReducedUnits())
+    {
+        epsilon_ /= rU.refEnergy();
+    }
+
+    setLookupTables(rU);
 }
 
 
@@ -96,11 +109,11 @@ scalar azizChen::unscaledEnergy(const scalar r) const
 }
 
 
-bool azizChen::read(const dictionary& azizChen)
+bool azizChen::read(const dictionary& pairPotentialProperties, const reducedUnits& rU)
 {
-    pairPotential::read(azizChen);
+    pairPotential::read(pairPotentialProperties, rU);
 
-    azizChenCoeffs_ = azizChen.subDict(typeName + "Coeffs");
+    azizChenCoeffs_ = pairPotentialProperties.subDict(typeName + "Coeffs");
 
     azizChenCoeffs_.lookup("epsilon") >> epsilon_;
     azizChenCoeffs_.lookup("rm") >> rm_;
@@ -112,7 +125,18 @@ bool azizChen::read(const dictionary& azizChen)
     azizChenCoeffs_.lookup("D") >> D_;
     azizChenCoeffs_.lookup("gamma") >> gamma_;
 
+    if(rU.runReducedUnits())
+    {
+        epsilon_ /= rU.refEnergy();
+    }
+
     return true;
+}
+
+
+const dictionary& azizChen::dict() const
+{
+    return azizChenCoeffs_;
 }
 
 

@@ -1,0 +1,3 @@
+deleteMolecules.C
+
+EXE = $(FOAM_APPBIN)/deletePolyMolecules

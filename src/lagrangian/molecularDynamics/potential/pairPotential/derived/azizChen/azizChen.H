@@ -94,11 +94,12 @@ public:
     // Constructors
 
         //- Construct from components
-        azizChen
-        (
-            const word& name,
-            const dictionary& pairPotentialProperties
-        );
+    	azizChen
+		(
+			const word& name,
+			const reducedUnits& rU,
+			const dictionary& pairPotentialProperties
+		);
 
 
     //- Destructor
@@ -111,7 +112,9 @@ public:
         scalar unscaledEnergy(const scalar r) const;
 
         //- Read dictionary
-        bool read(const dictionary& pairPotentialProperties);
+        bool read(const dictionary& pairPotentialProperties, const reducedUnits& rU);
+
+        const dictionary& dict() const;
 };
 
 

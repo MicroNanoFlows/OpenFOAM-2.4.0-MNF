@@ -51,10 +51,11 @@ shifted::shifted
 (
     const word& name,
     const dictionary& energyScalingFunctionProperties,
-    const pairPotential& pairPot
+    const pairPotential& pairPot,
+    const reducedUnits& rU
 )
 :
-    energyScalingFunction(name, energyScalingFunctionProperties, pairPot),
+    energyScalingFunction(name, energyScalingFunctionProperties, pairPot, rU),
     e_at_rCut_(pairPot.unscaledEnergy(pairPot.rCut()))
 {}
 
@@ -67,9 +68,13 @@ void shifted::scaleEnergy(scalar& e, const scalar r) const
 }
 
 
-bool shifted::read(const dictionary& energyScalingFunctionProperties)
+bool shifted::read
+(
+    const dictionary& energyScalingFunctionProperties,
+    const reducedUnits& rU
+)
 {
-    energyScalingFunction::read(energyScalingFunctionProperties);
+    energyScalingFunction::read(energyScalingFunctionProperties, rU);
 
     return true;
 }

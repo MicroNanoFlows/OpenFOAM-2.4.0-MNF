@@ -2,16 +2,16 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2008-2009 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
     This file is part of OpenFOAM.
 
-    OpenFOAM is free software: you can redistribute it and/or modify it
-    under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
 
     OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -19,7 +19,8 @@ License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     Foam::pairPotential
@@ -28,7 +29,7 @@ Description
 
 SourceFiles
     pairPotential.C
-    pairPotentialNew.C
+    newPairPotential.C
 
 \*---------------------------------------------------------------------------*/
 
@@ -42,6 +43,8 @@ SourceFiles
 #include "List.H"
 #include "Pair.H"
 #include "Switch.H"
+#include "mathematicalConstants.H"
+#include "reducedUnits.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -52,7 +55,7 @@ namespace Foam
 class energyScalingFunction;
 
 /*---------------------------------------------------------------------------*\
-                        Class pairPotential Declaration
+                     Class pairPotential Declaration
 \*---------------------------------------------------------------------------*/
 
 class pairPotential
@@ -71,6 +74,9 @@ protected:
         scalar rMin_;
         scalar dr_;
 
+        scalar fMin_;
+        scalar energyMin_;
+        
         List<scalar> forceLookup_;
         List<scalar> energyLookup_;
 
@@ -78,10 +84,14 @@ protected:
 
         bool writeTables_;
 
-
     // Private Member Functions
 
-        void scaleEnergy(scalar& e, const scalar r) const;
+        void scaleEnergy
+        (
+            scalar& e,
+            const scalar r,
+            const reducedUnits& rU
+        ) const;
 
         //- Disallow copy construct
         pairPotential(const pairPotential&);
@@ -105,9 +115,10 @@ public:
             dictionary,
             (
                 const word& name,
+                const reducedUnits& rU,
                 const dictionary& pairPotentialProperties
             ),
-            (name, pairPotentialProperties)
+            (name, rU, pairPotentialProperties)
         );
 
 
@@ -117,6 +128,7 @@ public:
         static autoPtr<pairPotential> New
         (
             const word& name,
+            const reducedUnits& rU,
             const dictionary& pairPotentialProperties
         );
 
@@ -127,18 +139,20 @@ public:
         pairPotential
         (
             const word& name,
+            const reducedUnits& rU,
             const dictionary& pairPotentialProperties
         );
 
 
-    //- Destructor
-    virtual ~pairPotential()
-    {}
+    // Destructor
+
+        virtual ~pairPotential()
+        {}
 
 
     // Member Functions
 
-        void setLookupTables();
+        void setLookupTables(const reducedUnits& rU);
 
         inline scalar rMin() const;
 
@@ -160,10 +174,17 @@ public:
 
         virtual scalar unscaledEnergy(const scalar r) const = 0;
 
-        scalar scaledEnergy(const scalar r) const;
+        virtual const dictionary& dict() const = 0;
+
+        scalar scaledEnergy
+        (
+            const reducedUnits& rU,
+            const scalar r
+        ) const;
 
         scalar energyDerivative
         (
+            const reducedUnits& rU,
             const scalar r,
             const bool scaledEnergyDerivative = true
         ) const;
@@ -176,7 +197,11 @@ public:
         bool writeEnergyAndForceTables(Ostream& os) const;
 
         //- Read pairPotential dictionary
-        virtual bool read(const dictionary& pairPotentialProperties) = 0;
+        virtual bool read
+        (
+            const dictionary& pairPotentialProperties,
+            const reducedUnits& rU
+        ) = 0;
 };
 
 

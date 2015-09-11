@@ -39,6 +39,7 @@ SourceFiles
 #include "word.H"
 #include "pairPotential.H"
 #include "polyMesh.H"
+#include "reducedUnits.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -73,11 +74,12 @@ class pairPotentialList
         ) const;
 
         void readPairPotentialDict
-        (
-            const List<word>& idList,
-            const dictionary& pairPotentialDict,
-            const polyMesh& mesh
-        );
+		(
+			const List<word>& idList,
+			const dictionary& pairPotentialDict,
+			const polyMesh& mesh,
+			const reducedUnits& rU
+		);
 
         //- Disallow default bitwise assignment
         void operator=(const pairPotentialList&);
@@ -94,11 +96,12 @@ public:
 
         //- Construct from idList and potental dictionaries
         pairPotentialList
-        (
-            const List<word>& idList,
-            const dictionary& pairPotentialDict,
-            const polyMesh& mesh
-        );
+		(
+			const List<word>& idList,
+			const dictionary& pairPotentialDict,
+			const polyMesh& mesh,
+			const reducedUnits& rU
+		);
 
 
     //- Destructor
@@ -107,12 +110,13 @@ public:
 
     // Member Functions
 
-        void buildPotentials
-        (
-            const List<word>& idList,
-            const dictionary& pairPotentialDict,
-            const polyMesh& mesh
-        );
+    	void buildPotentials
+		(
+			const List<word>& idList,
+			const dictionary& pairPotentialDict,
+			const polyMesh& mesh,
+			const reducedUnits& rU
+		);
 
 
         // Access
@@ -120,6 +124,8 @@ public:
             inline scalar rCutMax() const;
 
             inline scalar rCutMaxSqr() const;
+
+            inline scalar rCutMaxSqrWithBuffer() const;
 
             bool rCutMaxSqr(scalar rIJMagSqr) const;
 

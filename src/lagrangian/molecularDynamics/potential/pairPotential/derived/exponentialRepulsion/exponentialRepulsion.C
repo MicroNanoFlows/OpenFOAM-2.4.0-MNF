@@ -50,10 +50,11 @@ addToRunTimeSelectionTable
 exponentialRepulsion::exponentialRepulsion
 (
     const word& name,
+    const reducedUnits& rU,
     const dictionary& exponentialRepulsion
 )
 :
-    pairPotential(name, exponentialRepulsion),
+    pairPotential(name, rU, exponentialRepulsion),
     exponentialRepulsionCoeffs_
     (
         exponentialRepulsion.subDict(typeName + "Coeffs")
@@ -61,7 +62,14 @@ exponentialRepulsion::exponentialRepulsion
     rm_(readScalar(exponentialRepulsionCoeffs_.lookup("rm"))),
     epsilon_(readScalar(exponentialRepulsionCoeffs_.lookup("epsilon")))
 {
-    setLookupTables();
+
+    if(rU.runReducedUnits())
+    {
+        rm_ /= rU.refLength();
+        epsilon_ /= rU.refEnergy();
+    }
+
+    setLookupTables(rU);
 }
 
 
@@ -73,9 +81,13 @@ scalar exponentialRepulsion::unscaledEnergy(const scalar r) const
 }
 
 
-bool exponentialRepulsion::read(const dictionary& exponentialRepulsion)
+bool exponentialRepulsion::read
+(
+    const dictionary& exponentialRepulsion,
+    const reducedUnits& rU
+)
 {
-    pairPotential::read(exponentialRepulsion);
+    pairPotential::read(exponentialRepulsion, rU);
 
     exponentialRepulsionCoeffs_ =
         exponentialRepulsion.subDict(typeName + "Coeffs");
@@ -83,7 +95,19 @@ bool exponentialRepulsion::read(const dictionary& exponentialRepulsion)
     exponentialRepulsionCoeffs_.lookup("rm") >> rm_;
     exponentialRepulsionCoeffs_.lookup("epsilon") >> epsilon_;
 
+    if(rU.runReducedUnits())
+    {
+        rm_ /= rU.refLength();
+        epsilon_ /= rU.refEnergy();
+    }
+
     return true;
+}
+
+
+const dictionary& exponentialRepulsion::dict() const
+{
+    return exponentialRepulsionCoeffs_;
 }
 
 

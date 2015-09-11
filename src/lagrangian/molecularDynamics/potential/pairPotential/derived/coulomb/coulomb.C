@@ -45,21 +45,28 @@ addToRunTimeSelectionTable
     dictionary
 );
 
-scalar coulomb::oneOverFourPiEps0 =
-    1.0/(4.0*constant::mathematical::pi*8.854187817e-12);
-
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 coulomb::coulomb
 (
     const word& name,
+    const reducedUnits& rU,
     const dictionary& pairPotentialProperties
 )
 :
-    pairPotential(name, pairPotentialProperties)
+    pairPotential(name, rU, pairPotentialProperties),
+    oneOverFourPiEps0_(1.0/(4.0 * constant::mathematical::pi * 8.854187817e-12))
 {
-    setLookupTables();
+    if(rU.runReducedUnits())
+    {
+        oneOverFourPiEps0_ = (1.0/(4.0 * constant::mathematical::pi * rU.epsilonPermittivity()));
+    }
+    else
+    {
+    	oneOverFourPiEps0_ = 1.0/(4.0*constant::mathematical::pi*8.854187817e-12);
+    }
+
+    setLookupTables(rU);
 }
 
 
@@ -67,15 +74,24 @@ coulomb::coulomb
 
 scalar coulomb::unscaledEnergy(const scalar r) const
 {
-    return oneOverFourPiEps0/r;
+    return oneOverFourPiEps0_/r;
 }
 
 
-bool coulomb::read(const dictionary& pairPotentialProperties)
+bool coulomb::read
+(
+    const dictionary& pairPotentialProperties,
+    const reducedUnits& rU
+)
 {
-    pairPotential::read(pairPotentialProperties);
+    pairPotential::read(pairPotentialProperties, rU);
 
     return true;
+}
+
+const dictionary& coulomb::dict() const
+{
+    return pairPotentialProperties_;
 }
 
 

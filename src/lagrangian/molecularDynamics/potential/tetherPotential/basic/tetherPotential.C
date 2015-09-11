@@ -39,6 +39,7 @@ namespace Foam
 Foam::tetherPotential::tetherPotential
 (
     const word& name,
+    const reducedUnits& rU,
     const dictionary& tetherPotentialProperties
 )
 :
@@ -50,7 +51,11 @@ Foam::tetherPotential::tetherPotential
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
 
-bool Foam::tetherPotential::read(const dictionary& tetherPotentialProperties)
+bool Foam::tetherPotential::read
+(
+    const dictionary& tetherPotentialProperties,
+    const reducedUnits& rU
+)
 {
     tetherPotentialProperties_ = tetherPotentialProperties;
 

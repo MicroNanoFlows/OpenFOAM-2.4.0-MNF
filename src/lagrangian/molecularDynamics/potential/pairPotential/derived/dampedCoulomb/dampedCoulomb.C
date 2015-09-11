@@ -45,26 +45,34 @@ addToRunTimeSelectionTable
     dictionary
 );
 
-scalar dampedCoulomb::oneOverFourPiEps0 =
-    1.0/(4.0*constant::mathematical::pi*8.854187817e-12);
-
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 dampedCoulomb::dampedCoulomb
 (
     const word& name,
+    const reducedUnits& rU,
     const dictionary& pairPotentialProperties
 )
 :
-    pairPotential(name, pairPotentialProperties),
+    pairPotential(name, rU, pairPotentialProperties),
     dampedCoulombCoeffs_
     (
         pairPotentialProperties.subDict(typeName + "Coeffs")
     ),
-    alpha_(readScalar(dampedCoulombCoeffs_.lookup("alpha")))
+    alpha_(readScalar(dampedCoulombCoeffs_.lookup("alpha"))),
+    oneOverFourPiEps0_(1.0/(4.0 * constant::mathematical::pi * 8.854187817e-12))
 {
-    setLookupTables();
+
+    if(rU.runReducedUnits())
+    {
+        oneOverFourPiEps0_ = (1.0/(4.0 * constant::mathematical::pi * rU.epsilonPermittivity()));
+    }
+    else
+    {
+    	oneOverFourPiEps0_ = 1.0/(4.0*constant::mathematical::pi*8.854187817e-12);
+    }
+
+    setLookupTables(rU);
 }
 
 
@@ -72,13 +80,13 @@ dampedCoulomb::dampedCoulomb
 
 scalar dampedCoulomb::unscaledEnergy(const scalar r) const
 {
-    return oneOverFourPiEps0*erfc(alpha_*r)/r;
+    return oneOverFourPiEps0_*erfc(alpha_*r)/r;
 }
 
 
-bool dampedCoulomb::read(const dictionary& pairPotentialProperties)
+bool dampedCoulomb::read(const dictionary& pairPotentialProperties, const reducedUnits& rU)
 {
-    pairPotential::read(pairPotentialProperties);
+    pairPotential::read(pairPotentialProperties, rU);
 
     dampedCoulombCoeffs_ =
         pairPotentialProperties.subDict(typeName + "Coeffs");
@@ -86,6 +94,11 @@ bool dampedCoulomb::read(const dictionary& pairPotentialProperties)
     dampedCoulombCoeffs_.lookup("alpha") >> alpha_;
 
     return true;
+}
+
+const dictionary& dampedCoulomb::dict() const
+{
+    return pairPotentialProperties_;
 }
 
 

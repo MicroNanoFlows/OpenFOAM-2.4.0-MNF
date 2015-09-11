@@ -1,47 +1,48 @@
-potential = potential
+potential/potential.C
 
-$(potential)/potential.C
+pairPotential/pairPotentialList/pairPotentialList.C
+pairPotential/basic/pairPotentialIO.C
+pairPotential/basic/pairPotential.C
+pairPotential/derived/FENE/FENE.C
+pairPotential/derived/lennardJones/lennardJones.C
+pairPotential/basic/pairPotentialNew.C
+pairPotential/derived/maitlandSmith/maitlandSmith.C
+pairPotential/derived/azizChen/azizChen.C
+pairPotential/derived/exponentialRepulsion/exponentialRepulsion.C
+pairPotential/derived/coulomb/coulomb.C
+pairPotential/derived/dampedCoulomb/dampedCoulomb.C
+pairPotential/derived/noInteraction/noInteraction.C
+pairPotential/derived/buckinghamPotential/buckinghamPotential.C
+pairPotential/derived/reactionField/reactionField.C
 
-pairPotential = pairPotential
+energyScalingFunction/basic/energyScalingFunction.C
+energyScalingFunction/basic/energyScalingFunctionNew.C
+energyScalingFunction/derived/shifted/shifted.C
+energyScalingFunction/derived/shiftedForce/shiftedForce.C
+energyScalingFunction/derived/sigmoid/sigmoid.C
+energyScalingFunction/derived/noScaling/noScaling.C
+energyScalingFunction/derived/doubleSigmoid/doubleSigmoid.C
 
-$(pairPotential)/pairPotentialList/pairPotentialList.C
+tetherPotential/tetherPotentialList/tetherPotentialList.C
+tetherPotential/basic/tetherPotential.C
+tetherPotential/basic/tetherPotentialNew.C
 
-$(pairPotential)/basic/pairPotential.C
-$(pairPotential)/basic/pairPotentialIO.C
-$(pairPotential)/basic/pairPotentialNew.C
+brennerPotential/brennerPotential.C
 
-$(pairPotential)/derived/lennardJones/lennardJones.C
-$(pairPotential)/derived/maitlandSmith/maitlandSmith.C
-$(pairPotential)/derived/azizChen/azizChen.C
-$(pairPotential)/derived/exponentialRepulsion/exponentialRepulsion.C
-$(pairPotential)/derived/coulomb/coulomb.C
-$(pairPotential)/derived/dampedCoulomb/dampedCoulomb.C
-$(pairPotential)/derived/noInteraction/noInteraction.C
+selectSiteIds/selectSiteIds.C
 
-energyScalingFunction = energyScalingFunction
+selectIds/selectIds.C
 
-$(energyScalingFunction)/basic/energyScalingFunction.C
-$(energyScalingFunction)/basic/energyScalingFunctionNew.C
+gpu/selectIdPairs/selectIdPairs.C
 
-$(energyScalingFunction)/derived/shifted/shifted.C
-$(energyScalingFunction)/derived/shiftedForce/shiftedForce.C
-$(energyScalingFunction)/derived/noScaling/noScaling.C
-$(energyScalingFunction)/derived/sigmoid/sigmoid.C
-$(energyScalingFunction)/derived/doubleSigmoid/doubleSigmoid.C
+tether/basic/tether.C
 
-tetherPotential = tetherPotential
+tetherPotential/derived/harmonicSpring/harmonicSpring.C
+tetherPotential/derived/restrainedHarmonicSpring/restrainedHarmonicSpring.C
+tetherPotential/derived/pitchForkRing/pitchForkRing.C
 
-$(tetherPotential)/tetherPotentialList/tetherPotentialList.C
+fenePotential/fenePotential.C
 
-$(tetherPotential)/basic/tetherPotential.C
-$(tetherPotential)/basic/tetherPotentialNew.C
-
-$(tetherPotential)/derived/harmonicSpring/harmonicSpring.C
-$(tetherPotential)/derived/restrainedHarmonicSpring/restrainedHarmonicSpring.C
-$(tetherPotential)/derived/pitchForkRing/pitchForkRing.C
-
-electrostaticPotential = electrostaticPotential
-
-$(electrostaticPotential)/electrostaticPotential.C
+polyIdPairs/polyIdPairs.C
 
 LIB = $(FOAM_LIBBIN)/libpotential

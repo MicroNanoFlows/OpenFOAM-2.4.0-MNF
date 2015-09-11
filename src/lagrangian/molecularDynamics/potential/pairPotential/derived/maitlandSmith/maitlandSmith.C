@@ -50,17 +50,31 @@ addToRunTimeSelectionTable
 maitlandSmith::maitlandSmith
 (
     const word& name,
+    const reducedUnits& rU,
     const dictionary& maitlandSmith
 )
 :
-    pairPotential(name, maitlandSmith),
+    pairPotential(name, rU, maitlandSmith),
     maitlandSmithCoeffs_(maitlandSmith.subDict(typeName + "Coeffs")),
     m_(readScalar(maitlandSmithCoeffs_.lookup("m"))),
     gamma_(readScalar(maitlandSmithCoeffs_.lookup("gamma"))),
     rm_(readScalar(maitlandSmithCoeffs_.lookup("rm"))),
     epsilon_(readScalar(maitlandSmithCoeffs_.lookup("epsilon")))
 {
-    setLookupTables();
+    // temporary error
+    FatalErrorIn("maitlandSmith::maitlandSmith()")
+        << "Check and modify the code for the maitlandSmith model (i.e. you need to make sure that the coefficents are changed to reduced units if you are using reduced units)"
+        << nl << "in: " << "potentialDict"
+        << exit(FatalError);
+
+    // see below too
+    if(rU.runReducedUnits())
+    {
+        rm_ /= rU.refLength();
+        epsilon_ /= rU.refEnergy();
+    }
+
+    setLookupTables(rU);
 }
 
 
@@ -78,18 +92,29 @@ scalar maitlandSmith::unscaledEnergy(const scalar r) const
 }
 
 
-bool maitlandSmith::read(const dictionary& maitlandSmith)
+bool maitlandSmith::read(const dictionary& pairPotentialProperties, const reducedUnits& rU)
 {
-    pairPotential::read(maitlandSmith);
+    pairPotential::read(pairPotentialProperties, rU);
 
-    maitlandSmithCoeffs_ = maitlandSmith.subDict(typeName + "Coeffs");
+    maitlandSmithCoeffs_ = pairPotentialProperties.subDict(typeName + "Coeffs");
 
     maitlandSmithCoeffs_.lookup("m") >> m_;
     maitlandSmithCoeffs_.lookup("gamma") >> gamma_;
     maitlandSmithCoeffs_.lookup("rm") >> rm_;
     maitlandSmithCoeffs_.lookup("epsilon") >> epsilon_;
 
+    if(rU.runReducedUnits())
+    {
+        rm_ /= rU.refLength();
+        epsilon_ /= rU.refEnergy();
+    }
+
     return true;
+}
+
+const dictionary& maitlandSmith::dict() const
+{
+    return pairPotentialProperties_;
 }
 
 

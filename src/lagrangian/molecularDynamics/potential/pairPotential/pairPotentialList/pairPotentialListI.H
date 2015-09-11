@@ -63,12 +63,15 @@ inline Foam::scalar Foam::pairPotentialList::rCutMax() const
     return rCutMax_;
 }
 
-
 inline Foam::scalar Foam::pairPotentialList::rCutMaxSqr() const
 {
     return rCutMaxSqr_;
 }
 
+inline Foam::scalar Foam::pairPotentialList::rCutMaxSqrWithBuffer() const
+{
+    return rCutMaxSqr_*(1+0.02);
+}
 
 inline const Foam::pairPotential& Foam::pairPotentialList::electrostatic() const
 {

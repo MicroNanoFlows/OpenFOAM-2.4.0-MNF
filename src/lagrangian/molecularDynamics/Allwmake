@@ -3,7 +3,9 @@ cd ${0%/*} || exit 1    # run from this directory
 makeType=${1:-libso}
 set -x
 
+wmake $makeType general
 wmake $makeType potential
+wmake $makeType polyField
 wmake $makeType molecularMeasurements
 wmake $makeType molecule
 

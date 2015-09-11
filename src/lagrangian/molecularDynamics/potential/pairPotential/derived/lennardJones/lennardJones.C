@@ -50,15 +50,23 @@ addToRunTimeSelectionTable
 lennardJones::lennardJones
 (
     const word& name,
+    const reducedUnits& rU,
     const dictionary& pairPotentialProperties
 )
 :
-    pairPotential(name, pairPotentialProperties),
+    pairPotential(name, rU, pairPotentialProperties),
     lennardJonesCoeffs_(pairPotentialProperties.subDict(typeName + "Coeffs")),
     sigma_(readScalar(lennardJonesCoeffs_.lookup("sigma"))),
     epsilon_(readScalar(lennardJonesCoeffs_.lookup("epsilon")))
 {
-    setLookupTables();
+
+    if(rU.runReducedUnits())
+    {
+        sigma_ /= rU.refLength();
+        epsilon_ /= rU.refEnergy();
+    }
+
+    setLookupTables(rU);
 }
 
 
@@ -76,16 +84,32 @@ scalar lennardJones::unscaledEnergy(const scalar r) const
 }
 
 
-bool lennardJones::read(const dictionary& pairPotentialProperties)
+bool lennardJones::read
+(
+    const dictionary& pairPotentialProperties,
+    const reducedUnits& rU
+)
 {
-    pairPotential::read(pairPotentialProperties);
+    pairPotential::read(pairPotentialProperties, rU);
 
     lennardJonesCoeffs_ = pairPotentialProperties.subDict(typeName + "Coeffs");
 
     lennardJonesCoeffs_.lookup("sigma") >> sigma_;
     lennardJonesCoeffs_.lookup("epsilon") >> epsilon_;
 
+    if(rU.runReducedUnits())
+    {
+        sigma_ /= rU.refLength();
+        epsilon_ /= rU.refEnergy();
+    }
+
     return true;
+}
+
+
+const dictionary& lennardJones::dict() const
+{
+    return lennardJonesCoeffs_;
 }
 
 

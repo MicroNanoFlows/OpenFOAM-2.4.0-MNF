@@ -30,16 +30,22 @@ License
 Foam::autoPtr<Foam::tetherPotential> Foam::tetherPotential::New
 (
     const word& name,
-    const dictionary& propDict
+    const reducedUnits& rU,
+    const dictionary& tetherPotentialProperties
 )
 {
-    const word potentialType(propDict.lookup("tetherPotential"));
+    word
+        tetherPotentialTypeName
+        (
+            tetherPotentialProperties.lookup("tetherPotential")
+        );
 
-    Info<< nl << "Selecting tether potential " << potentialType
-        << " for " << name << endl;
+    Info<< nl << "Selecting tether potential "
+        << tetherPotentialTypeName << " for "
+        << name << endl;
 
     dictionaryConstructorTable::iterator cstrIter =
-        dictionaryConstructorTablePtr_->find(potentialType);
+        dictionaryConstructorTablePtr_->find(tetherPotentialTypeName);
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
@@ -47,13 +53,14 @@ Foam::autoPtr<Foam::tetherPotential> Foam::tetherPotential::New
         (
             "tetherPotential::New()"
         )   << "Unknown tetherPotential type "
-            << potentialType << nl << nl
-            << "Valid tetherPotentials are:" << nl
-            << dictionaryConstructorTablePtr_->sortedToc()
+            << tetherPotentialTypeName << nl << nl
+            << "Valid  tetherPotentials are: " << nl
+            << dictionaryConstructorTablePtr_->toc()
             << exit(FatalError);
     }
 
-    return autoPtr<tetherPotential>(cstrIter()(name, propDict));
+    return autoPtr<tetherPotential>
+        (cstrIter()(name, rU, tetherPotentialProperties));
 }
 
 

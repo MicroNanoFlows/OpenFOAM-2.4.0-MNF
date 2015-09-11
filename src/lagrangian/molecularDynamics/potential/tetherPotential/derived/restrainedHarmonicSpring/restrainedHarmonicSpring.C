@@ -50,10 +50,11 @@ addToRunTimeSelectionTable
 restrainedHarmonicSpring::restrainedHarmonicSpring
 (
     const word& name,
+    const reducedUnits& rU,
     const dictionary& tetherPotentialProperties
 )
 :
-    tetherPotential(name, tetherPotentialProperties),
+    tetherPotential(name, rU, tetherPotentialProperties),
     restrainedHarmonicSpringCoeffs_
     (
         tetherPotentialProperties.subDict(typeName + "Coeffs")
@@ -66,7 +67,13 @@ restrainedHarmonicSpring::restrainedHarmonicSpring
     (
         readScalar(restrainedHarmonicSpringCoeffs_.lookup("rR"))
     )
-{}
+{
+    if(rU.runReducedUnits())
+    {
+        springConstant_ /= (rU.refForce()/rU.refLength());
+        rR_ /= rU.refLength();
+    }
+}
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
@@ -103,16 +110,23 @@ vector restrainedHarmonicSpring::force(const vector r) const
 
 bool restrainedHarmonicSpring::read
 (
-    const dictionary& tetherPotentialProperties
+    const dictionary& tetherPotentialProperties,
+    const reducedUnits& rU
 )
 {
-    tetherPotential::read(tetherPotentialProperties);
+    tetherPotential::read(tetherPotentialProperties, rU);
 
     restrainedHarmonicSpringCoeffs_ =
         tetherPotentialProperties.subDict(typeName + "Coeffs");
 
     restrainedHarmonicSpringCoeffs_.lookup("springConstant") >> springConstant_;
     restrainedHarmonicSpringCoeffs_.lookup("rR") >> rR_;
+
+    if(rU.runReducedUnits())
+    {
+        springConstant_ /= (rU.refForce()/rU.refLength());
+        rR_ /= rU.refLength();
+    }
 
     return true;
 }

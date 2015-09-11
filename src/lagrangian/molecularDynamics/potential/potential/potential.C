@@ -27,23 +27,29 @@ License
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-void Foam::potential::setSiteIdList(const dictionary& moleculePropertiesDict)
+void Foam::potential::setSiteIdList(const IOdictionary& moleculePropertiesDict)
 {
     DynamicList<word> siteIdList;
+
     DynamicList<word> pairPotentialSiteIdList;
+
+    dictionary moleculeProperties
+    (
+        moleculePropertiesDict.subDict("moleculeProperties")
+    );
 
     forAll(idList_, i)
     {
         const word& id(idList_[i]);
 
-        if (!moleculePropertiesDict.found(id))
+        if (!moleculeProperties.found(id))
         {
             FatalErrorIn("potential::setSiteIdList(const dictionary&)")
                 << id << " molecule subDict not found"
                 << nl << abort(FatalError);
         }
 
-        const dictionary& molDict(moleculePropertiesDict.subDict(id));
+        const dictionary& molDict(moleculeProperties.subDict(id));
 
         List<word> siteIdNames = molDict.lookup("siteIds");
 
@@ -51,7 +57,7 @@ void Foam::potential::setSiteIdList(const dictionary& moleculePropertiesDict)
         {
             const word& siteId = siteIdNames[sI];
 
-            if (findIndex(siteIdList, siteId) == -1)
+            if(findIndex(siteIdList, siteId) == -1)
             {
                 siteIdList.append(siteId);
             }
@@ -89,43 +95,29 @@ void Foam::potential::setSiteIdList(const dictionary& moleculePropertiesDict)
         }
     }
 
-    siteIdList_.transfer(pairPotentialSiteIdList.shrink());
+    siteIdList_.transfer(pairPotentialSiteIdList);
 }
 
 
-void Foam::potential::potential::readPotentialDict()
+void Foam::potential::readPotentialDict()
 {
     Info<< nl <<  "Reading potential dictionary:" << endl;
 
-    IOdictionary idListDict
+    IOdictionary moleculePropertiesDict
     (
         IOobject
         (
-            "idList",
+            "moleculeProperties",
             mesh_.time().constant(),
             mesh_,
-            IOobject::MUST_READ_IF_MODIFIED,
+            IOobject::MUST_READ,
             IOobject::NO_WRITE
         )
     );
 
-    idList_ = List<word>(idListDict.lookup("idList"));
+    setIdList(moleculePropertiesDict);
 
-    setSiteIdList
-    (
-        IOdictionary
-        (
-            IOobject
-            (
-                "moleculeProperties",
-                mesh_.time().constant(),
-                mesh_,
-                IOobject::MUST_READ_IF_MODIFIED,
-                IOobject::NO_WRITE,
-                false
-            )
-        )
-    );
+    setSiteIdList(moleculePropertiesDict);
 
     List<word> pairPotentialSiteIdList
     (
@@ -137,13 +129,6 @@ void Foam::potential::potential::readPotentialDict()
         << pairPotentialSiteIdList
         << endl;
 
-    List<word> tetherSiteIdList(0);
-
-    if (idListDict.found("tetherSiteIdList"))
-    {
-        tetherSiteIdList = List<word>(idListDict.lookup("tetherSiteIdList"));
-    }
-
     IOdictionary potentialDict
     (
         IOobject
@@ -151,7 +136,7 @@ void Foam::potential::potential::readPotentialDict()
             "potentialDict",
             mesh_.time().system(),
             mesh_,
-            IOobject::MUST_READ_IF_MODIFIED,
+            IOobject::MUST_READ,
             IOobject::NO_WRITE
         )
     );
@@ -161,24 +146,38 @@ void Foam::potential::potential::readPotentialDict()
         potentialDict.lookup("potentialEnergyLimit")
     );
 
+
+    if(redUnits_.runReducedUnits())
+    {
+        potentialEnergyLimit_ /= redUnits_.refEnergy();
+    }
+
+     //************ modified the way removal ordering is done *****/
     if (potentialDict.found("removalOrder"))
     {
         List<word> remOrd = potentialDict.lookup("removalOrder");
 
-        removalOrder_.setSize(remOrd.size());
+        DynamicList<label> removalOrder(0);
 
-        forAll(removalOrder_, rO)
+        forAll(remOrd, rO)
         {
-            removalOrder_[rO] = findIndex(idList_, remOrd[rO]);
+            const label id = findIndex(idList_, remOrd[rO]);
 
-            if (removalOrder_[rO] == -1)
+            if( (id != -1) && (findIndex(removalOrder, id) == -1) )
             {
-                FatalErrorIn("potential::readPotentialDict()")
-                    << "removalOrder entry: " << remOrd[rO]
-                    << " not found in idList."
-                    << nl << abort(FatalError);
+                removalOrder.append(id);
             }
         }
+
+        forAll(idList_, i)
+        {
+            if(findIndex(removalOrder, i) == -1)
+            {
+                removalOrder.append(i);
+            }
+        }
+
+        removalOrder_.transfer(removalOrder);
     }
 
     // *************************************************************************
@@ -197,13 +196,14 @@ void Foam::potential::potential::readPotentialDict()
     (
         pairPotentialSiteIdList,
         pairDict,
-        mesh_
+        mesh_,
+        redUnits_
     );
 
     // *************************************************************************
     // Tether potentials
 
-    if (tetherSiteIdList.size())
+    if (tetherIdList_.size())
     {
         if (!potentialDict.found("tether"))
         {
@@ -218,26 +218,87 @@ void Foam::potential::potential::readPotentialDict()
         (
             siteIdList_,
             tetherDict,
-            tetherSiteIdList
+            tetherIdList_,
+            redUnits_
         );
     }
 
     // *************************************************************************
-    // External Forces
+	// External Forces
 
-    gravity_ = vector::zero;
+	gravity_ = vector::zero;
 
-    if (potentialDict.found("external"))
+	if (potentialDict.found("external"))
+	{
+		Info<< nl << "Reading external forces:" << endl;
+
+		const dictionary& externalDict = potentialDict.subDict("external");
+
+		// gravity
+		externalDict.readIfPresent("gravity", gravity_);
+
+		Info<< nl << tab << "gravity = " << gravity_ << endl;
+	}
+}
+
+void Foam::potential::setIdList
+(
+    const IOdictionary& moleculePropertiesDict
+)
+{
+    // read in id-list from moleculePropertiesDict
+
+    const List<word> molecules (moleculePropertiesDict.lookup("idList"));
+
+    DynamicList<word> moleculesReduced(0);
+
+    forAll(molecules, i)
     {
-        Info<< nl << "Reading external forces:" << endl;
+        const word& moleculeName(molecules[i]);
 
-        const dictionary& externalDict = potentialDict.subDict("external");
-
-        // gravity
-        externalDict.readIfPresent("gravity", gravity_);
+        if(findIndex(moleculesReduced, moleculeName) == -1)
+        {
+            moleculesReduced.append(moleculeName);
+        }
+        else
+        {
+            Info << "WARNING: YOU HAVE DEFINED MORE THAN ONCE MOLECULE: "
+                 << moleculeName << nl << " in moleculeProperties dict."
+                 << endl;
+        }
     }
 
-    Info<< nl << tab << "gravity = " << gravity_ << endl;
+    idList_.transfer(moleculesReduced);
+
+    // tethered molecules
+
+    const List<word> tetheredMolecules (moleculePropertiesDict.lookup("tetherIdList"));
+
+    DynamicList<word> tetheredMoleculesReduced(0);
+
+    forAll(tetheredMolecules, i)
+    {
+        const word& moleculeName(tetheredMolecules[i]);
+
+        if(findIndex(tetheredMoleculesReduced, moleculeName) == -1)
+        {
+            if(findIndex(idList_, moleculeName) != -1)
+            {
+                tetheredMoleculesReduced.append(moleculeName);
+            }
+            else
+            {
+                FatalErrorIn("potential::setIdList()")
+                    << "Tethered molecule " << moleculeName
+                    << " not specified in moleculePropertiesDict/idList"
+                    << abort(FatalError);
+            }
+        }
+    }
+
+    tetherIdList_.transfer(tetheredMoleculesReduced);
+
+    setSiteIdList(moleculePropertiesDict);
 }
 
 
@@ -364,13 +425,32 @@ void Foam::potential::potential::readMdInitialiseDict
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::potential::potential(const polyMesh& mesh)
+//- Construct to run MD simulation (idList is read in from constant dir)
+Foam::potential::potential
+(
+    const polyMesh& mesh,
+    const reducedUnits& rU
+)
 :
-    mesh_(mesh)
+    mesh_(mesh),
+    redUnits_(rU)
 {
     readPotentialDict();
 }
 
+//- Construct for mdInitialise (idList built from all molecules defined in moleculesProperties)
+Foam::potential::potential
+(
+    const polyMesh& mesh,
+    const reducedUnits& rU,
+    const IOdictionary& moleculePropertiesDict
+)
+:
+    mesh_(mesh),
+    redUnits_(rU)
+{
+    readPotentialDict();
+}
 
 Foam::potential::potential
 (
@@ -379,9 +459,10 @@ Foam::potential::potential
     IOdictionary& idListDict
 )
 :
-    mesh_(mesh)
+    mesh_(mesh),
+	redUnits_(reducedUnits())
 {
-    readMdInitialiseDict(mdInitialiseDict, idListDict);
+	readMdInitialiseDict(mdInitialiseDict, idListDict);
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //

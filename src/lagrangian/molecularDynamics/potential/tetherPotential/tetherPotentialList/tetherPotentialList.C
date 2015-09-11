@@ -31,7 +31,8 @@ void Foam::tetherPotentialList::readTetherPotentialDict
 (
     const List<word>& siteIdList,
     const dictionary& tetherPotentialDict,
-    const List<word>& tetherSiteIdList
+    const List<word>& tetherSiteIdList,
+    const reducedUnits& rU
 )
 {
 
@@ -50,8 +51,7 @@ void Foam::tetherPotentialList::readTetherPotentialDict
         if (tetherId == -1)
         {
             FatalErrorIn("tetherPotentialList::readTetherPotentialDict")
-                << nl
-                << "No matching entry found in siteIdList for tether name "
+                << nl << "No matching entry found in siteIdList for tether name "
                 << tetherPotentialName
                 << abort(FatalError);
         }
@@ -70,6 +70,7 @@ void Foam::tetherPotentialList::readTetherPotentialDict
                 tetherPotential::New
                 (
                     tetherPotentialName,
+                    rU,
                     tetherPotentialDict.subDict(tetherPotentialName)
                 )
             );
@@ -95,13 +96,14 @@ Foam::tetherPotentialList::tetherPotentialList
 (
     const List<word>& siteIdList,
     const dictionary& tetherPotentialDict,
-    const List<word>& tetherSiteIdList
+    const List<word>& tetherSiteIdList,
+    const reducedUnits& rU
 )
 :
     PtrList<tetherPotential>(),
     idMap_()
 {
-    buildPotentials(siteIdList, tetherPotentialDict, tetherSiteIdList);
+    buildPotentials(siteIdList, tetherPotentialDict, tetherSiteIdList, rU);
 }
 
 
@@ -117,12 +119,13 @@ void Foam::tetherPotentialList::buildPotentials
 (
     const List<word>& siteIdList,
     const dictionary& tetherPotentialDict,
-    const List<word>& tetherSiteIdList
+    const List<word>& tetherSiteIdList,
+    const reducedUnits& rU
 )
 {
     setSize(tetherSiteIdList.size());
 
-    readTetherPotentialDict(siteIdList, tetherPotentialDict, tetherSiteIdList);
+    readTetherPotentialDict(siteIdList, tetherPotentialDict, tetherSiteIdList, rU);
 }
 
 

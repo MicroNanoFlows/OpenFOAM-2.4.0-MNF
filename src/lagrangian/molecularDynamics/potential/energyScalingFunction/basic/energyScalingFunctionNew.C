@@ -31,18 +31,22 @@ License
 Foam::autoPtr<Foam::energyScalingFunction> Foam::energyScalingFunction::New
 (
     const word& name,
-    const dictionary& propDict,
-    const pairPotential& pairPot
+    const dictionary& energyScalingFunctionProperties,
+    const pairPotential& pairPot,
+    const reducedUnits& rU
 )
 {
-    const word scalingType(propDict.lookup("energyScalingFunction"));
+    word energyScalingFunctionTypeName
+    (
+        energyScalingFunctionProperties.lookup("energyScalingFunction")
+    );
 
     Info<< "Selecting energy scaling function "
-        << scalingType << " for "
+        << energyScalingFunctionTypeName << " for "
         << name << " potential energy." << endl;
 
     dictionaryConstructorTable::iterator cstrIter =
-        dictionaryConstructorTablePtr_->find(scalingType);
+        dictionaryConstructorTablePtr_->find(energyScalingFunctionTypeName);
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
@@ -50,13 +54,14 @@ Foam::autoPtr<Foam::energyScalingFunction> Foam::energyScalingFunction::New
         (
             "energyScalingFunction::New()"
         )   << "Unknown energyScalingFunction type "
-            << scalingType << nl << nl
-            << "Valid energyScalingFunctions are:" << nl
-            << dictionaryConstructorTablePtr_->sortedToc()
+            << energyScalingFunctionTypeName << nl << nl
+            << "Valid  energyScalingFunctions are: " << nl
+            << dictionaryConstructorTablePtr_->toc()
             << exit(FatalError);
     }
 
-    return autoPtr<energyScalingFunction>(cstrIter()(name, propDict, pairPot));
+    return autoPtr<energyScalingFunction>
+        (cstrIter()(name, energyScalingFunctionProperties, pairPot, rU));
 }
 
 

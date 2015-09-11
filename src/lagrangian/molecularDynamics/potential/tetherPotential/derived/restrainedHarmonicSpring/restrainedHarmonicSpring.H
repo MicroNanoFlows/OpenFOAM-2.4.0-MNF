@@ -70,11 +70,12 @@ public:
     // Constructors
 
         //- Construct from components
-        restrainedHarmonicSpring
-        (
-            const word& name,
-            const dictionary& tetherPotentialProperties
-        );
+    	restrainedHarmonicSpring
+		(
+			const word& name,
+			const reducedUnits& rU,
+			const dictionary& tetherPotentialProperties
+		);
 
 
     //- Destructor
@@ -89,7 +90,11 @@ public:
         vector force(const vector r) const;
 
         //- Read dictionary
-        bool read(const dictionary& tetherPotentialProperties);
+        bool read
+		(
+			const dictionary& tetherPotentialProperties,
+			const reducedUnits& rU
+		);
 };
 
 

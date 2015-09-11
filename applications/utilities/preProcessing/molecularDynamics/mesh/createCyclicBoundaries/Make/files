@@ -1,0 +1,4 @@
+
+createCyclicBoundaries.C
+
+EXE = $(FOAM_APPBIN)/createCyclicBoundaries

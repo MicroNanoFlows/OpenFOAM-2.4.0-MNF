@@ -50,12 +50,13 @@ addToRunTimeSelectionTable
 noInteraction::noInteraction
 (
     const word& name,
+    const reducedUnits& rU,
     const dictionary& pairPotentialProperties
 )
 :
-    pairPotential(name, pairPotentialProperties)
+    pairPotential(name, rU, pairPotentialProperties)
 {
-    setLookupTables();
+    setLookupTables(rU);
 }
 
 
@@ -67,11 +68,16 @@ scalar noInteraction::unscaledEnergy(const scalar r) const
 }
 
 
-bool noInteraction::read(const dictionary& pairPotentialProperties)
+bool noInteraction::read(const dictionary& pairPotentialProperties, const reducedUnits& rU)
 {
-    pairPotential::read(pairPotentialProperties);
+    pairPotential::read(pairPotentialProperties, rU);
 
     return true;
+}
+
+const dictionary& noInteraction::dict() const
+{
+    return pairPotentialProperties_;
 }
 
 

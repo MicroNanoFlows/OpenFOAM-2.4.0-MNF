@@ -63,10 +63,11 @@ doubleSigmoid::doubleSigmoid
 (
     const word& name,
     const dictionary& energyScalingFunctionProperties,
-    const pairPotential& pairPot
+    const pairPotential& pairPot,
+    const reducedUnits& rU
 )
 :
-    energyScalingFunction(name, energyScalingFunctionProperties, pairPot),
+    energyScalingFunction(name, energyScalingFunctionProperties, pairPot, rU),
     doubleSigmoidCoeffs_
     (
         energyScalingFunctionProperties.subDict(typeName + "Coeffs")
@@ -75,7 +76,18 @@ doubleSigmoid::doubleSigmoid
     scale1_(readScalar(doubleSigmoidCoeffs_.lookup("scale1"))),
     shift2_(readScalar(doubleSigmoidCoeffs_.lookup("shift2"))),
     scale2_(readScalar(doubleSigmoidCoeffs_.lookup("scale2")))
-{}
+{
+    FatalErrorIn("doubleSigmoid::doubleSigmoid()")
+        << "You will need to check and modify the code for the doubleSigmoid model (i.e. you need to make sure that the coefficents are changed to reduced units if you are using reduced units)"
+        << nl << "in: " << "potentialDict"
+        << exit(FatalError);
+
+    if(rU.runReducedUnits())
+    {
+        shift1_ /= rU.refLength();
+        shift2_ /= rU.refLength();
+    }
+}
 
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
@@ -86,9 +98,13 @@ void doubleSigmoid::scaleEnergy(scalar& e, const scalar r) const
 }
 
 
-bool doubleSigmoid::read(const dictionary& energyScalingFunctionProperties)
+bool doubleSigmoid::read
+(
+    const dictionary& energyScalingFunctionProperties,
+    const reducedUnits& rU
+)
 {
-    energyScalingFunction::read(energyScalingFunctionProperties);
+    energyScalingFunction::read(energyScalingFunctionProperties, rU);
 
     doubleSigmoidCoeffs_ =
         energyScalingFunctionProperties.subDict(typeName + "Coeffs");
@@ -97,6 +113,13 @@ bool doubleSigmoid::read(const dictionary& energyScalingFunctionProperties)
     doubleSigmoidCoeffs_.lookup("scale1") >> scale1_;
     doubleSigmoidCoeffs_.lookup("shift2") >> shift2_;
     doubleSigmoidCoeffs_.lookup("scale2") >> scale2_;
+
+
+    if(rU.runReducedUnits())
+    {
+        shift1_ /= rU.refLength();
+        shift2_ /= rU.refLength();
+    }
 
     return true;
 }

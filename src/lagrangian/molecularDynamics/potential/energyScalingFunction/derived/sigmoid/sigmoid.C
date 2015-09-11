@@ -64,17 +64,28 @@ sigmoid::sigmoid
 (
     const word& name,
     const dictionary& energyScalingFunctionProperties,
-    const pairPotential& pairPot
+    const pairPotential& pairPot,
+    const reducedUnits& rU
 )
 :
-    energyScalingFunction(name, energyScalingFunctionProperties, pairPot),
+    energyScalingFunction(name, energyScalingFunctionProperties, pairPot, rU),
     sigmoidCoeffs_
     (
         energyScalingFunctionProperties.subDict(typeName + "Coeffs")
     ),
     shift_(readScalar(sigmoidCoeffs_.lookup("shift"))),
     scale_(readScalar(sigmoidCoeffs_.lookup("scale")))
-{}
+{
+    FatalErrorIn("sigmoid::sigmoid()")
+        << "You will need to check and modify the code for the sigmoid model (i.e. you need to make sure that the coefficents are changed to reduced units if you are using reduced units)"
+        << nl << "in: " << "potentialDict"
+        << exit(FatalError);
+
+    if(rU.runReducedUnits())
+    {
+        shift_ /= rU.refLength();
+    }
+}
 
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
@@ -85,15 +96,24 @@ void sigmoid::scaleEnergy(scalar& e, const scalar r) const
 }
 
 
-bool sigmoid::read(const dictionary& energyScalingFunctionProperties)
+bool sigmoid::read
+(
+    const dictionary& energyScalingFunctionProperties,
+    const reducedUnits& rU
+)
 {
-    energyScalingFunction::read(energyScalingFunctionProperties);
+    energyScalingFunction::read(energyScalingFunctionProperties, rU);
 
     sigmoidCoeffs_ =
         energyScalingFunctionProperties.subDict(typeName + "Coeffs");
 
     sigmoidCoeffs_.lookup("shift") >> shift_;
     sigmoidCoeffs_.lookup("scale") >> shift_;
+
+    if(rU.runReducedUnits())
+    {
+        shift_ /= rU.refLength();
+    }
 
     return true;
 }

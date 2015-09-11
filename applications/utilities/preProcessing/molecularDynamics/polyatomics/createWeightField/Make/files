@@ -1,0 +1,3 @@
+createWeightField.C
+
+EXE = $(FOAM_APPBIN)/createPolyWeightField

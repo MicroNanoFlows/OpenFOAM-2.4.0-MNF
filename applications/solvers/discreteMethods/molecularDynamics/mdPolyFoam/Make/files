@@ -1,0 +1,3 @@
+mdPolyFoam.C
+
+EXE = $(FOAM_APPBIN)/mdPolyFoam

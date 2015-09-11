@@ -1,0 +1,39 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.6                                   |
+|   \\  /    A nd           | Web:      http://www.OpenFOAM.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      zoneDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+//- list zones to combine together. These zones will also be subtracted from the global zone
+
+// EXAMPLE
+
+zones
+(
+      zone
+      {
+         name            fillRegionA;
+         startPoint      (0 0 0);
+         endPoint        (16 6.4 16);
+      }
+      
+      zone
+      {
+         name            fillRegionB;
+         startPoint      (0 6.4 0);
+         endPoint        (16 16 16);
+      }
+);
+
+
+// ************************************************************************* //

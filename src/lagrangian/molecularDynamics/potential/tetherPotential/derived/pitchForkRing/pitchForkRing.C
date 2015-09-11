@@ -50,10 +50,11 @@ addToRunTimeSelectionTable
 pitchForkRing::pitchForkRing
 (
     const word& name,
+    const reducedUnits& rU,
     const dictionary& tetherPotentialProperties
 )
 :
-    tetherPotential(name, tetherPotentialProperties),
+    tetherPotential(name, rU, tetherPotentialProperties),
     pitchForkRingCoeffs_
     (
         tetherPotentialProperties.subDict(typeName + "Coeffs")
@@ -61,7 +62,13 @@ pitchForkRing::pitchForkRing
     mu_(readScalar(pitchForkRingCoeffs_.lookup("mu"))),
     alpha_(readScalar(pitchForkRingCoeffs_.lookup("alpha"))),
     rOrbit_(readScalar(pitchForkRingCoeffs_.lookup("rOrbit")))
-{}
+{
+
+    FatalErrorIn("pitchForkRing::pitchForkRing()")
+        << "You will need to check and modify the code for the pitchForkRing model (i.e. you need to make sure that the coefficents are changed to reduced units if you are using reduced units)"
+        << nl << "in: " << "potentialDict"
+        << exit(FatalError);
+}
 
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
@@ -94,9 +101,13 @@ vector pitchForkRing::force(const vector r) const
 }
 
 
-bool pitchForkRing::read(const dictionary& tetherPotentialProperties)
+bool pitchForkRing::read
+(
+    const dictionary& tetherPotentialProperties,
+    const reducedUnits& rU
+)
 {
-    tetherPotential::read(tetherPotentialProperties);
+    tetherPotential::read(tetherPotentialProperties, rU);
 
     pitchForkRingCoeffs_ =
         tetherPotentialProperties.subDict(typeName + "Coeffs");
@@ -104,6 +115,11 @@ bool pitchForkRing::read(const dictionary& tetherPotentialProperties)
     pitchForkRingCoeffs_.lookup("mu") >> mu_;
     pitchForkRingCoeffs_.lookup("alpha") >> alpha_;
     pitchForkRingCoeffs_.lookup("rOrbit") >> rOrbit_;
+
+    if(rU.runReducedUnits())
+    {
+
+    }
 
     return true;
 }

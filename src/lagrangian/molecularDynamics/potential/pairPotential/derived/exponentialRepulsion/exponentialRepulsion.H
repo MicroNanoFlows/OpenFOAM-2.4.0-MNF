@@ -69,11 +69,12 @@ public:
     // Constructors
 
         //- Construct from components
-        exponentialRepulsion
-        (
-            const word& name,
-            const dictionary& pairPotentialProperties
-        );
+    	exponentialRepulsion
+		(
+			const word& name,
+			const reducedUnits& rU,
+			const dictionary& pairPotentialProperties
+		);
 
 
     //- Destructor
@@ -85,8 +86,10 @@ public:
 
         scalar unscaledEnergy(const scalar r) const;
 
-        //- Read dictionary
-        bool read(const dictionary& pairPotentialProperties);
+		//- Read dictionary
+		bool read(const dictionary& pairPotentialProperties, const reducedUnits& rU);
+
+		const dictionary& dict() const;
 };
 
 
