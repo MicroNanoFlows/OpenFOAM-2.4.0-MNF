@@ -61,21 +61,21 @@ class clockTimer
 
 //         timespec lastTime_;
         timeval lastTime_;
-
-        scalar duration_;
-        
+    
+        scalar instTimeIndex_;
         scalar timeIndex_;
+    
+        // total duration time
+        scalar totalDuration_;
 
-        scalar writeInterval_;
-
-        label index_;
-
+        // duration in one MD time-step
+        scalar duration_;
+    
+        // time over one write interval
         scalar instantDuration_;
-        
-//         scalarField instantTimeDuration_;
-        scalarField averageTimeDuration_;
 
         bool writeOut_;
+
         fileName timePath_;
 
 public:
@@ -94,12 +94,13 @@ public:
 
         void startClock();
         void stopClock();
-
+        scalar averageTimeWriteInterval();
         scalar averageTime();
         void write();
         
         const scalar& instantDuration() const;
-        const scalar& duration() const;
+        const scalar& totalDuration() const;
+
 };
 
 

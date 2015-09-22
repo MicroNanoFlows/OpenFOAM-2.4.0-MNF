@@ -32,7 +32,6 @@ Description
 
 #include "fvCFD.H"
 #include "mdPoly.H"
-#include "clockTimer.H"
 
 int main(int argc, char *argv[])
 {
@@ -58,17 +57,17 @@ int main(int argc, char *argv[])
 
     Info << "\nStarting time loop\n" << endl;
 
-    clockTimer evolveTimer(runTime, "evolve", true);
+//     clockTimer evolveTimer(runTime, "evolve", true);
 
     while (runTime.loop())
     {
         Info << "Time = " << runTime.timeName() << endl;
 
-        evolveTimer.startClock();
+        molecules().clock().startClock();
 
         molecules.evolve();
 
-        evolveTimer.stopClock();
+        molecules().clock().stopClock();
 
         runTime.write();
 

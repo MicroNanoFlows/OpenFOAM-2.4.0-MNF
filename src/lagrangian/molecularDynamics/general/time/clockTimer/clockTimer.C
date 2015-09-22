@@ -40,20 +40,14 @@ clockTimer::clockTimer(Time& t, word fieldName, bool write)
 :
     time_(t),
     fieldName_(fieldName),
-    duration_(0.0),
+    instTimeIndex_(0.0),
     timeIndex_(0.0),
-    writeInterval_(readScalar(t.controlDict().lookup("writeInterval"))),
-    index_(0),
-//     instantTimeDuration_(),
-    averageTimeDuration_(),
+    totalDuration_(0.0),
+    duration_(0.0),
+    instantDuration_(0.0),
     writeOut_(write),
     timePath_()
-//     instant_(true)
 {
-    label writeIntSteps = label((writeInterval_/t.deltaT().value()) + 0.5);
-
-//     elapsedMicroCpuField_.setSize(writeIntSteps, 0.0);
-//     elapsedCpuField_.setSize(writeIntSteps, 0.0);
     if(writeOut_)
     {
         // directory: case/boundaries
@@ -67,14 +61,11 @@ clockTimer::clockTimer(Time& t, word fieldName, bool write)
         if(Pstream::master())
         {
             mkDir(timePath_);
-
-//             instantTimeDuration_.setSize(writeIntSteps, 0.0);
-
-            averageTimeDuration_.setSize(writeIntSteps, 0.0);
         }
     }
-    instantDuration_ = 0.0;
-//     if()
+
+
+
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -147,27 +138,24 @@ void clockTimer::stopClock()
 
     scalar duration = seconds + (useconds*1e-6);
 
-    duration_ += duration;
-    timeIndex_ += 1.0;
-    
-    instantDuration_ = duration;
+    duration_ = duration;
+    instantDuration_ += duration;
+    totalDuration_ += duration;
 
-    Info<< fieldName_ << ":  Time-step duration = " << duration 
-        << " s   Average duration = " << averageTime()
-        << " s   Total duration = " << duration_ << " s"
+    instTimeIndex_ += 1.0;
+    timeIndex_ += 1.0;
+
+    
+    Info<< "Duration: " << fieldName_ << ", inst. = " << duration
+        << " s   av. write int. = " << averageTimeWriteInterval()
+        << " s   av. sim. = " << averageTime()
+        << " s   tot. = " << totalDuration_ << " s"
         << endl;
 
 //     elapsedMicroCpuField_[index_] = duration_;
 //     elapsedCpuField_[index_] = time_.elapsedCpuTime();
 
-    if(Pstream::master() && writeOut_)
-    {
-//         instantTimeDuration_[index_] = duration;
-    
-        averageTimeDuration_[index_] = averageTime();
-    
-        index_++;
-    }
+
 
     write();
 }
@@ -176,43 +164,54 @@ void clockTimer::stopClock()
 // {
 //     return (outerIncrement_-innerIncrement_)/timeIndex_;
 // }
-
-scalar clockTimer::averageTime()
+    
+    
+scalar clockTimer::averageTimeWriteInterval()
 {
-    if(duration_ > 0)
+    if(instTimeIndex_ > 0)
     {
-        return duration_/timeIndex_;
+        return instantDuration_/instTimeIndex_;
     }
     else
     {
-        return 0;
+        return 0.0;
     }
 }
 
-const scalar& clockTimer::instantDuration() const
+scalar clockTimer::averageTime()
 {
-    return instantDuration_;
+    if(timeIndex_ > 0)
+    {
+        return totalDuration_/timeIndex_;
+    }
+    else
+    {
+        return 0.0;
+    }
 }
 
-const scalar& clockTimer::duration() const
+
+const scalar& clockTimer::instantDuration() const
 {
     return duration_;
+}
+
+    
+const scalar& clockTimer::totalDuration() const
+{
+    return totalDuration_;
 }
 
 void clockTimer::write()
 {
     if(time_.outputTime())
     {
+
         if(Pstream::master() && writeOut_)
         {
-            scalarField timeField(averageTimeDuration_.size(), 0.0);
-    
-            forAll(timeField, tT)
-            {
-                timeField[tT] = time_.timeOutputValue() 
-                                - writeInterval_
-                                + (tT+1)*time_.deltaT().value();
-            }
+            scalarField timeField(1, time_.timeOutputValue());
+            scalarField instantDuration(1, averageTimeWriteInterval());
+            scalarField cumulDuration(1, averageTime());
 
 //             fileName casePath(time_.path());
 
@@ -227,18 +226,27 @@ void clockTimer::write()
 
             writeTimeData
             (
+                 timePath_,
+                 "cpuTimeProcess_"+fieldName_+"_instant.xy",
+                 timeField,
+                 instantDuration,
+                 true
+             );
+            
+            writeTimeData
+            (
                 timePath_,
                 "cpuTimeProcess_"+fieldName_+"_average.xy",
                 timeField,
-                averageTimeDuration_,
+                cumulDuration,
                 true
             );
 
-            // reset
-            index_ = 0;
-//             instantTimeDuration_ = 0.0;
-            averageTimeDuration_ = 0.0;
         }
+        
+        // reset
+        instTimeIndex_ = 0.0;
+        instantDuration_ = 0.0;
     }
 }
 

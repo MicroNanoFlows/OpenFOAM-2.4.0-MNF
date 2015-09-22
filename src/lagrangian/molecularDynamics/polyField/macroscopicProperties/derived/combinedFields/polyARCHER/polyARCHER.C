@@ -27,7 +27,6 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "polyARCHER.H"
-#include "addToRunTimeSelectionTable.H"
 #include "graph.H"
 #include "OFstream.H"
 #include "IFstream.H"
@@ -37,79 +36,86 @@ Description
 namespace Foam
 {
 
-defineTypeNameAndDebug(polyARCHER, 0);
-
-addToRunTimeSelectionTable(polyField, polyARCHER, dictionary);
-
-
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-// Construct from components
-polyARCHER::polyARCHER
-(
-    Time& t,
-    const polyMesh& mesh,
-    polyMoleculeCloud& molCloud,
-    const dictionary& dict
-)
-:
-    polyField(t, mesh, molCloud, dict),
-    propsDict_(dict.subDict(typeName + "Properties")),    
-    fields_(t, mesh, "dummy"),
-    nameOfFile_(propsDict_.lookup("fileName"))    
+void polyARCHER::outputInitialisation()
 {
-    pathName_ = time_.time().path();
-}
-
-
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-polyARCHER::~polyARCHER()
-{}
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-void polyARCHER::createField()
-{
-    outputInitialisation();
-}
-
-
-void polyARCHER::calculateField()
-{
-//     if(runTime.outputTime())
+    
     {
-        outputTime();
+        // deletes current content of file
+        OFstream file(pathName_/nameOfFile_);
+    
+        if(file.good())
+        {
+            file << endl;
+        }
+        else
+        {
+            FatalErrorIn("void writeTimeData::writeTimeData()")
+                << "Cannot open file " << file.name()
+                << abort(FatalError);
+        }
     }
+
+    // Initialisation
+    
+    fileName fName(pathName_/nameOfFile_);
+
+    std::ofstream file(fName.c_str(),ios_base::app);
+    file.precision(11);
+
+    if(file.is_open())
+    {
+        file << "*--------------------------------*- C++ -*----------------------------------*" << nl;
+        file << "| =========                |                                                 | " << nl;
+        file << "| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           | " << nl;
+        file << "|  \\    /   O peration     | Version:  2.3.x                                 | " << nl;
+        file << "|   \\  /    A nd           | Web:      www.OpenFOAM.org                      | " << nl;
+        file << "|    \\/     M anipulation  |                                                 | " << nl;
+        file << "*---------------------------------------------------------------------------*" << nl;
+        
+        file << "OpenFOAM running on ARCHER - temporary log file" <<  nl;
+        file << "number of procs = " << Pstream::nProcs() << nl;
+        file << nl;
+    }
+    else
+    {
+        FatalErrorIn("void polyARCHER()")
+            << "Cannot open file " << fName
+            << abort(FatalError);
+    }
+
+    file.close();
 }
 
-void polyARCHER::writeField()
+void polyARCHER::outputTime()
 {
+    fileName fName(pathName_/nameOfFile_);
 
-}
+    std::ofstream file(fName.c_str(),ios_base::app);
+    file.precision(11);
 
-void polyARCHER::measureDuringForceComputation
-(
-    polyMolecule* molI,
-    polyMolecule* molJ
-)
-{}
+    if(file.is_open())
+    {
+        file<< "Time = " << time_.timeOutputValue() << nl;
+        file<< "Duration: " << molCloud_.clock().instantDuration()
+         << " s   av. write int. = " << molCloud_.clock().averageTimeWriteInterval()
+         << " s   av. sim. = " << molCloud_.clock().averageTime()
+         << " s   tot. = " << molCloud_.clock().totalDuration() << " s"
+         << nl;
+        
+        file<< "ExecutionTime = " << time_.elapsedCpuTime() << " s"
+            << "  ClockTime = " << time_.elapsedClockTime() << " s"
+            << nl;
+        file<< nl;            
+    }
+    else
+    {
+        FatalErrorIn("void polyARCHER()")
+            << "Cannot open file " << fName
+            << abort(FatalError);
+    }
 
-void polyARCHER::measureDuringForceComputationSite
-(
-    polyMolecule* molI,
-    polyMolecule* molJ,
-    label sI,
-    label sJ
-)
-{}
-
-const propertyField& polyARCHER::fields() const
-{
-    return  fields_;
+    file.close();    
+    
 }
 
 } // End namespace Foam

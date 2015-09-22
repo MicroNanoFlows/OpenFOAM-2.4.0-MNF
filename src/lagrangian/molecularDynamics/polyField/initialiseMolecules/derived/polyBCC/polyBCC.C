@@ -180,6 +180,8 @@ void polyBCC::setInitialConfiguration()
                 << exit(FatalError);            
 
         }
+        
+        Info << "Target number of molecules to insert = " << N << endl;
     }
     else
     {
@@ -188,119 +190,94 @@ void polyBCC::setInitialConfiguration()
     
     label nMolsInserted = 0;
     
-    // insert molecules
-    forAll(positions, i)
+    if(N == positions.size())
     {
-        label cell = -1;
-        label tetFace = -1;
-        label tetPt = -1;
-
-        mesh_.findCellFacePt
-        (
-            positions[i],
-            cell,
-            tetFace,
-            tetPt
-        );
-
-        if(cell != -1)
+        // insert molecules
+        forAll(positions, i)
         {
-            insertMolecule
-            (
-                positions[i],
-                cell,
-                tetFace,
-                tetPt,
-                molId,
-                tethered,
-                frozen,
-                temperature,
-                bulkVelocity
-            );
+            label cell = -1;
+            label tetFace = -1;
+            label tetPt = -1;
             
-            nMolsInserted++;
+            mesh_.findCellFacePt
+            (
+             positions[i],
+             cell,
+             tetFace,
+             tetPt
+             );
+            
+            if(cell != -1)
+            {
+                insertMolecule
+                (
+                 positions[i],
+                 cell,
+                 tetFace,
+                 tetPt,
+                 molId,
+                 tethered,
+                 frozen,
+                 temperature,
+                 bulkVelocity
+                 );
+                
+                nMolsInserted++;
+            }
         }
     }
-    
-    label nToDel = nMolsInserted - N;
-    
-    distributePoints randomBox
-    (
-        bb,
-        molCloud_.rndGen()
-    );    
-    
-    // Delete excess molecules 
-    
-    if(nToDel > 0)
+    else
     {
-        List<vector> molPositions(nToDel, vector::zero);
+        Info << "Using randomness to select molecules" << endl;
         
-        forAll(molPositions, i)
+        //label nToDel = positions.size()-N;
+        
+        // use probability to delete to get close to estimate
+        
+        scalar p = scalar(N)/scalar(positions.size());
+        
+        Info << "probability to accept molecules = " << p << endl;
+        
+        DynamicList<vector> rejectedPositions;
+        
+        // insert molecules
+        forAll(positions, i)
         {
-            molPositions[i] = randomBox.randomPoint();
+            if(molCloud_.rndGen().sample01<scalar>() <= p)
+            {
+                label cell = -1;
+                label tetFace = -1;
+                label tetPt = -1;
+                
+                mesh_.findCellFacePt
+                (
+                  positions[i],
+                  cell,
+                  tetFace,
+                  tetPt
+                );
+                
+                if(cell != -1)
+                {
+                    insertMolecule
+                    (
+                     positions[i],
+                     cell,
+                     tetFace,
+                     tetPt,
+                     molId,
+                     tethered,
+                     frozen,
+                     temperature,
+                     bulkVelocity
+                     );
+                    
+                    nMolsInserted++;
+                }
+            }
         }
         
-        DynamicList<polyMolecule*> molsToDel;
-        DynamicList<label> chosenIds(0);
-        
-        forAll(molPositions, j)
-        {   
-            DynamicList<polyMolecule*> molsToDelTemp;
-            
-            const vector& rJ = molPositions[j];
-            
-            scalar deltaR = GREAT;        
-            
-            label tNI = 0;
-            label chosenI = -1;
-            
-            IDLList<polyMolecule>::iterator mol(molCloud_.begin());
-            
-            for
-            (
-                mol = molCloud_.begin();
-                mol != molCloud_.end();
-                ++mol
-            )
-            {
-                if(mol().id() == molId)
-                {
-                    scalar magRIJ = mag(rJ - mol().position());
-                    polyMolecule* molI = &mol();
-                    
-                    if(magRIJ < deltaR)
-                    {
-                        if(findIndex(chosenIds, tNI) == -1)
-                        {
-                            deltaR = magRIJ;
-                            
-                            molsToDelTemp.clear();
-                            
-                            molsToDelTemp.append(molI);   
-                            chosenI = tNI;
-                        }
-                    }
-                }
-                
-                tNI++;
-            }
-            
-            molsToDelTemp.shrink();
-            
-            if(chosenI != -1)
-            {
-                molsToDel.append(molsToDelTemp[0]);
-                chosenIds.append(chosenI);
-            }
-        }  
-        
-        molsToDel.shrink();
-        
-        forAll(molsToDel, m)
-        {
-            molCloud_.deleteParticle(*molsToDel[m]);
-        }   
+        Info << "Nmols inserted = " << nMolsInserted << endl;
     }
     
     scalar V = bb.volume();
@@ -329,6 +306,12 @@ void polyBCC::setInitialConfiguration()
     //- new - delete existing molecules and replace with other species
     if(multispecies)
     {
+        distributePoints randomBox
+        (
+          bb,
+          molCloud_.rndGen()
+        );
+        
         selectIds ids
         (
            molCloud_.pot(),

@@ -43,7 +43,7 @@ void polyMoleculeCloud::updateNeighbouringRadii
     polyMolecule* molI
 )
 {
-	molI->R() = GREAT;
+    molI->R() = GREAT;
     const label& cell = molI->cell();
 
     const labelListList& fullInteractionCellList = iL_.fil();
@@ -55,9 +55,9 @@ void polyMoleculeCloud::updateNeighbouringRadii
     //- molecules within direct interaction cells (not incl. owner cell)
     forAll(dICL, dCell)
     {
-    	forAll(cellOccupancy_[dICL[dCell]], m)
+        forAll(cellOccupancy_[dICL[dCell]], m)
         {
-    		polyMolecule* molJ = cellOccupancy_[dICL[dCell]][m];
+            polyMolecule* molJ = cellOccupancy_[dICL[dCell]][m];
 
             vector rIJ = molI->position() - molJ->position();
     
@@ -109,10 +109,15 @@ void polyMoleculeCloud::updateNeighbouringRadii
 
         referredCell& refCellI = iL_.refCells()[rId];
         
-        //const polyMolecule& particle = *molI;
-        //iL_.referredCloud().append(particle.clone().ptr());
+        // OLDER const polyMolecule& particle = *molI;
+        //OLDER iL_.referredCloud().append(particle.clone().ptr());
 
-        iL_.referredCloud().append(molI);
+// OLD        iL_.referredCloud().append(molI);
+
+
+        const polyMolecule& molIN = *molI;            
+        iL_.referredCloud().append(molIN.clone().ptr());
+
 
         polyMolecule* molN = iL_.referredCloud().last();
 
