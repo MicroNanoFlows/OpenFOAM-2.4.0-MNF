@@ -96,10 +96,12 @@ void polyARCHER::outputTime()
     if(file.is_open())
     {
         file<< "Time = " << time_.timeOutputValue() << nl;
-        file<< "Duration: Inst. = " << molCloud_.clock().instantDuration() 
-            << " s   Av. = " << molCloud_.clock().averageTime()
-            << " s   Tot. = " << molCloud_.clock().duration() << " s"
-            << nl;        
+        file<< "Duration: " << molCloud_.clock().instantDuration()
+         << " s   av. write int. = " << molCloud_.clock().averageTimeWriteInterval()
+         << " s   av. sim. = " << molCloud_.clock().averageTime()
+         << " s   tot. = " << molCloud_.clock().totalDuration() << " s"
+         << nl;
+        
         file<< "ExecutionTime = " << time_.elapsedCpuTime() << " s"
             << "  ClockTime = " << time_.elapsedClockTime() << " s"
             << nl;

@@ -63,11 +63,11 @@ int main(int argc, char *argv[])
     {
         Info << "Time = " << runTime.timeName() << endl;
 
-        molecules().clock().startClock();
+        molecules.clock().startClock();
 
         molecules.evolve();
 
-        molecules().clock().stopClock();
+        molecules.clock().stopClock();
 
         runTime.write();
 
