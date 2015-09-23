@@ -640,11 +640,11 @@ void Foam::polyMoleculeCloud::checkMoleculesInMesh()
 
     forAll (molsToDelete, mTD)
     {
-    	Pout << nl << " WARNING: Molecule Outside Mesh - Deleting molecule "
-    	            <<  " proc no = " << Pstream::myProcNo()
-    	            << ", position = " << molsToDelete[mTD]->position()
-    	            << ", molecule = " << pot_.idList()[molsToDelete[mTD]->id()]
-    	            << endl;
+        Pout << nl << " WARNING: Molecule Outside Mesh - Deleting molecule "
+                    <<  " proc no = " << Pstream::myProcNo()
+                    << ", position = " << molsToDelete[mTD]->position()
+                    << ", molecule = " << pot_.idList()[molsToDelete[mTD]->id()]
+                    << endl;
 
         deleteParticle(*(molsToDelete[mTD]));
     }

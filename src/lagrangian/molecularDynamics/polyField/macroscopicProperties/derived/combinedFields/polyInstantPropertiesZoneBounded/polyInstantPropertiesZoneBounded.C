@@ -57,7 +57,6 @@ void polyInstantPropertiesZoneBounded::setBoundBoxes()
 
         vector startPoint = dict.lookup("startPoint");
         vector endPoint = dict.lookup("endPoint");
-        //checkBoundBox(boxes_[b], startPoint, endPoint);
         boxes_[b].resetBoundedBox(startPoint, endPoint);
     }
 }
@@ -117,7 +116,7 @@ void polyInstantPropertiesZoneBounded::calculateField()
 {
     scalar mols = 0.0;
     vector vel = vector::zero;
-		vector frc = vector::zero;
+    vector frc = vector::zero;
 
     IDLList<polyMolecule>::iterator mol(molCloud_.begin());
 
@@ -131,7 +130,6 @@ void polyInstantPropertiesZoneBounded::calculateField()
                 {
                     const polyMolecule::constantProperties& constProp = molCloud_.constProps(mol().id());
                     mols += 1.0;
-
                     vel += mol().v();
                     frc += constProp.mass()*mol().a();
                 }
@@ -149,6 +147,7 @@ void polyInstantPropertiesZoneBounded::calculateField()
     
     vector velocity = vector::zero;
     vector force = vector::zero;
+    
     if(mols > 0.0)
     {
         velocity = vel/mols;
@@ -204,20 +203,6 @@ void polyInstantPropertiesZoneBounded::writeField()
                 force,
                 true
             );
-            
-            // const reducedUnits& rU = molCloud_.redUnits();
-    
-            // if(rU.outputSIUnits())
-            // {
-            //     writeTimeData
-            //     (
-            //         casePath_,
-            //         "velocity_"+fieldName_+"_SI.xy",
-            //         timeField*rU.refTime(),
-            //         velocity*rU.refVelocity(),
-            //         true
-            //     );
-            // }
         }
     }
 }

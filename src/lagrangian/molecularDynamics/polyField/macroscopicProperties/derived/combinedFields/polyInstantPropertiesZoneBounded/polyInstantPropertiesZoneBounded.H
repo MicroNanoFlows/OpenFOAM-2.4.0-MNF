@@ -58,32 +58,32 @@ namespace Foam
 
 class polyInstantPropertiesZoneBounded
 :
-	public polyField
+    public polyField
 {
 
 private:
 
-	// Private data
+    // Private data
 
-	//- subDictionary containing the properties
-	dictionary propsDict_;
+        //- subDictionary containing the properties
+        dictionary propsDict_;
 
-	propertyField fields_;
-	
-	word fieldName_;
-	
-	List<boundedBox> boxes_;
+        propertyField fields_;
+        
+        word fieldName_;
+        
+        List<boundedBox> boxes_;
 
-	List<label> molIds_;
-	
-	DynamicList<vector> velocityField_;
-    DynamicList<vector> forceField_;      
-    
-	// Private Member Functions
+        List<label> molIds_;
+        
+        DynamicList<vector> velocityField_;
+        DynamicList<vector> forceField_;      
+        
+        // Private Member Functions
 
-	void setBoundBoxes();
+        void setBoundBoxes();
 
-	
+
   
 public:
 	
