@@ -137,6 +137,8 @@ public:
             const vectorField& xData,
             const tensorField& yData
         );
+        
+        // WITH APPEND POSSIBLE
 
         // two scalar fields (with append possible)
         writeTimeData
@@ -194,6 +196,8 @@ public:
             const tensorField& xData,
             const bool& dummy
         );
+        
+        
         
         // write out List<scalarField>
         writeTimeData

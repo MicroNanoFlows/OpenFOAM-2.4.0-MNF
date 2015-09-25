@@ -81,6 +81,7 @@ polyInstantPropertiesZoneBounded::polyInstantPropertiesZoneBounded
     boxes_(),
     molIds_()
 {
+
         // build bound boxes
     setBoundBoxes();
 

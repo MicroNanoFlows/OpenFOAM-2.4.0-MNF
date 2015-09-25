@@ -25,6 +25,7 @@ initialiseMolecules/derived/polyGrapheneSheetPeriodic/polyGrapheneSheetPeriodic.
 initialiseMolecules/derived/polyCNT/polyCNT.C
 initialiseMolecules/derived/polyGrapheneSheetPeriodicSkew/polyGrapheneSheetPeriodicSkew.C
 initialiseMolecules/derived/polyBCC/polyBCC.C
+initialiseMolecules/derived/polyCrystal/polyCrystal.C
 
 molsToDel/basic/polyMolsToDeleteModel/polyMolsToDeleteModel.C
 molsToDel/basic/polyMolsToDelete/polyMolsToDelete.C
@@ -109,6 +110,7 @@ controllers/derived/others/polyForceTwoShear/polyForceTwoShear.C
 controllers/derived/others/polyMovingWallRitos/polyMovingWallRitos.C
 controllers/derived/others/polyLiquidGasDistinction/polyLiquidGasDistinction.C
 controllers/derived/others/polyForce/polyForce.C
+controllers/derived/others/polyBoundedForce/polyBoundedForce.C
 controllers/derived/others/polyPressureForce/polyPressureForce.C
 
 
