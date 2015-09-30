@@ -36,6 +36,7 @@ molsToDel/derived/polyDelFromCylinder/polyDelFromCylinder.C
 molsToDel/derived/polyDelFromCylindricalShell/polyDelFromCylindricalShell.C
 molsToDel/derived/polyDelFromMesh/polyDelFromMesh.C
 molsToDel/derived/polyDelFromBoundBox/polyDelFromBoundBox.C
+molsToDel/derived/polyDelFromEnclosedPoints/polyDelFromEnclosedPoints.C
 
 mappingModels/basic/polyMappingModel/polyMappingModel.C
 mappingModels/basic/polyMappingModels/polyMappingModels.C
@@ -75,7 +76,7 @@ macroscopicProperties/derived/otherFields/polyMoleculePotentialEnergy/polyMolecu
 macroscopicProperties/derived/otherFields/polyPDB/polyPDB.C
 macroscopicProperties/derived/otherFields/polyXMOL/polyXMOL.C
 macroscopicProperties/derived/otherFields/polyZoneRdf/polyZoneRdf.C
-
+macroscopicProperties/derived/otherFields/forceInstantProperties/forceInstantProperties.C
 
 /*  CONTROLLERS  */
 
