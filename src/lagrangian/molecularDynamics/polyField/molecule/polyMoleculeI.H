@@ -621,12 +621,15 @@ inline Foam::label Foam::polyMolecule::special() const
     return special_;
 }
 
+inline Foam::label& Foam::polyMolecule::special()
+{
+    return special_;
+}
 
 inline bool Foam::polyMolecule::tethered() const
 {
     return special_ == SPECIAL_TETHERED;
 }
-
 
 inline Foam::label Foam::polyMolecule::id() const
 {
@@ -679,5 +682,11 @@ inline bool Foam::polyMolecule::frozen()
         return false;
     }
 }
+
+inline bool Foam::polyMolecule::referred()
+{
+    return special_ == SPECIAL_REFERRED;
+}
+
 
 // ************************************************************************* //

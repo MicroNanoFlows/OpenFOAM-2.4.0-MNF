@@ -43,23 +43,23 @@ addToRunTimeSelectionTable(polyField, forceInstantProperties, dictionary);
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-void forceInstantProperties::setBoundBoxes()
-{
- 
-    PtrList<entry> boxList(propsDict_.lookup("boxes"));
-
-    boxes_.setSize(boxList.size());
-
-    forAll(boxList, b)
-    {
-        const entry& boxI = boxList[b];
-        const dictionary& dict = boxI.dict();
-
-        vector startPoint = dict.lookup("startPoint");
-        vector endPoint = dict.lookup("endPoint");
-        boxes_[b].resetBoundedBox(startPoint, endPoint);
-    }
-}
+// void forceInstantProperties::setBoundBoxes()
+// {
+//  
+//     PtrList<entry> boxList(propsDict_.lookup("boxes"));
+// 
+//     boxes_.setSize(boxList.size());
+// 
+//     forAll(boxList, b)
+//     {
+//         const entry& boxI = boxList[b];
+//         const dictionary& dict = boxI.dict();
+// 
+//         vector startPoint = dict.lookup("startPoint");
+//         vector endPoint = dict.lookup("endPoint");
+//         boxes_[b].resetBoundedBox(startPoint, endPoint);
+//     }
+// }
 
 
 
@@ -77,26 +77,49 @@ forceInstantProperties::forceInstantProperties
     polyField(t, mesh, molCloud, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
     fields_(t, mesh, "dummy"),
-    fieldName_(propsDict_.lookup("fieldName")),
-    boxes_(),
-    molIds_()
+    fieldName_(propsDict_.lookup("fieldName"))
+//     boxes_(),
+//     molIds_()
 {
-
         // build bound boxes
-    setBoundBoxes();
+//     setBoundBoxes();
+    
+    measureInterForcesSites_ = true;
+    
+    {
+        // choose molecule ids to sample
+        molIdsWall_.clear();
+        
+        selectIds ids
+        (
+            molCloud_.pot(),
+            propsDict_,
+            "molIdsWall"
+            
+        );
 
-    // choose molecule ids to sample
-    molIds_.clear();
+        molIdsWall_ = ids.molIds();
+    }
+    
+    {
+        // choose molecule ids to sample
+        molIdsFluid_.clear();
+        
+        selectIds ids
+        (
+            molCloud_.pot(),
+            propsDict_,
+            "molIdsFluid"
+            
+        );
 
-    selectIds ids
-    (
-        molCloud_.pot(),
-        propsDict_
-    );
-
-    molIds_ = ids.molIds();
-
+        molIdsFluid_ = ids.molIds();
+    }
+    
     forceField_.clear();
+    pairsField_.clear();
+    force_ = vector::zero;
+    pairs_ = 0.0;
 }
 
 
@@ -114,32 +137,18 @@ void forceInstantProperties::createField()
 
 void forceInstantProperties::calculateField()
 {
-    vector force = vector::zero;
-
-    IDLList<polyMolecule>::iterator mol(molCloud_.begin());
-
-    for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
-    {
-        if(findIndex(molIds_, mol().id()) != -1)
-        {
-            forAll(boxes_, b)
-            {
-                if(boxes_[b].contains(mol().position()))
-                {
-                    const polyMolecule::constantProperties& constProp = molCloud_.constProps(mol().id());
-                    force += constProp.mass()*mol().a();
-                }
-            }
-        }
-    }    
-    
     // - parallel processing
     if(Pstream::parRun())
     {
-        reduce(force, sumOp<vector>());
+        reduce(force_, sumOp<vector>());
+        reduce(pairs_, sumOp<scalar>());
     }
     
-    forceField_.append(force);
+    forceField_.append(force_);
+    pairsField_.append(pairs_);
+    
+    force_ = vector::zero;
+    pairs_ = 0.0;
 }
 
 
@@ -155,9 +164,13 @@ void forceInstantProperties::writeField()
 
             scalarField timeField (forceField_.size(), 0.0);
             vectorField force (forceField_.size(), vector::zero);
+            scalarField pairs (pairsField_.size(), 0.0);            
             
             force.transfer(forceField_);
             forceField_.clear();
+
+            pairs.transfer(pairsField_);
+            pairsField_.clear();
             
             const scalar& deltaT = time_.time().deltaT().value();
             
@@ -169,11 +182,20 @@ void forceInstantProperties::writeField()
             writeTimeData
             (
                 casePath_,
-                "force_instant_"+fieldName_+".xyz",
-                timeField,
-                force,
+                "force_instant_"+fieldName_+"_force_SI.xyz",
+                timeField*molCloud_.redUnits().refTime(),
+                force*molCloud_.redUnits().refForce(),
                 true
             );
+            
+            writeTimeData
+            (
+                casePath_,
+                "force_instant_"+fieldName_+"_pairs.xyz",
+                timeField,
+                pairs,
+                true
+            );            
         }
     }
 }
@@ -189,7 +211,50 @@ void forceInstantProperties::measureDuringForceComputationSite
     polyMolecule* molJ,
     label sI,
     label sJ
-){}
+)
+{
+    label idsI = molCloud_.constProps(molI->id()).sites()[sI].siteId();
+    label idsJ = molCloud_.constProps(molJ->id()).sites()[sJ].siteId();    
+
+
+    label idIW = findIndex(molIdsWall_, molI->id());
+    label idJW = findIndex(molIdsWall_, molJ->id());
+
+    label idIF = findIndex(molIdsFluid_, molI->id());
+    label idJF = findIndex(molIdsFluid_, molJ->id());
+    
+//     idIW & idJW = no
+//     idIW & idIF = no
+//     
+//     idIW & idJF = yes
+//     idJW & idIF = yes
+//     
+//     idIF & idJF = no
+//     idJF & idJW = no
+    
+    if
+    (
+        ((idIW != -1) && (idJF != -1)) ||
+        ((idJW != -1) && (idIF != -1))
+    )
+    {
+        vector rsIsJ = molI->sitePositions()[sI] - molJ->sitePositions()[sJ];
+        scalar rsIsJMag = mag(rsIsJ);
+        vector force = (rsIsJ/rsIsJMag) * molCloud_.pot().pairPotentials().force(idsI, idsJ, rsIsJMag);
+        
+        if(molI->referred() || molJ->referred())
+        {
+            pairs_ += 0.5;
+            force_ += force*0.5;
+        }
+        else
+        {
+            force_ += force;
+            pairs_ += 1.0;           
+        }
+    }    
+    
+}
 
 const propertyField& forceInstantProperties::fields() const
 {

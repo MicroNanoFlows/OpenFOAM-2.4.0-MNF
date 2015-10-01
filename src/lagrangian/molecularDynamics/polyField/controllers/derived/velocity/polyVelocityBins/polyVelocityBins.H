@@ -23,29 +23,27 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    forceInstantProperties
-
+    polyVelocityBins
 
 Description
-    Measures instantaneous force in a bounded box 
+
 
 SourceFiles
-    forceInstantPropertiesI.H
-    forceInstantProperties.C
-    forceInstantPropertiesIO.C
+    polyVelocityBinsI.H
+    polyVelocityBins.C
+    polyVelocityBinsIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef forceInstantProperties_H
-#define forceInstantProperties_H
+#ifndef polyVelocityBins_H
+#define polyVelocityBins_H
 
-#include "polyField.H"
+#include "polyStateController.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
 #include "polyMoleculeCloud.H"
-#include "distribution.H"
-// #include "boundedBox.H"
+#include "binModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -53,12 +51,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class forceInstantProperties Declaration
+                           Class polyVelocityBins Declaration
 \*---------------------------------------------------------------------------*/
 
-class forceInstantProperties
+class polyVelocityBins
 :
-    public polyField
+	public polyStateController
 {
 
 private:
@@ -68,83 +66,73 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-        propertyField fields_;
-        
-        word fieldName_;
-        
-//         List<boundedBox> boxes_;
+        //- time constant
+        scalar lambda_;
 
-        // interaction between wall and fluid 
-        
-        // include wall Ids 
-        List<label> molIdsWall_;
-        
-        // Include fluid Ids (e.g. fluid species)
-        List<label> molIdsFluid_;
+        // component control
+        bool componentControl_;
+        bool X_;
+        bool Y_;
+        bool Z_;
 
-        vector force_;
-        
-        scalar pairs_;
-        
-        DynamicList<vector> forceField_;      
-        DynamicList<scalar> pairsField_;
-        
-        // Private Member Functions
+        autoPtr<binModel> binModel_;
 
-//         void setBoundBoxes();
+        List<label> molIds_;
+
+        
+
+    // Private Member Functions
 
 
-  
 public:
-	
-	//- Runtime type information
-	TypeName("forceInstantProperties");
-	
-	// Constructors
-	
-	//- Construct from components
-	forceInstantProperties
-	(
-		Time& t,
-		const polyMesh& mesh,
-		polyMoleculeCloud& molCloud,
-		const dictionary& dict
-		);
 
-	// Destructor
+    //- Runtime type information
+    TypeName("polyVelocityBins");
 
-	~forceInstantProperties();
+    // Constructors
+
+        //- Construct from components
+        polyVelocityBins
+        (
+            Time& t,
+            polyMoleculeCloud& molCloud,
+            const dictionary& dict
+        );
+
+    // Destructor
+
+        ~polyVelocityBins();
 
 
-	// Member Functions
+    // Member Functions
 
-	//- create initial field
-	void createField();
+        void initialConfiguration();
 
-	//- calculate field
-	void calculateField();
+        //- B. calculate any required properties
+        void calculateProperties();
 
-	void measureDuringForceComputation
-	(
-		polyMolecule* molI,
-		polyMolecule* molJ
-		);
+        //- C. control the mols
+        void controlMols();
 
-	void measureDuringForceComputationSite
-	(
-		polyMolecule* molI,
-		polyMolecule* molJ,
-		label sI,
-		label sJ
-		);
+        //- D. output data
+        void output
+        (
+            const fileName& fixedPathName, 
+            const fileName& timePath
+        );
 
-	const propertyField& fields() const;
+        //- E.  update properties from a modified dictionary
+        void updateProperties(const dictionary&);
 
-	//- write field
-	void writeField();
-
-	//void updateProperties(const dictionary&);
-}; 		
+        void controlMolsBeg();
+        void controlMolsEnd();
+        void controlBeforeForces();
+        void controlDuringForces
+        (
+            polyMolecule* molI,
+            polyMolecule* molJ
+        );
+};
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

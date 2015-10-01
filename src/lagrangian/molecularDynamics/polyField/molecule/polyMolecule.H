@@ -75,7 +75,8 @@ public:
         SPECIAL_TETHERED = -1,
         SPECIAL_FROZEN   = -2,
         NOT_SPECIAL      = 0,
-        SPECIAL_USER     = 1
+        SPECIAL_REFERRED = 1,
+        SPECIAL_USER     = 2
     };
 
     //- Class to hold molecule constant properties
@@ -320,7 +321,8 @@ public:
                 const scalar& trackTime
             );
 
-
+            void setAsReferred();
+            
         // Access
 
             inline const tensor& Q() const;
@@ -354,7 +356,8 @@ public:
             inline tensor& rf();
 
             inline label special() const;
-
+            inline label& special();
+            
             inline bool tethered() const;
 
             inline label id() const;
@@ -372,7 +375,9 @@ public:
             inline label& trackingNumber();
 
             inline bool frozen();
-
+            
+            inline bool referred();
+            
     // Member Operators
 
 

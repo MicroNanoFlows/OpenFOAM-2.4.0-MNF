@@ -109,6 +109,11 @@ bool Foam::polyMolecule::move
     return td.keepParticle;
 }
 
+void Foam::polyMolecule::setAsReferred()
+{
+    special_ = 1;
+}
+
 void Foam::polyMolecule::updateHalfVelocity
 (
     const constantProperties& constProps,

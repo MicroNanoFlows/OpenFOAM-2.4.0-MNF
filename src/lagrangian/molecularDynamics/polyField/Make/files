@@ -88,6 +88,7 @@ controllers/basic/polyFluxController/polyFluxController.C
 
 controllers/derived/velocity/polyVelocityZoneControl/polyVelocityZoneControl.C
 controllers/derived/velocity/polyVelocityBounded/polyVelocityBounded.C
+controllers/derived/velocity/polyVelocityBins/polyVelocityBins.C
 
 
 /*  - TEMPERATURE  */
