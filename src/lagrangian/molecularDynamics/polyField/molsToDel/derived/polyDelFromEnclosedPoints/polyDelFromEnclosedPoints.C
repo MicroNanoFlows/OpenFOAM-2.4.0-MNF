@@ -87,6 +87,21 @@ polyDelFromEnclosedPoints::polyDelFromEnclosedPoints
         translate = propsDict_.lookup("translate");
     }
     
+    rotate_ = false;
+    theta_ = 0;
+    
+    // positive = clockwise
+    if (propsDict_.found("rotate"))
+    {    
+        rotate_ = true;
+        
+        if(rotate_)
+        {
+            scalar theta = readScalar(propsDict_.lookup("rotate")); // degrees
+            theta_ = -theta*constant::mathematical::pi/180;
+        }
+    }    
+    
     normal_ = propsDict_.lookup("normal");
     
     points_.setSize(points.size(), vector::zero);
@@ -103,6 +118,35 @@ polyDelFromEnclosedPoints::polyDelFromEnclosedPoints
             << "Did not specify a list of points in dictionary!"
             << exit(FatalError);        
     }
+    // Rotate points here
+    
+    if(rotate_)
+    {
+        centre_ = vector::zero;
+        
+        forAll(points_, i)
+        {
+            centre_ += points_[i];
+        }
+        
+        centre_ /= scalar(points_.size());
+    
+        // scale to zero
+        forAll(points_, i)
+        {
+            points_[i] -= centre_;
+            scalar x1 = points_[i].x();
+            scalar y1 = points_[i].y();
+            scalar x2 = x1*cos(theta_) - y1*sin(theta_);
+            scalar y2 = y1*cos(theta_) + x1*sin(theta_);
+            
+            points_[i].x() = x2;
+            points_[i].y() = y2;
+            
+            points_[i] += centre_;
+        }
+    }
+    
     
     // Assume 2D for now and list is ordered
     

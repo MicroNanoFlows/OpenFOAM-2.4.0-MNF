@@ -114,7 +114,7 @@ controllers/derived/others/polyLiquidGasDistinction/polyLiquidGasDistinction.C
 controllers/derived/others/polyForce/polyForce.C
 controllers/derived/others/polyBoundedForce/polyBoundedForce.C
 controllers/derived/others/polyPressureForce/polyPressureForce.C
-
+controllers/derived/others/polyInternalWall/polyInternalWall.C
 
 /*  BOUNDARIES  */
 

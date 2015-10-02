@@ -23,27 +23,30 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    polyDelFromEnclosedPoints
+    polyInternalWall
 
 Description
-    Assume 2D only 
+    devel stage
+    - used for keeping molecules below a plane by inverting their velocities
+    once they leave the domain.
 
 SourceFiles
-    polyDelFromEnclosedPointsI.H
-    polyDelFromEnclosedPoints.C
-    polyDelFromEnclosedPointsIO.C
+    polyInternalWallI.H
+    polyInternalWall.C
+    polyInternalWallIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef polyDelFromEnclosedPoints_H
-#define polyDelFromEnclosedPoints_H
+#ifndef polyInternalWall_H
+#define polyInternalWall_H
 
-#include "polyMolsToDeleteModel.H"
+#include "polyStateController.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
 #include "polyMoleculeCloud.H"
-#include "boundBox.H"
+#include "gravityForce.H" 
+#include "boundedBox.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,12 +54,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class polyDelFromEnclosedPoints Declaration
+                           Class polyInternalWall Declaration
 \*---------------------------------------------------------------------------*/
 
-class polyDelFromEnclosedPoints
+class polyInternalWall
 :
-	public polyMolsToDeleteModel
+	public polyStateController
 {
 
 private:
@@ -65,60 +68,69 @@ private:
 
         //- subDictionary containing the properties
         dictionary propsDict_;
+
+        // mid point of plane
+        vector startPoint_;
         
-        boundBox box_;
-        
+        // specify plane normal vector pointing out from domain of interest
+        vector normal_;
+
+        //- ids of mols
         List<label> molIds_;
 
-        bool deleteExternalMols_;
-        
-        List<vector> points_;
-        
-        vector normal_;
-        
-        vector centre_;
-        
-        bool rotate_;
-        
-        // radians
-        scalar theta_;
-        
     // Private Member Functions
 
-        void findMolsToDel();
-        
-        bool isPointWithinRegion(const vector& rI);
-        
-        bool isPointWithinTriangle
-        (
-            const vector& r1,
-            const vector& r2,
-            const vector& rI
-        );
-        
-        
+        void readProperties();
+
 public:
 
     //- Runtime type information
-    TypeName("polyDelFromEnclosedPoints");
+    TypeName("polyInternalWall");
 
     // Constructors
 
         //- Construct from components
-        polyDelFromEnclosedPoints
+        polyInternalWall
 		(
+            Time& t,
             polyMoleculeCloud& molCloud,
             const dictionary& dict
 		);
 
     // Destructor
 
- 		~polyDelFromEnclosedPoints();
+ 		~polyInternalWall();
 
 
     // Member Functions
 
- 
+        void initialConfiguration();
+
+        //- calculate any required properties
+        void calculateProperties();
+
+        //- control the mols
+        void controlMols();
+        void controlMolsBeg();
+        void controlMolsEnd();
+        void controlBeforeForces();
+        void controlDuringForces
+        (
+            polyMolecule* molI,
+            polyMolecule* molJ
+        );
+
+        //- output data
+        void output
+        (
+            const fileName& fixedPathName, 
+            const fileName& timePath
+        );
+
+        //- update properties from a modified dictionary
+        void updateProperties(const dictionary&);
+
+        // Access
 };
 
 
