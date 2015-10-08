@@ -5,6 +5,8 @@ boundedBox/boundedBox.C
 
 distributePoints/distributePoints.C
 
+constantMoleculeProperties/constantMoleculeProperties.C
+
 /* BOUNDARIES */
 
 boundaries/basic/cyclicBoundaries/cyclicBoundaries.C

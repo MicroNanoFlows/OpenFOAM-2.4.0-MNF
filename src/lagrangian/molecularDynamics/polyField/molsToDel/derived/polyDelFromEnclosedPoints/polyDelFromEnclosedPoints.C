@@ -110,6 +110,7 @@ polyDelFromEnclosedPoints::polyDelFromEnclosedPoints
     {
         points_[i] = points[i]+translate;
     }
+    
     Info << "points " << points_ << endl;
     
     if(!(points_.size() > 0))

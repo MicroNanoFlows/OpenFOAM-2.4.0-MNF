@@ -115,7 +115,7 @@ private:
         void calculatePairForces();
         void checkForOverlaps();
         void removeHighEnergyOverlaps();
-        void setTrackingNumbers();
+//         void setTrackingNumbers();
         void checkMoleculesInMesh();
         void setMoleculesForDirectInteraction();
         void computePairForces();
@@ -195,7 +195,9 @@ public:
             const scalar& fraction,
             const label trackingNumber
         );
-
+        
+        void updateTrackingNumbersAfterRead();
+        
         //- Evolve the molecules (move, calculate forces, control state etc)
         void preliminaries();
         void initialHalfVelocity();
@@ -252,7 +254,7 @@ public:
         void readNewField();
         void setIPL();
         label getTrackingNumber();
-        void testTrackingNumbers();
+        void resetTrackingNumbers();
         void writeReferredCloud();
         
         // Access

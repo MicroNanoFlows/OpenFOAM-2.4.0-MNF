@@ -232,11 +232,31 @@ void forceInstantProperties::measureDuringForceComputationSite
 //     idIF & idJF = no
 //     idJF & idJW = no
     
+    
+    // Assume FLUID-to-WALL forces
+    
     if
     (
-        ((idIW != -1) && (idJF != -1)) ||
-        ((idJW != -1) && (idIF != -1))
+        ((idIW != -1) && (idJF != -1)) 
     )
+    {
+        vector rsIsJ = molI->sitePositions()[sI] - molJ->sitePositions()[sJ];
+        scalar rsIsJMag = mag(rsIsJ);
+        vector force = (rsIsJ/rsIsJMag) * molCloud_.pot().pairPotentials().force(idsI, idsJ, rsIsJMag);
+
+        
+        if(molI->referred() || molJ->referred())
+        {
+            pairs_ += 0.5;
+            force_ += -force*0.5;// This is negative because the wall is particle J
+        }
+        else
+        {
+            force_ += -force;// This is negative because the wall is particle J
+            pairs_ += 1.0;           
+        }        
+    }
+    else if((idJW != -1) && (idIF != -1))
     {
         vector rsIsJ = molI->sitePositions()[sI] - molJ->sitePositions()[sJ];
         scalar rsIsJMag = mag(rsIsJ);
@@ -245,11 +265,11 @@ void forceInstantProperties::measureDuringForceComputationSite
         if(molI->referred() || molJ->referred())
         {
             pairs_ += 0.5;
-            force_ += force*0.5;
+            force_ += force*0.5; 
         }
         else
         {
-            force_ += force;
+            force_ += force; 
             pairs_ += 1.0;           
         }
     }    

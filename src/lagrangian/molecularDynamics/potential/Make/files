@@ -5,6 +5,7 @@ pairPotential/basic/pairPotentialIO.C
 pairPotential/basic/pairPotential.C
 pairPotential/derived/FENE/FENE.C
 pairPotential/derived/lennardJones/lennardJones.C
+pairPotential/derived/morse/morse.C
 pairPotential/basic/pairPotentialNew.C
 pairPotential/derived/maitlandSmith/maitlandSmith.C
 pairPotential/derived/azizChen/azizChen.C

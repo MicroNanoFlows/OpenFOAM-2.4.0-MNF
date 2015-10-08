@@ -702,7 +702,8 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     checkMoleculesInMesh();
 
     // set tracking numbers
-    setTrackingNumbers();
+//     setTrackingNumbers();
+    updateTrackingNumbersAfterRead();
 
     //removeHighEnergyOverlaps();
     checkForOverlaps();
@@ -770,6 +771,10 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
 
         initialMolecules = 0;
     }
+    else
+    {
+        updateTrackingNumbersAfterRead();
+    }
     
     buildConstProps();
     setSiteSizesAndPositions();
@@ -790,7 +795,6 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     else if(option == "delete")
     {
         checkMoleculesInMesh();
-        setTrackingNumbers();
         buildCellOccupancy();
         prepareInteractions();
         polyMolsToDelete molsDel(mesh_, *this);
@@ -1297,25 +1301,85 @@ void Foam::polyMoleculeCloud::writeReferredCloud()
     }
 }
 
-void Foam::polyMoleculeCloud::testTrackingNumbers()
+void Foam::polyMoleculeCloud::updateTrackingNumbersAfterRead()
+{
+    const_iterator mol(this->begin());
+    
+    label tN = 0;
+    
+    for (mol = this->begin(); mol != this->end(); ++mol)
+    {
+        if(mol().trackingNumber() > tN)
+        {
+            tN = mol().trackingNumber();
+        }
+    } 
+    
+    //- parallel-processing
+    if(Pstream::parRun())
+    {
+
+        //- sending
+        for (int p = 0; p < Pstream::nProcs(); p++)
+        {
+            if(p != Pstream::myProcNo())
+            {
+                const int proc = p;
+                {
+                    OPstream toNeighbour(Pstream::blocking, proc);
+                    toNeighbour << tN;
+                }
+            }
+        }
+    
+        //- receiving
+        for (int p = 0; p < Pstream::nProcs(); p++)
+        {
+            if(p != Pstream::myProcNo())
+            {
+                label trackingNumberProc;
+
+                const int proc = p;
+                {
+                    IPstream fromNeighbour(Pstream::blocking, proc);
+                    fromNeighbour >> trackingNumberProc;
+                }
+
+                if(trackingNumberProc > tN)
+                {
+                    tN = trackingNumberProc;
+                }
+            }
+        }
+    }    
+    
+    moleculeTracking_.trackingIndex() = tN+1;
+}
+
+Foam::label Foam::polyMoleculeCloud::getTrackingNumber()
+{
+    return moleculeTracking_.getTrackingNumber();
+}
+
+// This function is not being used.It is a test to see if the max number of possible 
+// labels have been exceeded. The maximum is usually so large that this is hardly ever possible.
+// It may only be required for systems with an enormous turnover of molecules (adds and deletes).   
+void Foam::polyMoleculeCloud::resetTrackingNumbers()
 {
     moleculeTracking_.resetTrackingNumbers();
 
     if(moleculeTracking_.resetTracking())
     {
-        setTrackingNumbers();  
+        iterator mol(this->begin());
+
+        for (mol = this->begin(); mol != this->end(); ++mol)
+        {
+            mol().trackingNumber() = getTrackingNumber();
+        }
     }
 }
 
-void Foam::polyMoleculeCloud::setTrackingNumbers()
-{
-    iterator mol(this->begin());
 
-    for (mol = this->begin(); mol != this->end(); ++mol)
-    {
-        mol().trackingNumber() = getTrackingNumber();
-    }
-}
 
 void Foam::polyMoleculeCloud::insertMolInCellOccupancy(polyMolecule* mol)
 {
@@ -1370,9 +1434,6 @@ void Foam::polyMoleculeCloud::removeMolFromCellOccupancy
     cellOccupancy_[cell].transfer(molsInCell);
 }
 
-Foam::label Foam::polyMoleculeCloud::getTrackingNumber()
-{
-    return moleculeTracking_.getTrackingNumber();
-}
+
 
 // ************************************************************************* //

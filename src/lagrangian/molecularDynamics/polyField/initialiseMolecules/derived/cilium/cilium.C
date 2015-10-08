@@ -1,0 +1,190 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+
+Description
+
+\*---------------------------------------------------------------------------*/
+
+#include "cilium.H"
+#include "addToRunTimeSelectionTable.H"
+#include "IFstream.H"
+#include "graph.H"
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+defineTypeNameAndDebug(cilium, 0);
+
+addToRunTimeSelectionTable(polyConfiguration, cilium, dictionary);
+
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+// Construct from components
+cilium::cilium
+(
+    polyMoleculeCloud& molCloud,
+    const dictionary& dict
+)
+:
+    polyConfiguration(molCloud, dict)
+{
+
+}
+
+
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+cilium::~cilium()
+{}
+
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+
+void cilium::setInitialConfiguration()
+{
+    label initialSize = molCloud_.size();
+
+    Info << nl << "Creating cilium " << endl;
+
+    const word molIdName(mdInitialiseDict_.lookup("molId")); 
+    const List<word>& idList(molCloud_.pot().idList());
+
+    label molId = findIndex(idList, molIdName);
+
+    if(molId == -1)
+    {
+        FatalErrorIn("cilium::setInitialConfiguration()")
+            << "Cannot find molecule id: " << molIdName << nl << "in idList."
+            << exit(FatalError);
+    }
+
+    const reducedUnits& rU = molCloud_.redUnits();
+    
+    scalar temperature = 300/rU.refTemp();
+    vector bulkVelocity = vector::zero;
+    
+    //- start point is the fixed point
+    vector startPoint = mdInitialiseDict_.lookup("startPoint");
+    
+    vector endPoint = mdInitialiseDict_.lookup("endPoint");
+    
+    bool frozen = false;
+
+    if (mdInitialiseDict_.found("frozen"))
+    {
+        frozen = Switch(mdInitialiseDict_.lookup("frozen"));
+    }
+    
+    bool tethered = false;
+    
+    scalar spacing = readScalar(mdInitialiseDict_.lookup("spacing"));
+    
+
+    DynamicList<vector> positions;
+    
+    // unit vector 
+    vector n = endPoint - startPoint;
+    
+    scalar magSE = mag(n);
+    
+    n /= mag(n);
+    
+    scalar Ns = magSE/spacing;
+    
+    label N = label(Ns) + 1;
+    
+    // new spacing
+    scalar s = magSE/scalar(N-1);
+    
+    for (label i = 0; i < N; i++)
+    {
+        vector p = startPoint + i*s*n;
+        positions.append(p);
+    }
+    
+    positions.shrink();
+
+    Info << nl << " No of sites found = " << positions.size() << endl;
+
+    // insert molecules in cloud
+    label nMolsInserted = 0;
+    
+    forAll(positions, i)
+    {
+        label cell = -1;
+        label tetFace = -1;
+        label tetPt = -1;
+        
+        mesh_.findCellFacePt
+        (
+            positions[i],
+            cell,
+            tetFace,
+            tetPt
+        );
+        
+        if(cell != -1)
+        {
+            insertMolecule
+            (
+                positions[i],
+                cell,
+                tetFace,
+                tetPt,
+                molId,
+                tethered,
+                frozen,
+                temperature,
+                bulkVelocity
+            );
+            
+            nMolsInserted++;
+        }
+    }
+
+    Info<< nl << " No of initial cloud = " << initialSize
+        << ", no of molecules inserted = " << nMolsInserted
+        << endl;
+    
+    // write out of ordered locations 
+    // IMPORTANT
+    
+    
+}
+
+
+
+
+
+
+} // End namespace Foam
+
+// ************************************************************************* //

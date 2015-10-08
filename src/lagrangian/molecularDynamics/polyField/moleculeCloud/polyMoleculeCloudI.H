@@ -85,6 +85,12 @@ inline void Foam::polyMoleculeCloud::evaluatePair
 
                     molJ->siteForces()[sJ] += -fsIsJ;
 
+//                     Info<< "position I = " << molI->position() 
+//                         << ", site = " << idsI 
+//                         << ", mag = " << rsIsJMag
+//                         << ", force = " << fsIsJ 
+//                         << endl;
+                        
                     scalar potentialEnergy
                     (
                         f*pairPot.energy(idsI, idsJ, rsIsJMag)

@@ -121,25 +121,29 @@ void Foam::polyMolecule::readFields(Cloud<polyMolecule>& mC)
     IOField<tensor> Q(mC.fieldIOobject("Q", IOobject::MUST_READ));
     mC.checkFieldIOobject(mC, Q);
 
-    IOField<tensor> rf(mC.fieldIOobject("rf", IOobject::MUST_READ));
-    mC.checkFieldIOobject(mC, rf);
+    // MB: I have removed reading/writing these fields because no one ever uses them
+    //    and they by doing this we are saving a lot on hard disk space
+    
+//     IOField<tensor> rf(mC.fieldIOobject("rf", IOobject::MUST_READ));
+//     mC.checkFieldIOobject(mC, rf);
 
     IOField<vector> v(mC.fieldIOobject("v", IOobject::MUST_READ));
     mC.checkFieldIOobject(mC, v);
 
-    IOField<vector> a(mC.fieldIOobject("a", IOobject::MUST_READ));
-    mC.checkFieldIOobject(mC, a);
+//     IOField<vector> a(mC.fieldIOobject("a", IOobject::MUST_READ));
+//     mC.checkFieldIOobject(mC, a);
 
     IOField<vector> pi(mC.fieldIOobject("pi", IOobject::MUST_READ));
     mC.checkFieldIOobject(mC, pi);
 
-    IOField<vector> tau(mC.fieldIOobject("tau", IOobject::MUST_READ));
-    mC.checkFieldIOobject(mC, tau);
+//     IOField<vector> tau(mC.fieldIOobject("tau", IOobject::MUST_READ));
+//     mC.checkFieldIOobject(mC, tau);
 
     IOField<vector> specialPosition
     (
         mC.fieldIOobject("specialPosition", IOobject::MUST_READ)
     );
+    
     mC.checkFieldIOobject(mC, specialPosition);
 
     IOField<label> special(mC.fieldIOobject("special", IOobject::MUST_READ));
@@ -147,6 +151,9 @@ void Foam::polyMolecule::readFields(Cloud<polyMolecule>& mC)
 
     IOField<label> id(mC.fieldIOobject("id", IOobject::MUST_READ));
     mC.checkFieldIOobject(mC, id);
+    
+    IOField<label> trackingNumber(mC.fieldIOobject("trackingNumber", IOobject::MUST_READ));
+    mC.checkFieldIOobject(mC, trackingNumber);    
 
     label i = 0;
     forAllIter(polyMoleculeCloud, mC, iter)
@@ -154,15 +161,15 @@ void Foam::polyMolecule::readFields(Cloud<polyMolecule>& mC)
         polyMolecule& mol = iter();
 
         mol.Q_ = Q[i];
-        mol.rf_ = rf[i];
+//         mol.rf_ = rf[i];
         mol.v_ = v[i];
-        mol.a_ = a[i];
+//         mol.a_ = a[i];
         mol.pi_ = pi[i];
-        mol.tau_ = tau[i];
+//         mol.tau_ = tau[i];
         mol.specialPosition_ = specialPosition[i];
         mol.special_ = special[i];
         mol.id_ = id[i];
-        
+        mol.trackingNumber_ = trackingNumber[i];        
         i++;
     }
 }
@@ -175,11 +182,11 @@ void Foam::polyMolecule::writeFields(const Cloud<polyMolecule>& mC)
     label np = mC.size();
 
     IOField<tensor> Q(mC.fieldIOobject("Q", IOobject::NO_READ), np);
-    IOField<tensor> rf(mC.fieldIOobject("rf", IOobject::NO_READ), np);
+//     IOField<tensor> rf(mC.fieldIOobject("rf", IOobject::NO_READ), np);
     IOField<vector> v(mC.fieldIOobject("v", IOobject::NO_READ), np);
-    IOField<vector> a(mC.fieldIOobject("a", IOobject::NO_READ), np);
+//     IOField<vector> a(mC.fieldIOobject("a", IOobject::NO_READ), np);
     IOField<vector> pi(mC.fieldIOobject("pi", IOobject::NO_READ), np);
-    IOField<vector> tau(mC.fieldIOobject("tau", IOobject::NO_READ), np);
+//     IOField<vector> tau(mC.fieldIOobject("tau", IOobject::NO_READ), np);
     IOField<vector> specialPosition
     (
         mC.fieldIOobject("specialPosition", IOobject::NO_READ),
@@ -187,80 +194,86 @@ void Foam::polyMolecule::writeFields(const Cloud<polyMolecule>& mC)
     );
     IOField<label> special(mC.fieldIOobject("special", IOobject::NO_READ), np);
     IOField<label> id(mC.fieldIOobject("id", IOobject::NO_READ), np);
-
+    IOField<label> trackingNumber(mC.fieldIOobject("trackingNumber", IOobject::NO_READ), np);
+    
     // Post processing fields
 
-    IOField<vector> piGlobal
-    (
-        mC.fieldIOobject("piGlobal", IOobject::NO_READ),
-        np
-    );
-
-    IOField<vector> tauGlobal
-    (
-        mC.fieldIOobject("tauGlobal", IOobject::NO_READ),
-        np
-    );
-
-    IOField<vector> orientation1
-    (
-        mC.fieldIOobject("orientation1", IOobject::NO_READ),
-        np
-    );
-
-    IOField<vector> orientation2
-    (
-        mC.fieldIOobject("orientation2", IOobject::NO_READ),
-        np
-    );
-
-    IOField<vector> orientation3
-    (
-        mC.fieldIOobject("orientation3", IOobject::NO_READ),
-        np
-    );
+    // MB: I have removed reading/writing these fields because no one ever uses them
+    //    and they by doing this we are saving a lot on hard disk space
+    
+//     IOField<vector> piGlobal
+//     (
+//         mC.fieldIOobject("piGlobal", IOobject::NO_READ),
+//         np
+//     );
+// 
+//     IOField<vector> tauGlobal
+//     (
+//         mC.fieldIOobject("tauGlobal", IOobject::NO_READ),
+//         np
+//     );
+// 
+//     IOField<vector> orientation1
+//     (
+//         mC.fieldIOobject("orientation1", IOobject::NO_READ),
+//         np
+//     );
+// 
+//     IOField<vector> orientation2
+//     (
+//         mC.fieldIOobject("orientation2", IOobject::NO_READ),
+//         np
+//     );
+// 
+//     IOField<vector> orientation3
+//     (
+//         mC.fieldIOobject("orientation3", IOobject::NO_READ),
+//         np
+//     );
 
     label i = 0;
     forAllConstIter(polyMoleculeCloud, mC, iter)
     {
         const polyMolecule& mol = iter();
 
-        rf[i] = mol.rf_;
+//         rf[i] = mol.rf_;
         Q[i] = mol.Q_;
         v[i] = mol.v_;
-        a[i] = mol.a_;
+//         a[i] = mol.a_;
         pi[i] = mol.pi_;
-        tau[i] = mol.tau_;
+//         tau[i] = mol.tau_;
         specialPosition[i] = mol.specialPosition_;
         special[i] = mol.special_;
         id[i] = mol.id_;
+        trackingNumber[i] = mol.trackingNumber_;
+        
+//         piGlobal[i] = mol.Q_ & mol.pi_;
+//         tauGlobal[i] = mol.Q_ & mol.tau_;
 
-        piGlobal[i] = mol.Q_ & mol.pi_;
-        tauGlobal[i] = mol.Q_ & mol.tau_;
-
-        orientation1[i] = mol.Q_ & vector(1,0,0);
-        orientation2[i] = mol.Q_ & vector(0,1,0);
-        orientation3[i] = mol.Q_ & vector(0,0,1);
+//         orientation1[i] = mol.Q_ & vector(1,0,0);
+//         orientation2[i] = mol.Q_ & vector(0,1,0);
+//         orientation3[i] = mol.Q_ & vector(0,0,1);
 
         i++;
     }
 
-    rf.write();
+//     rf.write();
     Q.write();
     v.write();
-    a.write();
+//     a.write();
     pi.write();
-    tau.write();
+//     tau.write();
     specialPosition.write();
     special.write();
     id.write();
+    trackingNumber.write();
+    
+//     piGlobal.write();
+//     tauGlobal.write();
 
-    piGlobal.write();
-    tauGlobal.write();
-
-    orientation1.write();
-    orientation2.write();
-    orientation3.write();
+//     orientation1.write();
+//     orientation2.write();
+//     orientation3.write();
 
     Info<< "writeFields " << mC.name() << endl;
     

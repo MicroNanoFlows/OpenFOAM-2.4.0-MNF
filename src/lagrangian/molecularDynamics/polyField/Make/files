@@ -26,6 +26,7 @@ initialiseMolecules/derived/polyCNT/polyCNT.C
 initialiseMolecules/derived/polyGrapheneSheetPeriodicSkew/polyGrapheneSheetPeriodicSkew.C
 initialiseMolecules/derived/polyBCC/polyBCC.C
 initialiseMolecules/derived/polyCrystal/polyCrystal.C
+initialiseMolecules/derived/cilium/cilium.C
 
 molsToDel/basic/polyMolsToDeleteModel/polyMolsToDeleteModel.C
 molsToDel/basic/polyMolsToDelete/polyMolsToDelete.C
@@ -89,7 +90,7 @@ controllers/basic/polyFluxController/polyFluxController.C
 controllers/derived/velocity/polyVelocityZoneControl/polyVelocityZoneControl.C
 controllers/derived/velocity/polyVelocityBounded/polyVelocityBounded.C
 controllers/derived/velocity/polyVelocityBins/polyVelocityBins.C
-
+controllers/derived/velocity/polyVelocity2DBins/polyVelocity2DBins.C
 
 /*  - TEMPERATURE  */
 
