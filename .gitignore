@@ -56,8 +56,6 @@ doc/Doxygen/DTAGS
 /doc/*.html
 
 # Untracked configuration files
-/etc/prefs.csh
-/etc/prefs.sh
 /etc/config/prefs.csh
 /etc/config/prefs.sh
 
