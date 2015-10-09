@@ -41,6 +41,8 @@ int main(int argc, char *argv[])
 #   include "createMesh.H"
 #   include "createRandom.H"
     
+//     constantMoleculeProperties cP (mesh);
+    
     reducedUnits redUnits(runTime, mesh);
 
     potential pot(mesh, redUnits);

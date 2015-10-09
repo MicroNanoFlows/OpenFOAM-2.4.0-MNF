@@ -51,7 +51,7 @@ noScaling::noScaling
 (
     const word& name,
     const dictionary& energyScalingFunctionProperties,
-    const pairPotential& pairPot,
+    const pairPotentialModel& pairPot,
     const reducedUnits& rU
 )
 :
@@ -67,11 +67,10 @@ void noScaling::scaleEnergy(scalar& e, const scalar r) const
 
 bool noScaling::read
 (
-    const dictionary& energyScalingFunctionProperties,
-    const reducedUnits& rU
+    const dictionary& energyScalingFunctionProperties
 )
 {
-    energyScalingFunction::read(energyScalingFunctionProperties, rU);
+    energyScalingFunction::read(energyScalingFunctionProperties);
 
     return true;
 }

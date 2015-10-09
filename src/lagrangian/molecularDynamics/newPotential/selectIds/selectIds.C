@@ -39,13 +39,6 @@ namespace Foam
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-// void selectIds::setRadius()
-// {
-//     for(label i = 0; i < noOfBins_; i++)
-//     {
-//        radius_[i] = (0.5 + scalar(i)) * binWidth();
-//     }
-// }
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -56,117 +49,148 @@ selectIds::selectIds()
 {}
 
 
-
 selectIds::selectIds
 (
-    const potential& pot,
+    const constantMoleculeProperties& cP,
     const dictionary& dict
 )
 :
     molIds_()
 {
     const List<word> molecules (dict.lookup("molIds"));
-
+    
     if(molecules.size() > 0)
     {
-        DynamicList<word> moleculesReduced(0);
-    
-        forAll(molecules, i)
+        if
+        ( 
+            (molecules.size() == 1) &&
+            (molecules[0] == "ALL")
+        )
         {
-            const word& moleculeName(molecules[i]);
-    
-            if(findIndex(moleculesReduced, moleculeName) == -1)
+            molIds_.setSize(cP.nMolTypes(), -1);
+            
+            forAll(cP.molIds(), i)
             {
-                moleculesReduced.append(moleculeName);
+                molIds_[i] = i;
             }
         }
-    
-        molIds_.setSize(moleculesReduced.size(), -1);
-    
-        forAll(moleculesReduced, i)
+        else
         {
-            const word& moleculeName(moleculesReduced[i]);
-    
-            label molId(findIndex(pot.idList(), moleculeName));
-    
-            if(molId == -1)
+            DynamicList<word> moleculesReduced(0);
+        
+            forAll(molecules, i)
             {
-                FatalErrorIn
-                (
-                    "selectIds::selectIds()"
-                )
-                    << "Cannot find id: " << moleculeName << nl << "in dictionary."
-                    << exit(FatalError);
+                const word& moleculeName(molecules[i]);
+        
+                if(findIndex(moleculesReduced, moleculeName) == -1)
+                {
+                    moleculesReduced.append(moleculeName);
+                }
             }
-    
-            molIds_[i] = molId;
+        
+            molIds_.setSize(moleculesReduced.size(), -1);
+        
+            forAll(moleculesReduced, i)
+            {
+                const word& moleculeName(moleculesReduced[i]);
+        
+                label molId(findIndex(cP.molIds(), moleculeName));
+        
+                if(molId == -1)
+                {
+                    FatalErrorIn
+                    (
+                        "selectIds::selectIds()"
+                    )
+                        << "Cannot find id: " << moleculeName << nl << "in dictionary."
+                        << exit(FatalError);
+                }
+        
+                molIds_[i] = molId;
+            }
         }
     }
     else
     {
-        molIds_.setSize(pot.idList().size(), -1);
-
-        forAll(molIds_, i)
-        {
-            molIds_[i] = i;
-        }
+        FatalErrorIn
+        (
+            "selectIds::selectIds()"
+        )
+            << "molIds need to be greater than 0 in dictionary."
+            << exit(FatalError);
     }
 }
 
 selectIds::selectIds
 (
-    const potential& pot,
+    const constantMoleculeProperties& cP,
     const dictionary& dict,
-    const word& molIdsName
+    const word& molIdsHeader
 )
 :
     molIds_()
 {
-    const List<word> molecules (dict.lookup(molIdsName));
+    const List<word> molecules (dict.lookup(molIdsHeader));
 
     if(molecules.size() > 0)
     {
-        DynamicList<word> moleculesReduced(0);
-    
-        forAll(molecules, i)
+        if
+        ( 
+            (molecules.size() == 1) &&
+            (molecules[0] == "ALL")
+        )
         {
-            const word& moleculeName(molecules[i]);
-    
-            if(findIndex(moleculesReduced, moleculeName) == -1)
+            molIds_.setSize(cP.nMolTypes(), -1);
+            
+            forAll(cP.molIds(), i)
             {
-                moleculesReduced.append(moleculeName);
+                molIds_[i] = i;
             }
         }
-    
-        molIds_.setSize(moleculesReduced.size(), -1);
-    
-        forAll(moleculesReduced, i)
+        else
         {
-            const word& moleculeName(moleculesReduced[i]);
-    
-            label molId(findIndex(pot.idList(), moleculeName));
-    
-            if(molId == -1)
+            DynamicList<word> moleculesReduced(0);
+        
+            forAll(molecules, i)
             {
-                FatalErrorIn
-                (
-                    "selectIds::selectIds()"
-                )
-                    << "Cannot find id: " << moleculeName << nl << "in dictionary."
-                    << exit(FatalError);
+                const word& moleculeName(molecules[i]);
+        
+                if(findIndex(moleculesReduced, moleculeName) == -1)
+                {
+                    moleculesReduced.append(moleculeName);
+                }
             }
-    
-            molIds_[i] = molId;
+        
+            molIds_.setSize(moleculesReduced.size(), -1);
+        
+            forAll(moleculesReduced, i)
+            {
+                const word& moleculeName(moleculesReduced[i]);
+        
+                label molId(findIndex(cP.molIds(), moleculeName));
+        
+                if(molId == -1)
+                {
+                    FatalErrorIn
+                    (
+                        "selectIds::selectIds()"
+                    )
+                        << "Cannot find id: " << moleculeName << nl << "in dictionary."
+                        << exit(FatalError);
+                }
+        
+                molIds_[i] = molId;
+            }
         }
     }
     else
     {
-        molIds_.setSize(pot.idList().size(), -1);
-
-        forAll(molIds_, i)
-        {
-            molIds_[i] = i;
-        }
+        FatalErrorIn
+        (
+            "selectIds::selectIds()"
+        )
+            << "molIds need to be greater than 0 in dictionary."
+            << exit(FatalError);
     }
 }
 

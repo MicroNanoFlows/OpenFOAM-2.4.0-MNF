@@ -1,15 +1,17 @@
-
 potentials/potentials.C
-pairPotentials/basic/pairPotentialModel/pairPotentialModel.C
-pairPotentials/basic/potentialsCollector/potentialsCollector.C
 
+/* Pair Potentials */
+pairPotentials/basic/pairPotentials/pairPotentials.C
+pairPotentials/basic/pairPotentialModel/pairPotentialModel.C
+
+/* derived */
 pairPotentials/derived/pairPotentialModels/lennardJones/lennardJones.C
+pairPotentials/derived/pairPotentialModels/noInteraction/noInteraction.C
 
 
 energyScalingFunction/basic/energyScalingFunction.C
-energyScalingFunction/basic/energyScalingFunctionNew.C
-energyScalingFunction/derived/shifted/shifted.C
 energyScalingFunction/derived/shiftedForce/shiftedForce.C
+energyScalingFunction/derived/shifted/shifted.C
 energyScalingFunction/derived/sigmoid/sigmoid.C
 energyScalingFunction/derived/noScaling/noScaling.C
 energyScalingFunction/derived/doubleSigmoid/doubleSigmoid.C
@@ -21,10 +23,10 @@ tetherPotential/basic/tetherPotential.C
 tetherPotential/basic/tetherPotentialNew.C
 */
 
-/*
+/* MOVE THIS TO GENERAL */
 selectSiteIds/selectSiteIds.C
 selectIds/selectIds.C
-*/
+
 
 /*/gpu/selectIdPairs/selectIdPairs.C*/
 

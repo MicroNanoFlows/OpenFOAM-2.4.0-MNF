@@ -86,6 +86,7 @@ public:
         (
             const polyMesh& mesh,
             const reducedUnits& redUnits,
+            const word& name,         
             const dictionary& dict
         );
 

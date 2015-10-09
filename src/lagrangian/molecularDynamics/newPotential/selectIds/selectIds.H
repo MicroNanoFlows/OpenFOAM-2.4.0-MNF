@@ -38,7 +38,7 @@ SourceFiles
 #define selectIds_H
 
 #include "polyMesh.H"
-#include "potential.H"
+#include "constantMoleculeProperties.H"
 #include "dictionary.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -69,19 +69,19 @@ public:
         //- Construct null
         selectIds();
 
-        //- Construct from xs and ys
         selectIds
         (
-            const potential& pot,
+            const constantMoleculeProperties& cP,
             const dictionary& dict
         );
 
         selectIds
         (
-            const potential& pot,
+            const constantMoleculeProperties& cP,
             const dictionary& dict,
-            const word& molIdsName
+            const word& molIdsHeader
         );
+        
     // Selectors
 
     // Destructor

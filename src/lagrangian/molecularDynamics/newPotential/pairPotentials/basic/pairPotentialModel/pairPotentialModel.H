@@ -70,12 +70,23 @@ protected:
 
         const reducedUnits& rU_;
         
+        dictionary  pairPotentialProperties_;
+       
+        // ids header of dictionary e.g. A-B 
+        word name_;
+        
+        // split ids [0] = A; [1] = B
+        List<word> idList_;
+        
         scalar rCut_;
         scalar rCutSqr_;
         
         scalar rMin_;
         
         scalar dr_;        
+        
+         
+        
         
 //         word energyScalingFunction_;
 
@@ -97,8 +108,7 @@ protected:
         void scaleEnergy
         (
             scalar& e,
-            const scalar r,
-            const reducedUnits& rU
+            const scalar r
         ) const;        
 
 public:
@@ -115,9 +125,10 @@ public:
             (
                 const polyMesh& mesh,
                 const reducedUnits& redUnits,
+                const word& name,
                 const dictionary& dict
             ),
-            (mesh, redUnits, dict)
+            (mesh, redUnits, name, dict)
         );
    
     // Constructors
@@ -127,6 +138,7 @@ public:
         (
             const polyMesh& mesh,
             const reducedUnits& redUnits,
+            const word& name,
             const dictionary& dict
         );
 
@@ -137,6 +149,7 @@ public:
         (
             const polyMesh& mesh,
             const reducedUnits& redUnits,
+            const word& name,
             const dictionary& dict
         );
 
@@ -151,13 +164,7 @@ public:
         
         void setLookupTables();
 
-        inline scalar rMin() const;
 
-        inline scalar dr() const;
-
-        inline scalar rCut() const;
-
-        inline scalar rCutSqr() const;
 
         scalar energy (const scalar r) const;
 
@@ -184,10 +191,7 @@ public:
             const bool scaledEnergyDerivative = true
         ) const;
 
-//         const dictionary& pairPotentialProperties() const
-//         {
-//             return pairPotentialProperties_;
-//         }
+        const dictionary& pairPotentialProperties() const;
 
         bool writeEnergyAndForceTables(Ostream& os) const;
 
@@ -196,6 +200,14 @@ public:
 //         (
 //             const dictionary& pairPotentialProperties
 //         ) = 0;
+
+
+        inline const word& name() const;
+        inline const List<word>& idList() const;
+        inline scalar rMin() const;
+        inline scalar dr() const;
+        inline scalar rCut() const;
+        inline scalar rCutSqr() const;        
 };
 
 

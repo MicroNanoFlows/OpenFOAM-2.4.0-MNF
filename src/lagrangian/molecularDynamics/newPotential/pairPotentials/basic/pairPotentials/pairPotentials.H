@@ -23,15 +23,15 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    potentialsCollector
+    pairPotentials
 
 Description
 
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef potentialsCollector_H
-#define potentialsCollector_H
+#ifndef pairPotentials_H
+#define pairPotentials_H
 
 #include "vector.H"
 #include "List.H"
@@ -41,6 +41,7 @@ Description
 #include "polyMesh.H"
 #include "pairPotentialModel.H"
 #include "reducedUnits.H"
+#include "constantMoleculeProperties.H"
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -49,18 +50,24 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class potentialsCollector Declaration
+                           Class pairPotentials Declaration
 \*---------------------------------------------------------------------------*/
 
-class potentialsCollector
+class pairPotentials
 {
 
     // Private data
 
         const polyMesh& mesh_;
 
+        const constantMoleculeProperties& cP_;
+        
         IOdictionary potentialsDict_;
 
+        // maximum rCut
+        scalar rCut_;
+//         scalar rCutSqr_;
+        
         // these are just pair potentials
         
         PtrList<entry> pairPotentialsList_;
@@ -69,41 +76,75 @@ class potentialsCollector
         List< autoPtr<pairPotentialModel> > pairPotentials_;
 
         
-        // any different catagories of potentials can go here
+        // linking pairpotids to potential storage
+        // outer list size of cP_.()
+        // inner list size of cP_.()
+        // store index of pairPotentials_
+        List<List<label> > pairPotLinks_;
+
+
+        
+        // these are electrostatic potentials
+        
+        
+
         
         
         
         // private member functions 
         
-//             void testPairPotentials();
-        
+            void testPairPotentials();
             
         
 public:
 
     // Constructors
-
-        //- Null Constructor (mdInitialise)
-        potentialsCollector
+    
+    
+        //- Standard constructor
+        pairPotentials
         (
             const polyMesh& mesh,
+            const constantMoleculeProperties& cP,
             const reducedUnits& redUnits
         );
 
 
-        ~potentialsCollector();
+        ~pairPotentials();
 
     // Member Functions
 
-        inline List< autoPtr<pairPotentialModel> >& pairPotentials();
-        inline const List< autoPtr<pairPotentialModel> >& pairPotentials() const;
+        scalar maxRCut();
+        
+        inline List< autoPtr<pairPotentialModel> >& pairPots();
+        inline const List< autoPtr<pairPotentialModel> >& pairPots() const;
         inline const List<word>& pairNames() const;
         inline const List<label>& pairIds() const;
         
+        scalar pairForce
+        (
+            const label& pairSiteA,
+            const label& pairSiteB,
+            const scalar& r
+        );
+        
+        scalar pairEnergy
+        (
+            const label& pairSiteA,
+            const label& pairSiteB,
+            const scalar& r
+        );
+
+        bool rCutSqr
+        (
+            const label& pairSiteA,
+            const label& pairSiteB,
+            const scalar& r
+        );         
         
     // Ostream Operator
 
-//         friend Ostream& operator<<(Ostream&, const potentialsCollector&);
+//         friend Ostream& operator<<(Ostream&, const pairPotentials&);
 };
 
 
@@ -113,7 +154,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#include "potentialsCollectorI.H"
+#include "pairPotentialsI.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

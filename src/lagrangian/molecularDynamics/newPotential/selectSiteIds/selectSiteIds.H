@@ -38,7 +38,7 @@ SourceFiles
 #define selectSiteIds_H
 
 #include "polyMesh.H"
-#include "potential.H"
+#include "constantMoleculeProperties.H"
 #include "dictionary.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -54,7 +54,7 @@ class selectSiteIds
 {
     // Private data
 
-        List<label> molSiteIds_;
+        List<label> siteIds_;
 
 
 
@@ -69,11 +69,18 @@ public:
         //- Construct null
         selectSiteIds();
 
-        //- Construct from xs and ys
+
         selectSiteIds
         (
-            const potential& pot,
+            const constantMoleculeProperties& cP,
             const dictionary& dict
+        );
+
+        selectSiteIds
+        (
+            const constantMoleculeProperties& cP,
+            const dictionary& dict,
+            const word& siteIdsHeader
         );
 
 
@@ -87,8 +94,7 @@ public:
 
         // Access
 
-            inline List<label> molSiteIds();
-//             inline labelList& molIds();
+            inline List<label> siteIds();
 
 
         // Check

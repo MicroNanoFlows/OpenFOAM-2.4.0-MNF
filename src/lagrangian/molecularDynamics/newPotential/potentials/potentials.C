@@ -25,9 +25,12 @@ License
 
 #include "potentials.H"
 
+namespace Foam
+{
+
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-void Foam::potentials::readPotentialDict()
+void potentials::readPotentialDict()
 {
     Info<< nl <<  "Reading potentials dictionary:" << endl;
 
@@ -35,7 +38,7 @@ void Foam::potentials::readPotentialDict()
     (
         IOobject
         (
-            "potentialsDict",
+            "potentialDict",
             mesh_.time().system(),
             mesh_,
             IOobject::MUST_READ,
@@ -104,25 +107,37 @@ void Foam::potentials::readPotentialDict()
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 //- Construct to run MD simulation (idList is read in from constant dir)
-Foam::potentials::potentials
+potentials::potentials
 (
     const polyMesh& mesh,
     const reducedUnits& rU,
-    const constantMoleculeProperties cP
+    const constantMoleculeProperties& cP
 )
 :
     mesh_(mesh),
     redUnits_(rU),
     cP_(cP),
-    potentials_(mesh, rU)
+    pairPotentials_(mesh, cP, rU),
+    rCut_(pairPotentials_.maxRCut())
 {
     readPotentialDict();
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::potentials::~potentials()
+potentials::~potentials()
 {}
 
+const pairPotentials& potentials::pairPots() const
+{
+    return pairPotentials_;
+}
+
+// Foam::pairPotentials& Foam::potentials::pairPotentials()
+// {
+//     return pairPotentials_;
+// }
+
+} // End namespace Foam
 
 // ************************************************************************* //

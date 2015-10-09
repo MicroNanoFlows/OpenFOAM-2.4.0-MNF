@@ -63,7 +63,7 @@ doubleSigmoid::doubleSigmoid
 (
     const word& name,
     const dictionary& energyScalingFunctionProperties,
-    const pairPotential& pairPot,
+    const pairPotentialModel& pairPot,
     const reducedUnits& rU
 )
 :
@@ -100,11 +100,10 @@ void doubleSigmoid::scaleEnergy(scalar& e, const scalar r) const
 
 bool doubleSigmoid::read
 (
-    const dictionary& energyScalingFunctionProperties,
-    const reducedUnits& rU
+    const dictionary& energyScalingFunctionProperties
 )
 {
-    energyScalingFunction::read(energyScalingFunctionProperties, rU);
+    energyScalingFunction::read(energyScalingFunctionProperties);
 
     doubleSigmoidCoeffs_ =
         energyScalingFunctionProperties.subDict(typeName + "Coeffs");
@@ -115,10 +114,10 @@ bool doubleSigmoid::read
     doubleSigmoidCoeffs_.lookup("scale2") >> scale2_;
 
 
-    if(rU.runReducedUnits())
+    if(rU_.runReducedUnits())
     {
-        shift1_ /= rU.refLength();
-        shift2_ /= rU.refLength();
+        shift1_ /= rU_.refLength();
+        shift2_ /= rU_.refLength();
     }
 
     return true;

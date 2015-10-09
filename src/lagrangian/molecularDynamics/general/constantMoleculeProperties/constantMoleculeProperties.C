@@ -36,9 +36,14 @@ namespace Foam
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 //-  Constructor
-constantMoleculeProperties::constantMoleculeProperties(const polyMesh& mesh)
+constantMoleculeProperties::constantMoleculeProperties
+(
+    const polyMesh& mesh,
+    const reducedUnits& rU
+)
 :
-    mesh_(mesh)
+    mesh_(mesh),
+    rU_(rU)
 {
     Info << nl << "Reading moleculeProperties dictionary." << endl;
     
@@ -63,6 +68,7 @@ constantMoleculeProperties::constantMoleculeProperties(const polyMesh& mesh)
     cloudTypes_.setSize(N_);
     siteNames_.setSize(N_);
     pairPotNames_.setSize(N_);
+    chargeNames_.setSize(N_);
     siteRefPositions_.setSize(N_);
     siteMasses_.setSize(N_);
     siteCharges_.setSize(N_);
@@ -102,16 +108,13 @@ constantMoleculeProperties::constantMoleculeProperties(const polyMesh& mesh)
     // building unique lists
     DynamicList<word> siteIdList;
     DynamicList<word> pairPotentialSiteIdList;    
-
+    DynamicList<word> chargeSiteIdList; 
+    
     // reading in information from constant/moleculeProperties dictionary 
     forAll(molList, i)
     {
         const entry& molEntryI = molList[i];
         const dictionary& subDict = molEntryI.dict();
-//         Info << "entry name keyword = " <<  molEntryI.keyword()<< endl;
-        
-        // WE ARE MISSING THE CHECK ON THE HEADING OF THE SUBDICTIONARY,
-        // AND THAT IT MATCHES WITH: names_
         
         if (molEntryI.keyword() != names_[i])
         {
@@ -169,43 +172,111 @@ constantMoleculeProperties::constantMoleculeProperties(const polyMesh& mesh)
         forAll(siteRefPositions, j)
         {
             siteRefPositions_[i][j] = siteRefPositions[j];
-        }        
+
+            if(rU_.runReducedUnits())
+            {
+                siteRefPositions_[i][j] /= rU_.refLength();
+            }
+        }
 
         List<scalar> siteMasses = subDict.lookup("siteMasses");
         siteMasses_[i].setSize(siteMasses.size());
         
         forAll(siteMasses, j)
         {
-            siteMasses_[i][j] = siteMasses[j];
+            siteMasses_[i][j] = siteMasses[j]; 
+            
+            if(rU_.runReducedUnits())
+            {
+                siteMasses_[i][j] /= rU_.refMass();
+            }
         }        
 
         List<scalar> siteCharges = subDict.lookup("siteCharges");
         siteCharges_[i].setSize(siteCharges.size());
         
+        DynamicList<word> chargeNames;
+        
         forAll(siteCharges, j)
         {
+            if(siteCharges[j] != 0.0)
+            {
+                if(findIndex(chargeSiteIdList, siteIdNames[j]) == -1)
+                {
+                    chargeSiteIdList.append(siteIdNames[j]);
+                }
+                
+                chargeNames.append(siteNames_[i][j]);
+            }
+            
             siteCharges_[i][j] = siteCharges[j];
-        }        
+            
+            if(rU_.runReducedUnits())
+            {
+                siteCharges_[i][j] /= rU_.refCharge();
+            }
+        }
+        
+        chargeNames_[i].transfer(chargeNames);
     }
 
-    nPairPotIds_ = pairPotentialSiteIdList.size();
+    nPairPotSites_ = pairPotentialSiteIdList.size();
+    nSites_=siteIdList.size();
+    nChargeSites_=chargeSiteIdList.size();
 
-    // not sure what is happening here
-    // why would there 
-//     forAll(siteIdList, k)
-//     {
-//         const word& siteName = siteIdList[k];
-// 
-//         if (findIndex(pairPotentialSiteIdList, siteName) == -1)
-//         {
-//             pairPotentialSiteIdList.append(siteName);
-//         }
-//     }
-
-//     siteIdList_.transfer(pairPotentialSiteIdList);    
     
     siteIdList_.transfer(siteIdList);    
-    potSiteIdList_.transfer(pairPotentialSiteIdList);    
+    pairPotSiteIdList_.transfer(pairPotentialSiteIdList);    
+    chargeSiteIdList_.transfer(chargeSiteIdList);
+    
+    
+    pairPotNamesToFullSites_.setSize(N_);
+
+    forAll(pairPotNamesToFullSites_, i)
+    {
+        pairPotNamesToFullSites_[i].setSize(pairPotNames_[i].size());
+        
+        forAll(pairPotNames_[i], j)
+        {
+            const word& name = pairPotNames_[i][j];
+            label k = findIndex(pairPotSiteIdList_, name);
+            pairPotNamesToFullSites_[i][j] = k;
+        }
+    }
+
+    pairPotNamesToSites_.setSize(N_);
+
+    forAll(pairPotNamesToSites_, i)
+    {
+        pairPotNamesToSites_[i].setSize(pairPotNames_[i].size());
+        
+        forAll(pairPotNames_[i], j)
+        {
+            const word& name = pairPotNames_[i][j];
+            label k = findIndex(siteNames_[i], name);
+            pairPotNamesToSites_[i][j] = k;
+        }
+    }
+
+    
+    chargePotNamesToFullSites_.setSize(N_);
+
+    forAll(chargePotNamesToFullSites_, i)
+    {
+        chargePotNamesToFullSites_[i].setSize(chargeNames_[i].size());
+        
+        forAll(chargeNames_[i], j)
+        {
+            const word& name = chargeNames_[i][j];
+            label k = findIndex(chargeSiteIdList_, name);
+            chargePotNamesToFullSites_[i][j] = k;
+        }
+    }
+    
+    Info << "siteNames_ = " << siteNames_ << endl;
+    Info << "chargeNames_ = " << chargeNames_ << endl;
+    Info << "chargeSiteIdList_ = " << chargeSiteIdList_ << endl;
+    Info << "chargePotNamesToFullSites_ = " << chargePotNamesToFullSites_ << endl;
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -217,7 +288,7 @@ constantMoleculeProperties::~constantMoleculeProperties()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 
-const label& constantMoleculeProperties::nTypes() const
+const label& constantMoleculeProperties::nMolTypes() const
 {
     return N_;
 }
@@ -338,6 +409,52 @@ const List<scalar>& constantMoleculeProperties::siteCharges(const label& id) con
     return siteCharges_[id];
 }
 
+const label& constantMoleculeProperties::nSiteTypes() const
+{
+    return nSites_;
+}
+
+const label& constantMoleculeProperties::nPairPotTypes() const
+{
+    return nPairPotSites_;
+}
+
+const label& constantMoleculeProperties::nChargeTypes() const
+{
+    return nChargeSites_;
+}
+
+
+const List<word>& constantMoleculeProperties::siteIds() const
+{
+    return siteIdList_;
+}
+
+const List<word>& constantMoleculeProperties::pairPotSiteIdList() const
+{
+    return pairPotSiteIdList_;
+}
+
+const List<word>& constantMoleculeProperties::chargeSiteIdList() const
+{
+    return chargeSiteIdList_;
+}
+
+        
+const List<List<label> >& constantMoleculeProperties::pairPotNamesToFullSites() const
+{
+    return pairPotNamesToFullSites_;
+}
+
+const List<List<label> >& constantMoleculeProperties::pairPotNamesToSites() const
+{
+    return pairPotNamesToSites_;
+}
+
+const List<List<label> >& constantMoleculeProperties::chargePotNamesToFullSites() const
+{
+    return chargePotNamesToFullSites_;
+}
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 

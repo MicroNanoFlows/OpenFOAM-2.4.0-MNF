@@ -64,7 +64,7 @@ sigmoid::sigmoid
 (
     const word& name,
     const dictionary& energyScalingFunctionProperties,
-    const pairPotential& pairPot,
+    const pairPotentialModel& pairPot,
     const reducedUnits& rU
 )
 :
@@ -98,11 +98,10 @@ void sigmoid::scaleEnergy(scalar& e, const scalar r) const
 
 bool sigmoid::read
 (
-    const dictionary& energyScalingFunctionProperties,
-    const reducedUnits& rU
+    const dictionary& energyScalingFunctionProperties
 )
 {
-    energyScalingFunction::read(energyScalingFunctionProperties, rU);
+    energyScalingFunction::read(energyScalingFunctionProperties);
 
     sigmoidCoeffs_ =
         energyScalingFunctionProperties.subDict(typeName + "Coeffs");
@@ -110,9 +109,9 @@ bool sigmoid::read
     sigmoidCoeffs_.lookup("shift") >> shift_;
     sigmoidCoeffs_.lookup("scale") >> shift_;
 
-    if(rU.runReducedUnits())
+    if(rU_.runReducedUnits())
     {
-        shift_ /= rU.refLength();
+        shift_ /= rU_.refLength();
     }
 
     return true;

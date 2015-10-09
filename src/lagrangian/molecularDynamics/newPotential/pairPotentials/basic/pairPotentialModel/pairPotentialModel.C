@@ -46,15 +46,18 @@ pairPotentialModel::pairPotentialModel
 (
     const polyMesh& mesh,
     const reducedUnits& redUnits,
+    const word& name,
     const dictionary& dict
 )
 :
     mesh_(mesh),
     rU_(redUnits),
+    pairPotentialProperties_(dict),    
+    name_(name),
+    idList_(),
     rCut_(readScalar(dict.lookup("rCut"))),
-    rMin_(readScalar(dict.lookup("rMin"))) 
+    rMin_(readScalar(dict.lookup("rMin"))),
     dr_(readScalar(dict.lookup("dr"))),
-//     energyScalingFunction_(dict.lookup("energyScalingFunction")),
     forceLookup_(0),
     energyLookup_(0),
     esfPtr_(NULL),
@@ -67,13 +70,35 @@ pairPotentialModel::pairPotentialModel
         writeTables_ = Switch(dict.lookup("writeTables"));
     }
     
-    if(rU.runReducedUnits())
+    if(rU_.runReducedUnits())
     {
-        rCut_ /= rU.refLength();
-        rMin_ /= rU.refLength();
-        dr_ /= rU.refLength();
+        rCut_ /= rU_.refLength();
+        rMin_ /= rU_.refLength();
+        dr_ /= rU_.refLength();
         rCutSqr_ = rCut_*rCut_;
     }
+    
+    // splitting the name using a delimeter "A-B" => "A" and "B"
+    idList_.setSize(2);
+    
+    Info << nl << "name = " << name_ << endl;
+    
+    std::string s = name_;
+    std::string delimiter = "-";
+    
+    size_t pos = 0;
+    std::string token;
+
+    while ((pos = s.find(delimiter)) != std::string::npos) {
+        token = s.substr(0, pos);
+        idList_[0]=token;
+        s.erase(0, pos + delimiter.length());
+        idList_[1]=s;
+    }
+    
+    Info << " idList = " << idList_ << endl;
+    
+    
     
 }
 
@@ -84,6 +109,7 @@ autoPtr<pairPotentialModel> pairPotentialModel::New
 (
     const polyMesh& mesh,
     const reducedUnits& redUnits, 
+    const word& name, 
     const dictionary& dict
 )
 {
@@ -111,7 +137,7 @@ autoPtr<pairPotentialModel> pairPotentialModel::New
 
     return autoPtr<pairPotentialModel>
     (
-        cstrIter()(mesh, redUnits, dict)
+        cstrIter()(mesh, redUnits, name, dict)
     );
 }
 
@@ -120,6 +146,23 @@ autoPtr<pairPotentialModel> pairPotentialModel::New
 
 pairPotentialModel::~pairPotentialModel()
 {}
+
+void Foam::pairPotentialModel::scaleEnergy
+(
+    scalar& e,
+    const scalar r
+) const
+{
+    if (!esfPtr_)
+    {
+        esfPtr_ = energyScalingFunction::New
+        (
+            name_, pairPotentialProperties_, *this, rU_
+        ).ptr();
+    }
+
+    esfPtr_->scaleEnergy(e, r);
+}
 
 void pairPotentialModel::setLookupTables()
 {
@@ -279,7 +322,7 @@ scalar pairPotentialModel::energyDerivative
 
 // bool pairPotentialModel::read
 // (
-//     const dictionary& pairPotentialProperties,
+//     const dictionary& pairPotentialProperties
 // )
 // {
 //     pairPotentialProperties_ = pairPotentialProperties;
@@ -309,6 +352,10 @@ bool pairPotentialModel::writeEnergyAndForceTables(Ostream& os) const
     return os.good();
 }
 
+const dictionary& pairPotentialModel::pairPotentialProperties() const
+{
+    return pairPotentialProperties_;
+}
 
 } // End namespace Foam
 

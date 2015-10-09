@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,72 +22,35 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    distribution
-
-Description
-
 \*---------------------------------------------------------------------------*/
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-
-// * * * * * * * * * * * * * * * * Destructors * * * * * * * * * * * * * * * //
-
-
-
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-inline const List<List<List<scalar> > >& polyIdPairs::coeffVals() const
+
+inline List< autoPtr<pairPotentialModel> >& pairPotentials::pairPots()
 {
-	return coeffVals_;
+    return pairPotentials_;
 }
 
-inline const List<word>& polyIdPairs::coeffNames() const
+inline const List< autoPtr<pairPotentialModel> >& pairPotentials::pairPots() const
 {
-	return coeffNames_;
+    return pairPotentials_;
 }
 
-inline const List<label>& polyIdPairs::coeffNumIds() const
+inline const List<word>& pairPotentials::pairNames() const
 {
-    return coeffNumIds_;
+    return pairNames_;
 }
 
-inline const label& polyIdPairs::nIds() const
+inline const List<label>& pairPotentials::pairIds() const
 {
-    return nIds_;
+    return pairIds_;
 }
-
-inline const label& polyIdPairs::coeffSize() const
-{
-	return coeffSize_;
-}
-
-inline const std::string& polyIdPairs::coeffType() const
-{
-    return coeffType_;
-}
-// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
-
-
-// * * * * * * * * * * * * * * * Friend Functions  * * * * * * * * * * * * * //
-
-
-// * * * * * * * * * * * * * * * Friend Operators  * * * * * * * * * * * * * //
-
-
-// * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * * //
-
-
-// * * * * * * * * * * * * * * * Ostream Operator  * * * * * * * * * * * * * //
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

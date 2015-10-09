@@ -66,13 +66,13 @@ public:
     // Constructors
 
         //- Construct from components
-    	shifted
-		(
-			const word& name,
-			const dictionary& energyScalingFunctionProperties,
-			const pairPotential& pairPot,
-			const reducedUnits& rU
-		);
+        shifted
+        (
+            const word& name,
+            const dictionary& energyScalingFunctionProperties,
+            const pairPotentialModel& pairPot,
+            const reducedUnits& rU
+        );
 
 
     //- Destructor
@@ -87,8 +87,7 @@ public:
         //- Read dictionary
         bool read
 	   (
-		   const dictionary& energyScalingFunctionProperties,
-		   const reducedUnits& rU
+		   const dictionary& energyScalingFunctionProperties
 	   );
 };
 

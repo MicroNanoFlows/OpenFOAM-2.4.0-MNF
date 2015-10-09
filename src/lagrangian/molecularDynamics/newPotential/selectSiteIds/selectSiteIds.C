@@ -39,80 +39,161 @@ namespace Foam
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-// void selectSiteIds::setRadius()
-// {
-//     for(label i = 0; i < noOfBins_; i++)
-//     {
-//        radius_[i] = (0.5 + scalar(i)) * binWidth();
-//     }
-// }
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Null constructor
 selectSiteIds::selectSiteIds()
 :
-    molSiteIds_()
+    siteIds_()
 {}
 
 
 
 selectSiteIds::selectSiteIds
 (
-    const potential& pot,
+    const constantMoleculeProperties& cP,
     const dictionary& dict
 )
 :
-    molSiteIds_()
+    siteIds_()
 {
-    const List<word> molecules (dict.lookup("molSiteIds"));
+    const List<word> sites (dict.lookup("siteIds"));
 
-    if(molecules.size() > 0)
+    if(sites.size() > 0)
     {
-        DynamicList<word> moleculesReduced(0);
-    
-        forAll(molecules, i)
+        if
+        ( 
+            (sites.size() == 1) &&
+            (sites[0] == "ALL")
+        )
         {
-            const word& moleculeName(molecules[i]);
-    
-            if(findIndex(moleculesReduced, moleculeName) == -1)
+            siteIds_.setSize(cP.nSiteTypes(), -1);
+            
+            forAll(cP.siteIds(), i)
             {
-                moleculesReduced.append(moleculeName);
+                siteIds_[i] = i;
             }
         }
-
-        //!!SL!!
-        //moleculesReduced.shrink();
-    
-        molSiteIds_.setSize(moleculesReduced.size(), -1);
-    
-        forAll(moleculesReduced, i)
+        else
         {
-            const word& moleculeName(moleculesReduced[i]);
-    
-            label siteId(findIndex(pot.siteIdList(), moleculeName));
-    
-            if(siteId == -1)
+            DynamicList<word> sitesReduced(0);
+        
+            forAll(sites, i)
             {
-                FatalErrorIn
-                (
-                    "selectSiteIds::selectSiteIds()"
-                )
-                    << "Cannot find id: " << moleculeName << nl << "in dictionary."
-                    << exit(FatalError);
+                const word& siteName(sites[i]);
+        
+                if(findIndex(sitesReduced, siteName) == -1)
+                {
+                    sitesReduced.append(siteName);
+                }
             }
-  
-            molSiteIds_[i] = siteId;
+        
+            siteIds_.setSize(sitesReduced.size(), -1);
+        
+            forAll(sitesReduced, i)
+            {
+                const word& siteName(sitesReduced[i]);
+        
+                label siteId(findIndex(cP.siteIds(), siteName));
+        
+                if(siteId == -1)
+                {
+                    FatalErrorIn
+                    (
+                        "selectSiteIds::selectSiteIds()"
+                    )
+                        << "Cannot find siteId: " << siteName
+                        << " in siteIds dictionary = " << sites
+                        << nl << exit(FatalError);
+                }
+        
+                siteIds_[i] = siteId;
+            }
         }
     }
     else
     {
-        molSiteIds_.setSize(pot.siteIdList().size(), -1);
+        FatalErrorIn
+        (
+            "selectSiteIds::selectSiteIds()"
+        )
+            << "siteIds need to be greater than 0 in dictionary."
+            << exit(FatalError);
+    }
+}
 
-        forAll(molSiteIds_, i)
+selectSiteIds::selectSiteIds
+(
+    const constantMoleculeProperties& cP,
+    const dictionary& dict,
+    const word& siteIdsHeader
+)
+:
+    siteIds_()
+{
+    const List<word> sites (dict.lookup(siteIdsHeader));
+
+    if(sites.size() > 0)
+    {
+        if
+        ( 
+            (sites.size() == 1) &&
+            (sites[0] == "ALL")
+        )
         {
-            molSiteIds_[i] = i;
+            siteIds_.setSize(cP.nSiteTypes(), -1);
+            
+            forAll(cP.siteIds(), i)
+            {
+                siteIds_[i] = i;
+            }
         }
+        else
+        {
+            DynamicList<word> sitesReduced(0);
+        
+            forAll(sites, i)
+            {
+                const word& siteName(sites[i]);
+        
+                if(findIndex(sitesReduced, siteName) == -1)
+                {
+                    sitesReduced.append(siteName);
+                }
+            }
+        
+            siteIds_.setSize(sitesReduced.size(), -1);
+        
+            forAll(sitesReduced, i)
+            {
+                const word& siteName(sitesReduced[i]);
+        
+                label siteId(findIndex(cP.siteIds(), siteName));
+        
+                if(siteId == -1)
+                {
+                    FatalErrorIn
+                    (
+                        "selectSiteIds::selectSiteIds()"
+                    )
+                        << "Cannot find siteId: " << siteName
+                        << " in siteIds dictionary = " << sites
+                        << nl << exit(FatalError);
+                }
+        
+                siteIds_[i] = siteId;
+            }
+        }
+    }
+    else
+    {
+        FatalErrorIn
+        (
+            "selectSiteIds::selectSiteIds()"
+        )
+            << "siteIds need to be greater than 0 in dictionary."
+            << exit(FatalError);
     }
 }
 

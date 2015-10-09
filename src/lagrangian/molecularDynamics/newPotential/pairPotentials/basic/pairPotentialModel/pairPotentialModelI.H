@@ -31,7 +31,15 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+inline const word& pairPotentialModel::name() const
+{
+    return name_;
+}
 
+inline const List<word>& pairPotentialModel::idList() const
+{
+    return idList_;
+}
 
 inline scalar pairPotentialModel::rMin() const
 {
@@ -61,6 +69,7 @@ inline bool pairPotentialModel::writeTables() const
 {
     return writeTables_;
 }
+
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

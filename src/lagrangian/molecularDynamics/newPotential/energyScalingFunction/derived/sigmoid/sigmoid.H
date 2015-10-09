@@ -83,7 +83,7 @@ public:
 		(
 			const word& name,
 			const dictionary& energyScalingFunctionProperties,
-			const pairPotential& pairPot,
+			const pairPotentialModel& pairPot,
 			const reducedUnits& rU
 		);
 
@@ -100,8 +100,7 @@ public:
         //- Read dictionary
         bool read
 		(
-			const dictionary& energyScalingFunctionProperties,
-			const reducedUnits& rU
+			const dictionary& energyScalingFunctionProperties
 		);
 };
 

@@ -41,7 +41,7 @@ SourceFiles
 // #include "electrostaticPotential.H"
 #include "reducedUnits.H"
 #include "constantMoleculeProperties.H"
-#include "potentialsCollector.H"
+#include "pairPotentials.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -60,13 +60,16 @@ class potentials
 
         const reducedUnits& redUnits_;
         
-        const constantMoleculeProperties cP_;
+        const constantMoleculeProperties& cP_;
         
-        potentialsCollector potentials_;
+        pairPotentials pairPotentials_;
         
         scalar potentialEnergyLimit_;
 
         labelList removalOrder_;
+        
+        // largest rCut of all pair and electrostatic potentials
+        scalar rCut_; 
 
         // Storage of potentials
 
@@ -97,7 +100,7 @@ public:
         (
             const polyMesh& mesh,
             const reducedUnits& rU,
-            const constantMoleculeProperties cP
+            const constantMoleculeProperties& cP
         );
 
 
@@ -116,9 +119,12 @@ public:
 
 //             inline const List<word>& siteIdList() const;
 
+                
+            const pairPotentials& pairPots() const;
+            
+//             pairPotentials& pairPotentials();
+            
             inline const scalar& potentialEnergyLimit() const;
-
-//             inline label nPairPotentials() const;
 
             inline const labelList& removalOrder() const;
 

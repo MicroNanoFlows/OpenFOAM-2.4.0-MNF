@@ -38,27 +38,28 @@ defineRunTimeSelectionTable(energyScalingFunction, dictionary);
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::energyScalingFunction::energyScalingFunction
+energyScalingFunction::energyScalingFunction
 (
     const word& name,
     const dictionary& energyScalingFunctionProperties,
-    const pairPotential& pairPot,
+    const pairPotentialModel& pairPot,
     const reducedUnits& rU
 )
 :
     name_(name),
     energyScalingFunctionProperties_(energyScalingFunctionProperties),
-    pairPot_(pairPot)
+    pairPot_(pairPot),
+    rU_(rU)
+    
 {}
 
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
 
-bool Foam::energyScalingFunction::read
+bool energyScalingFunction::read
 (
-    const dictionary& energyScalingFunctionProperties,
-    const reducedUnits& rU
+    const dictionary& energyScalingFunctionProperties
 )
 {
     energyScalingFunctionProperties_ = energyScalingFunctionProperties;
@@ -66,6 +67,41 @@ bool Foam::energyScalingFunction::read
     return true;
 }
 
+autoPtr<energyScalingFunction> energyScalingFunction::New
+(
+    const word& name,
+    const dictionary& energyScalingFunctionProperties,
+    const pairPotentialModel& pairPot,
+    const reducedUnits& rU
+)
+{
+    word energyScalingFunctionTypeName
+    (
+        energyScalingFunctionProperties.lookup("energyScalingFunction")
+    );
+
+    Info<< "Selecting energy scaling function "
+        << energyScalingFunctionTypeName << " for "
+        << name << " potential energy." << endl;
+
+    dictionaryConstructorTable::iterator cstrIter =
+        dictionaryConstructorTablePtr_->find(energyScalingFunctionTypeName);
+
+    if (cstrIter == dictionaryConstructorTablePtr_->end())
+    {
+        FatalErrorIn
+        (
+            "energyScalingFunction::New()"
+        )   << "Unknown energyScalingFunction type "
+            << energyScalingFunctionTypeName << nl << nl
+            << "Valid  energyScalingFunctions are: " << nl
+            << dictionaryConstructorTablePtr_->toc()
+            << exit(FatalError);
+    }
+
+    return autoPtr<energyScalingFunction>
+        (cstrIter()(name, energyScalingFunctionProperties, pairPot, rU));
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

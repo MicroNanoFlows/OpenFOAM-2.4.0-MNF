@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    distribution
+    
 
 Description
 
@@ -50,12 +50,6 @@ inline List<label> selectIds::molIds()
 {
     return molIds_;
 }
-
-// inline labelList& selectIds::molIds()
-// {
-//     return siteReferencePosition_;
-// }
-
 
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //

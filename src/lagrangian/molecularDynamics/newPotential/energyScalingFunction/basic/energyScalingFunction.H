@@ -40,7 +40,7 @@ SourceFiles
 #include "typeInfo.H"
 #include "runTimeSelectionTables.H"
 #include "autoPtr.H"
-#include "pairPotential.H"
+#include "pairPotentialModel.H"
 #include "reducedUnits.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -63,8 +63,10 @@ protected:
 
         dictionary energyScalingFunctionProperties_;
 
-        const pairPotential& pairPot_;
+        const pairPotentialModel& pairPot_;
 
+        const reducedUnits& rU_;
+        
 
     // Private Member Functions
 
@@ -91,7 +93,7 @@ public:
             (
                 const word& name,
                 const dictionary& energyScalingFunctionProperties,
-                const pairPotential& pairPot,
+                const pairPotentialModel& pairPot,
                 const reducedUnits& rU
             ),
             (name, energyScalingFunctionProperties, pairPot, rU)
@@ -105,7 +107,7 @@ public:
         (
             const word& name,
             const dictionary& energyScalingFunctionProperties,
-            const pairPotential& pairPot,
+            const pairPotentialModel& pairPot,
             const reducedUnits& rU
         );
 
@@ -117,7 +119,7 @@ public:
         (
             const word& name,
             const dictionary& energyScalingFunctionProperties,
-            const pairPotential& pairPot,
+            const pairPotentialModel& pairPot,
             const reducedUnits& rU
         );
 
@@ -140,8 +142,7 @@ public:
         //- Read energyScalingFunction dictionary
         virtual bool read
         (
-            const dictionary& energyScalingFunctionProperties,
-            const reducedUnits& rU
+            const dictionary& energyScalingFunctionProperties
         ) = 0;
 };
 
