@@ -51,6 +51,11 @@ inline List<label> selectIds::molIds()
     return molIds_;
 }
 
+inline List<word> selectIds::molIdNames() 
+{
+    return molIdNames_;
+}
+
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 

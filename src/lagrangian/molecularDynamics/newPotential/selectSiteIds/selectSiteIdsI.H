@@ -51,6 +51,12 @@ inline List<label> selectSiteIds::siteIds()
     return siteIds_;
 }
 
+
+inline List<word> selectSiteIds::siteIdNames() 
+{
+    return siteIdNames_;
+}
+
 // inline labelList& selectIds::molIds()
 // {
 //     return siteReferencePosition_;

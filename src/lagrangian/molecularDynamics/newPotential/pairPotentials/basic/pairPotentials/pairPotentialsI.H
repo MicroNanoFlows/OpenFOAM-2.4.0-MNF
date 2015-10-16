@@ -52,6 +52,15 @@ inline const List<label>& pairPotentials::pairIds() const
     return pairIds_;
 }
 
+inline autoPtr<pairPotentialModel>& pairPotentials::electrostaticPot()
+{
+    return electrostaticPotential_;
+}
+
+inline const autoPtr<pairPotentialModel>& pairPotentials::electrostaticPot() const
+{
+    return electrostaticPotential_;
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

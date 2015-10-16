@@ -83,13 +83,13 @@ void polyPDBreader::setInitialConfiguration()
 
     selectIds ids
     (
-        molCloud_.pot(),
+        molCloud_.cP(),
         mdInitialiseDict_
     );
 
     molIds_ = ids.molIds();
     
-    const List<word>& idList(molCloud_.pot().idList());
+    const List<word>& idList(molCloud_.cP().molIds());
     
     molIdNames_.setSize(molIds_.size());
     

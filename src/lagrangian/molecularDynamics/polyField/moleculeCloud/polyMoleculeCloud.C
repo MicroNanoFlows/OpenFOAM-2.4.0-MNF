@@ -41,7 +41,7 @@ namespace Foam
 };
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
+/*
 void Foam::polyMoleculeCloud::buildConstProps()
 {
     Info<< nl << "Reading moleculeProperties dictionary." << endl;
@@ -104,7 +104,7 @@ void Foam::polyMoleculeCloud::buildConstProps()
         }
     }
 }
-
+*/
 
 void Foam::polyMoleculeCloud::setSiteSizesAndPositions()
 {
@@ -112,11 +112,11 @@ void Foam::polyMoleculeCloud::setSiteSizesAndPositions()
 
     for (mol = this->begin(); mol != this->end(); ++mol)
     {
-        const polyMolecule::constantProperties& cP = constProps(mol().id());
+//         const polyMolecule::constantProperties& cP = constProps(mol().id());
+        
+        mol().setSiteSizes(cP_.nSites(mol().id()));
 
-        mol().setSiteSizes(cP.nSites());
-
-        mol().setSitePositions(cP);
+        mol().setSitePositions(cP_);
     }
 }
 
@@ -148,19 +148,12 @@ void Foam::polyMoleculeCloud::buildCellOccupancy()
 // NEW //
 void Foam::polyMoleculeCloud::checkForOverlaps()
 {
+    const scalar& potLim = p_.potentialEnergyLimit();
+    
     Info<< nl << "Removing high energy overlaps, limit = "
-    << pot_.potentialEnergyLimit()
-    << nl << "Removal order:";
-
-    forAll(pot_.removalOrder(), rO)
-    {
-        if(pot_.removalOrder()[rO] != -1)
-        {
-            Info<< ' ' << pot_.idList()[pot_.removalOrder()[rO]];
-        }
-    }
-
-    Info<< nl ;
+        << potLim
+        << ", from removalOrder list = " << p_.removalOrder()
+        << endl;
 
     label initialSize = this->size();
 
@@ -179,7 +172,6 @@ void Foam::polyMoleculeCloud::checkForOverlaps()
     polyMolecule* molI = NULL;
     polyMolecule* molJ = NULL;
 
-    const scalar& potLim = pot_.potentialEnergyLimit();
 
     {
         // Real-Real interactions
@@ -212,8 +204,8 @@ void Foam::polyMoleculeCloud::checkForOverlaps()
                             {
                                 label idJ = molJ->id();
 
-                                label removeIdI = findIndex(pot_.removalOrder(), idI);
-                                label removeIdJ = findIndex(pot_.removalOrder(), idJ);
+                                label removeIdI = findIndex(p_.removalOrder(), idI);
+                                label removeIdJ = findIndex(p_.removalOrder(), idJ);
 
                                 if(removeIdI < removeIdJ)
                                 {
@@ -246,8 +238,8 @@ void Foam::polyMoleculeCloud::checkForOverlaps()
                             {
                                 label idJ = molJ->id();
 
-                                label removeIdI = findIndex(pot_.removalOrder(), idI);
-                                label removeIdJ = findIndex(pot_.removalOrder(), idJ);
+                                label removeIdI = findIndex(p_.removalOrder(), idI);
+                                label removeIdJ = findIndex(p_.removalOrder(), idJ);
 
                                 if(removeIdI < removeIdJ)
                                 {
@@ -302,8 +294,8 @@ void Foam::polyMoleculeCloud::checkForOverlaps()
                                     label idJ = molJ->id();
                                     label idI = molI->id();
 
-                                    label removeIdI = findIndex(pot_.removalOrder(), idI);
-                                    label removeIdJ = findIndex(pot_.removalOrder(), idJ);
+                                    label removeIdI = findIndex(p_.removalOrder(), idI);
+                                    label removeIdJ = findIndex(p_.removalOrder(), idJ);
 
                                     if(removeIdI < removeIdJ)
                                     {
@@ -336,7 +328,7 @@ void Foam::polyMoleculeCloud::checkForOverlaps()
         Pout << nl << " WARNING: Deleting molecule "
             <<  " proc no = " << Pstream::myProcNo()
             << ", position = " << molsToDelete[mTD]->position()
-            << ", molecule = " << pot_.idList()[molsToDelete[mTD]->id()]
+            << ", molecule = " << cP_.molIds()[molsToDelete[mTD]->id()]
             << endl;
 
         deleteParticle(*(molsToDelete[mTD]));
@@ -363,7 +355,7 @@ void Foam::polyMoleculeCloud::checkForOverlaps()
 
     prepareInteractions();
 }
-
+/*
 void Foam::polyMoleculeCloud::removeHighEnergyOverlaps()
 {
     Info<< nl << "Removing high energy overlaps, limit = "
@@ -569,7 +561,7 @@ void Foam::polyMoleculeCloud::removeHighEnergyOverlaps()
         }
     }
     
-}
+}*/
 
 
 Foam::label Foam::polyMoleculeCloud::nSites() const
@@ -580,7 +572,8 @@ Foam::label Foam::polyMoleculeCloud::nSites() const
 
     for (mol = this->begin(); mol != this->end(); ++mol)
     {
-        n += constProps(mol().id()).nSites();
+//         n += constProps(mol().id()).nSites();
+        n += cP_.nSites(mol().id());
     }
 
     return n;
@@ -643,7 +636,7 @@ void Foam::polyMoleculeCloud::checkMoleculesInMesh()
         Pout << nl << " WARNING: Molecule Outside Mesh - Deleting molecule "
                     <<  " proc no = " << Pstream::myProcNo()
                     << ", position = " << molsToDelete[mTD]->position()
-                    << ", molecule = " << pot_.idList()[molsToDelete[mTD]->id()]
+                    << ", molecule = " << cP_.molIds()[molsToDelete[mTD]->id()]
                     << endl;
 
         deleteParticle(*(molsToDelete[mTD]));
@@ -669,25 +662,27 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
 (
     Time& t,
     const polyMesh& mesh,
-    const potential& pot,
+    const potentials& p,
     const reducedUnits& rU,
+    const constantMoleculeProperties& cP, 
     cachedRandomMD& rndGen
 )
 :
     Cloud<polyMolecule>(mesh, "polyMoleculeCloud", false),
     mesh_(mesh),
-    pot_(pot),
+    p_(p),
     redUnits_(rU),
+    cP_(cP),
     rndGen_(rndGen),
     cellOccupancy_(mesh_.nCells()),
-    constPropList_(),
+//     constPropList_(),
     fields_(t, mesh_, *this),
     boundaries_(t, mesh, *this),
     controllers_(t, mesh, *this),
     trackingInfo_(mesh, *this),
     moleculeTracking_(),
     cyclics_(t, mesh_, -1), 
-    iL_(mesh, rU, cyclics_, pot_.pairPotentials().rCutMax(), "poly"),
+    iL_(mesh, rU, cyclics_, p_.rCutMax(), "poly"),
     ipl_(mesh.nCells()),
 	clock_(t, "evolve", true)
 {
@@ -695,7 +690,7 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
 
     rndGen.initialise(this->size() != 0 ? this->size() : 10000); //Initialise the random number cache (initialise to 10000 if size is zero)
 
-    buildConstProps();
+//     buildConstProps();
 
     setSiteSizesAndPositions();
 
@@ -728,8 +723,9 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
 (
     Time& t,
     const polyMesh& mesh,
-    const potential& pot,
+    const potentials& p,
     const reducedUnits& rU,
+    const constantMoleculeProperties& cP,
     cachedRandomMD& rndGen, 
     const word& option,
     const bool& clearFields
@@ -737,18 +733,19 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     :
     Cloud<polyMolecule>(mesh, "polyMoleculeCloud", false),
     mesh_(mesh),
-    pot_(pot),
+    p_(p),    
     redUnits_(rU),
+    cP_(cP),
     rndGen_(rndGen),    
     cellOccupancy_(mesh_.nCells()),
-    constPropList_(),
+//     constPropList_(),
     fields_(t, mesh_),
     boundaries_(t, mesh),
     controllers_(t, mesh),
     trackingInfo_(mesh, *this),
     moleculeTracking_(),
     cyclics_(t, mesh_, -1),
-    iL_(mesh, rU, cyclics_, pot_.pairPotentials().rCutMax(), "poly"),
+    iL_(mesh, rU, cyclics_, p_.rCutMax(), "poly"),
     ipl_(mesh.nCells()),
 	clock_(t, "evolve", true)
 {
@@ -776,7 +773,7 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
         updateTrackingNumbersAfterRead();
     }
     
-    buildConstProps();
+//     buildConstProps();
     setSiteSizesAndPositions();
 
     if((option == "mdInitialise") && clearFields)
@@ -838,14 +835,15 @@ Foam::autoPtr<Foam::polyMoleculeCloud> Foam::polyMoleculeCloud::New
 (
     Time& t,
     const polyMesh& mesh,
-    const potential& pot,
+    const potentials& p,
     const reducedUnits& rU,
+    const constantMoleculeProperties& cP, 
     cachedRandomMD& rndGen
 )
 {
     return autoPtr<polyMoleculeCloud>
     (
-        new polyMoleculeCloud(t, mesh, pot, rU, rndGen)
+        new polyMoleculeCloud(t, mesh, p, rU, cP, rndGen)
     );
 }
 
@@ -853,8 +851,9 @@ Foam::autoPtr<Foam::polyMoleculeCloud> Foam::polyMoleculeCloud::New
 (
     Time& t,
     const polyMesh& mesh,
-    const potential& pot,
+    const potentials& p,
     const reducedUnits& rU,
+    const constantMoleculeProperties& cP, 
     cachedRandomMD& rndGen,
     const word& option,
     const bool& clearFields
@@ -862,7 +861,7 @@ Foam::autoPtr<Foam::polyMoleculeCloud> Foam::polyMoleculeCloud::New
 {
     return autoPtr<polyMoleculeCloud>
     (
-        new polyMoleculeCloud(t, mesh, pot, rU, rndGen, option, clearFields)
+        new polyMoleculeCloud(t, mesh, p, rU, cP, rndGen, option, clearFields)
     );
 }
 
@@ -902,7 +901,8 @@ void  Foam::polyMoleculeCloud::createMolecule
             pi,
             tau,
             specialPosition,
-            constProps(id),
+//             constProps(id),
+            cP_,
             special,
             id,
             fraction,
@@ -1011,8 +1011,8 @@ void Foam::polyMoleculeCloud::updateAfterMove(const scalar& trackTime)
     {
         if(!mol().frozen())
         {
-            const polyMolecule::constantProperties& cP = constProps(mol().id());
-            mol().updateAfterMove(cP, trackTime);
+//             const polyMolecule::constantProperties& cP = constProps(mol().id());
+            mol().updateAfterMove(cP_, trackTime);
         }
     }
 }
@@ -1023,8 +1023,8 @@ void Foam::polyMoleculeCloud::velocityUpdate(const scalar& trackTime)
     {
         if(!mol().frozen())
         {
-            const polyMolecule::constantProperties& cP = constProps(mol().id());
-            mol().updateHalfVelocity(cP, trackTime);
+//             const polyMolecule::constantProperties& cP = constProps(mol().id());
+            mol().updateHalfVelocity(cP_, trackTime);
         }
     }
 }
@@ -1035,8 +1035,8 @@ void Foam::polyMoleculeCloud::accelerationUpdate()
     {
         if(!mol().frozen())
         {
-            const polyMolecule::constantProperties& cP = constProps(mol().id());
-            mol().updateAcceleration(cP);
+//             const polyMolecule::constantProperties& cP = constProps(mol().id());
+            mol().updateAcceleration(cP_);
         }
     }
 }
@@ -1213,13 +1213,14 @@ void Foam::polyMoleculeCloud::writeXYZ(const fileName& fName) const
 
     for (mol = this->begin(); mol != this->end(); ++mol)
     {
-        const polyMolecule::constantProperties& cP = constProps(mol().id());
+//         const polyMolecule::constantProperties& cP = constProps(mol().id());
 
         forAll(mol().sitePositions(), i)
         {
             const point& sP = mol().sitePositions()[i];
 
-            os << pot_.siteIdList()[cP.sites()[i].siteId()]
+//             os << pot_.siteIdList()[cP.sites()[i].siteId()]
+            os << cP_.siteNames(mol().id())[i]
                 << ' ' << sP.x()*redUnits_.refLength()*1.0e10
                 << ' ' << sP.y()*redUnits_.refLength()*1.0e10
                 << ' ' << sP.z()*redUnits_.refLength()*1.0e10
@@ -1279,19 +1280,21 @@ void Foam::polyMoleculeCloud::writeReferredCloud()
             mol
         )
         {
-            const polyMolecule::constantProperties& cP = constProps(mol().id());
+//             const polyMolecule::constantProperties& cP = constProps(mol().id());
 
             forAll(mol().sitePositions(), j)
             {            
             	const point& sP = mol().sitePositions()[j];
 
-                os1 << pot_.siteIdList()[cP.sites()[j].siteId()]
+//                 os1 << pot_.siteIdList()[cP.sites()[j].siteId()]
+                    os1 << cP_.siteNames(mol().id())[j]
                         << ' ' << sP.x()*redUnits_.refLength()*1e10
                         << ' ' << sP.y()*redUnits_.refLength()*1e10
                         << ' ' << sP.z()*redUnits_.refLength()*1e10
                         << nl;
                         
-                os2 << pot_.siteIdList()[cP.sites()[j].siteId()]
+//                 os2 << pot_.siteIdList()[cP.sites()[j].siteId()]
+                   os2 << cP_.siteNames(mol().id())[j]    
                         << ' ' << sP.x()
                         << ' ' << sP.y()
                         << ' ' << sP.z()

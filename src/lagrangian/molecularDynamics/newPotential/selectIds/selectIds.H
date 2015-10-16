@@ -56,7 +56,7 @@ class selectIds
 
         List<label> molIds_;
 
-
+        List<word> molIdNames_;
 
     // Private Member Functions
 
@@ -93,6 +93,7 @@ public:
         // Access
 
             inline List<label> molIds();
+            inline List<word> molIdNames();            
 //             inline labelList& molIds();
 
 

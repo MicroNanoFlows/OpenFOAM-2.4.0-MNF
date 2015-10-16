@@ -53,10 +53,10 @@ polyFaceTracker::polyFaceTracker
 :
     mesh_(refCast<const fvMesh>(mesh)),
     molCloud_(molCloud),
-    molIdFlux_(molCloud_.pot().idList().size()),
-    massIdFlux_(molCloud_.pot().idList().size()),
-    absMomIdFlux_(molCloud_.pot().idList().size()),
-    momIdFlux_(molCloud_.pot().idList().size())
+    molIdFlux_(molCloud_.cP().molIds().size()),
+    massIdFlux_(molCloud_.cP().molIds().size()),
+    absMomIdFlux_(molCloud_.cP().molIds().size()),
+    momIdFlux_(molCloud_.cP().molIds().size())
 
 {
     forAll(molIdFlux_, i)
@@ -101,8 +101,9 @@ void polyFaceTracker::updateFields
 {
     const label& crossedFace = mol.face();
     const label& molId = mol.id();
-    const polyMolecule::constantProperties& constProp = molCloud_.constProps(molId);
-    const scalar& mass = constProp.mass();
+//     const polyMolecule::constantProperties& constProp = molCloud_.constProps(molId);
+    
+    const scalar& mass = molCloud_.cP().mass(molId);
     const vector& U = mol.v();
     const vector mom = mol.v()*mass;
 //     const scalar pE = mol.potentialEnergy();

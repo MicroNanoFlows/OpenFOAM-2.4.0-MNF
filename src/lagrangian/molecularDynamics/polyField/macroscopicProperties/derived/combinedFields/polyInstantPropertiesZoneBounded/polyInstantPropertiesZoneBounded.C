@@ -90,7 +90,7 @@ polyInstantPropertiesZoneBounded::polyInstantPropertiesZoneBounded
 
     selectIds ids
     (
-        molCloud_.pot(),
+        molCloud_.cP(),
         propsDict_
     );
 
@@ -129,10 +129,10 @@ void polyInstantPropertiesZoneBounded::calculateField()
             {
                 if(boxes_[b].contains(mol().position()))
                 {
-                    const polyMolecule::constantProperties& constProp = molCloud_.constProps(mol().id());
+//                     const polyMolecule::constantProperties& constProp = molCloud_.constProps(mol().id());
                     mols += 1.0;
                     vel += mol().v();
-                    frc += constProp.mass()*mol().a();
+                    frc += molCloud_.cP().mass(mol().id())*mol().a();
                 }
             }
         }

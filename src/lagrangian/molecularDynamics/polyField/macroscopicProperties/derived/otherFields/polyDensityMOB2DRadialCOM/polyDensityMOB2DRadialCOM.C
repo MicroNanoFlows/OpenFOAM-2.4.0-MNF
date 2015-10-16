@@ -96,7 +96,7 @@ polyDensityMOB2DRadialCOM::polyDensityMOB2DRadialCOM
 
     selectIds ids
     (
-        molCloud_.pot(),
+        molCloud_.cP(),
         propsDict_
     );
 
@@ -288,10 +288,9 @@ void polyDensityMOB2DRadialCOM::calculateField()
 
 				if(findIndex(molIds_, molI->id()) != -1)
 				{
-				const polyMolecule::constantProperties& constProp
-						= molCloud_.constProps(molI->id());
-				mass += constProp.mass();
-				centreOfMass += constProp.mass()*rI;
+                    const scalar& massI = molCloud_.cP().mass(molI->id());
+                    mass += massI;
+                    centreOfMass += massI*rI;
 				}
 			}
 		}

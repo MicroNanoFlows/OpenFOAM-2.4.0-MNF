@@ -85,7 +85,7 @@ void polySimpleLatticeZoneMixtures::setInitialConfiguration()
     const scalar minSpacing(readScalar(mdInitialiseDict_.lookup("minSpacing")));
 
     const List<word> molIdNames(mdInitialiseDict_.lookup("molIds")); 
-    const List<word>& idList(molCloud_.pot().idList());
+    const List<word>& idList(molCloud_.cP().molIds());
 
     molIds_.setSize(molIdNames.size(), -1);
 

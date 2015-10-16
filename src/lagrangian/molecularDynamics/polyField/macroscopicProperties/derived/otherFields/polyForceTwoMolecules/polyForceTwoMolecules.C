@@ -46,8 +46,8 @@ void polyForceTwoMolecules::setMolIds()
     const word molNameA(propsDict_.lookup("molSiteIdA"));
     const word molNameB(propsDict_.lookup("molSiteIdB"));
 
-    label molIdA(findIndex(molCloud_.pot().idList(), molNameA));
-    label molIdB(findIndex(molCloud_.pot().idList(), molNameB));
+    label molIdA(findIndex(molCloud_.cP().molIds(), molNameA));
+    label molIdB(findIndex(molCloud_.cP().molIds(), molNameB));
 
     if(molIdA == -1)
     {
@@ -228,13 +228,13 @@ void polyForceTwoMolecules::calculateField()
     
         for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
         {
-            const polyMolecule::constantProperties& cP = molCloud_.constProps(mol().id());
+//             const polyMolecule::constantProperties& cP = molCloud_.constProps(mol().id());
             
             if(mol().trackingNumber() == molTrackingNoA_)
             {
                 cellA_ = mol().cell();
                 molPositionA_ = mol().position();
-                forceSiteA = mol().a()*cP.mass();
+                forceSiteA = mol().a()*molCloud_.cP().mass(mol().id());
                 virialSiteA = mol().rf();
 
                 Pout<< "A: track poly mol position: " << molPositionA_ 
@@ -260,13 +260,11 @@ void polyForceTwoMolecules::calculateField()
     
         for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
         {
-            const polyMolecule::constantProperties& cP = molCloud_.constProps(mol().id());
-
             if(mol().trackingNumber() == molTrackingNoB_)
             {
                 cellB_ = mol().cell();
                 molPositionB_ = mol().position();
-                forceSiteB = mol().a()*cP.mass();
+                forceSiteB = mol().a()*molCloud_.cP().mass(mol().id());
                 virialSiteB = mol().rf();
 
                 Pout<< "A: track poly mol position: " << molPositionB_ 

@@ -83,10 +83,23 @@ class pairPotentials
         List<List<label> > pairPotLinks_;
 
 
+        // this is a fixed electrostatic short range potential applied to all
+        // charged sites 
+        autoPtr<pairPotentialModel> electrostaticPotential_;
         
-        // these are electrostatic potentials
         
+        // these are the electrostatic potentials
         
+//         PtrList<entry> electrostaticPotentialsList_;
+//         List<word> electrostaticNames_;
+//         List<label> electrostaticIds_;
+//         List< autoPtr<electrostaticModel> > electrostaticPotentials_;
+        
+        // linking pairpotids to potential storage
+        // outer list size of cP_.()
+        // inner list size of cP_.()
+        // store index of pairPotentials_
+//         List<List<label> > electrostaticLinks_;
 
         
         
@@ -94,6 +107,7 @@ class pairPotentials
         // private member functions 
         
             void testPairPotentials();
+
             
         
 public:
@@ -120,27 +134,46 @@ public:
         inline const List< autoPtr<pairPotentialModel> >& pairPots() const;
         inline const List<word>& pairNames() const;
         inline const List<label>& pairIds() const;
+
+        inline autoPtr<pairPotentialModel>& electrostaticPot();
+        inline const autoPtr<pairPotentialModel>& electrostaticPot() const;        
         
-        scalar pairForce
-        (
-            const label& pairSiteA,
-            const label& pairSiteB,
-            const scalar& r
-        );
         
-        scalar pairEnergy
+        
+        scalar force
         (
-            const label& pairSiteA,
-            const label& pairSiteB,
-            const scalar& r
-        );
+            const label pairSiteA,
+            const label pairSiteB,
+            const scalar r
+        ) const;
+        
+        scalar energy
+        (
+            const label pairSiteA,
+            const label pairSiteB,
+            const scalar r
+        ) const;
 
         bool rCutSqr
         (
+            const label pairSiteA,
+            const label pairSiteB,
+            const scalar r
+        ) const;         
+
+        scalar rMin
+        (
+            const label pairSiteA,
+            const label pairSiteB
+        ) const;
+        
+        const List< List<label> >& pairPotLinks() const;
+        
+        const label& pairPotLink
+        (
             const label& pairSiteA,
-            const label& pairSiteB,
-            const scalar& r
-        );         
+            const label& pairSiteB            
+        ) const;
         
     // Ostream Operator
 

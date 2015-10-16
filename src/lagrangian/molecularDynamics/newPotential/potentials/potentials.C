@@ -74,6 +74,7 @@ void potentials::readPotentialDict()
             }
         }
 
+        // fill in remaining spots arbitrarily
         forAll(cP_.molIds(), i)
         {
             if(findIndex(removalOrder, i) == -1)
@@ -83,6 +84,8 @@ void potentials::readPotentialDict()
         }
 
         removalOrder_.transfer(removalOrder);
+        
+        Info << "setup removalOrder = " << removalOrder_ << endl;
     }
     else
     {
@@ -118,7 +121,7 @@ potentials::potentials
     redUnits_(rU),
     cP_(cP),
     pairPotentials_(mesh, cP, rU),
-    rCut_(pairPotentials_.maxRCut())
+    rCutMax_(pairPotentials_.maxRCut())
 {
     readPotentialDict();
 }
@@ -128,10 +131,24 @@ potentials::potentials
 potentials::~potentials()
 {}
 
+
+
+
 const pairPotentials& potentials::pairPots() const
 {
     return pairPotentials_;
 }
+
+const scalar& potentials::rCutMax() const
+{
+    return rCutMax_;
+}
+
+
+// pairPotentials& potentials::pairPots()
+// {
+//     return pairPotentials_;
+// }
 
 // Foam::pairPotentials& Foam::potentials::pairPotentials()
 // {

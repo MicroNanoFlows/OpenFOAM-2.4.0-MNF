@@ -92,7 +92,7 @@ polyMassFluxZone::polyMassFluxZone
 
     selectIds ids
     (
-        molCloud_.pot(),
+        molCloud_.cP(),
         propsDict_
     );
 
@@ -149,9 +149,9 @@ void polyMassFluxZone::calculateField()
             if(findIndex(molIds_, molI->id()) != -1)
             {
                 mols += 1.0;
-                const polyMolecule::constantProperties& constProp = molCloud_.constProps(molI->id());
-                mass += constProp.mass();
-                mom += molI->v()*constProp.mass();
+                const scalar& massI = molCloud_.cP().mass(molI->id());
+                mass += massI;
+                mom += molI->v()*massI;
             }
         }
     }

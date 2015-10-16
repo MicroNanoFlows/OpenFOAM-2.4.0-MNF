@@ -95,7 +95,7 @@ void polySimpleLattice::setInitialConfiguration()
     }
 
     const word molIdName(mdInitialiseDict_.lookup("molId")); 
-    const List<word>& idList(molCloud_.pot().idList());
+    const List<word>& idList(molCloud_.cP().molIds());
 
     label molId = findIndex(idList, molIdName);
 
@@ -243,9 +243,9 @@ void polySimpleLattice::setInitialConfiguration()
         }
         else if (mdInitialiseDict_.found("massDensity"))
         {
-            const polyMolecule::constantProperties& cP(molCloud_.constProps(molId));
+//             const polyMolecule::constantProperties& cP(molCloud_.constProps(molId));
     
-            scalar mass = cP.mass();
+            scalar mass = molCloud_.cP().mass(molId);
     
             Info << "mass: " << mass << endl;
     
@@ -265,9 +265,9 @@ void polySimpleLattice::setInitialConfiguration()
         }
         else if (mdInitialiseDict_.found("massDensitySI"))
         {
-            const polyMolecule::constantProperties& cP(molCloud_.constProps(molId));
+//             const polyMolecule::constantProperties& cP(molCloud_.constProps(molId));
     
-            scalar mass = cP.mass();
+            scalar mass = molCloud_.cP().mass(molId);
     
             Info << "mass: " << mass << endl;
     

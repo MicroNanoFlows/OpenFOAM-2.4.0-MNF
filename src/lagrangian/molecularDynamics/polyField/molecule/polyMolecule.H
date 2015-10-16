@@ -41,10 +41,11 @@ SourceFiles
 #include "particle.H"
 #include "IOstream.H"
 #include "autoPtr.H"
-#include "diagTensor.H"
-#include "reducedUnits.H"
+// #include "diagTensor.H"
+// #include "reducedUnits.H"
+#include "constantMoleculeProperties.H"
 
-#include "constPropSite.H"
+// #include "constPropSite.H"
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -79,6 +80,7 @@ public:
         SPECIAL_USER     = 2
     };
 
+    /*
     //- Class to hold molecule constant properties
     class constantProperties
     {
@@ -141,7 +143,7 @@ public:
         inline scalar mass() const;
 
         inline label nSites() const;
-    };
+    };*/
 
 
     //- Class used to pass tracking data to the trackToFace function
@@ -250,7 +252,8 @@ public:
             const vector& pi,
             const vector& tau,
             const vector& specialPosition,
-            const constantProperties& constProps,
+//             const constantProperties& constProps,
+            const constantMoleculeProperties& cP,
             const label special,
             const label id,
             const scalar& frac,
@@ -300,24 +303,24 @@ public:
 
             void transformProperties(const vector& separation);
 
-            void setSitePositions(const constantProperties& constProps);
+            void setSitePositions(const constantMoleculeProperties& cP);
 
             void setSiteSizes(label size);
 
             void updateHalfVelocity
             (
-                const constantProperties& constProps,
+                const constantMoleculeProperties& cP,
                 const scalar& trackTime
             );
 
             void updateAcceleration
             (
-                const constantProperties& constProps
+                const constantMoleculeProperties& cP
             );
 
             void updateAfterMove
             (
-                const constantProperties& constProps,
+                const constantMoleculeProperties& cP,
                 const scalar& trackTime
             );
 

@@ -89,7 +89,8 @@ selectIds::selectIds
             }
         
             molIds_.setSize(moleculesReduced.size(), -1);
-        
+            molIdNames_.setSize(moleculesReduced.size());
+            
             forAll(moleculesReduced, i)
             {
                 const word& moleculeName(moleculesReduced[i]);
@@ -107,6 +108,7 @@ selectIds::selectIds
                 }
         
                 molIds_[i] = molId;
+                molIdNames_[i] = moleculeName;
             }
         }
     }
@@ -162,7 +164,8 @@ selectIds::selectIds
             }
         
             molIds_.setSize(moleculesReduced.size(), -1);
-        
+            molIdNames_.setSize(moleculesReduced.size());
+            
             forAll(moleculesReduced, i)
             {
                 const word& moleculeName(moleculesReduced[i]);
@@ -180,6 +183,8 @@ selectIds::selectIds
                 }
         
                 molIds_[i] = molId;
+                molIdNames_[i] = moleculeName;
+                
             }
         }
     }

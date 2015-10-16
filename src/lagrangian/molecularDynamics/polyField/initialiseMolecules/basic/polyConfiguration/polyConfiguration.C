@@ -108,9 +108,9 @@ vector polyConfiguration::equipartitionLinearVelocity
 {
     return sqrt(molCloud_.redUnits().kB()*temperature/mass)*vector
     (
-		molCloud_.rndGen().GaussNormalMD<scalar>(),
-		molCloud_.rndGen().GaussNormalMD<scalar>(),
-		molCloud_.rndGen().GaussNormalMD<scalar>()
+        molCloud_.rndGen().GaussNormalMD<scalar>(),
+        molCloud_.rndGen().GaussNormalMD<scalar>(),
+        molCloud_.rndGen().GaussNormalMD<scalar>()
     );
 }
 
@@ -120,26 +120,24 @@ vector polyConfiguration::equipartitionAngularMomentum
     label id
 )
 {
-    const polyMolecule::constantProperties& cP = molCloud_.constProps(id);
-
     scalar sqrtKbT = sqrt(molCloud_.redUnits().kB()*temperature);
 
-    if (cP.linearMolecule())
+    if (molCloud_.cP().linearMolecule(id))
     {
         return sqrtKbT*vector
         (
             0.0,
-            sqrt(cP.momentOfInertia().yy())*molCloud_.rndGen().GaussNormalMD<scalar>(),
-            sqrt(cP.momentOfInertia().zz())*molCloud_.rndGen().GaussNormalMD<scalar>()
+            sqrt(molCloud_.cP().momentOfInertia(id).yy())*molCloud_.rndGen().GaussNormalMD<scalar>(),
+            sqrt(molCloud_.cP().momentOfInertia(id).zz())*molCloud_.rndGen().GaussNormalMD<scalar>()
         );
     }
     else
     {
         return sqrtKbT*vector
         (
-            sqrt(cP.momentOfInertia().xx())*molCloud_.rndGen().GaussNormalMD<scalar>(),
-            sqrt(cP.momentOfInertia().yy())*molCloud_.rndGen().GaussNormalMD<scalar>(),
-            sqrt(cP.momentOfInertia().zz())*molCloud_.rndGen().GaussNormalMD<scalar>()
+            sqrt(molCloud_.cP().momentOfInertia(id).xx())*molCloud_.rndGen().GaussNormalMD<scalar>(),
+            sqrt(molCloud_.cP().momentOfInertia(id).yy())*molCloud_.rndGen().GaussNormalMD<scalar>(),
+            sqrt(molCloud_.cP().momentOfInertia(id).zz())*molCloud_.rndGen().GaussNormalMD<scalar>()
         );
     }
 }
@@ -176,9 +174,9 @@ void polyConfiguration::insertMolecule
         special = polyMolecule::SPECIAL_FROZEN;
     }
 
-    const polyMolecule::constantProperties& cP = molCloud_.constProps(id);
+//     const polyMolecule::constantProperties& cP = molCloud_.constProps(id);
 
-    vector v = equipartitionLinearVelocity(temperature, cP.mass());
+    vector v = equipartitionLinearVelocity(temperature, molCloud_.cP().mass(id));
 
     v += bulkVelocity;
 
@@ -186,7 +184,7 @@ void polyConfiguration::insertMolecule
 
     tensor Q = I;
 
-    if (!cP.pointMolecule())
+    if (!molCloud_.cP().pointMolecule(id))
     {
         pi = equipartitionAngularMomentum(temperature, id);
         scalar phi(molCloud_.rndGen().sample01<scalar>()*constant::mathematical::twoPi);
@@ -268,9 +266,9 @@ void polyConfiguration::insertMolecule
             special = polyMolecule::SPECIAL_FROZEN;
         }
 
-        const polyMolecule::constantProperties& cP = molCloud_.constProps(id);
+//         const polyMolecule::constantProperties& cP = molCloud_.constProps(id);
 
-        vector v = equipartitionLinearVelocity(temperature, cP.mass());
+        vector v = equipartitionLinearVelocity(temperature, molCloud_.cP().mass(id));
 
         v += bulkVelocity;
 
@@ -278,7 +276,7 @@ void polyConfiguration::insertMolecule
 
         tensor Q = I;
 
-        if (!cP.pointMolecule())
+        if (!molCloud_.cP().pointMolecule(id))
         {
             pi = equipartitionAngularMomentum(temperature, id);
             scalar phi(molCloud_.rndGen().sample01<scalar>()*constant::mathematical::twoPi);

@@ -115,7 +115,7 @@ polyBinsMethod::polyBinsMethod
 
     selectIds ids
     (
-        molCloud_.pot(),
+        molCloud_.cP(),
         propsDict_
     );
 
@@ -303,16 +303,18 @@ void polyBinsMethod::createField()
             {
                 if(findIndex(molIds_, molI->id()) != -1)
                 {
-                    const polyMolecule::constantProperties& constProp 
-                                = molCloud_.constProps(molI->id());
+//                     const polyMolecule::constantProperties& constProp 
+//                                 = molCloud_.constProps(molI->id());
 
                     mols[n] += 1.0;
 
-                    mass[n] += constProp.mass();
+                    const scalar& massI = molCloud_.cP().mass(molI->id());
+                    
+                    mass[n] += massI;
 
-                    mom[n] += constProp.mass()*molI->v();
+                    mom[n] += massI*molI->v();
 
-                    const diagTensor& molMoI(constProp.momentOfInertia());
+                    const diagTensor& molMoI(molCloud_.cP().momentOfInertia(molI->id()));
 
                     // angular speed 
                     const vector& molOmega(inv(molMoI) & molI->pi());
@@ -396,16 +398,15 @@ void polyBinsMethod::calculateField()
             {
                 if(findIndex(molIds_, molI->id()) != -1)
                 {
-                    const polyMolecule::constantProperties& constProp 
-                                = molCloud_.constProps(molI->id());
-
                     molsV_[n] += 1.0;
+                    
+                    const scalar& massI = molCloud_.cP().mass(molI->id());
+                    
+                    massV_[n] += massI;
 
-                    massV_[n] += constProp.mass();
+                    momV_[n] += massI*molI->v();
 
-                    momV_[n] += constProp.mass()*molI->v();
-
-                    const diagTensor& molMoI(constProp.momentOfInertia());
+                    const diagTensor& molMoI(molCloud_.cP().momentOfInertia(molI->id()));
 
                     // angular speed 
                     const vector& molOmega(inv(molMoI) & molI->pi());
@@ -497,11 +498,10 @@ void polyBinsMethod::calculateField()
             {
                 if(findIndex(molIds_, molI->id()) != -1)
                 {
-                    const polyMolecule::constantProperties& constProp 
-                                            = molCloud_.constProps(molI->id());
+//                     const polyMolecule::constantProperties& constProp 
+//                                             = molCloud_.constProps(molI->id());
 
-                    const scalar& massI = constProp.mass();
-
+                    const scalar& massI = molCloud_.cP().mass(molI->id());
                     mols_[n] += 1.0;
                     mass[n] += massI;
                     mom[n] += massI*molI->v();
@@ -509,10 +509,10 @@ void polyBinsMethod::calculateField()
                     kE_[n] += 0.5*massI*magSqr(molI->v() - velocity_[n]);
 
 
-                    dof_[n] += constProp.degreesOfFreedom();
+                    dof_[n] += molCloud_.cP().degreesOfFreedom(molI->id());
 
 
-                    const diagTensor& molMoI(constProp.momentOfInertia());
+                    const diagTensor& molMoI(molCloud_.cP().momentOfInertia(molI->id()));
 
                     // angular speed 
                     const vector& molOmega(inv(molMoI) & molI->pi());

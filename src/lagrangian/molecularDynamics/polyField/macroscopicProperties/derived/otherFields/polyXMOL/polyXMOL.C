@@ -66,7 +66,7 @@ polyXMOL::polyXMOL
 
     selectIds ids
     (
-        molCloud_.pot(),
+        molCloud_.cP(),
         propsDict_
     );
 
@@ -102,33 +102,16 @@ polyXMOL::~polyXMOL()
 
 void polyXMOL::createField()
 {
+    selectSiteIds sites
+    (
+        molCloud_.cP(),
+        propsDict_,
+        "sitesToExclude"
+    );
 
-    const List<word> moleculeSites(propsDict_.lookup("sitesToExclude"));
-    
-    const List<word>& siteIdList(molCloud_.pot().siteIdList());
+    List<word> siteNames = sites.siteIdNames();
 
-    DynamicList<word> sites(0);
-
-    forAll(moleculeSites, m)
-    {
-        if(findIndex(siteIdList, moleculeSites[m]) != -1)
-        {
-            if(findIndex(sites, moleculeSites[m]) == -1)
-            {
-                sites.append(moleculeSites[m]);
-            }
-        }
-        else
-        {
-            FatalErrorIn("void combinedPDB::writeField()")
-                << "Cannot find molecule site " << moleculeSites[m]
-                << abort(FatalError);
-        }
-    }
-    
-    //excludeSites_.transfer(sites.shrink());
-
-    excludeSites_.transfer(sites);
+    excludeSites_.transfer(siteNames);
 
     Info   << "sites to exclude: " << excludeSites_ << endl;
 }
@@ -164,11 +147,11 @@ void polyXMOL::writeInMesh(List<labelField>& molIds, List<vectorField>& sites)
             {
                 moleculeIds.append(mol().id());
 
-                const polyMolecule::constantProperties cP(molCloud_.constProps(mol().id()));
+//                 const polyMolecule::constantProperties cP(molCloud_.constProps(mol().id()));
 
                 forAll(mol().sitePositions(), i)
                 {
-                    if(findIndex(excludeSites_, cP.sites()[i].name()) == -1)
+                    if(findIndex(excludeSites_, molCloud_.cP().siteNames(mol().id())[i]) == -1)
                     {
                         sitePositions.append(mol().sitePositions()[i]);
                     }
@@ -209,11 +192,11 @@ void polyXMOL::writeInZone(List<labelField>& molIds, List<vectorField>& sites)
             {
                 moleculeIds.append(molI->id());
 
-                const polyMolecule::constantProperties cP(molCloud_.constProps(molI->id()));
+//                 const polyMolecule::constantProperties cP(molCloud_.constProps(molI->id()));
 
                 forAll(molI->sitePositions(), i)
                 {
-                    if(findIndex(excludeSites_, cP.sites()[i].name()) == -1)
+                    if(findIndex(excludeSites_, molCloud_.cP().siteNames(molI->id())[i]) == -1)
                     {
                         sitePositions.append(molI->sitePositions()[i]);
                     }
@@ -318,17 +301,17 @@ void polyXMOL::write()
             {
                 label molId = molIds[p][i];
 
-                const polyMolecule::constantProperties cP(molCloud_.constProps(molId));
+//                 const polyMolecule::constantProperties cP(molCloud_.constProps(molId));
 
-                label n = cP.nSites();
+                label n = molCloud_.cP().nSites(molId);
             
                 for (int i = 0; i < n; i++)
                 {
-                    if(findIndex(excludeSites_, cP.sites()[i].name()) == -1)
+                    if(findIndex(excludeSites_, molCloud_.cP().siteNames(molId)[i]) == -1)
                     {
                         vector rS = sites[p][posCounter]*rU.refLength()*1e10;
 
-                        str << cP.sites()[i].name()
+                        str <<  molCloud_.cP().siteNames(molId)[i]
                             << ' ' << rS.x()
                             << ' ' << rS.y()
                             << ' ' << rS.z()

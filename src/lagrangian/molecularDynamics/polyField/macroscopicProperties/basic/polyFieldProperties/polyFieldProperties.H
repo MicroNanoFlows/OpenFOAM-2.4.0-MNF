@@ -41,9 +41,6 @@ Description
 #include "dictionary.H"
 #include "autoPtr.H"
 #include "polyMesh.H"
-
-#include "potential.H"
-
 #include "polyField.H"
 
 

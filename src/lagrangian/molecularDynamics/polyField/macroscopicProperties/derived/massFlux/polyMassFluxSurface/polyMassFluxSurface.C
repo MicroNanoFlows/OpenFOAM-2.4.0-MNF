@@ -103,7 +103,7 @@ polyMassFluxSurface::polyMassFluxSurface
 
     selectIds ids
     (
-        molCloud_.pot(),
+        molCloud_.cP(),
         propsDict_
     );
 

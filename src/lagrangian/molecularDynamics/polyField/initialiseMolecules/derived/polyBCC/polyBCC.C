@@ -79,7 +79,7 @@ void polyBCC::setInitialConfiguration()
     const vector bulkVelocity(mdInitialiseDict_.lookup("bulkVelocity"));
 
     const word molIdName(mdInitialiseDict_.lookup("molId")); 
-    const List<word>& idList(molCloud_.pot().idList());
+    const List<word>& idList(molCloud_.cP().molIds());
 
     label molId = findIndex(idList, molIdName);
 
@@ -90,9 +90,9 @@ void polyBCC::setInitialConfiguration()
             << exit(FatalError);
     }
 
-    const polyMolecule::constantProperties& cP(molCloud_.constProps(molId));
+//     const polyMolecule::constantProperties& cP(molCloud_.constProps(molId));
 
-    scalar massI = cP.mass();
+    scalar massI = molCloud_.cP().mass(molId);
 
     bool frozen = false;
 
@@ -314,7 +314,7 @@ void polyBCC::setInitialConfiguration()
         
         selectIds ids
         (
-           molCloud_.pot(),
+           molCloud_.cP(),
            mdInitialiseDict_
         );
         

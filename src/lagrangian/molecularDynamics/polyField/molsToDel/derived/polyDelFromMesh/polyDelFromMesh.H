@@ -68,9 +68,7 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-        bool oneSpecie_;
-
-        label molId_;
+        List<label> molIds_;
 
     // Private Member Functions
 

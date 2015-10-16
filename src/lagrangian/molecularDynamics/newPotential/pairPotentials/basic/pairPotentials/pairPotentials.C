@@ -60,6 +60,11 @@ pairPotentials::pairPotentials
     pairNames_(pairPotentialsList_.size()),
     pairIds_(pairPotentialsList_.size()),
     pairPotentials_(pairPotentialsList_.size())
+    
+/*    electrostaticPotentialsList_(potentialsDict_.lookup("electrostatics")),
+    electrostaticNames_(electrostaticPotentialsList_.size()),
+    electrostaticIds_(electrostaticPotentialsList_.size()),
+    electrostaticPotentials_(electrostaticPotentialsList_.size())  */  
 {
    
     if(pairPotentialsList_.size() > 0 )
@@ -94,6 +99,42 @@ pairPotentials::pairPotentials
                 << " ); " 
                 << nl << abort(FatalError);       
     }
+    
+//     if(electrostaticPotentialsList_.size() > 0 )
+//     {
+//         forAll(electrostaticPotentialsList_, i)
+//         {
+//             const entry& potI = electrostaticPotentialsList_[i];
+//             const dictionary& potIDict = potI.dict();
+//             const word& headerName=potI.keyword();
+//             
+//             electrostaticPotentials_[i] = autoPtr<electrostaticModel>
+//             (
+//                 electrostaticModel::New(mesh, redUnits, headerName, potIDict)
+//             );
+//     
+//             electrostaticNames_[i] = electrostaticPotentials_[i]->type();
+//             electrostaticIds_[i] = i;
+//         }
+//     }
+//     else
+//     {
+//         // WARNING - TEST for charges in domain
+//         
+//     }
+   
+    // electrostatic potential 
+    
+    word headerName = "electrostatic";
+    
+    dictionary& dict = potentialsDict_.subDict(headerName);
+    
+    electrostaticPotential_ = autoPtr<pairPotentialModel>
+    (
+        pairPotentialModel::New(mesh, redUnits, headerName, dict)
+    );
+
+
     
     rCut_ = maxRCut();
 //     rCutSqr_ = rCut_*rCut_;
@@ -158,6 +199,8 @@ void pairPotentials::testPairPotentials()
     }
 }
 
+
+
 scalar pairPotentials::maxRCut()
 {
     scalar rCut = 0.0;
@@ -170,33 +213,51 @@ scalar pairPotentials::maxRCut()
         }
     }
     
+    if(electrostaticPotential_->rCut() > rCut)
+    {
+        rCut = electrostaticPotential_->rCut();
+    }    
+
+    
     return rCut;
 }        
 
-scalar pairPotentials::pairForce
+scalar pairPotentials::force
 (
-    const label& pairSiteA,
-    const label& pairSiteB,
-    const scalar& r
-)
+    const label pairSiteA,
+    const label pairSiteB,
+    const scalar r
+) const
 {
     label k = pairPotLinks_[pairSiteA][pairSiteB];
     
     return pairPotentials_[k]->force(r);
 }
 
-
-bool pairPotentials::rCutSqr
+scalar pairPotentials::energy
 (
-    const label& pairSiteA,
-    const label& pairSiteB,
-    const scalar& rCutSqr
-)
+    const label pairSiteA,
+    const label pairSiteB,
+    const scalar r
+) const
 {
     label k = pairPotLinks_[pairSiteA][pairSiteB];
     
-    if(pairPotentials_[k]->rCutSqr() <= rCutSqr)
-    {    
+    return pairPotentials_[k]->energy(r);
+}
+
+
+bool pairPotentials::rCutSqr
+(
+    const label pairSiteA,
+    const label pairSiteB,
+    const scalar rIJSqr
+) const
+{
+    label k = pairPotLinks_[pairSiteA][pairSiteB];
+    
+    if(rIJSqr <= pairPotentials_[k]->rCutSqr())
+    {
         return true;
     }
     else
@@ -205,7 +266,30 @@ bool pairPotentials::rCutSqr
     }
 }
 
+scalar pairPotentials::rMin
+(
+    const label pairSiteA,
+    const label pairSiteB
+) const
+{
+     label k = pairPotLinks_[pairSiteA][pairSiteB];
+    
+     return pairPotentials_[k]->rMin();
+}
 
+const List< List<label> >& pairPotentials::pairPotLinks() const
+{
+    return pairPotLinks_;
+}
+
+const label& pairPotentials::pairPotLink
+(
+    const label& pairSiteA,
+    const label& pairSiteB    
+) const
+{
+    return pairPotLinks_[pairSiteA][pairSiteB];
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

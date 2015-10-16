@@ -39,6 +39,11 @@ SourceFiles
 #include "Time.H"
 #include "polyMesh.H"
 #include "reducedUnits.H"
+#include "diagTensor.H"
+#include "transform.H"
+// #include "rotationTensor.H"
+
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
@@ -61,6 +66,12 @@ class constantMoleculeProperties
         
         // ordered list of molecule names
         List<word> names_;
+        
+        // list of total masses of each molecule type
+        List<scalar> masses_;
+        
+        // list of moment of inertia of each molecule type
+        List<diagTensor> momentOfInertia_;
         
         // outer list = molecule types, linked to cloud (e.g. polyMoleculeCloud)
         List<word> cloudTypes_;
@@ -123,7 +134,7 @@ class constantMoleculeProperties
         // outer list = molecule types
         // inner list = linked to pairPotNames_
         // each entry is an index to pairPotSiteIdList_
-        List< List<label> > pairPotNamesToFullSites_;
+        List< List<label> > pairPotNamesToPairPotSitesList_;
 
         // link between pairPotNames_ and siteNames_
         // outer list = molecule types
@@ -136,7 +147,17 @@ class constantMoleculeProperties
         // outer list = molecule types
         // inner list = linked to chargeNames_
         // each entry is an index to chargeSiteIdList_
-        List< List<label> > chargePotNamesToFullSites_;        
+        List< List<label> > chargePotNamesToChargePotSitesList_;        
+        
+        
+        // link between chargeNames_ and siteNames_
+        // outer list = molecule types
+        // inner list = linked to chargeNames_
+        // each entry is an index to siteNames_
+        List< List<label> > chargePotNamesToSites_;           
+        
+        
+        
         
         
 public:
@@ -157,17 +178,37 @@ public:
 
     // Member functions
 
+        bool linearMoleculeTest(const label& idI) const;
+        
+        const List<diagTensor>& momentOfInertia() const;
+        const diagTensor& momentOfInertia(const label& id) const;
+        bool linearMolecule(const label& id) const;
+        bool pointMolecule(const label& id) const;
+        label degreesOfFreedom(const label& id) const;
+        
         // no of id types
         const label& nMolTypes() const;
         
+        // namelist of all molecule ids 
         const List<word>& molIds() const;
+        
+        // namelist of cloud types (redundant, unless various clouds exist)
         const List<word>& cloudTypes() const;
+        
+        const List<scalar>& mass() const;
+        const scalar& mass(const label& id) const;        
+        
+        label nSites(const word& idName) const;
+        label nSites(const label& id) const;
+        
+        const List<List<word> >& siteNames() const;        
         const List<word>& siteNames(const word& idName) const;
         const List<word>& siteNames(const label& id) const;
 
         const List<word>& pairPotNames(const word& idName) const;
         const List<word>& pairPotNames(const label& id) const;
-
+        
+        const List<List<vector> >& siteRefPositions() const;
         const List<vector>& siteRefPositions(const word& idName) const;
         const List<vector>& siteRefPositions(const label& id) const;
 
@@ -188,9 +229,10 @@ public:
         const List<word>& chargeSiteIdList() const;
         
         
-        const List<List<label> >& pairPotNamesToFullSites() const;
+        const List<List<label> >& pairPotNamesToPairPotSitesList() const;
         const List<List<label> >& pairPotNamesToSites() const;        
-        const List<List<label> >& chargePotNamesToFullSites() const;        
+        const List<List<label> >& chargePotNamesToChargePotSitesList() const; 
+        const List<List<label> >& chargePotNamesToSites() const; 
 };
 
 

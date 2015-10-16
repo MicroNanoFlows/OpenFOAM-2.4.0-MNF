@@ -132,7 +132,10 @@ constantMoleculeProperties::constantMoleculeProperties
         const word cloudTypeI = subDict.lookup("cloudType");   
         cloudTypes_[i] = cloudTypeI;
         List<word> siteIdNames = subDict.lookup("siteIds");
-        siteNames_[i].setSize(siteIdNames.size());
+        
+        label Nsites = siteIdNames.size();
+        
+        siteNames_[i].setSize(Nsites);
         
         forAll(siteIdNames, j)
         {
@@ -142,7 +145,6 @@ constantMoleculeProperties::constantMoleculeProperties
             }
 
             siteNames_[i][j] = siteIdNames[j];
-            
         }
         
         List<word> pairIdNames = subDict.lookup("pairPotentialSiteIds");
@@ -167,7 +169,18 @@ constantMoleculeProperties::constantMoleculeProperties
         }
 
         List<vector> siteRefPositions = subDict.lookup("siteReferencePositions");
-        siteRefPositions_[i].setSize(siteRefPositions.size());
+        
+        if(siteRefPositions.size() != Nsites)
+        {
+            FatalErrorIn("constantMoleculeProperties.C") << nl
+                    << " Number of site reference positions = " << siteRefPositions.size()
+                    << ", does not match number of sites "
+                    << " in moleculeProperties subdictionary = "
+                    << Nsites
+                    << nl << abort(FatalError);
+        }
+    
+        siteRefPositions_[i].setSize(Nsites, vector::zero);
         
         forAll(siteRefPositions, j)
         {
@@ -180,6 +193,17 @@ constantMoleculeProperties::constantMoleculeProperties
         }
 
         List<scalar> siteMasses = subDict.lookup("siteMasses");
+        
+        if(siteMasses.size() != Nsites)
+        {
+            FatalErrorIn("constantMoleculeProperties.C") << nl
+                    << " Number of siteMasses = " << siteMasses.size()
+                    << ", does not match number of sites "
+                    << " in moleculeProperties subdictionary = "
+                    << Nsites
+                    << nl << abort(FatalError);
+        }
+        
         siteMasses_[i].setSize(siteMasses.size());
         
         forAll(siteMasses, j)
@@ -193,7 +217,18 @@ constantMoleculeProperties::constantMoleculeProperties
         }        
 
         List<scalar> siteCharges = subDict.lookup("siteCharges");
-        siteCharges_[i].setSize(siteCharges.size());
+        
+        if(siteCharges.size() != Nsites)
+        {
+            FatalErrorIn("constantMoleculeProperties.C") << nl
+                    << " Number of siteCharges = " << siteCharges.size()
+                    << ", does not match number of sites "
+                    << " in moleculeProperties subdictionary = "
+                    << Nsites
+                    << nl << abort(FatalError);
+        }
+        
+        siteCharges_[i].setSize(siteCharges.size(), 0.0);
         
         DynamicList<word> chargeNames;
         
@@ -219,9 +254,9 @@ constantMoleculeProperties::constantMoleculeProperties
         
         chargeNames_[i].transfer(chargeNames);
     }
-
-    nPairPotSites_ = pairPotentialSiteIdList.size();
+    
     nSites_=siteIdList.size();
+    nPairPotSites_ = pairPotentialSiteIdList.size();
     nChargeSites_=chargeSiteIdList.size();
 
     
@@ -230,17 +265,17 @@ constantMoleculeProperties::constantMoleculeProperties
     chargeSiteIdList_.transfer(chargeSiteIdList);
     
     
-    pairPotNamesToFullSites_.setSize(N_);
+    pairPotNamesToPairPotSitesList_.setSize(N_);
 
-    forAll(pairPotNamesToFullSites_, i)
+    forAll(pairPotNamesToPairPotSitesList_, i)
     {
-        pairPotNamesToFullSites_[i].setSize(pairPotNames_[i].size());
+        pairPotNamesToPairPotSitesList_[i].setSize(pairPotNames_[i].size());
         
         forAll(pairPotNames_[i], j)
         {
             const word& name = pairPotNames_[i][j];
             label k = findIndex(pairPotSiteIdList_, name);
-            pairPotNamesToFullSites_[i][j] = k;
+            pairPotNamesToPairPotSitesList_[i][j] = k;
         }
     }
 
@@ -257,26 +292,255 @@ constantMoleculeProperties::constantMoleculeProperties
             pairPotNamesToSites_[i][j] = k;
         }
     }
-
     
-    chargePotNamesToFullSites_.setSize(N_);
+    chargePotNamesToChargePotSitesList_.setSize(N_);
 
-    forAll(chargePotNamesToFullSites_, i)
+    forAll(chargePotNamesToChargePotSitesList_, i)
     {
-        chargePotNamesToFullSites_[i].setSize(chargeNames_[i].size());
+        chargePotNamesToChargePotSitesList_[i].setSize(chargeNames_[i].size());
         
         forAll(chargeNames_[i], j)
         {
             const word& name = chargeNames_[i][j];
             label k = findIndex(chargeSiteIdList_, name);
-            chargePotNamesToFullSites_[i][j] = k;
+            chargePotNamesToChargePotSitesList_[i][j] = k;
         }
     }
     
+    chargePotNamesToSites_.setSize(N_);
+
+    forAll(chargePotNamesToSites_, i)
+    {
+        chargePotNamesToSites_[i].setSize(chargeNames_[i].size());
+        
+        forAll(chargeNames_[i], j)
+        {
+            const word& name = chargeNames_[i][j];
+            label k = findIndex(siteNames_[i], name);
+            chargePotNamesToSites_[i][j] = k;
+        }
+    }    
+
+    // Output tests - debug
     Info << "siteNames_ = " << siteNames_ << endl;
+    Info << "pairPotNames_ = " << pairPotNames_ << endl;    
     Info << "chargeNames_ = " << chargeNames_ << endl;
+    Info << "siteIdList_ = " << siteIdList_ << endl;
+    Info << "pairPotSiteIdList_" << pairPotSiteIdList_ << endl;
     Info << "chargeSiteIdList_ = " << chargeSiteIdList_ << endl;
-    Info << "chargePotNamesToFullSites_ = " << chargePotNamesToFullSites_ << endl;
+
+
+    // set mass
+    
+    masses_.setSize(N_, 0.0);
+    
+    
+    forAll(siteMasses_, i)
+    {
+        forAll(siteMasses_[i], j)
+        {
+            masses_[i] += siteMasses_[i][j];
+        }
+    }
+    
+// apply adjustments and calculate moment of intertia
+    
+    momentOfInertia_.setSize(N_);
+    
+    forAll(names_, i)
+    {
+        vector centreOfMass(vector::zero);
+
+        // Calculate the centre of mass of the body and subtract it from each
+        // position
+
+        forAll(siteRefPositions_[i], s)
+        {
+            centreOfMass += siteRefPositions_[i][s]*siteMasses_[i][s];
+        }
+
+        centreOfMass /= masses_[i];
+
+        forAll(siteRefPositions_[i], s)
+        {
+            siteRefPositions_[i][s] -= centreOfMass;
+        }
+
+        if (siteNames_[i].size() == 1)
+        {
+            siteRefPositions_[i] = vector::zero;
+
+            momentOfInertia_[i] = diagTensor(-1, -1, -1);
+        }
+        else if (linearMoleculeTest(i))
+        {
+            // Linear molecule.
+
+            Info<< nl << "Linear molecule." << endl;
+
+            vector dir = siteRefPositions_[i][1] -  siteRefPositions_[i][0];
+
+            dir /= mag(dir);
+
+            tensor Q = rotationTensor(dir, vector(1,0,0));
+
+            // Transform the site positions
+            forAll(siteRefPositions_[i], s)
+            {
+                siteRefPositions_[i][s] = (Q & siteRefPositions_[i][s]);
+            }
+
+            // The rotation was around the centre of mass but remove any
+            // components that have crept in due to floating point errors
+
+            centreOfMass = vector::zero;
+
+            forAll(siteRefPositions_[i], s)
+            {
+                centreOfMass += siteRefPositions_[i][s]*siteMasses_[i][s];
+            }
+
+            centreOfMass /= masses_[i];
+
+            forAll(siteRefPositions_[i], s)
+            {
+                siteRefPositions_[i][s] -= centreOfMass;
+            }
+
+            diagTensor momOfInertia = diagTensor::zero;
+
+            forAll(siteRefPositions_[i], s)
+            {
+                const vector& p(siteRefPositions_[i][s]);
+        
+                momOfInertia += siteMasses_[i][s]*diagTensor(0, p.x()*p.x(), p.x()*p.x());
+            }
+
+            momentOfInertia_[i] = diagTensor
+            (
+                -1,
+                momOfInertia.yy(),
+                momOfInertia.zz()
+            );
+        }
+        else
+        {
+            // Fully 6DOF molecule
+
+            // Calculate the inertia tensor in the current orientation
+
+            tensor momOfInertia(tensor::zero);
+        
+            forAll(siteRefPositions_[i], s)
+            {
+                const vector& p(siteRefPositions_[i][s]);
+        
+                momOfInertia += siteMasses_[i][s]*tensor
+                (
+                    p.y()*p.y() + p.z()*p.z(), -p.x()*p.y(), -p.x()*p.z(),
+                    -p.y()*p.x(), p.x()*p.x() + p.z()*p.z(), -p.y()*p.z(),
+                    -p.z()*p.x(), -p.z()*p.y(), p.x()*p.x() + p.y()*p.y()
+                );
+            }
+            
+    //         Info << "Eigen values: x = " << eigenValues(momOfInertia).x()
+    //             << " y = " << eigenValues(momOfInertia).y()
+    //             << " z = " << eigenValues(momOfInertia).z()
+    //             << endl;
+            Info << "momOfInertia (full tensor) = " <<  momOfInertia << endl;
+            
+            if (eigenValues(momOfInertia).x() < VSMALL)
+            {
+    //             FatalErrorIn("polyMolecule::constantProperties::constantProperties")
+    //                 << "An eigenvalue of the inertia tensor is zero, the molecule "
+    //                 << dict.name() << " is not a valid 6DOF shape."
+    //                 << nl << abort(FatalError);
+                
+                Info << "Warning no adjustment to be made to molecule" << endl;
+                
+                momentOfInertia_[i] = diagTensor
+                (
+                    momOfInertia.xx(),
+                    momOfInertia.yy(),
+                    momOfInertia.zz()
+                ); 
+            }
+            else
+            {
+                Info << "Adjusting molecule" << endl;
+                
+                // Normalise the inertia tensor magnitude to avoid SMALL numbers in the
+                // components causing problems
+        
+                momOfInertia /= eigenValues(momOfInertia).x();
+            
+                tensor e = eigenVectors(momOfInertia);
+        
+            
+                // Calculate the transformation between the principle axes to the
+                // global axes
+            
+                tensor Q = vector(1,0,0)*e.x() + vector(0,1,0)*e.y() + vector(0,0,1)*e.z();
+            
+            //         Info << "Q: " << Q << endl;
+            
+                // Transform the site positions
+                forAll(siteRefPositions_[i], s)
+                {
+                    siteRefPositions_[i][s] = (Q & siteRefPositions_[i][s]);
+                }
+
+                // Recalculating the moment of inertia with the new site positions
+            
+                // The rotation was around the centre of mass but remove any
+                // components that have crept in due to floating point errors
+            
+                centreOfMass = vector::zero;
+            
+                forAll(siteRefPositions_[i], s)
+                {
+                    centreOfMass += siteRefPositions_[i][s]*siteMasses_[i][s];
+                }
+            
+                centreOfMass /= masses_[i];
+            
+                forAll(siteRefPositions_[i], s)
+                {
+                    siteRefPositions_[i][s] -= centreOfMass;
+            
+    /*                Info<< "mol: " << sites_[s].name() 
+                        << " position: " << sites_[s].siteReferencePosition()
+                        << endl;*/
+                }
+                
+                // Calculate the moment of inertia in the principle component
+                // reference frame
+            
+                momOfInertia = tensor::zero;
+            
+                forAll(siteRefPositions_[i], s)
+                {
+                    const vector& p(siteRefPositions_[i][s]);
+            
+                    momOfInertia += siteMasses_[i][s]*tensor
+                    (
+                        p.y()*p.y() + p.z()*p.z(), -p.x()*p.y(), -p.x()*p.z(),
+                        -p.y()*p.x(), p.x()*p.x() + p.z()*p.z(), -p.y()*p.z(),
+                        -p.z()*p.x(), -p.z()*p.y(), p.x()*p.x() + p.y()*p.y()
+                    );
+                }
+            
+                momentOfInertia_[i] = diagTensor
+                (
+                    momOfInertia.xx(),
+                    momOfInertia.yy(),
+                    momOfInertia.zz()
+                );            
+            }
+            
+            Info << "moment of inertia (diag tensor): " << momentOfInertia_[i] << endl;
+        }    
+    }
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -287,6 +551,74 @@ constantMoleculeProperties::~constantMoleculeProperties()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+bool constantMoleculeProperties::linearMoleculeTest(const label& idI) const
+{
+    label nSites = siteNames_[idI].size();
+    
+    if (nSites == 2)
+    {
+        return true;
+    }
+    
+    vector refDir = siteRefPositions_[idI][1] - siteRefPositions_[idI][0];
+
+    refDir /= mag(refDir);
+
+    for
+    (
+        label i = 2;
+        i < nSites;
+        i++
+    )
+    {
+        vector dir =  siteRefPositions_[idI][i] -  siteRefPositions_[idI][i-1];
+
+        dir /= mag(dir);
+
+        if (mag(refDir & dir) < 1 - SMALL)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+const List<diagTensor>& constantMoleculeProperties::momentOfInertia() const
+{
+    return momentOfInertia_;
+}
+
+const diagTensor& constantMoleculeProperties::momentOfInertia(const label& id) const
+{
+    return momentOfInertia_[id];
+}
+
+bool constantMoleculeProperties::linearMolecule(const label& id) const
+{
+    return ((momentOfInertia_[id].xx() < 0) && (momentOfInertia_[id].yy() > 0));
+}
+
+bool constantMoleculeProperties::pointMolecule(const label& id) const
+{
+    return (momentOfInertia_[id].zz() < 0);
+}
+
+label constantMoleculeProperties::degreesOfFreedom(const label& id) const
+{
+    if (linearMolecule(id))
+    {
+        return 5;
+    }
+    else if (pointMolecule(id))
+    {
+        return 3;
+    }
+    else
+    {
+        return 6;
+    }
+}
 
 const label& constantMoleculeProperties::nMolTypes() const
 {
@@ -301,6 +633,31 @@ const List<word>& constantMoleculeProperties::molIds() const
 const List<word>& constantMoleculeProperties::cloudTypes() const
 {
     return cloudTypes_;
+}
+
+const List<scalar>& constantMoleculeProperties::mass() const
+{
+    return masses_;
+}    
+
+const scalar& constantMoleculeProperties::mass(const label& id) const
+{
+    return masses_[id];    
+}
+
+label constantMoleculeProperties::nSites(const word& idName) const
+{
+    return siteNames(idName).size();
+}
+
+label constantMoleculeProperties::nSites(const label& id) const
+{
+    return siteNames_[id].size();
+}
+
+const  List<List<word> >& constantMoleculeProperties::siteNames() const
+{
+    return siteNames_;
 }
 
 const List<word>& constantMoleculeProperties::siteNames(const word& idName) const
@@ -345,6 +702,10 @@ const List<word>& constantMoleculeProperties::pairPotNames(const label& id) cons
     return pairPotNames_[id];
 }
 
+const List<List<vector> >& constantMoleculeProperties::siteRefPositions() const
+{
+    return siteRefPositions_;
+}
 
 const List<vector>& constantMoleculeProperties::siteRefPositions(const word& idName) const
 {
@@ -441,9 +802,9 @@ const List<word>& constantMoleculeProperties::chargeSiteIdList() const
 }
 
         
-const List<List<label> >& constantMoleculeProperties::pairPotNamesToFullSites() const
+const List<List<label> >& constantMoleculeProperties::pairPotNamesToPairPotSitesList() const
 {
-    return pairPotNamesToFullSites_;
+    return pairPotNamesToPairPotSitesList_;
 }
 
 const List<List<label> >& constantMoleculeProperties::pairPotNamesToSites() const
@@ -451,9 +812,14 @@ const List<List<label> >& constantMoleculeProperties::pairPotNamesToSites() cons
     return pairPotNamesToSites_;
 }
 
-const List<List<label> >& constantMoleculeProperties::chargePotNamesToFullSites() const
+const List<List<label> >& constantMoleculeProperties::chargePotNamesToChargePotSitesList() const
 {
-    return chargePotNamesToFullSites_;
+    return chargePotNamesToChargePotSitesList_;
+}
+
+const List<List<label> >& constantMoleculeProperties::chargePotNamesToSites() const
+{
+    return chargePotNamesToSites_;
 }
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //

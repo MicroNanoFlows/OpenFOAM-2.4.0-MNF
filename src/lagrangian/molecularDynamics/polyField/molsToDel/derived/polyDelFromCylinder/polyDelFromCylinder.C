@@ -80,7 +80,7 @@ polyDelFromCylinder::polyDelFromCylinder
 
     selectIds ids
     (
-        molCloud_.pot(),
+        molCloud_.cP(),
         propsDict_
     );
 

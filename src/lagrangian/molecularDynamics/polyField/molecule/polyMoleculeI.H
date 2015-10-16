@@ -25,7 +25,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
+/*
 inline Foam::polyMolecule::constantProperties::constantProperties()
 :
     nSites_(0),
@@ -319,10 +319,7 @@ inline Foam::polyMolecule::constantProperties::constantProperties
             forAll(sites_, s)
             {
                 sites_[s].siteReferencePosition() -= centreOfMass;
-        
-/*                Info<< "mol: " << sites_[s].name() 
-                    << " position: " << sites_[s].siteReferencePosition()
-                    << endl;*/
+
             }
             
             // Calculate the moment of inertia in the principle component
@@ -352,7 +349,7 @@ inline Foam::polyMolecule::constantProperties::constantProperties
         
         Info << "moment of inertia (diag tensor): " << momentOfInertia_ << endl;
     }
-}
+}*/
 
 
 inline Foam::polyMolecule::polyMolecule
@@ -368,7 +365,8 @@ inline Foam::polyMolecule::polyMolecule
     const vector& pi,
     const vector& tau,
     const vector& specialPosition,
-    const constantProperties& constProps,
+//     const constantProperties& constProps,
+    const constantMoleculeProperties& cP,
     const label special,
     const label id,
     const scalar& frac,
@@ -389,12 +387,15 @@ inline Foam::polyMolecule::polyMolecule
     R_(GREAT),
     frac_(frac),
     trackingNumber_(trackingNumber),
-    siteForces_(constProps.nSites(), vector::zero),
-    sitePositions_(constProps.nSites())
+//     siteForces_(constProps.nSites(), vector::zero),
+//     sitePositions_(constProps.nSites())
+    siteForces_(cP.siteNames(id).size(), vector::zero),
+    sitePositions_(cP.siteNames(id).size())
 {
-    setSitePositions(constProps);
+    setSitePositions(cP);
 }
 
+/*
 inline bool Foam::polyMolecule::constantProperties::linearMoleculeTest() const
 {
     if (sites_.size() == 2)
@@ -424,17 +425,17 @@ inline bool Foam::polyMolecule::constantProperties::linearMoleculeTest() const
     }
 
     return true;
-}
+}*/
 
 
 // * * * * * * * constantProperties Member Functions * * * * * * * * * * * * //
-inline const Foam::List< Foam::constPropSite>&
-Foam::polyMolecule::constantProperties::sites() const
-{
-    return sites_;
-}
+// inline const Foam::List< Foam::constPropSite>&
+// Foam::polyMolecule::constantProperties::sites() const
+// {
+//     return sites_;
+// }
 
-
+/*
 inline const Foam::List<Foam::label>&
 Foam::polyMolecule::constantProperties::pairPotSites() const
 {
@@ -480,9 +481,9 @@ inline Foam::label Foam::polyMolecule::constantProperties::degreesOfFreedom() co
     {
         return 6;
     }
-}
+}*/
 
-
+/*
 inline Foam::scalar Foam::polyMolecule::constantProperties::mass() const
 {
     return mass_;
@@ -493,7 +494,7 @@ inline Foam::label Foam::polyMolecule::constantProperties::nSites() const
 {
     return sites_.size();
 
-}
+}*/
 
 // * * * * * * * * * * * * polyMolecule Member Functions * * * * * * * * * * * * //
 

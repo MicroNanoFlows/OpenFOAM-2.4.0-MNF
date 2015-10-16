@@ -92,7 +92,7 @@ forceInstantProperties::forceInstantProperties
         
         selectIds ids
         (
-            molCloud_.pot(),
+            molCloud_.cP(),
             propsDict_,
             "molIdsWall"
             
@@ -107,7 +107,7 @@ forceInstantProperties::forceInstantProperties
         
         selectIds ids
         (
-            molCloud_.pot(),
+            molCloud_.cP(),
             propsDict_,
             "molIdsFluid"
             
@@ -213,8 +213,11 @@ void forceInstantProperties::measureDuringForceComputationSite
     label sJ
 )
 {
-    label idsI = molCloud_.constProps(molI->id()).sites()[sI].siteId();
-    label idsJ = molCloud_.constProps(molJ->id()).sites()[sJ].siteId();    
+    label idI = molI->id();
+    label idJ = molJ->id();
+    
+    label idsI=molCloud_.cP().pairPotNamesToPairPotSitesList()[idI][i];
+    label idsJ=molCloud_.cP().pairPotNamesToPairPotSitesList()[idJ][j];  
 
 
     label idIW = findIndex(molIdsWall_, molI->id());
@@ -242,7 +245,7 @@ void forceInstantProperties::measureDuringForceComputationSite
     {
         vector rsIsJ = molI->sitePositions()[sI] - molJ->sitePositions()[sJ];
         scalar rsIsJMag = mag(rsIsJ);
-        vector force = (rsIsJ/rsIsJMag) * molCloud_.pot().pairPotentials().force(idsI, idsJ, rsIsJMag);
+        vector force = (rsIsJ/rsIsJMag) * molCloud_.pot().pairPots().force(idsI, idsJ, rsIsJMag);
 
         
         if(molI->referred() || molJ->referred())
@@ -260,7 +263,7 @@ void forceInstantProperties::measureDuringForceComputationSite
     {
         vector rsIsJ = molI->sitePositions()[sI] - molJ->sitePositions()[sJ];
         scalar rsIsJMag = mag(rsIsJ);
-        vector force = (rsIsJ/rsIsJMag) * molCloud_.pot().pairPotentials().force(idsI, idsJ, rsIsJMag);
+        vector force = (rsIsJ/rsIsJMag) * molCloud_.pot().pairPots().force(idsI, idsJ, rsIsJMag);
         
         if(molI->referred() || molJ->referred())
         {

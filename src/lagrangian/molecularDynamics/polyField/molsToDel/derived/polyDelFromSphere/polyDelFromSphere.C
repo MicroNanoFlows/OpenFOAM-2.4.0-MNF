@@ -54,9 +54,7 @@ polyDelFromSphere::polyDelFromSphere
     polyMolsToDeleteModel(molCloud, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
     startPoint_(propsDict_.lookup("startPoint")),
-    radius_(readScalar(propsDict_.lookup("radius"))),
-    oneSpecie_(false),
-    molId_(-1)
+    radius_(readScalar(propsDict_.lookup("radius")))
 {
 
     // check if start point is in the mesh
@@ -68,26 +66,15 @@ polyDelFromSphere::polyDelFromSphere
             << endl;
     }
 
-    if (propsDict_.found("oneSpecie"))
-    {
-        oneSpecie_ = Switch(propsDict_.lookup("oneSpecie"));
-
-        if (oneSpecie_)
-        {
-            const List<word>& idList(molCloud_.pot().idList());
-            const word molId = propsDict_.lookup("molId");
-            molId_ = findIndex(idList, molId);
-
-            if(molId_ == -1)
-            {
-                FatalErrorIn("polyDelFromSphere::polyDelFromSphere()")
-                    << "Cannot find molId: " << molId << nl << "in: "
-                    << mesh_.time().system()/"molsToDeleteDict"
-                    << exit(FatalError);
-            }
-        }
-    }
-
+        
+    selectIds ids
+    (
+        molCloud_.cP(),
+        propsDict_
+    );
+    
+    molIds_ = ids.molIds();
+    
     findMolsToDel();
 }
 
@@ -123,7 +110,7 @@ void polyDelFromSphere::findMolsToDel()
         {
             label molId = mol().id();
 
-            if(!oneSpecie_ || (molId == molId_))
+            if(findIndex(molIds_, molId) != -1)
             {
                 polyMolecule* molI = &mol();
                 molsToDel.append(molI);

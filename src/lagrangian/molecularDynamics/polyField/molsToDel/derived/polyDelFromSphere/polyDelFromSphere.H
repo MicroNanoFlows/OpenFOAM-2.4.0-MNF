@@ -68,9 +68,7 @@ private:
 
         scalar radius_;
 
-        bool oneSpecie_;
-
-        label molId_;
+        List<label> molIds_;
 
     // Private Member Functions
 

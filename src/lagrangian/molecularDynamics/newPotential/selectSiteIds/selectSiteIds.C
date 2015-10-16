@@ -90,7 +90,8 @@ selectSiteIds::selectSiteIds
             }
         
             siteIds_.setSize(sitesReduced.size(), -1);
-        
+            siteIdNames_.setSize(sitesReduced.size());
+            
             forAll(sitesReduced, i)
             {
                 const word& siteName(sitesReduced[i]);
@@ -109,6 +110,7 @@ selectSiteIds::selectSiteIds
                 }
         
                 siteIds_[i] = siteId;
+                siteIdNames_[i] = siteName;
             }
         }
     }
@@ -164,7 +166,8 @@ selectSiteIds::selectSiteIds
             }
         
             siteIds_.setSize(sitesReduced.size(), -1);
-        
+            siteIdNames_.setSize(sitesReduced.size());
+            
             forAll(sitesReduced, i)
             {
                 const word& siteName(sitesReduced[i]);
@@ -183,6 +186,7 @@ selectSiteIds::selectSiteIds
                 }
         
                 siteIds_[i] = siteId;
+                siteIdNames_[i] = siteName;                
             }
         }
     }

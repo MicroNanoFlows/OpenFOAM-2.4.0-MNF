@@ -116,7 +116,8 @@ void Foam::polyMolecule::setAsReferred()
 
 void Foam::polyMolecule::updateHalfVelocity
 (
-    const constantProperties& constProps,
+//     const constantProperties& constProps,
+    const constantMoleculeProperties& cP,       
     const scalar& trackTime
 )
 {
@@ -124,14 +125,14 @@ void Foam::polyMolecule::updateHalfVelocity
 
     pi_ += 0.5*trackTime*tau_;
 
-    if (constProps.pointMolecule())
+    if (cP.pointMolecule(id_))
     {
         tau_ = vector::zero;
 
         pi_ = vector::zero;
     }
 
-    if (constProps.linearMolecule())
+    if (cP.linearMolecule(id_))
     {
         tau_.x() = 0.0;
 
@@ -141,10 +142,12 @@ void Foam::polyMolecule::updateHalfVelocity
 
 void Foam::polyMolecule::updateAcceleration
 (
-    const constantProperties& constProps
+//     const constantProperties& constProps
+    const constantMoleculeProperties& cP    
 )
 {
-    scalar m = constProps.mass();
+//     scalar m = constProps.mass();
+    scalar m = cP.mass(id_);
 
     forAll(siteForces_, s)
     {
@@ -152,23 +155,24 @@ void Foam::polyMolecule::updateAcceleration
 
         a_ += f/m;
 
-        tau_ += (constProps.sites()[s].siteReferencePosition() ^ (Q_.T() & f));
+        tau_ += (cP.siteRefPositions()[id_][s] ^ (Q_.T() & f));
     }
 }
 
 void Foam::polyMolecule::updateAfterMove
 (
-    const constantProperties& constProps,
+//     const constantProperties& constProps,
+    const constantMoleculeProperties& cP,    
     const scalar& trackTime
 )
 {   
-    if (!constProps.pointMolecule())
+    if (!cP.pointMolecule(id_))
     {
-        const diagTensor& momentOfInertia(constProps.momentOfInertia());
+        const diagTensor& momentOfInertia(cP.momentOfInertia(id_));
 
         tensor R;
 
-        if (!constProps.linearMolecule())
+        if (!cP.linearMolecule(id_))
         {
             R = rotationTensorX(0.5*trackTime*pi_.x()/momentOfInertia.xx());
             pi_ = pi_ & R;
@@ -187,7 +191,7 @@ void Foam::polyMolecule::updateAfterMove
         pi_ = pi_ & R;
         Q_ = Q_ & R;
 
-        if (!constProps.linearMolecule())
+        if (!cP.linearMolecule(id_))
         {
             R = rotationTensorX(0.5*trackTime*pi_.x()/momentOfInertia.xx());
             pi_ = pi_ & R;
@@ -195,7 +199,7 @@ void Foam::polyMolecule::updateAfterMove
         }
     }
 
-    setSitePositions(constProps);
+    setSitePositions(cP);
 }
 
 
@@ -233,15 +237,22 @@ void Foam::polyMolecule::transformProperties(const vector& separation)
     sitePositions_ = sitePositions_ + separation;
 }
 
-
+/*
 void Foam::polyMolecule::setSitePositions(const constantProperties& constProps)
 {
     forAll(constProps.sites(), s)
     {
         sitePositions_[s] = position_ + (Q_ & constProps.sites()[s].siteReferencePosition());
     }
-}
+}*/
 
+void Foam::polyMolecule::setSitePositions(const constantMoleculeProperties& cP)
+{
+    forAll(cP.siteRefPositions()[id_], s)
+    {
+        sitePositions_[s] = position_ + (Q_ & cP.siteRefPositions()[id_][s]);
+    }
+}
 
 void Foam::polyMolecule::setSiteSizes(label size)
 {

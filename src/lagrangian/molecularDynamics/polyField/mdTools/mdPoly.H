@@ -3,6 +3,5 @@
     #include "potential.H"
     #include "polyMoleculeCloud.H"
     #include "reducedUnits.H"
-    #include "constantMoleculeProperties.H"
 #endif
 

@@ -57,9 +57,7 @@ polyDelFromCylindricalShell::polyDelFromCylindricalShell
     endPoint_(propsDict_.lookup("endPoint")),
     unitVector_((endPoint_ - startPoint_)/mag(endPoint_ - startPoint_)),
     rOut_(readScalar(propsDict_.lookup("rOut"))),
-    rIn_(readScalar(propsDict_.lookup("rIn"))),
-    oneSpecie_(false),
-    molId_(-1)
+    rIn_(readScalar(propsDict_.lookup("rIn")))
 {
 
     // check if start point is in the mesh
@@ -77,26 +75,14 @@ polyDelFromCylindricalShell::polyDelFromCylindricalShell
             << " is selected outside the mesh."
             << endl;
     }
+    selectIds ids
+    (
+        molCloud_.cP(),
+        propsDict_
+    );
+    
+    molIds_ = ids.molIds();
 
-    if (propsDict_.found("oneSpecie"))
-    {
-        oneSpecie_ = Switch(propsDict_.lookup("oneSpecie"));
-
-        if (oneSpecie_)
-        {
-            const List<word>& idList(molCloud_.pot().idList());
-            const word molId = propsDict_.lookup("molId");
-            molId_ = findIndex(idList, molId);
-
-            if(molId_ == -1)
-            {
-                FatalErrorIn("polyDelFromCylindricalShell::polyDelFromCylindricalShell()")
-                    << "Cannot find molId: " << molId << nl << "in: "
-                    << mesh_.time().system()/"molsToDeleteDict"
-                    << exit(FatalError);
-            }
-        }
-    }
 
     findMolsToDel();
 }
@@ -145,7 +131,7 @@ void polyDelFromCylindricalShell::findMolsToDel()
             {
                 label molId = mol().id();
 
-                if(!oneSpecie_ || (molId == molId_))
+                if(findIndex(molIds_, molId) != -1)
                 {
                     polyMolecule* molI = &mol();
                     molsToDel.append(molI);

@@ -28,8 +28,10 @@ initialiseMolecules/derived/polyBCC/polyBCC.C
 initialiseMolecules/derived/polyCrystal/polyCrystal.C
 initialiseMolecules/derived/cilium/cilium.C
 
+
 molsToDel/basic/polyMolsToDeleteModel/polyMolsToDeleteModel.C
 molsToDel/basic/polyMolsToDelete/polyMolsToDelete.C
+
 
 molsToDel/derived/polyDelFromZone/polyDelFromZone.C
 molsToDel/derived/polyDelFromSphere/polyDelFromSphere.C
@@ -38,6 +40,7 @@ molsToDel/derived/polyDelFromCylindricalShell/polyDelFromCylindricalShell.C
 molsToDel/derived/polyDelFromMesh/polyDelFromMesh.C
 molsToDel/derived/polyDelFromBoundBox/polyDelFromBoundBox.C
 molsToDel/derived/polyDelFromEnclosedPoints/polyDelFromEnclosedPoints.C
+
 
 mappingModels/basic/polyMappingModel/polyMappingModel.C
 mappingModels/basic/polyMappingModels/polyMappingModels.C
@@ -50,8 +53,8 @@ macroscopicProperties/basic/polyField/polyField.C
 
 /*  - COMBINED  */
 
-macroscopicProperties/derived/combinedFields/polyOutputProperties/polyOutputProperties.C
 
+macroscopicProperties/derived/combinedFields/polyOutputProperties/polyOutputProperties.C
 macroscopicProperties/derived/combinedFields/polyPropertiesZoneBounded/polyPropertiesZoneBounded.C
 macroscopicProperties/derived/combinedFields/polyBinsMethod/polyBinsMethod.C
 macroscopicProperties/derived/combinedFields/polyPropertiesZone/polyPropertiesZone.C
@@ -68,7 +71,6 @@ macroscopicProperties/derived/massFlux/polyMassFluxMultiSurfaces/polyMassFluxMul
 macroscopicProperties/derived/massFlux/polyMassFluxSurface/polyMassFluxSurface.C
 macroscopicProperties/derived/massFlux/polyMassFluxZone/polyMassFluxZone.C
 
-
 /*  - OTHER  */
 
 macroscopicProperties/derived/otherFields/polyDensityMOB2DRadialCOM/polyDensityMOB2DRadialCOM.C
@@ -77,7 +79,8 @@ macroscopicProperties/derived/otherFields/polyMoleculePotentialEnergy/polyMolecu
 macroscopicProperties/derived/otherFields/polyPDB/polyPDB.C
 macroscopicProperties/derived/otherFields/polyXMOL/polyXMOL.C
 macroscopicProperties/derived/otherFields/polyZoneRdf/polyZoneRdf.C
-macroscopicProperties/derived/otherFields/forceInstantProperties/forceInstantProperties.C
+/*macroscopicProperties/derived/otherFields/forceInstantProperties/forceInstantProperties.C */
+
 
 /*  CONTROLLERS  */
 
@@ -92,6 +95,7 @@ controllers/derived/velocity/polyVelocityBounded/polyVelocityBounded.C
 controllers/derived/velocity/polyVelocityBins/polyVelocityBins.C
 controllers/derived/velocity/polyVelocity2DBins/polyVelocity2DBins.C
 
+
 /*  - TEMPERATURE  */
 
 controllers/derived/temperature/polyTemperatureMaxwellDemon/polyTemperatureMaxwellDemon.C
@@ -99,16 +103,12 @@ controllers/derived/temperature/polyTemperatureBerendsen/polyTemperatureBerendse
 controllers/derived/temperature/polyTemperatureBerendsenBins/polyTemperatureBerendsenBins.C
 controllers/derived/temperature/polyTemperatureBerendsenBinsNew/polyTemperatureBerendsenBinsNew.C
 
-
 /*  - DENSITY  */
-
 
 controllers/derived/density/polyFadeII/polyFadeII.C
 controllers/derived/density/polyDensityFadeBounded/polyDensityFadeBounded.C
 
-
 /*  - OTHERS  */
-
 controllers/derived/others/polyForceTwoShear/polyForceTwoShear.C
 controllers/derived/others/polyMovingWallRitos/polyMovingWallRitos.C
 controllers/derived/others/polyLiquidGasDistinction/polyLiquidGasDistinction.C

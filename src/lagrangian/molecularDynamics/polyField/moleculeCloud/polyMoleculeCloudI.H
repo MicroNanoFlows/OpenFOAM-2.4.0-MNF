@@ -26,6 +26,299 @@ License
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
+// NEW
+inline void Foam::polyMoleculeCloud::evaluatePair
+(
+    polyMolecule* molI,
+    polyMolecule* molJ
+)
+{
+  
+    label idI = molI->id();
+    label idJ = molJ->id();
+
+    // pair potential interactions
+    controllers_.controlDuringForceComputation(molI, molJ); 
+
+    fields_.measurementsDuringForceComputation
+    (
+        molI,
+        molJ
+    );
+
+    if(!molI->frozen() || !molJ->frozen())
+    {
+        // fraction
+        scalar f = molI->fraction();
+    
+        if(molJ->fraction() < f)
+        {
+            f = molJ->fraction();
+        }
+        
+        // looping over just pair potential sites
+        forAll(cP_.pairPotNamesToSites()[idI], i)
+        {
+            // sI is the index of the full list of sites
+            label sI = cP_.pairPotNamesToSites()[idI][i];
+            
+            forAll(cP_.pairPotNamesToSites()[idJ], j)
+            {
+                // sJ is the index of the full list of sites
+                label sJ = cP_.pairPotNamesToSites()[idJ][j];
+
+                vector rsIsJ = molI->sitePositions()[sI] - molJ->sitePositions()[sJ];
+
+                scalar rsIsJMagSq = magSqr(rsIsJ);
+                
+                // determine sites in pairPotSiteIdList_
+                label idsI=cP_.pairPotNamesToPairPotSitesList()[idI][i];
+                label idsJ=cP_.pairPotNamesToPairPotSitesList()[idJ][j];
+                
+                if(p_.pairPots().rCutSqr(idsI, idsJ, rsIsJMagSq))
+                {
+                    scalar rsIsJMag = mag(rsIsJ);
+
+                    vector fsIsJ = f*(rsIsJ/rsIsJMag)*p_.pairPots().force(idsI, idsJ, rsIsJMag);
+
+                    molI->siteForces()[sI] += fsIsJ;
+                    molJ->siteForces()[sJ] += -fsIsJ;
+
+                    scalar potentialEnergy
+                    (
+                        f*p_.pairPots().energy(idsI, idsJ, rsIsJMag)
+                    );
+
+                    molI->potentialEnergy() += 0.5*potentialEnergy;
+                    molJ->potentialEnergy() += 0.5*potentialEnergy;
+        
+                    vector rIJ = molI->position() - molJ->position();
+        
+                    tensor virialContribution = (rsIsJ*fsIsJ)*(rsIsJ & rIJ)/rsIsJMagSq;
+        
+                    molI->rf() += virialContribution;
+                    molJ->rf() += virialContribution;
+
+                    fields_.measurementsDuringForceComputationSite
+                    (
+                        molI,
+                        molJ,
+                        sI,
+                        sJ
+                    );
+                }
+            }
+        }
+ 
+        {
+            Foam::vector rIJ = molI->position() - molJ->position();
+    
+            scalar rIJMag = mag(rIJ);
+    
+            if(molI->R() > rIJMag)
+            {
+                molI->R() = rIJMag;
+            }
+    
+            if(molJ->R() > rIJMag)
+            {
+                molJ->R() = rIJMag;
+            }
+        }
+
+        
+        
+        forAll(cP_.chargePotNamesToSites()[idI], pI)
+        {
+            label sI = cP_.chargePotNamesToSites()[idI][pI];
+    
+            forAll(cP_.chargePotNamesToSites()[idJ], pJ)
+            {
+                label sJ = cP_.chargePotNamesToSites()[idJ][pJ];
+    
+                vector rsIsJ =
+                molI->sitePositions()[sI] - molJ->sitePositions()[sJ];
+    
+                scalar rsIsJMagSq = magSqr(rsIsJ);
+
+                if(rsIsJMagSq < p_.pairPots().electrostaticPot()->rCutSqr())
+                {
+                    scalar rsIsJMag = mag(rsIsJ);
+
+                    scalar chargeI = cP_.siteCharges(idI)[sI];
+                    scalar chargeJ = cP_.siteCharges(idJ)[sJ];
+                    
+//                     scalar chargeI = constPropI.sites()[sI].siteCharge();
+//                     scalar chargeJ = constPropJ.sites()[sJ].siteCharge();
+        
+                    vector fsIsJ =
+                        f*(rsIsJ/rsIsJMag)
+                        *chargeI*chargeJ
+                        *p_.pairPots().electrostaticPot()->force(rsIsJMag);
+        
+                    molI->siteForces()[sI] += fsIsJ;
+        
+                    molJ->siteForces()[sJ] += -fsIsJ;
+        
+                    scalar potentialEnergy =
+                        f*chargeI*chargeJ
+                        *p_.pairPots().electrostaticPot()->energy(rsIsJMag);
+        
+                    molI->potentialEnergy() += 0.5*potentialEnergy;
+        
+                    molJ->potentialEnergy() += 0.5*potentialEnergy;
+        
+                    vector rIJ = molI->position() - molJ->position();
+        
+                    tensor virialContribution =
+                        (rsIsJ*fsIsJ)*(rsIsJ & rIJ)/rsIsJMagSq;
+        
+                    molI->rf() += virialContribution;
+                    molJ->rf() += virialContribution;
+    
+                    fields_.measurementsDuringForceComputationSite
+                    (
+                        molI,
+                        molJ,
+                        sI,
+                        sJ
+                    );
+                }
+            }
+        }
+    }
+}
+
+
+inline bool Foam::polyMoleculeCloud::evaluatePotentialLimit
+(
+    polyMolecule* molI,
+    polyMolecule* molJ,
+    const scalar& potentialEnergyLimit
+) const
+{
+    
+  
+    label idI = molI->id();
+    label idJ = molJ->id();
+
+    if(!molI->frozen() || !molJ->frozen())
+    {
+        // fraction
+        scalar f = molI->fraction();
+    
+        if(molJ->fraction() < f)
+        {
+            f = molJ->fraction();
+        }
+        
+        // looping over just pair potential sites
+        forAll(cP_.pairPotNamesToSites()[idI], i)
+        {
+            // sI is the index of the full list of sites
+            label sI = cP_.pairPotNamesToSites()[idI][i];
+            
+            forAll(cP_.pairPotNamesToSites()[idJ], j)
+            {
+                // sJ is the index of the full list of sites
+                label sJ = cP_.pairPotNamesToSites()[idJ][j];
+
+                vector rsIsJ = molI->sitePositions()[sI] - molJ->sitePositions()[sJ];
+
+                scalar rsIsJMagSq = magSqr(rsIsJ);
+                
+                // determine sites in pairPotSiteIdList_
+                label idsI=cP_.pairPotNamesToPairPotSitesList()[idI][i];
+                label idsJ=cP_.pairPotNamesToPairPotSitesList()[idJ][j];
+                
+                if(p_.pairPots().rCutSqr(idsI, idsJ, rsIsJMagSq))
+                {
+                    scalar rsIsJMag = mag(rsIsJ);
+
+                    scalar rMin = p_.pairPots().rMin(idsI, idsJ);
+                    
+                    // Guard against pairPot.energy being evaluated
+                    // if rIJMag < SMALL. A floating point exception will
+                    // happen otherwise.
+                    
+                    
+                    if (rsIsJMag < SMALL)
+                    {
+                        return true;
+                    }
+        
+                    // Guard against pairPot.energy being evaluated if rIJMag <
+                    // rMin.  A tabulation lookup error will occur otherwise.
+        
+                    if (rsIsJMag < rMin)
+                    {
+                        return true;
+                    }
+    
+                    if
+                    (
+                        mag(p_.pairPots().energy(idsI, idsJ, rsIsJMag))
+                        > potentialEnergyLimit
+                    )
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        forAll(cP_.chargePotNamesToSites()[idI], pI)
+        {
+            label sI = cP_.chargePotNamesToSites()[idI][pI];
+    
+            forAll(cP_.chargePotNamesToSites()[idJ], pJ)
+            {
+                label sJ = cP_.chargePotNamesToSites()[idJ][pJ];
+    
+                vector rsIsJ =
+                molI->sitePositions()[sI] - molJ->sitePositions()[sJ];
+    
+                scalar rsIsJMagSq = magSqr(rsIsJ);
+
+                if(rsIsJMagSq < p_.pairPots().electrostaticPot()->rCutSqr())
+                {
+                    scalar rsIsJMag = mag(rsIsJ);
+                    
+                    // Guard against pairPot.energy being evaluated
+                    // if rIJMag < SMALL. A floating point exception will
+                    // happen otherwise.
+    
+                    if (rsIsJMag < SMALL)
+                    {
+                        return true;
+                    }
+    
+                    if (rsIsJMag <  p_.pairPots().electrostaticPot()->rMin())
+                    {
+                        return true;
+                    }
+                    
+                    scalar chargeI = cP_.siteCharges(idI)[sI];
+                    scalar chargeJ = cP_.siteCharges(idJ)[sJ];
+    
+                    if
+                    (
+                        mag(chargeI*chargeJ*p_.pairPots().electrostaticPot()->energy(rsIsJMag))
+                        > potentialEnergyLimit
+                    )
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    
+    return false;
+}
+
+/*
+// OLD
 inline void Foam::polyMoleculeCloud::evaluatePair
 (
     polyMolecule* molI,
@@ -189,8 +482,9 @@ inline void Foam::polyMoleculeCloud::evaluatePair
             }
         }
     }
-}
+}*/
 
+/*
 inline bool Foam::polyMoleculeCloud::evaluatePotentialLimit
 (
     polyMolecule* molI,
@@ -305,6 +599,7 @@ inline bool Foam::polyMoleculeCloud::evaluatePotentialLimit
     }
     return false;
 }
+*/
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -313,10 +608,10 @@ inline const Foam::polyMesh& Foam::polyMoleculeCloud::mesh() const
     return mesh_;
 }
 
-inline const Foam::potential& Foam::polyMoleculeCloud::pot() const
-{
-    return pot_;
-}
+// inline const Foam::potential& Foam::polyMoleculeCloud::pot() const
+// {
+//     return pot_;
+// }
 
 inline const Foam::List<Foam::DynamicList<Foam::polyMolecule*> >&
     Foam::polyMoleculeCloud::cellOccupancy() const
@@ -324,17 +619,27 @@ inline const Foam::List<Foam::DynamicList<Foam::polyMolecule*> >&
     return cellOccupancy_;
 }
 
-inline const Foam::List<Foam::polyMolecule::constantProperties>
-    Foam::polyMoleculeCloud::constProps() const
+inline const Foam::potentials& Foam::polyMoleculeCloud::pot() const
 {
-    return constPropList_;
+    return p_;
 }
 
-inline const Foam::polyMolecule::constantProperties&
-    Foam::polyMoleculeCloud::constProps(label id) const
+inline const Foam::constantMoleculeProperties& Foam::polyMoleculeCloud::cP() const
 {
-    return constPropList_[id];
+    return cP_;
 }
+
+// inline const Foam::List<Foam::polyMolecule::constantProperties>
+//     Foam::polyMoleculeCloud::constProps() const
+// {
+//     return constPropList_;
+// }
+// 
+// inline const Foam::polyMolecule::constantProperties&
+//     Foam::polyMoleculeCloud::constProps(label id) const
+// {
+//     return constPropList_[id];
+// }
 
 inline Foam::cachedRandomMD& Foam::polyMoleculeCloud::rndGen()
 {

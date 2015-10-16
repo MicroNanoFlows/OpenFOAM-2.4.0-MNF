@@ -221,7 +221,7 @@ void polyGrapheneSheetPeriodicSkew::setInitialConfiguration()
 
     word molIdName(mdInitialiseDict_.lookup("molId"));
 
-    const List<word>& idList(molCloud_.pot().idList());
+    const List<word>& idList(molCloud_.cP().molIds());
 
     label molId = findIndex(idList, molIdName);
 

@@ -40,7 +40,7 @@ SourceFiles
 #include "Cloud.H"
 #include "polyMolecule.H"
 #include "IOdictionary.H"
-#include "potential.H"
+// #include "potential.H"
 #include "labelVector.H"
 #include "cachedRandomMD.H"
 #include "fileName.H"
@@ -53,6 +53,8 @@ SourceFiles
 #include "cyclicBoundaries.H"
 #include "cellInteractions.H"
 #include "clockTimer.H"
+#include "potentials.H" 
+#include "constantMoleculeProperties.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -74,15 +76,19 @@ private:
 
         const polyMesh& mesh_;
         
-        const potential& pot_;
+//         const potential& pot_;
+        
+        const potentials& p_;
         
         const reducedUnits& redUnits_;
+
+        const constantMoleculeProperties& cP_;
         
         cachedRandomMD& rndGen_;
         
         List<DynamicList<polyMolecule*> > cellOccupancy_;
         
-        List<polyMolecule::constantProperties> constPropList_;
+//         List<polyMolecule::constantProperties> constPropList_;
         
         //- measurement fields
         polyFieldProperties fields_; 
@@ -114,7 +120,7 @@ private:
         void setSiteSizesAndPositions();
         void calculatePairForces();
         void checkForOverlaps();
-        void removeHighEnergyOverlaps();
+//         void removeHighEnergyOverlaps();
 //         void setTrackingNumbers();
         void checkMoleculesInMesh();
         void setMoleculesForDirectInteraction();
@@ -136,8 +142,9 @@ public:
         (
             Time& t,
             const polyMesh& mesh,
-            const potential& pot,
+            const potentials& p,
             const reducedUnits& rU,
+            const constantMoleculeProperties& cP,
             cachedRandomMD& rndGen
         );
 
@@ -146,8 +153,9 @@ public:
         (
             Time& t,
             const polyMesh& mesh,
-            const potential& pot,
+            const potentials& p,
             const reducedUnits& rU,
+            const constantMoleculeProperties& cP,
             cachedRandomMD& rndGen,
             const word& option,
             const bool& clearFields
@@ -159,8 +167,9 @@ public:
         (
             Time& t,
             const polyMesh& mesh,
-            const potential& pot,
+            const potentials& p,
             const reducedUnits& rU,
+            const constantMoleculeProperties& cP,
             cachedRandomMD& rndGen
         );
 
@@ -168,8 +177,9 @@ public:
         (
             Time& t,
             const polyMesh& mesh,
-            const potential& pot,
+            const potentials& p,
             const reducedUnits& rU,
+            const constantMoleculeProperties& cP,
             cachedRandomMD& rndGen,
             const word& option,
             const bool& clearFields
@@ -261,10 +271,12 @@ public:
 
             label nSites() const;
             inline const polyMesh& mesh() const;
-            inline const potential& pot() const;
+            inline const potentials& pot() const;
+            inline const constantMoleculeProperties& cP() const;
+//             inline const potential& pot() const;
             inline const List<DynamicList<polyMolecule*> >& cellOccupancy() const;
-            inline const List<polyMolecule::constantProperties> constProps() const;
-            inline const polyMolecule::constantProperties& constProps(label id) const;
+//             inline const List<polyMolecule::constantProperties> constProps() const;
+//             inline const polyMolecule::constantProperties& constProps(label id) const;
             inline cachedRandomMD& rndGen();
             inline const reducedUnits& redUnits() const;
             inline const polyFieldProperties& fields() const;  

@@ -77,7 +77,7 @@ polyPDB::polyPDB
 
     selectIds ids
     (
-        molCloud_.pot(),
+        molCloud_.cP(),
         propsDict_
     );
 
@@ -149,31 +149,16 @@ polyPDB::~polyPDB()
 
 void polyPDB::createField()
 {
-    const List<word> moleculeSites(propsDict_.lookup("sitesToExclude"));
-    
-    const List<word>& siteIdList(molCloud_.pot().siteIdList());
+    selectSiteIds sites
+    (
+        molCloud_.cP(),
+        propsDict_,
+        "sitesToExclude"
+    );
 
-    DynamicList<word> sites(0);
+    List<word> siteNames = sites.siteIdNames();
 
-    forAll(moleculeSites, m)
-    {
-        if(findIndex(siteIdList, moleculeSites[m]) != -1)
-        {
-            if(findIndex(sites, moleculeSites[m]) == -1)
-            {
-                sites.append(moleculeSites[m]);
-            }
-        }
-        else
-        {
-            FatalErrorIn("void combinedPDB::writeField()")
-                << "Cannot find molecule site " << moleculeSites[m]
-                << abort(FatalError);
-        }
-    }
-    
-    //excludeSites_.transfer(sites.shrink());
-    excludeSites_.transfer(sites);
+    excludeSites_.transfer(siteNames);
 
     Info   << "sites to exclude: " << excludeSites_ << endl;
 }
@@ -216,11 +201,11 @@ void polyPDB::writeInMesh(List<labelField>& molIds, List<vectorField>& sites)
         {
             moleculeIds.append(mol().id());
 
-            const polyMolecule::constantProperties cP(molCloud_.constProps(mol().id()));
+//             const polyMolecule::constantProperties cP(molCloud_.constProps(mol().id()));
 
             forAll(mol().sitePositions(), i)
             {
-                if(findIndex(excludeSites_, cP.sites()[i].name()) == -1)
+                if(findIndex(excludeSites_, molCloud_.cP().siteNames(mol().id())[i]) == -1)
                 {
                     sitePositions.append(mol().sitePositions()[i]);
                 }
@@ -260,11 +245,11 @@ void polyPDB::writeInZone(List<labelField>& molIds, List<vectorField>& sites)
                 if(findIndex(molIds_, molI->id()) != -1)
                 {
                     moleculeIds.append(molI->id());
-                    const polyMolecule::constantProperties cP(molCloud_.constProps(molI->id()));
+//                     const polyMolecule::constantProperties cP(molCloud_.constProps(molI->id()));
 
                     forAll(molI->sitePositions(), i)
                     {
-                        if(findIndex(excludeSites_, cP.sites()[i].name()) == -1)
+                        if(findIndex(excludeSites_, molCloud_.cP().siteNames(molI->id())[i]) == -1)
                         {
                             sitePositions.append(molI->sitePositions()[i]);
                         }
@@ -389,7 +374,7 @@ void polyPDB::write()
                 label nSites = 0;
                 label nMols = 1;
     
-                const List<word>& idList(molCloud_.pot().idList());
+                const List<word>& idList(molCloud_.cP().molIds());
     
                 // for all processors
                 forAll(molIds, p)
@@ -400,13 +385,13 @@ void polyPDB::write()
                     {
                         label molId = molIds[p][i];
     
-                        const polyMolecule::constantProperties cP(molCloud_.constProps(molId));
+//                         const polyMolecule::constantProperties cP(molCloud_.constProps(molId));
     
-                        label n = cP.nSites();
+                        label n = molCloud_.cP().nSites(molId);
 
                         for (int i = 0; i < n; i++)
                         {
-                            if(findIndex(excludeSites_, cP.sites()[i].name()) == -1)
+                            if(findIndex(excludeSites_,  molCloud_.cP().siteNames(molId)[i]) == -1)
                             {
                                 nSites++;
                                 posCounter++;
@@ -415,7 +400,7 @@ void polyPDB::write()
                                 {
                                     vector rS = sites[p][posCounter]*rU.refLength()*1.0e10;
 
-                                    if(cP.pointMolecule())
+                                    if(molCloud_.cP().pointMolecule(molId))
                                     {
                                         // site H1
                                         file.width(6);
@@ -424,10 +409,10 @@ void polyPDB::write()
                                         file << std::right << nSites-minLimit_[j];
                                         file << "  ";
                                         file.width(3);
-                                        file << std::left << cP.sites()[i].name();
+                                        file << std::left << molCloud_.cP().siteNames(molId)[i];
                                         file << " ";
                                         file.width(3);
-                                        file << std::right << cP.sites()[i].name();
+                                        file << std::right << molCloud_.cP().siteNames(molId)[i];
                                         file << " ";
                                         file.width(5);
                                         file << nMols;
@@ -456,7 +441,7 @@ void polyPDB::write()
                                             file << nSites-minLimit_[j];
                                             file << "  ";
                                             file.width(3);
-                                            file << std::left << cP.sites()[i].name();
+                                            file << std::left << molCloud_.cP().siteNames(molId)[i];
                                             file << " ";
                                             file.width(3);
                                             file << std::right << "HOH";
@@ -487,7 +472,7 @@ void polyPDB::write()
                                             file << nSites-minLimit_[j];
                                             file << "  ";
                                             file.width(3);
-                                            file << std::left << cP.sites()[i].name();
+                                            file << std::left << molCloud_.cP().siteNames(molId)[i];
                                             file << " ";
                                             file.width(3);
                                             file << std::right << "XXX";
@@ -535,8 +520,8 @@ void polyPDB::write()
                     }               
                     
                     label molId = molIds_[0];
-                    const polyMolecule::constantProperties cP(molCloud_.constProps(molId));
-                    word siteName = cP.sites()[0].name();
+//                     const polyMolecule::constantProperties cP(molCloud_.constProps(molId));
+                    word siteName = molCloud_.cP().siteNames(molId)[0];
                     
                     for (int i = 0; i < nBufferMols; i++)
                     {
@@ -546,7 +531,7 @@ void polyPDB::write()
                         {
                             vector rS = rDummy_*rU.refLength()*1.0e10;
 
-                            if(cP.pointMolecule())
+                            if(molCloud_.cP().pointMolecule(molId))
                             {
                                 // site H1
                                 file.width(6);
@@ -555,10 +540,10 @@ void polyPDB::write()
                                 file << std::right << nSites-minLimit_[j];
                                 file << "  ";
                                 file.width(3);
-                                file << std::left << cP.sites()[0].name();
+                                file << std::left << molCloud_.cP().siteNames(molId)[0];
                                 file << " ";
                                 file.width(3);
-                                file << std::right << cP.sites()[0].name();
+                                file << std::right << molCloud_.cP().siteNames(molId)[0];
                                 file << " ";
                                 file.width(5);
                                 file << nMols;
@@ -586,7 +571,7 @@ void polyPDB::write()
                                 file << nSites-minLimit_[j];
                                 file << "  ";
                                 file.width(3);
-                                file << std::left << cP.sites()[0].name();
+                                file << std::left << molCloud_.cP().siteNames(molId)[0];
                                 file << " ";
                                 file.width(3);
                                 file << std::right << "XXX";

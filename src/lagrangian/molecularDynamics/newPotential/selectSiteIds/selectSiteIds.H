@@ -56,6 +56,7 @@ class selectSiteIds
 
         List<label> siteIds_;
 
+        List<word> siteIdNames_;
 
 
     // Private Member Functions
@@ -95,7 +96,7 @@ public:
         // Access
 
             inline List<label> siteIds();
-
+            inline List<word> siteIdNames();
 
         // Check
 

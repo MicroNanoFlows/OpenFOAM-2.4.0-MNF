@@ -69,20 +69,13 @@ class potentials
         labelList removalOrder_;
         
         // largest rCut of all pair and electrostatic potentials
-        scalar rCut_; 
+        scalar rCutMax_; 
 
-        // Storage of potentials
-
-//         pairPotentialList pairPotentials_;
 
         
-
     // Private Member Functions
 
         void readPotentialDict();
-//         void setUpPotentials();
-
-        
         
         //- Disallow default bitwise copy construct
         potentials(const potentials&);
@@ -121,7 +114,7 @@ public:
 
                 
             const pairPotentials& pairPots() const;
-            
+//             pairPotentials& pairPots();            
 //             pairPotentials& pairPotentials();
             
             inline const scalar& potentialEnergyLimit() const;
@@ -129,6 +122,8 @@ public:
             inline const labelList& removalOrder() const;
 
 //             inline const pairPotentialList& pairPotentials() const;
+            
+            const scalar& rCutMax() const;
             
 };
 

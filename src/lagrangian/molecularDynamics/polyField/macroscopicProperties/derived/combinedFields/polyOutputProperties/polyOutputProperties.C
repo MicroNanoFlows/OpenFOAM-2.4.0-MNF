@@ -117,7 +117,7 @@ void polyOutputProperties::calculateField()
         )
         {
             label molId = mol().id();
-            scalar molMass(molCloud_.constProps(molId).mass());
+            scalar molMass(molCloud_.cP().mass(molId));
             singleStepTotalMass += molMass;
         }
     
@@ -130,16 +130,15 @@ void polyOutputProperties::calculateField()
         {
             label molId = mol().id();
     
-            const polyMolecule::constantProperties cP(molCloud_.constProps(molId));
-            scalar molMass(cP.mass());
+            scalar molMass(molCloud_.cP().mass(molId));
 
             const vector& molV(mol().v());
 
             vector molPiGlobal = vector::zero;
             vector molOmega = vector::zero;
-            const diagTensor& molMoI(cP.momentOfInertia());
+            const diagTensor& molMoI(molCloud_.cP().momentOfInertia(molId));
 
-            if(!cP.pointMolecule())
+            if(!molCloud_.cP().pointMolecule(molId))
             {
                 molOmega = inv(molMoI) & mol().pi();
                 molPiGlobal = mol().Q() & mol().pi();
@@ -157,7 +156,7 @@ void polyOutputProperties::calculateField()
             singleStepTotalAngularKE += 0.5*(molOmega & molMoI & molOmega);
             singleStepTotalPE += mol().potentialEnergy();
             singleStepTotalrDotf += tr(mol().rf());
-            singleStepDOFs += cP.degreesOfFreedom();
+            singleStepDOFs += molCloud_.cP().degreesOfFreedom(molId);
         }
     }
 

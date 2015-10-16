@@ -167,7 +167,7 @@ polyPropertiesZone::polyPropertiesZone
 
     selectIds ids
     (
-        molCloud_.pot(),
+        molCloud_.cP(),
         propsDict_
     );
 
@@ -275,11 +275,11 @@ void polyPropertiesZone::calculateField()
             if(findIndex(molIds_, molI->id()) != -1)
             {
                 mols += 1.0;
-                const polyMolecule::constantProperties& constProp = molCloud_.constProps(molI->id());
-                mass += constProp.mass();
-                mom += constProp.mass()*molI->v();
+                const scalar& massI = molCloud_.cP().mass(molI->id());
+                mass += massI;
+                mom += massI*molI->v();
 
-                const diagTensor& molMoI(constProp.momentOfInertia());
+                const diagTensor& molMoI(molCloud_.cP().momentOfInertia(molI->id()));
 
                 // angular speed 
                 const vector& molOmega(inv(molMoI) & molI->pi());
@@ -339,22 +339,19 @@ void polyPropertiesZone::calculateField()
             if(findIndex(molIds_, molI->id()) != -1)
             {
                 mols += 1.0;
-                const polyMolecule::constantProperties& constProp 
-                            = molCloud_.constProps(molI->id());
-
-                const scalar& massI = constProp.mass();
+                const scalar& massI = molCloud_.cP().mass(molI->id());
 
                 mass += massI;
                 mom += massI*molI->v();
 
-                dof += constProp.degreesOfFreedom();
+                dof += molCloud_.cP().degreesOfFreedom(molI->id());
 
                 kE += 0.5*massI*magSqr(molI->v() - velocity);
 
                 keSum += 0.5*massI*magSqr(molI->v());
                 peSum += molI->potentialEnergy();
 
-                const diagTensor& molMoI(constProp.momentOfInertia());
+                const diagTensor& molMoI(molCloud_.cP().momentOfInertia(molI->id()));
 
                 // angular speed 
                 const vector& molOmega(inv(molMoI) & molI->pi());

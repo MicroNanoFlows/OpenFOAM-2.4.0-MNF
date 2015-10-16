@@ -73,7 +73,7 @@ polyDeletionPatch::polyDeletionPatch
 
     selectIds ids
     (
-        molCloud_.pot(),
+        molCloud_.cP(),
         propsDict_
     );
 
@@ -103,8 +103,8 @@ void polyDeletionPatch::controlMol
 {
     if(findIndex(molIds_, mol.id()) != -1) 
     {
-        const polyMolecule::constantProperties& constProp = molCloud_.constProps(mol.id());
-        const scalar& massI = constProp.mass();
+//         const polyMolecule::constantProperties& constProp = molCloud_.constProps(mol.id());
+        const scalar& massI = molCloud_.cP().mass(mol.id());
         massFlux_ += massI;
         molFlux_ += 1.0;
         cumulMolFlux_ += 1.0;

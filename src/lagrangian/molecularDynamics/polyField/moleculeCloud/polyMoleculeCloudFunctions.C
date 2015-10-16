@@ -30,7 +30,7 @@ Description
 \*----------------------------------------------------------------------------*/
 
 #include "polyMoleculeCloud.H"
-#include "potential.H"
+// #include "potential.H"
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

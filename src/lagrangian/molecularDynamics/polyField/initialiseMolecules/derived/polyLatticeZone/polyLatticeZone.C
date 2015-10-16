@@ -106,7 +106,7 @@ void polyLatticeZone::setInitialConfiguration()
         );
 
 
-        const List<word>& idList(molCloud_.pot().idList());
+        const List<word>& idList(molCloud_.cP().molIds());
 
         // test for lattice ids in idList
         forAll(latticeIds, i)
@@ -170,11 +170,11 @@ void polyLatticeZone::setInitialConfiguration()
 
             forAll(latticeIds, i)
             {
-                label id = findIndex(molCloud_.pot().idList(), latticeIds[i]);
+                label id = findIndex(molCloud_.cP().molIds(), latticeIds[i]);
 
-                const polyMolecule::constantProperties& cP(molCloud_.constProps(id));
+//                 const polyMolecule::constantProperties& cP(molCloud_.constProps(id));
 
-                unitCellMass += cP.mass();
+                unitCellMass += molCloud_.cP().mass(id);
             }
 
             Info << "unitCellMass: " <<unitCellMass << endl;
@@ -350,7 +350,7 @@ void polyLatticeZone::setInitialConfiguration()
 
                 forAll(latticePositions, p)
                 {
-                    label id = findIndex(molCloud_.pot().idList(), latticeIds[p]);
+                    label id = findIndex(molCloud_.cP().molIds(), latticeIds[p]);
 
                     const vector& latticePosition =
                     vector
@@ -428,7 +428,7 @@ void polyLatticeZone::setInitialConfiguration()
                             {
                                 label id = findIndex
                                 (
-                                    molCloud_.pot().idList(),
+                                    molCloud_.cP().molIds(),
                                     latticeIds[p]
                                 );
 
@@ -499,7 +499,7 @@ void polyLatticeZone::setInitialConfiguration()
                             {
                                 label id = findIndex
                                 (
-                                    molCloud_.pot().idList(),
+                                    molCloud_.cP().molIds(),
                                     latticeIds[p]
                                 );
 
