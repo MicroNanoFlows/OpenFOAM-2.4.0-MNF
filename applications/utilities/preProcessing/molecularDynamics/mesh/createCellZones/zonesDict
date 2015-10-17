@@ -21,16 +21,18 @@ cellZones
 (
       zone
       {
-         name            fillRegionA;
-         startPoint      (0 0 0);
-         endPoint        (16 6.4 16);
+         zoneNname          fillRegionA;
+         option             boundBox;
+         startPoint         (0 0 0);
+         endPoint           (16 6.4 16);
       }
       
       zone
       {
-         name            fillRegionB;
-         startPoint      (0 6.4 0);
-         endPoint        (16 16 16);
+         name               fillRegionB;
+         option             boundBox;         
+         startPoint         (0 6.4 0);
+         endPoint           (16 16 16);
       }
 );
 
