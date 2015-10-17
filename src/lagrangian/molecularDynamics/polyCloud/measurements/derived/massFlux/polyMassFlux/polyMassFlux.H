@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,25 +23,31 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    newCellZone
+    polyMassFlux
 
 Description
-
+    Instantaneous measurements of mass flow rate (here instantaneous is defined 
+    at every MD timestep)
+    
+    Apply to an existing surface 
+    
+    
+    
 SourceFiles
-    newCellZoneI.H
-    newCellZone.C
-    newCellZoneIO.C
+    polyMassFlux.C
+
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef newCellZone_H
-#define newCellZone_H
+#ifndef polyMassFlux_H
+#define polyMassFlux_H
 
-#include "IOdictionary.H"
-// #include "IOstreams.H"
+#include "polyField.H"
+#include "vector.H"
 #include "polyMesh.H"
-#include "boundedBox.H"
-#include "Switch.H"
+#include "volFields.H"
+#include "polyMoleculeCloud.H"
+// #include "distribution.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -49,73 +55,101 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class newCellZone Declaration
+                           Class polyMassFlux Declaration
 \*---------------------------------------------------------------------------*/
 
-class newCellZone
+class polyMassFlux
+:
+    public polyField
 {
+
+private:
+
     // Private data
 
-        const polyMesh& mesh_;
-        
-        const dictionary& dict_;
-        
-        word regionName_;
+        //- subDictionary containing the properties
+        dictionary propsDict_;
+    
+        word fieldName_;
 
-        labelField cells_;
+        fileName pathName_;
+        fileName nameFile_;
 
-        word option_;
+        propertyField fields_;
 
-        bool writeCellSet_;
-        
-        
+        label regionId_;
+        word faceZoneName_;
+
+        //- this term is not used here
+        scalar zoneSurfaceArea_;
+
+        //- ids of molecules
+        List<label> molIds_;
+
+        vector fluxDirection_;
+    
+        scalar cumulativeFlux_;
+
+        DynamicList<scalar> massFlux_;
+
+
     // Private Member Functions
 
 
-public:
+ public:
+
+    //- Runtime type information
+    TypeName("polyMassFlux");
 
     // Constructors
 
-        //- Construct from properties
-        newCellZone
+        //- Construct from components
+        polyMassFlux
         (
+            Time& t,
             const polyMesh& mesh,
+            polyMoleculeCloud& molCloud,
             const dictionary& dict
         );
 
     // Destructor
 
-        ~newCellZone();
+        ~polyMassFlux();
+
 
     // Member Functions
 
-        void setZone();
+        //- create initial field
+        void createField();
 
-        // Access
+        //- calculate field
+        void calculateField();
+        void measureDuringForceComputation
+        (
+            polyMolecule* molI,
+            polyMolecule* molJ
+        );
 
-        inline const labelField& cells() const;
+        void measureDuringForceComputationSite
+        (
+            polyMolecule* molI,
+            polyMolecule* molJ,
+            label sI,
+            label sJ
+        );
 
-        inline const word& name() const;
-        
-        inline const bool& writeCellSet() const;        
+        //- write field
+        void writeField();
 
-        // Check
+        const propertyField& fields() const;
 
-        // Edit
-
-        // Write
-
-
+        void updateProperties(const dictionary&);
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#include "newCellZoneI.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

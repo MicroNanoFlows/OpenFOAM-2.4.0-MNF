@@ -35,9 +35,30 @@ namespace Foam
 {
 
 defineTypeNameAndDebug(polyMassFluxZone, 0);
+
 addToRunTimeSelectionTable(polyField, polyMassFluxZone, dictionary);
 
+
+
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+
+void polyMassFluxZone::setBoundBox
+(
+    const dictionary& propsDict,
+    boundedBox& bb,
+    const word& name 
+)
+{
+    const dictionary& dict(propsDict.subDict(name));
+    
+    vector startPoint = dict.lookup("startPoint");
+    vector endPoint = dict.lookup("endPoint");
+    bb.resetBoundedBox(startPoint, endPoint);
+}
+
+
+
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -59,21 +80,10 @@ polyMassFluxZone::polyMassFluxZone
     totalVolume_(0.0),
     length_(readScalar(propsDict_.lookup("length"))),
     unitVector_(propsDict_.lookup("unitVector")),
-    mols_(0.0),
-    mass_(0.0),
-    mom_(vector::zero),
-    velocity_(vector::zero),
+    useBoundBox_(false),
     molIds_(),
-	massFluxA_(1, 0.0),
-	massFluxB_(1, 0.0),
-	massFluxC_(1, 0.0),
-	nFluxA_(1, 0.0),
-    timeIndex_(0),
-    nAvTimeSteps_(0.0),
-    resetAtOutput_(false)
+    massFlux_()
 {
-    resetAtOutput_ = Switch(propsDict_.lookup("resetAtOutput")); 
-    
     const cellZoneMesh& cellZones = mesh_.cellZones();
 
     regionId_ = cellZones.findZoneID(regionName_);
@@ -98,6 +108,7 @@ polyMassFluxZone::polyMassFluxZone
 
     molIds_ = ids.molIds();
 
+
     //-set the total volume
     const labelList& cells = cellZones[regionId_];
 
@@ -111,7 +122,18 @@ polyMassFluxZone::polyMassFluxZone
     {
         reduce(totalVolume_, sumOp<scalar>());
     }
+    
+    if (propsDict_.found("useBoundBox"))
+    {
+        useBoundBox_ = Switch(propsDict_.lookup("useBoundBox"));
+        
+        if(useBoundBox_)
+        {
+            setBoundBox(propsDict_, bb_, "samplingRegion");
+        }
+    }    
 }
+
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
@@ -125,85 +147,51 @@ void polyMassFluxZone::createField()
 
 void polyMassFluxZone::calculateField()
 {
-    nAvTimeSteps_+= 1.0;
     
     const List< DynamicList<polyMolecule*> >& cellOccupancy
-        = molCloud_.cellOccupancy();
-
+            = molCloud_.cellOccupancy();
+    
     const labelList& cells = mesh_.cellZones()[regionId_];
-
-    scalar mols = 0.0;
-    scalar mass = 0.0;
+    
     vector mom = vector::zero;
-
-
+    
     forAll(cells, c)
     {
         const label& cellI = cells[c];
         const List<polyMolecule*>& molsInCell = cellOccupancy[cellI];
-
+        
         forAll(molsInCell, mIC)
         {
             polyMolecule* molI = molsInCell[mIC];
-
+            
             if(findIndex(molIds_, molI->id()) != -1)
             {
-                mols += 1.0;
                 const scalar& massI = molCloud_.cP().mass(molI->id());
-                mass += massI;
-                mom += molI->v()*massI;
+                
+                if(useBoundBox_)
+                {
+                    if(bb_.contains(molI->position()))
+                    {
+                        mom += molI->v()*massI;
+                    }
+                }
+                else
+                {
+                    mom += molI->v()*massI;
+                }
             }
         }
     }
-
+    
     if(Pstream::parRun())
     {
-        reduce(mols, sumOp<scalar>());
-        reduce(mass, sumOp<scalar>());
         reduce(mom, sumOp<vector>());
     }
 
-    if(mass > 0.0)
-    {
-        velocity_ += mom/mass;
-    }
 
-    mols_ += mols;
-    mass_ += mass;
-    mom_ += mom;
+    scalar massFlux =(mom & unitVector_)/(length_);
+    massFlux_.append(massFlux);
 
-
-    if(time_.outputTime()) 
-    {
-        const scalar& nAvTimeSteps = nAvTimeSteps_;
-
-        vector velocityA = vector::zero;
-        vector velocityB = velocity_/nAvTimeSteps;
-
-        scalar density = mass_/(length_*nAvTimeSteps);
-
-        if(mass_ > 0)
-        {
-            velocityA = mom_/mass_;
-        }
-        
-        massFluxA_[timeIndex_] = (mom_ & unitVector_)/(length_*nAvTimeSteps);
-
-        massFluxB_[timeIndex_] = (density*velocityA & unitVector_);
-
-        massFluxC_[timeIndex_] = (density*velocityB & unitVector_);
-
-        nFluxA_[timeIndex_] = mols_*(velocityA & unitVector_)/(length_*nAvTimeSteps);
-
-        if(resetAtOutput_)
-        {
-            mols_ = 0.0;
-            mass_ = 0.0;
-            mom_ = vector::zero;
-            velocity_ = vector::zero;
-            nAvTimeSteps_ = 1.0;
-        }
-    }
 }
 
 void polyMassFluxZone::writeField()
@@ -215,116 +203,43 @@ void polyMassFluxZone::writeField()
 
         if(Pstream::master())
         {
-            scalarField timeField(1, runTime.timeOutputValue());
 
-
+            massFlux_.shrink();
+            scalarField timeField (massFlux_.size(), 0.0);
+            scalarField massFlux (massFlux_.size(), 0.0);
+            
+            massFlux.transfer(massFlux_);
+            massFlux_.clear();
+            
+            const scalar& deltaT = time_.time().deltaT().value();
+            
+            forAll(timeField, i)
+            {
+                timeField[timeField.size()-i-1]=runTime.timeOutputValue()-(deltaT*i);
+            }
+            
             writeTimeData
             (
                 casePath_,
-                "fluxZone_"+regionName_+"_"+fieldName_+"_M_A.xy",
+                "fluxZone_"+regionName_+"_"+fieldName_+"_M.xy",
                 timeField,
-                massFluxA_,
+                massFlux,
                 true
             );
-
-            writeTimeData
-            (
-                casePath_,
-                "fluxZone_"+regionName_+"_"+fieldName_+"_M_B.xy",
-                timeField,
-                massFluxB_,
-                true
-            );
-
-            writeTimeData
-            (
-                casePath_,
-                "fluxZone_"+regionName_+"_"+fieldName_+"_M_C.xy",
-                timeField,
-                massFluxC_,
-                true
-            );
-
-            writeTimeData
-            (
-                casePath_,
-                "fluxZone_"+regionName_+"_"+fieldName_+"_N.xy",
-                timeField,
-                nFluxA_,
-                true
-            );
-
-        	writeTimeData
-			(
-				casePath_,
-				"fluxZone_"+regionName_+"_"+fieldName_+"_M_A.xy",
-				massFluxA_,
-				true
-			);
-
-			writeTimeData
-			(
-				casePath_,
-				"fluxZone_"+regionName_+"_"+fieldName_+"_M_B.xy",
-				massFluxB_,
-				true
-			);
-
-			writeTimeData
-			(
-				casePath_,
-				"fluxZone_"+regionName_+"_"+fieldName_+"_M_C.xy",
-				massFluxC_,
-				true
-			);
-
-			writeTimeData
-			(
-				casePath_,
-				"fluxZone_"+regionName_+"_"+fieldName_+"_N.xy",
-				nFluxA_,
-				true
-			);
 
 
             const reducedUnits& rU = molCloud_.redUnits();
     
             if(rU.outputSIUnits())
             {
-
-            	writeTimeData
-                (
-                    casePath_,
-                    "fluxZone_"+regionName_+"_"+fieldName_+"_M_A_SI.xy",
-                    timeField*rU.refTime(),
-                    massFluxA_*rU.refMassFlux(),
-                    true
-                );
-
                 writeTimeData
                 (
                     casePath_,
-                    "fluxZone_"+regionName_+"_"+fieldName_+"_N_SI.xy",
+                    "fluxZone_"+regionName_+"_"+fieldName_+"_M_SI.xy",
                     timeField*rU.refTime(),
-                    nFluxA_*rU.refMolFlux(),
+                    massFlux*rU.refMassFlux(),
                     true
                 );
-
-            	writeTimeData
-				(
-					casePath_,
-					"fluxZone_"+regionName_+"_"+fieldName_+"_M_A_SI.xy",
-					massFluxA_*rU.refMassFlux(),
-					true
-				);
-
-				writeTimeData
-				(
-					casePath_,
-					"fluxZone_"+regionName_+"_"+fieldName_+"_N_SI.xy",
-					nFluxA_*rU.refMolFlux(),
-					true
-				);
             }
         }
     }
@@ -334,8 +249,7 @@ void polyMassFluxZone::measureDuringForceComputation
 (
     polyMolecule* molI,
     polyMolecule* molJ
-)
-{}
+){}
 
 void polyMassFluxZone::measureDuringForceComputationSite
 (
@@ -343,13 +257,15 @@ void polyMassFluxZone::measureDuringForceComputationSite
     polyMolecule* molJ,
     label sI,
     label sJ
-)
-{}
+){}
+
 
 const propertyField& polyMassFluxZone::fields() const
 {
     return fields_;
 }
+
+
 
 } // End namespace Foam
 

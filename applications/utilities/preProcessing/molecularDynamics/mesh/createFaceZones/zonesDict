@@ -17,20 +17,13 @@ FoamFile
 
 // EXAMPLE
 
-cellZones
+faceZones
 (
       zone
       {
-         name            fillRegionA;
+         name            faceA;
          startPoint      (0 0 0);
          endPoint        (16 6.4 16);
-      }
-      
-      zone
-      {
-         name            fillRegionB;
-         startPoint      (0 6.4 0);
-         endPoint        (16 16 16);
       }
 );
 

@@ -62,6 +62,10 @@ inline const word& newFaceZone::name() const
     return regionName_;
 }
 
+inline const bool& newFaceZone::writeFaceSets() const
+{
+    return writeFaceSets_;
+}
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 

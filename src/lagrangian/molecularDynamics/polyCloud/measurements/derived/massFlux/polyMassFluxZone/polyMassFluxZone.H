@@ -27,7 +27,7 @@ Class
 
 
 Description
-    computing density in a selected zone
+    computing mass flow rate in a selected zone
 
     parallelised
 
@@ -47,6 +47,7 @@ SourceFiles
 #include "volFields.H"
 #include "polyMoleculeCloud.H"
 #include "distribution.H"
+#include "boundedBox.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -82,27 +83,25 @@ private:
         scalar length_;
         vector unitVector_;
 
-        scalar mols_;
-        scalar mass_;
-
-        vector mom_;
-        vector velocity_;
-
+        bool useBoundBox_;
+        
+        boundedBox bb_;
+        
         List<label> molIds_;
 
-        scalarField massFluxA_;
-        scalarField massFluxB_;
-        scalarField massFluxC_;
+        DynamicList<scalar> massFlux_;
 
-        scalarField nFluxA_;
-
-        label timeIndex_;
-        scalar nAvTimeSteps_;
-        bool resetAtOutput_;
 
     // Private Member Functions
+        
+        void setBoundBox
+        (
+            const dictionary& propsDict,
+            boundedBox& bb,
+            const word& name 
+        );
 
-
+        
 public:
 
     //- Runtime type information
@@ -122,6 +121,7 @@ public:
     // Destructor
 
  		~polyMassFluxZone();
+
 
     // Member Functions
 

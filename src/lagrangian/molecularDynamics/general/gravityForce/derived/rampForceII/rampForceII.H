@@ -23,25 +23,32 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    newCellZone
+   forceAtTimeZero : force at time t = 0
+   forceAtRampEndTime : maximum ramp force
+   rampEndTime : time at which maximum ramp force is reached
+ 
+   optional
+     relaxationTime : allows for an initial equilibration/relaxation time
+     provided options to fixGradient (i.e. changes rampEndTime)
+     or fix rampEndTime (and change gradient)
 
+     acrossMultipleRuns : allows you to pick up where your simulation has finished.
+     No need to change your other options.
+ 
 Description
 
 SourceFiles
-    newCellZoneI.H
-    newCellZone.C
-    newCellZoneIO.C
+    rampForceIII.H
+    rampForceII.C
+    rampForceIIIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef newCellZone_H
-#define newCellZone_H
+#ifndef rampForceII_H
+#define rampForceII_H
 
-#include "IOdictionary.H"
-// #include "IOstreams.H"
-#include "polyMesh.H"
-#include "boundedBox.H"
-#include "Switch.H"
+
+#include "gravityForce.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -49,62 +56,104 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class newCellZone Declaration
+                           Class rampForceII Declaration
 \*---------------------------------------------------------------------------*/
 
-class newCellZone
+class rampForceII
+:
+    public gravityForce
 {
+
+private:
+
     // Private data
 
-        const polyMesh& mesh_;
-        
-        const dictionary& dict_;
-        
-        word regionName_;
+        dictionary propsDict_;
 
-        labelField cells_;
-
-        word option_;
-
-        bool writeCellSet_;
+        vector force_;
         
+        vector direction_;
         
-    // Private Member Functions
+        scalar initialForce_;
+        
+        scalar finalForce_;
+        
+        scalar endTime_;
+        
+        scalar forceGradient_;
 
+        scalar relaxationTime_;
+        
+        scalar currentTime_;
+
+        scalar deltaTMD_;
+    
+        scalar c_;
+    
+    
 
 public:
 
+    //- Runtime type information
+    TypeName("rampForceII");
+
+    // Static data members
+
     // Constructors
 
-        //- Construct from properties
-        newCellZone
+        //- construct from components
+        rampForceII
         (
-            const polyMesh& mesh,
+            Time& time,
             const dictionary& dict
         );
 
+    // Selectors
+
+
     // Destructor
 
-        ~newCellZone();
+        ~rampForceII();
 
     // Member Functions
 
-        void setZone();
+        //- output data
 
         // Access
-
-        inline const labelField& cells() const;
-
-        inline const word& name() const;
-        
-        inline const bool& writeCellSet() const;        
 
         // Check
 
         // Edit
 
+            void updateForce();
+
+            vector force(const vector& position);
+            
+            vector force(const scalar& time);
+            
         // Write
 
+
+            void write
+            (
+                const fileName& fixedPathName,
+                const fileName& timePath
+            );
+
+
+            void updateProperties
+            (
+                const dictionary& dict
+            );
+
+
+    // Member Operators
+
+    // Friend Functions
+
+    // Friend Operators
+
+    // IOstream Operators
 
 };
 
@@ -115,7 +164,6 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#include "newCellZoneI.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

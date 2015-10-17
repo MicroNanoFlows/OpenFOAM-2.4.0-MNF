@@ -71,6 +71,7 @@ measurements/derived/combinedFields/polyARCHER/polyARCHER_outputFiles.C
 measurements/derived/massFlux/polyMassFluxMultiSurfaces/polyMassFluxMultiSurfaces.C
 measurements/derived/massFlux/polyMassFluxSurface/polyMassFluxSurface.C
 measurements/derived/massFlux/polyMassFluxZone/polyMassFluxZone.C
+measurements/derived/massFlux/polyMassFlux/polyMassFlux.C
 
 /*  - OTHER  */
 

@@ -73,7 +73,11 @@ class potentials
         // largest rCut of all pair and electrostatic potentials
         scalar rCutMax_; 
 
-
+        
+        // user defined potentials go here and chosen from potentialsDict
+        
+        
+        
         
     // Private Member Functions
 

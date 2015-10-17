@@ -91,6 +91,7 @@ gravityForce/derived/oneDimForce/oneDimForce.C
 gravityForce/derived/gaussianForce/gaussianForce.C
 gravityForce/derived/standardGaussian/standardGaussian.C
 gravityForce/derived/rampForce/rampForce.C
+gravityForce/derived/rampForceII/rampForceII.C
 gravityForce/derived/multiRampForce/multiRampForce.C
 gravityForce/derived/timeVaryingForce/timeVaryingForce.C
 gravityForce/derived/mixedOscillatingForce/mixedOscillatingForce.C
