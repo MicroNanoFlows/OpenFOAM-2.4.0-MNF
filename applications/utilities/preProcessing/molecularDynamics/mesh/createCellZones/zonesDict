@@ -14,7 +14,6 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-//- list zones to combine together. These zones will also be subtracted from the global zone
 
 // EXAMPLE
 
