@@ -131,6 +131,12 @@ const pairPotentials& potentials::pairPots() const
     return pairPotentials_;
 }
 
+
+pairPotentials& potentials::pairPots()
+{
+    return pairPotentials_;
+}
+
 const scalar& potentials::rCutMax() const
 {
     return rCutMax_;

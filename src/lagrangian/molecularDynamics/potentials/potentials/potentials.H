@@ -120,7 +120,7 @@ public:
 
                 
             const pairPotentials& pairPots() const;
-//             pairPotentials& pairPots();            
+            pairPotentials& pairPots();            
 //             pairPotentials& pairPotentials();
             
             inline const scalar& potentialEnergyLimit() const;

@@ -624,6 +624,12 @@ inline const Foam::potentials& Foam::polyMoleculeCloud::pot() const
     return p_;
 }
 
+inline Foam::potentials& Foam::polyMoleculeCloud::pot()
+{
+    return p_;
+}
+
+
 inline const Foam::constantMoleculeProperties& Foam::polyMoleculeCloud::cP() const
 {
     return cP_;

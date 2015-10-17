@@ -169,6 +169,7 @@ public:
         scalar energy (const scalar r) const;
 
         scalar force (const scalar r) const;
+        
 
         List<Pair<scalar> > energyTable() const;
 

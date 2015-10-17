@@ -75,13 +75,13 @@ private:
 
         const polyMesh& mesh_;
         
-        const potentials& p_;
-        
         const reducedUnits& redUnits_;
 
         const constantMoleculeProperties& cP_;
         
         cachedRandomMD& rndGen_;
+
+        potentials p_;
         
         List<DynamicList<polyMolecule*> > cellOccupancy_;
         
@@ -135,7 +135,7 @@ public:
         (
             Time& t,
             const polyMesh& mesh,
-            const potentials& p,
+//             const potentials& p,
             const reducedUnits& rU,
             const constantMoleculeProperties& cP,
             cachedRandomMD& rndGen
@@ -146,7 +146,7 @@ public:
         (
             Time& t,
             const polyMesh& mesh,
-            const potentials& p,
+//             const potentials& p,
             const reducedUnits& rU,
             const constantMoleculeProperties& cP,
             cachedRandomMD& rndGen,
@@ -160,7 +160,7 @@ public:
         (
             Time& t,
             const polyMesh& mesh,
-            const potentials& p,
+//             const potentials& p,
             const reducedUnits& rU,
             const constantMoleculeProperties& cP,
             cachedRandomMD& rndGen
@@ -170,7 +170,7 @@ public:
         (
             Time& t,
             const polyMesh& mesh,
-            const potentials& p,
+//             const potentials& p,
             const reducedUnits& rU,
             const constantMoleculeProperties& cP,
             cachedRandomMD& rndGen,
@@ -265,6 +265,7 @@ public:
             label nSites() const;
             inline const polyMesh& mesh() const;
             inline const potentials& pot() const;
+            inline potentials& pot();            
             inline const constantMoleculeProperties& cP() const;
 //             inline const potential& pot() const;
             inline const List<DynamicList<polyMolecule*> >& cellOccupancy() const;

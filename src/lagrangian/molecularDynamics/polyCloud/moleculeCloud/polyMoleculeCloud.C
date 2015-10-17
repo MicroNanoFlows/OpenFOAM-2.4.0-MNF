@@ -662,7 +662,7 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
 (
     Time& t,
     const polyMesh& mesh,
-    const potentials& p,
+//     const potentials& p,
     const reducedUnits& rU,
     const constantMoleculeProperties& cP, 
     cachedRandomMD& rndGen
@@ -670,10 +670,11 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
 :
     Cloud<polyMolecule>(mesh, "polyMoleculeCloud", false),
     mesh_(mesh),
-    p_(p),
+//     p_(p),
     redUnits_(rU),
     cP_(cP),
     rndGen_(rndGen),
+    p_(mesh, rU, cP), 
     cellOccupancy_(mesh_.nCells()),
 //     constPropList_(),
     fields_(t, mesh_, *this),
@@ -722,7 +723,7 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
 (
     Time& t,
     const polyMesh& mesh,
-    const potentials& p,
+//     const potentials& p,
     const reducedUnits& rU,
     const constantMoleculeProperties& cP,
     cachedRandomMD& rndGen, 
@@ -732,10 +733,10 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     :
     Cloud<polyMolecule>(mesh, "polyMoleculeCloud", false),
     mesh_(mesh),
-    p_(p),    
     redUnits_(rU),
     cP_(cP),
     rndGen_(rndGen),    
+    p_(mesh, rU, cP), 
     cellOccupancy_(mesh_.nCells()),
 //     constPropList_(),
     fields_(t, mesh_),
@@ -832,7 +833,6 @@ Foam::autoPtr<Foam::polyMoleculeCloud> Foam::polyMoleculeCloud::New
 (
     Time& t,
     const polyMesh& mesh,
-    const potentials& p,
     const reducedUnits& rU,
     const constantMoleculeProperties& cP, 
     cachedRandomMD& rndGen
@@ -840,7 +840,7 @@ Foam::autoPtr<Foam::polyMoleculeCloud> Foam::polyMoleculeCloud::New
 {
     return autoPtr<polyMoleculeCloud>
     (
-        new polyMoleculeCloud(t, mesh, p, rU, cP, rndGen)
+        new polyMoleculeCloud(t, mesh, rU, cP, rndGen)
     );
 }
 
@@ -848,7 +848,6 @@ Foam::autoPtr<Foam::polyMoleculeCloud> Foam::polyMoleculeCloud::New
 (
     Time& t,
     const polyMesh& mesh,
-    const potentials& p,
     const reducedUnits& rU,
     const constantMoleculeProperties& cP, 
     cachedRandomMD& rndGen,
@@ -858,7 +857,7 @@ Foam::autoPtr<Foam::polyMoleculeCloud> Foam::polyMoleculeCloud::New
 {
     return autoPtr<polyMoleculeCloud>
     (
-        new polyMoleculeCloud(t, mesh, p, rU, cP, rndGen, option, clearFields)
+        new polyMoleculeCloud(t, mesh, rU, cP, rndGen, option, clearFields)
     );
 }
 

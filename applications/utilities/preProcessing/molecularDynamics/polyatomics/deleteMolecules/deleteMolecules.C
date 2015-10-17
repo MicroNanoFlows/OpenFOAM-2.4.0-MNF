@@ -61,13 +61,10 @@ int main(int argc, char *argv[])
 
     constantMoleculeProperties cP (mesh, rU);
         
-    potentials p(mesh, rU, cP);
-
     polyMoleculeCloud molecules
     (
         runTime,
         mesh,
-        p,
         rU,
         cP,
         rndGen,
