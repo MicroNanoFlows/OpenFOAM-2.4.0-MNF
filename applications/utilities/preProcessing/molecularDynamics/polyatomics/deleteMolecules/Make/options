@@ -2,17 +2,17 @@ EXE_INC = \
     -I$(LIB_SRC)/finiteVolume/lnInclude \
     -I$(LIB_SRC)/meshTools/lnInclude \
     -I$(LIB_SRC)/lagrangian/basic/lnInclude \
-    -I$(LIB_SRC)/lagrangian/molecularDynamics/polyField/lnInclude \
-    -I$(LIB_SRC)/lagrangian/molecularDynamics/polyField/mdTools \
-    -I$(LIB_SRC)/lagrangian/molecularDynamics/potential/lnInclude \
+    -I$(LIB_SRC)/lagrangian/molecularDynamics/polyCloud/lnInclude \
+    -I$(LIB_SRC)/lagrangian/molecularDynamics/polyCloud/mdTools \
+    -I$(LIB_SRC)/lagrangian/molecularDynamics/potentials/lnInclude \
     -I$(LIB_SRC)/lagrangian/molecularDynamics/general/lnInclude \
-    -I$(LIB_SRC)/lagrangian/molecularDynamics/general/includeFiles 
+    -I$(LIB_SRC)/lagrangian/molecularDynamics/general/includeFiles     
     
+
 EXE_LIBS = \
     -lfiniteVolume \
     -lmeshTools \
     -llagrangian \
-    -lpolyField \
-    -lpotential \
+    -lpolyCloud \
+    -lpotentials \
     -lgeneralMolecule
-

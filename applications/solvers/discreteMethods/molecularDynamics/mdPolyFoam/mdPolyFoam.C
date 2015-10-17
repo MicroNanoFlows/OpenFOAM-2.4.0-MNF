@@ -41,18 +41,19 @@ int main(int argc, char *argv[])
 #   include "createMesh.H"
 #   include "createRandom.H"
     
-//     constantMoleculeProperties cP (mesh);
-    
-    reducedUnits redUnits(runTime, mesh);
+    reducedUnits rU(runTime, mesh);
 
-    potential pot(mesh, redUnits);
+    constantMoleculeProperties cP (mesh, rU);
+        
+    potentials p(mesh, rU, cP);
 
     polyMoleculeCloud molecules
     (
         runTime,
         mesh,
-        pot,
-        redUnits,
+        p,
+        rU,
+        cP,
         rndGen
     );
     

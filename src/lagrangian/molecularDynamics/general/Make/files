@@ -1,11 +1,16 @@
 cellInteractions/referredCell/referredCell.C
 cellInteractions/patchLayer/patchLayer.C
 
+
+constant/constantMoleculeProperties/constantMoleculeProperties.C
+constant/selectSiteIds/selectSiteIds.C
+constant/selectIds/selectIds.C
+
+
 boundedBox/boundedBox.C
 
 distributePoints/distributePoints.C
 
-constantMoleculeProperties/constantMoleculeProperties.C
 
 /* BOUNDARIES */
 
@@ -15,9 +20,6 @@ boundaries/derived/standardCyclic/standardCyclic.C
 
 constructCyclicBoundaries/constructCyclicBoundaries.C
 
-/* MOLECULES */
-
-constPropSite/constPropSite.C
 
 /* REDUCED UNITS*/
 

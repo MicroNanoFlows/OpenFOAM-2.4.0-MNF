@@ -65,11 +65,23 @@ int main(int argc, char *argv[])
 #   include "createMesh.H"
 #   include "createRandom.H"
     
-    reducedUnits redUnits(runTime, mesh);
+    reducedUnits rU(runTime, mesh);
 
-    potential pot(mesh, redUnits);
+    constantMoleculeProperties cP (mesh, rU);
+        
+    potentials p(mesh, rU, cP);
 
-    polyMoleculeCloud molecules(runTime, mesh, pot, redUnits, rndGen, "mapping", false);
+    polyMoleculeCloud molecules
+    (
+        runTime,
+        mesh,
+        p,
+        rU,
+        cP,
+        rndGen,
+        "mapping",
+        false
+    );    
 
     IOstream::defaultPrecision(15);
 
