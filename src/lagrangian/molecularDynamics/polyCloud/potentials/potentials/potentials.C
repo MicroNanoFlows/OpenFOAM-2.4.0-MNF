@@ -143,10 +143,10 @@ potentials::~potentials()
 //     if(!molI->frozen() || !molJ->frozen())
 
 
-const pairPotentials& potentials::pairPots() const
-{
-    return pairPotentials_;
-}
+// const pairPotentials& potentials::pairPots() const
+// {
+//     return pairPotentials_;
+// }
 
 
 pairPotentials& potentials::pairPots()

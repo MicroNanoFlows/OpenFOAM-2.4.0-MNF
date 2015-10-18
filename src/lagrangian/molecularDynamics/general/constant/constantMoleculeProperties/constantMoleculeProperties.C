@@ -265,17 +265,17 @@ constantMoleculeProperties::constantMoleculeProperties
     chargeSiteIdList_.transfer(chargeSiteIdList);
     
     
-    pairPotNamesToPairPotSitesList_.setSize(N_);
+    pairPotNames_to_pairPotSitesList_.setSize(N_);
 
-    forAll(pairPotNamesToPairPotSitesList_, i)
+    forAll(pairPotNames_to_pairPotSitesList_, i)
     {
-        pairPotNamesToPairPotSitesList_[i].setSize(pairPotNames_[i].size());
+        pairPotNames_to_pairPotSitesList_[i].setSize(pairPotNames_[i].size());
         
         forAll(pairPotNames_[i], j)
         {
             const word& name = pairPotNames_[i][j];
             label k = findIndex(pairPotSiteIdList_, name);
-            pairPotNamesToPairPotSitesList_[i][j] = k;
+            pairPotNames_to_pairPotSitesList_[i][j] = k;
         }
     }
 
@@ -320,6 +320,22 @@ constantMoleculeProperties::constantMoleculeProperties
             chargePotNamesToSites_[i][j] = k;
         }
     }    
+    
+    
+    
+    siteNames_to_siteIdList_.setSize(N_);
+    
+    forAll(siteNames_, i)
+    {
+        siteNames_to_siteIdList_[i].setSize(siteNames_[i].size());
+        
+        forAll(siteNames_[i], j)
+        {
+            const word& name = siteNames_[i][j];
+            label k = findIndex(siteIdList_, name);
+            siteNames_to_siteIdList_[i][j] = k;
+        }
+    }
 
     // Output tests - debug
     Info << "siteNames_ = " << siteNames_ << endl;
@@ -802,10 +818,7 @@ const List<word>& constantMoleculeProperties::chargeSiteIdList() const
 }
 
         
-const List<List<label> >& constantMoleculeProperties::pairPotNamesToPairPotSitesList() const
-{
-    return pairPotNamesToPairPotSitesList_;
-}
+
 
 const List<List<label> >& constantMoleculeProperties::pairPotNamesToSites() const
 {
@@ -820,6 +833,17 @@ const List<List<label> >& constantMoleculeProperties::chargePotNamesToChargePotS
 const List<List<label> >& constantMoleculeProperties::chargePotNamesToSites() const
 {
     return chargePotNamesToSites_;
+}
+
+// IMP:
+const List<List<label> >& constantMoleculeProperties::pairPotNames_to_pairPotSitesList() const
+{
+    return pairPotNames_to_pairPotSitesList_;
+}
+
+const List<List<label> >& constantMoleculeProperties::siteNames_to_siteIdList() const
+{
+    return siteNames_to_siteIdList_;
 }
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //

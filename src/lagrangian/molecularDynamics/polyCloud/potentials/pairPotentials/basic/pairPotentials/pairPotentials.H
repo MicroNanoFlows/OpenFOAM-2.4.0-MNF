@@ -76,13 +76,19 @@ class pairPotentials
         List< autoPtr<pairPotentialModel> > pairPotentials_;
 
         
-        // linking pairpotids to potential storage
-        // outer list size of cP_.()
-        // inner list size of cP_.()
+        // linking pairPotIdList_ with pairPotentials_
+        // outer list size of cP_.pairPotSiteIdList()
+        // inner list size of cP_.pairPotSiteIdList()
         // store index of pairPotentials_
-        List<List<label> > pairPotLinks_;
+        List<List<label> > pairPotIdList_to_pairPotentials_;
 
-
+        // linking siteIdList_ with pairPotentials_
+        // outer list size of cP_.siteIds()
+        // inner list size of cP_.siteIds()
+        // store index of pairPotentials_        
+        List<List<label> > siteIdList_to_pairPotentials_;
+        
+        
         // this is a fixed electrostatic short range potential applied to all
         // charged sites 
         autoPtr<pairPotentialModel> electrostaticPotential_;
@@ -101,7 +107,7 @@ class pairPotentials
         
             void testPairPotentials();
 
-            void setExclusions();
+//             void setExclusions();
         
 public:
 
@@ -128,61 +134,61 @@ public:
         inline const List< autoPtr<pairPotentialModel> >& pairPots() const;
         inline const List<word>& pairNames() const;
         inline const List<label>& pairIds() const;
-        
-        inline autoPtr<pairPotentialModel>& pairPot
-        (
-            const label pairSiteA,
-            const label pairSiteB
-        );
-        
         inline autoPtr<pairPotentialModel>& electrostaticPot();
         inline const autoPtr<pairPotentialModel>& electrostaticPot() const;        
         
+        inline label getIndexFromPairPotentialSites
+        (
+            const label& idI,
+            const label& idj,
+            const label& i,
+            const label& j
+        );
         
-        
+        inline label getIndexFromSites
+        (
+            const label& idI,
+            const label& idJ,
+            const label& sI,
+            const label& sJ
+        );  
+
         scalar force
         (
-            const label pairSiteA,
-            const label pairSiteB,
-            const scalar r
-        ) const;
+            const label& k,
+            const scalar& r
+        );
         
         scalar energy
         (
-            const label pairSiteA,
-            const label pairSiteB,
-            const scalar r
-        ) const;
+            const label& k,
+            const scalar& r
+        );
 
         bool rCutSqr
         (
-            const label pairSiteA,
-            const label pairSiteB,
-            const scalar r
-        ) const;         
+            const label& k,
+            const scalar& r
+        );         
 
-//         bool excludeSites
-//         (
-//             polyMolecule* molI,
-//             polyMolecule* molJ,         
-//             const label pairSiteA,
-//             const label pairSiteB
-//         ) const;
-        
         scalar rMin
         (
-            const label pairSiteA,
-            const label pairSiteB
-        ) const;
+            const label& k
+        );
         
-        const List< List<label> >& pairPotLinks() const;
-        
-        const label& pairPotLink
+        bool excludeSites
         (
-            const label& pairSiteA,
-            const label& pairSiteB            
-        ) const;
+            polyMolecule* molI,
+            polyMolecule* molJ,
+            const label& sI,
+            const label& sJ,
+            const label& k
+        );
         
+        
+        const List< List<label> >& pairPotIdList_to_pairPotentials() const;
+        
+//         
     // Ostream Operator
 
 //         friend Ostream& operator<<(Ostream&, const pairPotentials&);

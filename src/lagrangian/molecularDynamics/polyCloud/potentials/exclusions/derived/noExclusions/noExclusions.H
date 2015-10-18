@@ -60,16 +60,6 @@ private:
 
         dictionary propsDict_;
 
-//         vector startPoint_;
-//         vector endPoint_;
-//         vector unitVector_;
-//         scalar rSEMag_;
-// 
-// 
-//         label nBins_;
-//         scalar binWidth_;
-//         scalar area_;
-
 
 
 
@@ -119,22 +109,6 @@ public:
             const label& siteJ
         );
         
-        
-//             label isPointWithinBin
-//             (
-//                 const vector& rI,
-//                 const label& cellI
-//             );
-// 
-//             scalarField binPositions();
-// 
-//             vectorField bins();
-// 
-//             const label& nBins() const;
-// 
-//             scalar binVolume(const label& n);
-
-            
 
         // Write
 

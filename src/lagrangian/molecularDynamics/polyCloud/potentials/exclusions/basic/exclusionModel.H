@@ -134,24 +134,6 @@ public:
         ) = 0;
         
         
-        
-        
-//             virtual label isPointWithinBin
-//             (
-//                 const vector& rI,
-//                 const label& cellI
-//             ) = 0;
-
-//             virtual scalarField binPositions() = 0;
-
-//             virtual vectorField bins() = 0;
-
-//             virtual const label& nBins() const = 0;
-
-//             virtual scalar binVolume(const label& n) = 0;
-
-//             virtual scalar binWidth() = 0;
-
         // Access
 
         // Check

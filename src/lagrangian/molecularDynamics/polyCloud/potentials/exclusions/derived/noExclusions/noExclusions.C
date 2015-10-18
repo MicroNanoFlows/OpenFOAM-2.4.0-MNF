@@ -57,14 +57,7 @@ noExclusions::noExclusions
 )
 :
     exclusionModel(mesh, molCloud, dict)
-//     propsDict_(dict.subDict(typeName + "Properties")),
-//     startPoint_(propsDict_.lookup("startPoint")),
-//     endPoint_(propsDict_.lookup("endPoint")),
-//     unitVector_((endPoint_ - startPoint_)/mag(endPoint_ - startPoint_)),
-//     rSEMag_(mag(endPoint_ - startPoint_)),
-//     nBins_(readLabel(propsDict_.lookup("nBins"))),
-//     binWidth_(mag(endPoint_ - startPoint_)/(nBins_)),
-//     area_(readScalar(propsDict_.lookup("area")))
+
 {}
 
 
@@ -87,7 +80,7 @@ bool noExclusions::excludeMolecules
     polyMolecule* molJ
 )
 {
-    return true;
+    return false;
 }
 
 bool noExclusions::excludeSites
@@ -98,80 +91,9 @@ bool noExclusions::excludeSites
     const label& siteJ
 )
 {
-    return true;
+    return false;
 }
 
-// cellI is a dummy variable
-// label noExclusions::isPointWithinBin
-// (
-//     const vector& rI,
-//     const label& cellI
-// )
-// {
-//     label binNumber = -1;
-// 
-// //     scalar rSEMag = mag(endPoint_ - startPoint_);
-// 
-//     vector rSI = rI - startPoint_;
-//     scalar rD = rSI & unitVector_;
-//     label n = label(rD/binWidth_);
-// 
-//     if
-//     (
-//         (n >= 0) && (rD <= rSEMag_)
-//     )
-//     {
-// 
-//         if(n == nBins_) 
-//         {
-//             n--;
-//         }
-// 
-//         if(n < nBins_)
-//         {
-//             binNumber = n;
-//         }
-//     }
-// 
-//     return binNumber;
-// }
-// 
-// 
-// scalarField noExclusions::binPositions()
-// {
-//     scalarField positions(nBins_, 0.0);
-// 
-//     forAll(positions, i)
-//     {
-//         positions[i] = 0.5*binWidth_ + scalar(i)*binWidth_;
-//     }
-// 
-//     return positions;
-// }
-// 
-// vectorField noExclusions::bins()
-// {
-//     vectorField positions(nBins_, vector::zero);
-// 
-//     forAll(positions, i)
-//     {
-//         positions[i] = startPoint_ + (0.5 + scalar(i))*binWidth_*unitVector_;
-//     }
-// 
-//     return positions;
-// }
-// 
-// const label& noExclusions::nBins() const
-// {
-//     return nBins_;
-// }
-// 
-// scalar noExclusions::binVolume(const label& n)
-// {
-//     scalar volume = area_*binWidth_;
-// 
-//     return volume;
-// }
 
 
 // * * * * * * * * * * * * * * * Friend Functions  * * * * * * * * * * * * * //

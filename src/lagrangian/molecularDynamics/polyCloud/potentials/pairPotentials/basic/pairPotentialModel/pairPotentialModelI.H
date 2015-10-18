@@ -75,6 +75,10 @@ inline bool pairPotentialModel::exclusions() const
     return exclusions_;
 }
 
+inline autoPtr<exclusionModel>& pairPotentialModel::excludeModel()
+{
+    return exclusionModel_;
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

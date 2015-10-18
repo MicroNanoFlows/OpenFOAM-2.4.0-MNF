@@ -230,7 +230,7 @@ public:
             polyMolecule* molI,
             polyMolecule* molJ,
             const scalar& potentialEnergyLimit
-        ) const;
+        ) ;
 
         void insertMolInCellOccupancy
         (

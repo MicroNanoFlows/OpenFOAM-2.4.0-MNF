@@ -129,7 +129,7 @@ public:
 
 //             bool interactSites(polyMolecule* molI, polyMolecule* molJ, siteI, siteJ);
             
-            const pairPotentials& pairPots() const;
+//             const pairPotentials& pairPots() const;
             pairPotentials& pairPots();            
 //             pairPotentials& pairPotentials();
             

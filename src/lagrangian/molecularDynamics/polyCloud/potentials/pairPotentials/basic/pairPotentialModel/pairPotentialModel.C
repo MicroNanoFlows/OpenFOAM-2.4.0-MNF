@@ -373,10 +373,7 @@ const dictionary& pairPotentialModel::pairPotentialProperties() const
     return pairPotentialProperties_;
 }
 
-autoPtr<exclusionModel>& pairPotentialModel::exclModel()
-{
-    return exclusionModel_;
-}
+
 
 } // End namespace Foam
 

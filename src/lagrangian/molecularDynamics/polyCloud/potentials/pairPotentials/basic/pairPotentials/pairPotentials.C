@@ -128,18 +128,19 @@ void pairPotentials::testPairPotentials()
 {
     Info << nl << "Testing pair potentials..." << nl << endl;
 
-    // test 1 - check that all pair sites have pair potential combinations
+    // check that all pair sites have pair potential combinations defined in potentialDict
+    // and create the linked lists 
     
-    List<word> pairSites = cP_.pairPotSiteIdList();
+    const List<word>& pairSites = cP_.pairPotSiteIdList();
     
     Info << "cP_.pairPotSiteIdList() " << cP_.pairPotSiteIdList() << endl;
     
     // imp: first to set size of lists
-    pairPotLinks_.setSize(pairSites.size());
+    pairPotIdList_to_pairPotentials_.setSize(pairSites.size());
     
     forAll(pairSites, i)
     {
-        pairPotLinks_[i].setSize(pairSites.size(), -1); 
+        pairPotIdList_to_pairPotentials_[i].setSize(pairSites.size(), -1); 
     }
     
     forAll(pairSites, i)
@@ -158,8 +159,8 @@ void pairPotentials::testPairPotentials()
                     ( (ids[1] == pairSites[i]) && (ids[0] == pairSites[j]) ) 
                 )
                 {
-                    pairPotLinks_[i][j] = k;
-                    pairPotLinks_[j][i] = k;
+                    pairPotIdList_to_pairPotentials_[i][j] = k;
+                    pairPotIdList_to_pairPotentials_[j][i] = k;
                     pairsFound = true;
                 }
             }
@@ -175,6 +176,41 @@ void pairPotentials::testPairPotentials()
             }
         }
     }
+     
+    
+    // create linked lists for sites
+    
+    const List<word>& sites = cP_.siteIds();
+    
+    siteIdList_to_pairPotentials_.setSize(sites.size());
+    
+    forAll(sites, i)
+    {
+        siteIdList_to_pairPotentials_[i].setSize(sites.size(), -1); 
+    }
+    
+    forAll(sites, i)
+    {
+        forAll(sites, j)
+        {
+            forAll(pairPotentials_, k)
+            {
+                const List<word>& ids = pairPotentials_[k]->idList();
+                
+                if
+                (
+                    ( (ids[0] == sites[i]) && (ids[1] == sites[j]) ) ||
+                    ( (ids[1] == sites[i]) && (ids[0] == sites[j]) ) 
+                )
+                {
+                    siteIdList_to_pairPotentials_[i][j] = k;
+                    siteIdList_to_pairPotentials_[j][i] = k;
+                }
+            }
+        }
+    }
+    
+    Info << "siteIdList_to_pairPotentials_ = " << siteIdList_to_pairPotentials_ << endl;
 }
 
 
@@ -203,38 +239,29 @@ scalar pairPotentials::maxRCut()
 
 scalar pairPotentials::force
 (
-    const label pairSiteA,
-    const label pairSiteB,
-    const scalar r
-) const
+    const label& k,
+    const scalar& r
+) 
 {
-    label k = pairPotLinks_[pairSiteA][pairSiteB];
-    
     return pairPotentials_[k]->force(r);
 }
 
 scalar pairPotentials::energy
 (
-    const label pairSiteA,
-    const label pairSiteB,
-    const scalar r
-) const
+    const label& k,
+    const scalar& r
+) 
 {
-    label k = pairPotLinks_[pairSiteA][pairSiteB];
-    
     return pairPotentials_[k]->energy(r);
 }
 
 
 bool pairPotentials::rCutSqr
 (
-    const label pairSiteA,
-    const label pairSiteB,
-    const scalar rIJSqr
-) const
+    const label& k,
+    const scalar& rIJSqr
+) 
 {
-    label k = pairPotLinks_[pairSiteA][pairSiteB];
-    
     if(rIJSqr <= pairPotentials_[k]->rCutSqr())
     {
         return true;
@@ -246,49 +273,40 @@ bool pairPotentials::rCutSqr
 }
 
 
-// bool pairPotentials::excludeSites
-// (
-//     const label pairSiteA,
-//     const label pairSiteB
-// ) const
-// {
-//     
-//     label k = pairPotLinks_[pairSiteA][pairSiteB];
-//     
-//     if(!exclusions_[k])
-//     {
-//         return false;
-//     }
-//     else
-//     {
-//         return pairPotentials_[k]->exclModel().excludeSites();
-//     }
-// }
-
 scalar pairPotentials::rMin
 (
-    const label pairSiteA,
-    const label pairSiteB
-) const
+    const label& k
+) 
 {
-     label k = pairPotLinks_[pairSiteA][pairSiteB];
-    
      return pairPotentials_[k]->rMin();
 }
 
-const List< List<label> >& pairPotentials::pairPotLinks() const
+bool pairPotentials::excludeSites
+(
+    polyMolecule* molI,
+    polyMolecule* molJ,
+    const label& sI,
+    const label& sJ,
+    const label& k
+) 
 {
-    return pairPotLinks_;
+    if(!exclusions_[k])
+    {
+        return false;
+    }
+    else
+    {
+        Info << "Debug: Exclusion Model being implemented" << endl;
+        
+        return pairPotentials_[k]->excludeModel()->excludeSites(molI, molJ, sI, sJ);
+    }
 }
 
-const label& pairPotentials::pairPotLink
-(
-    const label& pairSiteA,
-    const label& pairSiteB    
-) const
+const List< List<label> >& pairPotentials::pairPotIdList_to_pairPotentials() const
 {
-    return pairPotLinks_[pairSiteA][pairSiteB];
+    return pairPotIdList_to_pairPotentials_;
 }
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

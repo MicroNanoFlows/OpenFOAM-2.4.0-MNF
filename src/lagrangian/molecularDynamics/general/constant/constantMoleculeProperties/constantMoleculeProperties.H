@@ -134,7 +134,7 @@ class constantMoleculeProperties
         // outer list = molecule types
         // inner list = linked to pairPotNames_
         // each entry is an index to pairPotSiteIdList_
-        List< List<label> > pairPotNamesToPairPotSitesList_;
+        List< List<label> > pairPotNames_to_pairPotSitesList_;
 
         // link between pairPotNames_ and siteNames_
         // outer list = molecule types
@@ -157,6 +157,8 @@ class constantMoleculeProperties
         List< List<label> > chargePotNamesToSites_;           
         
         
+        
+        List<List<label> > siteNames_to_siteIdList_;
         
         
         
@@ -229,10 +231,15 @@ public:
         const List<word>& chargeSiteIdList() const;
         
         
-        const List<List<label> >& pairPotNamesToPairPotSitesList() const;
+
         const List<List<label> >& pairPotNamesToSites() const;        
         const List<List<label> >& chargePotNamesToChargePotSitesList() const; 
         const List<List<label> >& chargePotNamesToSites() const; 
+        
+        
+        // IMP:
+        const List<List<label> >& pairPotNames_to_pairPotSitesList() const;        
+        const List<List<label> >& siteNames_to_siteIdList() const; 
 };
 
 

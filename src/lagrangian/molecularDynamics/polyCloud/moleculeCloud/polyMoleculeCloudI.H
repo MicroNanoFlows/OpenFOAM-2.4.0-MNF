@@ -73,24 +73,24 @@ inline void Foam::polyMoleculeCloud::evaluatePair
 
                 scalar rsIsJMagSq = magSqr(rsIsJ);
                 
-                // determine index of pairPotentials_
-                label idsI=cP_.pairPotNamesToPairPotSitesList()[idI][i];
-                label idsJ=cP_.pairPotNamesToPairPotSitesList()[idJ][j];
+                // determine index of pairPotential from list of pairPotentials_
                 
-                if(p_.pairPots().rCutSqr(idsI, idsJ, rsIsJMagSq))
+                label k = p_.pairPots().getIndexFromPairPotentialSites(idI, idJ, i, j);
+                
+                if(p_.pairPots().rCutSqr(k, rsIsJMagSq))
                 {
-//                     if(!p_.pairPots().exclude(idsI, idsJ))
+                    if(!p_.pairPots().excludeSites(molI, molJ, sI, sJ, k))
                     {
                         scalar rsIsJMag = mag(rsIsJ);
 
-                        vector fsIsJ = f*(rsIsJ/rsIsJMag)*p_.pairPots().force(idsI, idsJ, rsIsJMag);
+                        vector fsIsJ = f*(rsIsJ/rsIsJMag)*p_.pairPots().force(k, rsIsJMag);
 
                         molI->siteForces()[sI] += fsIsJ;
                         molJ->siteForces()[sJ] += -fsIsJ;
 
                         scalar potentialEnergy
                         (
-                            f*p_.pairPots().energy(idsI, idsJ, rsIsJMag)
+                            f*p_.pairPots().energy(k, rsIsJMag)
                         );
 
                         molI->potentialEnergy() += 0.5*potentialEnergy;
@@ -152,9 +152,6 @@ inline void Foam::polyMoleculeCloud::evaluatePair
 
                     scalar chargeI = cP_.siteCharges(idI)[sI];
                     scalar chargeJ = cP_.siteCharges(idJ)[sJ];
-                    
-//                     scalar chargeI = constPropI.sites()[sI].siteCharge();
-//                     scalar chargeJ = constPropJ.sites()[sJ].siteCharge();
         
                     vector fsIsJ =
                         f*(rsIsJ/rsIsJMag)
@@ -200,14 +197,12 @@ inline bool Foam::polyMoleculeCloud::evaluatePotentialLimit
     polyMolecule* molI,
     polyMolecule* molJ,
     const scalar& potentialEnergyLimit
-) const
+) 
 {
-    
-  
     label idI = molI->id();
     label idJ = molJ->id();
 
-    if(!molI->frozen() || !molJ->frozen())
+//     if(!molI->frozen() || !molJ->frozen())
     {
         // fraction
         scalar f = molI->fraction();
@@ -232,41 +227,42 @@ inline bool Foam::polyMoleculeCloud::evaluatePotentialLimit
 
                 scalar rsIsJMagSq = magSqr(rsIsJ);
                 
-                // determine sites in pairPotSiteIdList_
-                label idsI=cP_.pairPotNamesToPairPotSitesList()[idI][i];
-                label idsJ=cP_.pairPotNamesToPairPotSitesList()[idJ][j];
+                label k = p_.pairPots().getIndexFromPairPotentialSites(idI, idJ, i, j);
                 
-                if(p_.pairPots().rCutSqr(idsI, idsJ, rsIsJMagSq))
+                if(p_.pairPots().rCutSqr(k, rsIsJMagSq))
                 {
-                    scalar rsIsJMag = mag(rsIsJ);
+                    if(!p_.pairPots().excludeSites(molI, molJ, sI, sJ, k))
+                    {
+                        scalar rsIsJMag = mag(rsIsJ);
 
-                    scalar rMin = p_.pairPots().rMin(idsI, idsJ);
-                    
-                    // Guard against pairPot.energy being evaluated
-                    // if rIJMag < SMALL. A floating point exception will
-                    // happen otherwise.
-                    
-                    
-                    if (rsIsJMag < SMALL)
-                    {
-                        return true;
-                    }
+                        scalar rMin = p_.pairPots().rMin(k);
+                        
+                        // Guard against pairPot.energy being evaluated
+                        // if rIJMag < SMALL. A floating point exception will
+                        // happen otherwise.
+                        
+                        
+                        if (rsIsJMag < SMALL)
+                        {
+                            return true;
+                        }
+            
+                        // Guard against pairPot.energy being evaluated if rIJMag <
+                        // rMin.  A tabulation lookup error will occur otherwise.
+            
+                        if (rsIsJMag < rMin)
+                        {
+                            return true;
+                        }
         
-                    // Guard against pairPot.energy being evaluated if rIJMag <
-                    // rMin.  A tabulation lookup error will occur otherwise.
-        
-                    if (rsIsJMag < rMin)
-                    {
-                        return true;
-                    }
-    
-                    if
-                    (
-                        mag(p_.pairPots().energy(idsI, idsJ, rsIsJMag))
-                        > potentialEnergyLimit
-                    )
-                    {
-                        return true;
+                        if
+                        (
+                            mag(p_.pairPots().energy(k, rsIsJMag))
+                            > potentialEnergyLimit
+                        )
+                        {
+                            return true;
+                        }
                     }
                 }
             }

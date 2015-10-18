@@ -219,7 +219,7 @@ public:
         inline bool writeTables() const;        
         inline bool exclusions() const;    
         
-        autoPtr<exclusionModel>& exclModel();
+        inline autoPtr<exclusionModel>& excludeModel();
 };
 
 
