@@ -46,6 +46,9 @@ SourceFiles
 #include "polyMesh.H"
 #include "mathematicalConstants.H"
 #include "reducedUnits.H"
+#include "polyMolecule.H"
+#include "exclusionModel.H"
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -68,6 +71,8 @@ protected:
 
         const polyMesh& mesh_;
 
+        polyMoleculeCloud& molCloud_;
+        
         const reducedUnits& rU_;
         
         dictionary  pairPotentialProperties_;
@@ -85,7 +90,6 @@ protected:
         
         scalar dr_;        
         
-         
         
         
 //         word energyScalingFunction_;
@@ -101,6 +105,9 @@ protected:
 
         bool writeTables_;        
 
+        bool exclusions_;        
+        
+        autoPtr<exclusionModel> exclusionModel_;
         
         
     // Private Member Functions
@@ -124,11 +131,12 @@ public:
             dictionary,
             (
                 const polyMesh& mesh,
+                polyMoleculeCloud& molCloud,
                 const reducedUnits& redUnits,
                 const word& name,
                 const dictionary& dict
             ),
-            (mesh, redUnits, name, dict)
+            (mesh, molCloud, redUnits, name, dict)
         );
    
     // Constructors
@@ -137,6 +145,7 @@ public:
         pairPotentialModel
         (
             const polyMesh& mesh,
+            polyMoleculeCloud& molCloud,
             const reducedUnits& redUnits,
             const word& name,
             const dictionary& dict
@@ -148,6 +157,7 @@ public:
         static autoPtr<pairPotentialModel> New
         (
             const polyMesh& mesh,
+            polyMoleculeCloud& molCloud,
             const reducedUnits& redUnits,
             const word& name,
             const dictionary& dict
@@ -167,15 +177,11 @@ public:
 
 
         scalar energy (const scalar r) const;
-
         scalar force (const scalar r) const;
         
-
         List<Pair<scalar> > energyTable() const;
-
         List<Pair<scalar> > forceTable() const;
 
-        inline bool writeTables() const;
 
         virtual scalar unscaledEnergy(const scalar r) const = 0;
 
@@ -202,6 +208,7 @@ public:
 //             const dictionary& pairPotentialProperties
 //         ) = 0;
 
+        
 
         inline const word& name() const;
         inline const List<word>& idList() const;
@@ -209,6 +216,10 @@ public:
         inline scalar dr() const;
         inline scalar rCut() const;
         inline scalar rCutSqr() const;        
+        inline bool writeTables() const;        
+        inline bool exclusions() const;    
+        
+        autoPtr<exclusionModel>& exclModel();
 };
 
 

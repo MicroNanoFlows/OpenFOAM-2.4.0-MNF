@@ -45,12 +45,14 @@ defineRunTimeSelectionTable(pairPotentialModel, dictionary);
 pairPotentialModel::pairPotentialModel
 (
     const polyMesh& mesh,
+    polyMoleculeCloud& molCloud, 
     const reducedUnits& redUnits,
     const word& name,
     const dictionary& dict
 )
 :
     mesh_(mesh),
+    molCloud_(molCloud),
     rU_(redUnits),
     pairPotentialProperties_(dict),    
     name_(name),
@@ -61,7 +63,8 @@ pairPotentialModel::pairPotentialModel
     forceLookup_(0),
     energyLookup_(0),
     esfPtr_(NULL),
-    writeTables_(false)
+    writeTables_(false),
+    exclusions_(false)   
 {
     writeTables_ = false;  
 
@@ -99,7 +102,19 @@ pairPotentialModel::pairPotentialModel
     Info << " idList = " << idList_ << endl;
     
     
-    
+    // exclusions 
+    if(dict.found("exclusionModel"))
+    {
+        exclusionModel_ = autoPtr<exclusionModel>
+        (
+            exclusionModel::New(mesh, molCloud_, dict)
+        );
+        
+        if(exclusionModel_->type() != "noExclusions")
+        {
+            exclusions_ = true;
+        }
+    }
 }
 
 
@@ -108,6 +123,7 @@ pairPotentialModel::pairPotentialModel
 autoPtr<pairPotentialModel> pairPotentialModel::New
 (
     const polyMesh& mesh,
+    polyMoleculeCloud& molCloud,
     const reducedUnits& redUnits, 
     const word& name, 
     const dictionary& dict
@@ -137,7 +153,7 @@ autoPtr<pairPotentialModel> pairPotentialModel::New
 
     return autoPtr<pairPotentialModel>
     (
-        cstrIter()(mesh, redUnits, name, dict)
+        cstrIter()(mesh, molCloud, redUnits, name, dict)
     );
 }
 
@@ -355,6 +371,11 @@ bool pairPotentialModel::writeEnergyAndForceTables(Ostream& os) const
 const dictionary& pairPotentialModel::pairPotentialProperties() const
 {
     return pairPotentialProperties_;
+}
+
+autoPtr<exclusionModel>& pairPotentialModel::exclModel()
+{
+    return exclusionModel_;
 }
 
 } // End namespace Foam

@@ -26,7 +26,7 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "coulomb.H"
+#include "noInteraction.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -34,54 +34,66 @@ Description
 namespace Foam
 {
 
-defineTypeNameAndDebug(coulomb, 0);
-addToRunTimeSelectionTable(pairPotentialModel, coulomb, dictionary);
+defineTypeNameAndDebug(noInteraction, 0);
+addToRunTimeSelectionTable(pairPotentialModel, noInteraction, dictionary);
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-coulomb::coulomb
+noInteraction::noInteraction
 (
     const polyMesh& mesh,
+    polyMoleculeCloud& molCloud,
     const reducedUnits& redUnits,
     const word& name, 
     const dictionary& dict
 )
 :
-    pairPotentialModel(mesh, redUnits, name, dict),
-    oneOverFourPiEps0_(1.0/(4.0 * constant::mathematical::pi * 8.854187817e-12))   
+    pairPotentialModel(mesh, molCloud, redUnits, name, dict) 
 {
- 
-    if(redUnits.runReducedUnits())
-    {
-        oneOverFourPiEps0_ = (1.0/(4.0 * constant::mathematical::pi * redUnits.epsilonPermittivity()));
-    }
-    else
-    {
-        oneOverFourPiEps0_ = 1.0/(4.0*constant::mathematical::pi*8.854187817e-12);
-    }
-
-    setLookupTables();   
+    exclusions_ = true;
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-coulomb::~coulomb()
+noInteraction::~noInteraction()
 {}
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-scalar coulomb::unscaledEnergy(const scalar r) const
+scalar noInteraction::unscaledEnergy(const scalar r) const
 {
-    return oneOverFourPiEps0_/r;
+    return 0.0;
 }
 
 
-const dictionary& coulomb::dict() const
+// bool noInteraction::read
+// (
+//     const dictionary& pairPotentialProperties,
+//     const reducedUnits& rU
+// )
+// {
+//     pairPotentialModel::read(pairPotentialProperties, rU);
+// 
+//     noInteractionCoeffs_ = pairPotentialProperties.subDict(typeName + "Coeffs");
+// 
+//     noInteractionCoeffs_.lookup("sigma") >> sigma_;
+//     noInteractionCoeffs_.lookup("epsilon") >> epsilon_;
+// 
+//     if(rU.runReducedUnits())
+//     {
+//         sigma_ /= rU.refLength();
+//         epsilon_ /= rU.refEnergy();
+//     }
+// 
+//     return true;
+// }
+
+const dictionary& noInteraction::dict() const
 {
-    return pairPotentialProperties_;
+    return propsDict_;
 }
 
 

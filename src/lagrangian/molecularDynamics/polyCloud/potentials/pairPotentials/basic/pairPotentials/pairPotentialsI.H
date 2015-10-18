@@ -22,97 +22,59 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    coulomb
-
-
-Description
-    
-
-SourceFiles
-    coulombI.H
-    coulomb.C
-    coulombIO.C
-
 \*---------------------------------------------------------------------------*/
-
-#ifndef coulomb_H
-#define coulomb_H
-
-#include "pairPotentialModel.H"
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
-/*---------------------------------------------------------------------------*\
-                           Class coulomb Declaration
-\*---------------------------------------------------------------------------*/
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-class coulomb
-:
-    public pairPotentialModel
+
+inline List< autoPtr<pairPotentialModel> >& pairPotentials::pairPots()
 {
+    return pairPotentials_;
+}
 
-private:
+inline const List< autoPtr<pairPotentialModel> >& pairPotentials::pairPots() const
+{
+    return pairPotentials_;
+}
 
-    // Private data
+inline const List<word>& pairPotentials::pairNames() const
+{
+    return pairNames_;
+}
 
-        //- subDictionary containing the properties
-//         dictionary propsDict_;
+inline const List<label>& pairPotentials::pairIds() const
+{
+    return pairIds_;
+}
 
-        scalar oneOverFourPiEps0_;
+inline autoPtr<pairPotentialModel>& pairPotentials::electrostaticPot()
+{
+    return electrostaticPotential_;
+}
 
-        // exclusion lists may go here
+inline const autoPtr<pairPotentialModel>& pairPotentials::electrostaticPot() const
+{
+    return electrostaticPotential_;
+}
 
-        
-        
-    // Private Member Functions
-
-
-
-public:
-
-    //- Runtime type information
-    TypeName("coulomb");
-
-    // Constructors
-
-        //- Construct from components
-        coulomb
-        (
-            const polyMesh& mesh,
-            const reducedUnits& redUnits,
-            const word& name,         
-            const dictionary& dict
-        );
-
-    // Destructor
-
-        ~coulomb();
-
-    // Member Functions
-
-        scalar unscaledEnergy(const scalar r) const;
-
-        //- Read dictionary
-//         bool read
-//         (
-//             const dictionary& pairPotentialProperties,
-//         );
-
-        const dictionary& dict() const;
-};
-
+inline autoPtr<pairPotentialModel>& pairPotentials::pairPot
+(
+    const label pairSiteA,
+    const label pairSiteB
+)
+{
+     label k = pairPotLinks_[pairSiteA][pairSiteB];
+    
+     return pairPotentials_[k];
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#endif
 
 // ************************************************************************* //

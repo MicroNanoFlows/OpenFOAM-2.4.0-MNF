@@ -23,24 +23,24 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    noInteraction
+    lennardJones
 
 
 Description
     to write out a pdb file for creating movies
 
 SourceFiles
-    noInteractionI.H
-    noInteraction.C
-    noInteractionIO.C
+    lennardJonesI.H
+    lennardJones.C
+    lennardJonesIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef noInteraction_H
-#define noInteraction_H
+#ifndef lennardJones_H
+#define lennardJones_H
 
 #include "pairPotentialModel.H"
-
+#include "polyMoleculeCloud.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -48,10 +48,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class noInteraction Declaration
+                           Class lennardJones Declaration
 \*---------------------------------------------------------------------------*/
 
-class noInteraction
+class lennardJones
 :
     public pairPotentialModel
 {
@@ -63,6 +63,11 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
+        scalar sigma_;
+        scalar epsilon_;
+
+        // exclusion lists may go here
+
         
         
     // Private Member Functions
@@ -72,14 +77,15 @@ private:
 public:
 
     //- Runtime type information
-    TypeName("noInteraction");
+    TypeName("lennardJones");
 
     // Constructors
 
         //- Construct from components
-        noInteraction
+        lennardJones
         (
             const polyMesh& mesh,
+            polyMoleculeCloud& molCloud,         
             const reducedUnits& redUnits,
             const word& name,         
             const dictionary& dict
@@ -87,7 +93,7 @@ public:
 
     // Destructor
 
-        ~noInteraction();
+        ~lennardJones();
 
     // Member Functions
 

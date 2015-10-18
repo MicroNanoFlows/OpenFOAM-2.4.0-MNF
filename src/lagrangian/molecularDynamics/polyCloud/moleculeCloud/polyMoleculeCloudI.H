@@ -46,7 +46,9 @@ inline void Foam::polyMoleculeCloud::evaluatePair
         molJ
     );
 
-    if(!molI->frozen() || !molJ->frozen())
+//     if(p_.interactMolecules(molI, molJ))
+//     {
+//     if(!molI->frozen() || !molJ->frozen())
     {
         // fraction
         scalar f = molI->fraction();
@@ -71,41 +73,44 @@ inline void Foam::polyMoleculeCloud::evaluatePair
 
                 scalar rsIsJMagSq = magSqr(rsIsJ);
                 
-                // determine sites in pairPotSiteIdList_
+                // determine index of pairPotentials_
                 label idsI=cP_.pairPotNamesToPairPotSitesList()[idI][i];
                 label idsJ=cP_.pairPotNamesToPairPotSitesList()[idJ][j];
                 
                 if(p_.pairPots().rCutSqr(idsI, idsJ, rsIsJMagSq))
                 {
-                    scalar rsIsJMag = mag(rsIsJ);
+//                     if(!p_.pairPots().exclude(idsI, idsJ))
+                    {
+                        scalar rsIsJMag = mag(rsIsJ);
 
-                    vector fsIsJ = f*(rsIsJ/rsIsJMag)*p_.pairPots().force(idsI, idsJ, rsIsJMag);
+                        vector fsIsJ = f*(rsIsJ/rsIsJMag)*p_.pairPots().force(idsI, idsJ, rsIsJMag);
 
-                    molI->siteForces()[sI] += fsIsJ;
-                    molJ->siteForces()[sJ] += -fsIsJ;
+                        molI->siteForces()[sI] += fsIsJ;
+                        molJ->siteForces()[sJ] += -fsIsJ;
 
-                    scalar potentialEnergy
-                    (
-                        f*p_.pairPots().energy(idsI, idsJ, rsIsJMag)
-                    );
+                        scalar potentialEnergy
+                        (
+                            f*p_.pairPots().energy(idsI, idsJ, rsIsJMag)
+                        );
 
-                    molI->potentialEnergy() += 0.5*potentialEnergy;
-                    molJ->potentialEnergy() += 0.5*potentialEnergy;
-        
-                    vector rIJ = molI->position() - molJ->position();
-        
-                    tensor virialContribution = (rsIsJ*fsIsJ)*(rsIsJ & rIJ)/rsIsJMagSq;
-        
-                    molI->rf() += virialContribution;
-                    molJ->rf() += virialContribution;
+                        molI->potentialEnergy() += 0.5*potentialEnergy;
+                        molJ->potentialEnergy() += 0.5*potentialEnergy;
+            
+                        vector rIJ = molI->position() - molJ->position();
+            
+                        tensor virialContribution = (rsIsJ*fsIsJ)*(rsIsJ & rIJ)/rsIsJMagSq;
+            
+                        molI->rf() += virialContribution;
+                        molJ->rf() += virialContribution;
 
-                    fields_.measurementsDuringForceComputationSite
-                    (
-                        molI,
-                        molJ,
-                        sI,
-                        sJ
-                    );
+                        fields_.measurementsDuringForceComputationSite
+                        (
+                            molI,
+                            molJ,
+                            sI,
+                            sJ
+                        );
+                    }
                 }
             }
         }

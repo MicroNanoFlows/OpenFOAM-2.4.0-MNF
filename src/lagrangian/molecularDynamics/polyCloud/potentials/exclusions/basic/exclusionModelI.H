@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,54 +22,42 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-\*---------------------------------------------------------------------------*/
+Class
+    distribution
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Description
+
+\*---------------------------------------------------------------------------*/
 
 namespace Foam
 {
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+        
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+
+// * * * * * * * * * * * * * * * * Destructors * * * * * * * * * * * * * * * //
+
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-inline const word& pairPotentialModel::name() const
-{
-    return name_;
-}
-
-inline const List<word>& pairPotentialModel::idList() const
-{
-    return idList_;
-}
-
-inline scalar pairPotentialModel::rMin() const
-{
-    return rMin_;
-}
+// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
 
-inline scalar pairPotentialModel::dr() const
-{
-    return dr_;
-}
+// * * * * * * * * * * * * * * * Friend Functions  * * * * * * * * * * * * * //
 
 
-inline scalar pairPotentialModel::rCut() const
-{
-    return rCut_;
-}
+// * * * * * * * * * * * * * * * Friend Operators  * * * * * * * * * * * * * //
 
 
-inline scalar pairPotentialModel::rCutSqr() const
-{
-    return rCutSqr_;
-}
+// * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * * //
 
 
-inline bool pairPotentialModel::writeTables() const
-{
-    return writeTables_;
-}
-
+// * * * * * * * * * * * * * * * Ostream Operator  * * * * * * * * * * * * * //
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

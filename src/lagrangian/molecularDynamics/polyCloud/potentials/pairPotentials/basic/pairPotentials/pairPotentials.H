@@ -88,18 +88,11 @@ class pairPotentials
         autoPtr<pairPotentialModel> electrostaticPotential_;
         
         
-        // these are the electrostatic potentials
         
-//         PtrList<entry> electrostaticPotentialsList_;
-//         List<word> electrostaticNames_;
-//         List<label> electrostaticIds_;
-//         List< autoPtr<electrostaticModel> > electrostaticPotentials_;
+        List<bool> exclusions_;
         
-        // linking pairpotids to potential storage
-        // outer list size of cP_.()
-        // inner list size of cP_.()
-        // store index of pairPotentials_
-//         List<List<label> > electrostaticLinks_;
+       
+
 
         
         
@@ -108,7 +101,7 @@ class pairPotentials
         
             void testPairPotentials();
 
-            
+            void setExclusions();
         
 public:
 
@@ -119,6 +112,7 @@ public:
         pairPotentials
         (
             const polyMesh& mesh,
+            polyMoleculeCloud& molCloud,
             const constantMoleculeProperties& cP,
             const reducedUnits& redUnits
         );
@@ -134,7 +128,13 @@ public:
         inline const List< autoPtr<pairPotentialModel> >& pairPots() const;
         inline const List<word>& pairNames() const;
         inline const List<label>& pairIds() const;
-
+        
+        inline autoPtr<pairPotentialModel>& pairPot
+        (
+            const label pairSiteA,
+            const label pairSiteB
+        );
+        
         inline autoPtr<pairPotentialModel>& electrostaticPot();
         inline const autoPtr<pairPotentialModel>& electrostaticPot() const;        
         
@@ -161,6 +161,14 @@ public:
             const scalar r
         ) const;         
 
+//         bool excludeSites
+//         (
+//             polyMolecule* molI,
+//             polyMolecule* molJ,         
+//             const label pairSiteA,
+//             const label pairSiteB
+//         ) const;
+        
         scalar rMin
         (
             const label pairSiteA,

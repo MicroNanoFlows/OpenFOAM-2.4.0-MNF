@@ -22,98 +22,62 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    lennardJones
-
-
-Description
-    to write out a pdb file for creating movies
-
-SourceFiles
-    lennardJonesI.H
-    lennardJones.C
-    lennardJonesIO.C
-
 \*---------------------------------------------------------------------------*/
-
-#ifndef lennardJones_H
-#define lennardJones_H
-
-#include "pairPotentialModel.H"
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
-/*---------------------------------------------------------------------------*\
-                           Class lennardJones Declaration
-\*---------------------------------------------------------------------------*/
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-class lennardJones
-:
-    public pairPotentialModel
+inline const word& pairPotentialModel::name() const
 {
+    return name_;
+}
 
-private:
+inline const List<word>& pairPotentialModel::idList() const
+{
+    return idList_;
+}
 
-    // Private data
-
-        //- subDictionary containing the properties
-        dictionary propsDict_;
-
-        scalar sigma_;
-        scalar epsilon_;
-
-        // exclusion lists may go here
-
-        
-        
-    // Private Member Functions
+inline scalar pairPotentialModel::rMin() const
+{
+    return rMin_;
+}
 
 
+inline scalar pairPotentialModel::dr() const
+{
+    return dr_;
+}
 
-public:
 
-    //- Runtime type information
-    TypeName("lennardJones");
+inline scalar pairPotentialModel::rCut() const
+{
+    return rCut_;
+}
 
-    // Constructors
 
-        //- Construct from components
-        lennardJones
-        (
-            const polyMesh& mesh,
-            const reducedUnits& redUnits,
-            const word& name,         
-            const dictionary& dict
-        );
+inline scalar pairPotentialModel::rCutSqr() const
+{
+    return rCutSqr_;
+}
 
-    // Destructor
 
-        ~lennardJones();
+inline bool pairPotentialModel::writeTables() const
+{
+    return writeTables_;
+}
 
-    // Member Functions
-
-        scalar unscaledEnergy(const scalar r) const;
-
-        //- Read dictionary
-//         bool read
-//         (
-//             const dictionary& pairPotentialProperties,
-//         );
-
-        const dictionary& dict() const;
-};
+inline bool pairPotentialModel::exclusions() const
+{
+    return exclusions_;
+}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#endif
 
 // ************************************************************************* //

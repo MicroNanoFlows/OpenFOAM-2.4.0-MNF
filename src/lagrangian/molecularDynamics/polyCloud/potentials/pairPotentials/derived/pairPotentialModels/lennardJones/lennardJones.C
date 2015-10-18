@@ -26,7 +26,7 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "noInteraction.H"
+#include "lennardJones.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -34,40 +34,57 @@ Description
 namespace Foam
 {
 
-defineTypeNameAndDebug(noInteraction, 0);
-addToRunTimeSelectionTable(pairPotentialModel, noInteraction, dictionary);
+defineTypeNameAndDebug(lennardJones, 0);
+addToRunTimeSelectionTable(pairPotentialModel, lennardJones, dictionary);
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-noInteraction::noInteraction
+lennardJones::lennardJones
 (
     const polyMesh& mesh,
+    polyMoleculeCloud& molCloud, 
     const reducedUnits& redUnits,
     const word& name, 
     const dictionary& dict
 )
 :
-    pairPotentialModel(mesh, redUnits, name, dict) 
+    pairPotentialModel(mesh, molCloud, redUnits, name, dict),
+    propsDict_(dict.subDict(typeName + "Coeffs")),
+    sigma_(readScalar(propsDict_.lookup("sigma"))),
+    epsilon_(readScalar(propsDict_.lookup("epsilon")))    
 {
+    if(redUnits.runReducedUnits())
+    {
+        sigma_ /= redUnits.refLength();
+        epsilon_ /= redUnits.refEnergy();
+    }
+
+    setLookupTables();    
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-noInteraction::~noInteraction()
+lennardJones::~lennardJones()
 {}
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-scalar noInteraction::unscaledEnergy(const scalar r) const
+scalar lennardJones::unscaledEnergy(const scalar r) const
 {
-    return 0.0;
+    // (rIJ/sigma)^-2
+    scalar ir2 = (sigma_/r)*(sigma_/r);
+
+    // (rIJ/sigma)^-6
+    scalar ir6 = ir2*ir2*ir2;
+
+    return 4.0 * epsilon_*(ir6*(ir6 - 1.0));
 }
 
 
-// bool noInteraction::read
+// bool lennardJones::read
 // (
 //     const dictionary& pairPotentialProperties,
 //     const reducedUnits& rU
@@ -75,10 +92,10 @@ scalar noInteraction::unscaledEnergy(const scalar r) const
 // {
 //     pairPotentialModel::read(pairPotentialProperties, rU);
 // 
-//     noInteractionCoeffs_ = pairPotentialProperties.subDict(typeName + "Coeffs");
+//     lennardJonesCoeffs_ = pairPotentialProperties.subDict(typeName + "Coeffs");
 // 
-//     noInteractionCoeffs_.lookup("sigma") >> sigma_;
-//     noInteractionCoeffs_.lookup("epsilon") >> epsilon_;
+//     lennardJonesCoeffs_.lookup("sigma") >> sigma_;
+//     lennardJonesCoeffs_.lookup("epsilon") >> epsilon_;
 // 
 //     if(rU.runReducedUnits())
 //     {
@@ -89,7 +106,7 @@ scalar noInteraction::unscaledEnergy(const scalar r) const
 //     return true;
 // }
 
-const dictionary& noInteraction::dict() const
+const dictionary& lennardJones::dict() const
 {
     return propsDict_;
 }

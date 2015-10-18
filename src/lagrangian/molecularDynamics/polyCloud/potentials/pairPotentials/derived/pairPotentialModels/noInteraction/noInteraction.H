@@ -22,48 +22,94 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+Class
+    noInteraction
+
+
+Description
+    to write out a pdb file for creating movies
+
+SourceFiles
+    noInteractionI.H
+    noInteraction.C
+    noInteractionIO.C
+
 \*---------------------------------------------------------------------------*/
+
+#ifndef noInteraction_H
+#define noInteraction_H
+
+#include "pairPotentialModel.H"
+#include "polyMoleculeCloud.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+/*---------------------------------------------------------------------------*\
+                           Class noInteraction Declaration
+\*---------------------------------------------------------------------------*/
 
-
-inline List< autoPtr<pairPotentialModel> >& pairPotentials::pairPots()
+class noInteraction
+:
+    public pairPotentialModel
 {
-    return pairPotentials_;
-}
 
-inline const List< autoPtr<pairPotentialModel> >& pairPotentials::pairPots() const
-{
-    return pairPotentials_;
-}
+private:
 
-inline const List<word>& pairPotentials::pairNames() const
-{
-    return pairNames_;
-}
+    // Private data
 
-inline const List<label>& pairPotentials::pairIds() const
-{
-    return pairIds_;
-}
+        //- subDictionary containing the properties
+        dictionary propsDict_;
 
-inline autoPtr<pairPotentialModel>& pairPotentials::electrostaticPot()
-{
-    return electrostaticPotential_;
-}
+        
+        
+    // Private Member Functions
 
-inline const autoPtr<pairPotentialModel>& pairPotentials::electrostaticPot() const
-{
-    return electrostaticPotential_;
-}
+
+
+public:
+
+    //- Runtime type information
+    TypeName("noInteraction");
+
+    // Constructors
+
+        //- Construct from components
+        noInteraction
+        (
+            const polyMesh& mesh,
+            polyMoleculeCloud& molCloud,
+            const reducedUnits& redUnits,
+            const word& name,         
+            const dictionary& dict
+        );
+
+    // Destructor
+
+        ~noInteraction();
+
+    // Member Functions
+
+        scalar unscaledEnergy(const scalar r) const;
+
+        //- Read dictionary
+//         bool read
+//         (
+//             const dictionary& pairPotentialProperties,
+//         );
+
+        const dictionary& dict() const;
+};
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
 
 // ************************************************************************* //

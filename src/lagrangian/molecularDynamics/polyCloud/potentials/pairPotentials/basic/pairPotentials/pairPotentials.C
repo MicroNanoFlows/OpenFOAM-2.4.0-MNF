@@ -39,6 +39,7 @@ namespace Foam
 pairPotentials::pairPotentials
 (
     const polyMesh& mesh,
+    polyMoleculeCloud& molCloud,
     const constantMoleculeProperties& cP,
     const reducedUnits& redUnits
 )
@@ -59,12 +60,9 @@ pairPotentials::pairPotentials
     pairPotentialsList_(potentialsDict_.lookup("pairs")),
     pairNames_(pairPotentialsList_.size()),
     pairIds_(pairPotentialsList_.size()),
-    pairPotentials_(pairPotentialsList_.size())
-    
-/*    electrostaticPotentialsList_(potentialsDict_.lookup("electrostatics")),
-    electrostaticNames_(electrostaticPotentialsList_.size()),
-    electrostaticIds_(electrostaticPotentialsList_.size()),
-    electrostaticPotentials_(electrostaticPotentialsList_.size())  */  
+    pairPotentials_(pairPotentialsList_.size()),
+    exclusions_(pairPotentialsList_.size())
+
 {
    
     if(pairPotentialsList_.size() > 0 )
@@ -79,11 +77,13 @@ pairPotentials::pairPotentials
             
             pairPotentials_[i] = autoPtr<pairPotentialModel>
             (
-                pairPotentialModel::New(mesh, redUnits, headerName, potIDict)
+                pairPotentialModel::New(mesh, molCloud, redUnits, headerName, potIDict)
             );
     
             pairNames_[i] = pairPotentials_[i]->type();
             pairIds_[i] = i;
+            
+            exclusions_[i] = pairPotentials_[i]->exclusions();
         }
         
         testPairPotentials();        
@@ -100,28 +100,6 @@ pairPotentials::pairPotentials
                 << nl << abort(FatalError);       
     }
     
-//     if(electrostaticPotentialsList_.size() > 0 )
-//     {
-//         forAll(electrostaticPotentialsList_, i)
-//         {
-//             const entry& potI = electrostaticPotentialsList_[i];
-//             const dictionary& potIDict = potI.dict();
-//             const word& headerName=potI.keyword();
-//             
-//             electrostaticPotentials_[i] = autoPtr<electrostaticModel>
-//             (
-//                 electrostaticModel::New(mesh, redUnits, headerName, potIDict)
-//             );
-//     
-//             electrostaticNames_[i] = electrostaticPotentials_[i]->type();
-//             electrostaticIds_[i] = i;
-//         }
-//     }
-//     else
-//     {
-//         // WARNING - TEST for charges in domain
-//         
-//     }
    
     // electrostatic potential 
     
@@ -131,7 +109,7 @@ pairPotentials::pairPotentials
     
     electrostaticPotential_ = autoPtr<pairPotentialModel>
     (
-        pairPotentialModel::New(mesh, redUnits, headerName, dict)
+        pairPotentialModel::New(mesh, molCloud, redUnits, headerName, dict)
     );
 
 
@@ -201,6 +179,7 @@ void pairPotentials::testPairPotentials()
 
 
 
+
 scalar pairPotentials::maxRCut()
 {
     scalar rCut = 0.0;
@@ -265,6 +244,26 @@ bool pairPotentials::rCutSqr
         return false;
     }
 }
+
+
+// bool pairPotentials::excludeSites
+// (
+//     const label pairSiteA,
+//     const label pairSiteB
+// ) const
+// {
+//     
+//     label k = pairPotLinks_[pairSiteA][pairSiteB];
+//     
+//     if(!exclusions_[k])
+//     {
+//         return false;
+//     }
+//     else
+//     {
+//         return pairPotentials_[k]->exclModel().excludeSites();
+//     }
+// }
 
 scalar pairPotentials::rMin
 (

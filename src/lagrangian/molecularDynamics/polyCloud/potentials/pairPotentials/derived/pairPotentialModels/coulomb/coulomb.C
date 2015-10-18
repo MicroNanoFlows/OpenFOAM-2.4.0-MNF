@@ -26,7 +26,7 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "lennardJones.H"
+#include "coulomb.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -34,80 +34,55 @@ Description
 namespace Foam
 {
 
-defineTypeNameAndDebug(lennardJones, 0);
-addToRunTimeSelectionTable(pairPotentialModel, lennardJones, dictionary);
+defineTypeNameAndDebug(coulomb, 0);
+addToRunTimeSelectionTable(pairPotentialModel, coulomb, dictionary);
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-lennardJones::lennardJones
+coulomb::coulomb
 (
     const polyMesh& mesh,
+    polyMoleculeCloud& molCloud,
     const reducedUnits& redUnits,
     const word& name, 
     const dictionary& dict
 )
 :
-    pairPotentialModel(mesh, redUnits, name, dict),
-    propsDict_(dict.subDict(typeName + "Coeffs")),
-    sigma_(readScalar(propsDict_.lookup("sigma"))),
-    epsilon_(readScalar(propsDict_.lookup("epsilon")))    
+    pairPotentialModel(mesh, molCloud, redUnits, name, dict),
+    oneOverFourPiEps0_(1.0/(4.0 * constant::mathematical::pi * 8.854187817e-12))   
 {
+ 
     if(redUnits.runReducedUnits())
     {
-        sigma_ /= redUnits.refLength();
-        epsilon_ /= redUnits.refEnergy();
+        oneOverFourPiEps0_ = (1.0/(4.0 * constant::mathematical::pi * redUnits.epsilonPermittivity()));
+    }
+    else
+    {
+        oneOverFourPiEps0_ = 1.0/(4.0*constant::mathematical::pi*8.854187817e-12);
     }
 
-    setLookupTables();    
+    setLookupTables();   
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-lennardJones::~lennardJones()
+coulomb::~coulomb()
 {}
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-scalar lennardJones::unscaledEnergy(const scalar r) const
+scalar coulomb::unscaledEnergy(const scalar r) const
 {
-    // (rIJ/sigma)^-2
-    scalar ir2 = (sigma_/r)*(sigma_/r);
-
-    // (rIJ/sigma)^-6
-    scalar ir6 = ir2*ir2*ir2;
-
-    return 4.0 * epsilon_*(ir6*(ir6 - 1.0));
+    return oneOverFourPiEps0_/r;
 }
 
 
-// bool lennardJones::read
-// (
-//     const dictionary& pairPotentialProperties,
-//     const reducedUnits& rU
-// )
-// {
-//     pairPotentialModel::read(pairPotentialProperties, rU);
-// 
-//     lennardJonesCoeffs_ = pairPotentialProperties.subDict(typeName + "Coeffs");
-// 
-//     lennardJonesCoeffs_.lookup("sigma") >> sigma_;
-//     lennardJonesCoeffs_.lookup("epsilon") >> epsilon_;
-// 
-//     if(rU.runReducedUnits())
-//     {
-//         sigma_ /= rU.refLength();
-//         epsilon_ /= rU.refEnergy();
-//     }
-// 
-//     return true;
-// }
-
-const dictionary& lennardJones::dict() const
+const dictionary& coulomb::dict() const
 {
-    return propsDict_;
+    return pairPotentialProperties_;
 }
 
 

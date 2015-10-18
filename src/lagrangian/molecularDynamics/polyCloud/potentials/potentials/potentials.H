@@ -40,10 +40,10 @@ SourceFiles
 #include "polyMesh.H"
 #include "IOdictionary.H"
 #include "Time.H"
-// #include "electrostaticPotential.H"
 #include "reducedUnits.H"
 #include "constantMoleculeProperties.H"
 #include "pairPotentials.H"
+#include "polyMolecule.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -59,6 +59,8 @@ class potentials
     // Private data
 
         const polyMesh& mesh_;
+        
+        polyMoleculeCloud& molCloud_;
 
         const reducedUnits& redUnits_;
         
@@ -74,6 +76,9 @@ class potentials
         scalar rCutMax_; 
 
         
+        // add exclusions functionality here 
+        
+
         // user defined potentials go here and chosen from potentialsDict
         
         
@@ -82,6 +87,7 @@ class potentials
     // Private Member Functions
 
         void readPotentialDict();
+
         
         //- Disallow default bitwise copy construct
         potentials(const potentials&);
@@ -92,12 +98,15 @@ class potentials
 
 public:
 
+        friend class polyMolecule;
+        
     // Constructors
 
         //- Construct from standard quantities
         potentials
         (
             const polyMesh& mesh,
+            polyMoleculeCloud& molCloud,
             const reducedUnits& rU,
             const constantMoleculeProperties& cP
         );
@@ -118,7 +127,8 @@ public:
 
 //             inline const List<word>& siteIdList() const;
 
-                
+//             bool interactSites(polyMolecule* molI, polyMolecule* molJ, siteI, siteJ);
+            
             const pairPotentials& pairPots() const;
             pairPotentials& pairPots();            
 //             pairPotentials& pairPotentials();

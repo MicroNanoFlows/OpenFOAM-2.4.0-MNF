@@ -24,6 +24,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "potentials.H"
+#include "polyMoleculeCloud.H"
 
 namespace Foam
 {
@@ -105,17 +106,22 @@ void potentials::readPotentialDict()
 potentials::potentials
 (
     const polyMesh& mesh,
+    polyMoleculeCloud& molCloud,
     const reducedUnits& rU,
     const constantMoleculeProperties& cP
 )
 :
     mesh_(mesh),
+    molCloud_(molCloud),
     redUnits_(rU),
     cP_(cP),
-    pairPotentials_(mesh, cP, rU),
+    pairPotentials_(mesh, molCloud, cP, rU),
     rCutMax_(pairPotentials_.maxRCut())
 {
     readPotentialDict();
+    
+    // set exclusions
+    
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -124,6 +130,17 @@ potentials::~potentials()
 {}
 
 
+
+// bool potentials::interactMolecules(polyMolecule* molI, polyMolecule* molJ)
+// {
+//     if(!molI->frozen() || !molJ->frozen())
+//     {
+//         return false;
+//     }
+//    
+//     if()
+// }
+//     if(!molI->frozen() || !molJ->frozen())
 
 
 const pairPotentials& potentials::pairPots() const
