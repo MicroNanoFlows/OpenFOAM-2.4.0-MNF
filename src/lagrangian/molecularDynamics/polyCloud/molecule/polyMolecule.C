@@ -81,29 +81,29 @@ bool Foam::polyMolecule::move
 
     if (special_ != SPECIAL_FROZEN)
     {
-            scalar tEnd = (1.0 - stepFraction())*trackTime;
-            scalar dtMax = tEnd;
-    
-            while (td.keepParticle && !td.switchProcessor && tEnd > ROOTVSMALL)
-            {
-                // set the lagrangian time-step
-                scalar dt = min(dtMax, tEnd);
-    
-                dt *= trackToFace(position() + dt*v_, td);
+        scalar tEnd = (1.0 - stepFraction())*trackTime;
+        scalar dtMax = tEnd;
 
-                //- face tracking info
-                if( this->face() != -1 )   
-                {
-                    //--  monitoring flux properties
-                    td.cloud().tracker().updateFields
-                    (
-                        *this
-                    );
-                }
-   
-                tEnd -= dt;
-                stepFraction() = 1.0 - tEnd/trackTime;
+        while (td.keepParticle && !td.switchProcessor && tEnd > ROOTVSMALL)
+        {
+            // set the lagrangian time-step
+            scalar dt = min(dtMax, tEnd);
+
+            dt *= trackToFace(position() + dt*v_, td);
+
+            //- face tracking info
+            if( this->face() != -1 )   
+            {
+                //--  monitoring flux properties
+                td.cloud().tracker().updateFields
+                (
+                    *this
+                );
             }
+
+            tEnd -= dt;
+            stepFraction() = 1.0 - tEnd/trackTime;
+        }
     }
 
     return td.keepParticle;

@@ -46,9 +46,7 @@ inline void Foam::polyMoleculeCloud::evaluatePair
         molJ
     );
 
-//     if(p_.interactMolecules(molI, molJ))
-//     {
-//     if(!molI->frozen() || !molJ->frozen())
+    if(!molI->frozen() || !molJ->frozen())
     {
         // fraction
         scalar f = molI->fraction();
@@ -79,7 +77,7 @@ inline void Foam::polyMoleculeCloud::evaluatePair
                 
                 if(p_.pairPots().rCutSqr(k, rsIsJMagSq))
                 {
-                    if(!p_.pairPots().excludeSites(molI, molJ, sI, sJ, k))
+//                     if(!p_.pairPots().excludeSites(molI, molJ, sI, sJ, k))
                     {
                         scalar rsIsJMag = mag(rsIsJ);
 
@@ -202,7 +200,7 @@ inline bool Foam::polyMoleculeCloud::evaluatePotentialLimit
     label idI = molI->id();
     label idJ = molJ->id();
 
-//     if(!molI->frozen() || !molJ->frozen())
+    if(!molI->frozen() || !molJ->frozen())
     {
         // fraction
         scalar f = molI->fraction();

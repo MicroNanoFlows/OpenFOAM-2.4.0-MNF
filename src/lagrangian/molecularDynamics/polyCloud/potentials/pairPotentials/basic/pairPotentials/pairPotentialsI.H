@@ -62,36 +62,7 @@ inline const autoPtr<pairPotentialModel>& pairPotentials::electrostaticPot() con
     return electrostaticPotential_;
 }
 
-// supply molId I, molId J and i and j pot site indexes (see format of pairPotNames_ in cP_)
-//make inline
-inline label pairPotentials::getIndexFromPairPotentialSites
-(
-    const label& idI,
-    const label& idJ,
-    const label& i,
-    const label& j
-)
-{
-    label idsI=cP_.pairPotNames_to_pairPotSitesList()[idI][i];
-    label idsJ=cP_.pairPotNames_to_pairPotSitesList()[idJ][j];
-    return pairPotIdList_to_pairPotentials_[idsI][idsJ];
-}
 
-// supply molId I, molId J and sI and sJ site indexes (see format of siteNames_ in cP_)
-//make inline
-
-inline label pairPotentials::getIndexFromSites
-(
-    const label& idI,
-    const label& idJ,
-    const label& sI,
-    const label& sJ
-)
-{
-    label idsI=cP_.siteNames_to_siteIdList()[idI][sI];
-    label idsJ=cP_.siteNames_to_siteIdList()[idJ][sJ];
-    return siteIdList_to_pairPotentials_[idsI][idsJ];
-}
 
 // inline autoPtr<pairPotentialModel>& pairPotentials::pairPot
 // (

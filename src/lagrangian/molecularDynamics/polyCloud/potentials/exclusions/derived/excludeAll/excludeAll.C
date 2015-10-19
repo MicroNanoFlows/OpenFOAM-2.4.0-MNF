@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,80 +22,85 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+Class
+    excludeAll
+
 Description
 
-\*---------------------------------------------------------------------------*/
+\*----------------------------------------------------------------------------*/
 
-#include "noInteraction.H"
+#include "excludeAll.H"
 #include "addToRunTimeSelectionTable.H"
-
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
-defineTypeNameAndDebug(noInteraction, 0);
-addToRunTimeSelectionTable(pairPotentialModel, noInteraction, dictionary);
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+defineTypeNameAndDebug(excludeAll, 0);
+
+addToRunTimeSelectionTable(exclusionModel, excludeAll, dictionary);
+
+
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
-noInteraction::noInteraction
+//- Construct from components
+excludeAll::excludeAll
 (
     const polyMesh& mesh,
     polyMoleculeCloud& molCloud,
-    const reducedUnits& redUnits,
-    const word& name, 
     const dictionary& dict
 )
 :
-    pairPotentialModel(mesh, molCloud, redUnits, name, dict) 
-{
-//     exclusions_ = true;
-}
+    exclusionModel(mesh, molCloud, dict)
+
+{}
+
+
+
+// * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * * //
+
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-noInteraction::~noInteraction()
+excludeAll::~excludeAll()
 {}
+
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-scalar noInteraction::unscaledEnergy(const scalar r) const
+
+bool excludeAll::excludeMolecules
+(
+    polyMolecule* molI,
+    polyMolecule* molJ
+)
 {
-    return 0.0;
+    return true;
+}
+
+bool excludeAll::excludeSites
+(
+    polyMolecule* molI,
+    polyMolecule* molJ,
+    const label& siteI,
+    const label& siteJ
+)
+{
+    return true;
 }
 
 
-// bool noInteraction::read
-// (
-//     const dictionary& pairPotentialProperties,
-//     const reducedUnits& rU
-// )
-// {
-//     pairPotentialModel::read(pairPotentialProperties, rU);
-// 
-//     noInteractionCoeffs_ = pairPotentialProperties.subDict(typeName + "Coeffs");
-// 
-//     noInteractionCoeffs_.lookup("sigma") >> sigma_;
-//     noInteractionCoeffs_.lookup("epsilon") >> epsilon_;
-// 
-//     if(rU.runReducedUnits())
-//     {
-//         sigma_ /= rU.refLength();
-//         epsilon_ /= rU.refEnergy();
-//     }
-// 
-//     return true;
-// }
 
-const dictionary& noInteraction::dict() const
-{
-    return propsDict_;
-}
+// * * * * * * * * * * * * * * * Friend Functions  * * * * * * * * * * * * * //
 
+// * * * * * * * * * * * * * * * Friend Operators  * * * * * * * * * * * * * //
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
 

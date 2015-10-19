@@ -137,39 +137,39 @@ public:
         inline autoPtr<pairPotentialModel>& electrostaticPot();
         inline const autoPtr<pairPotentialModel>& electrostaticPot() const;        
         
-        inline label getIndexFromPairPotentialSites
+        label getIndexFromPairPotentialSites
         (
-            const label& idI,
-            const label& idj,
-            const label& i,
-            const label& j
-        );
+            const label idI,
+            const label idj,
+            const label i,
+            const label j
+        ) const; 
         
-        inline label getIndexFromSites
+        label getIndexFromSites
         (
-            const label& idI,
-            const label& idJ,
-            const label& sI,
-            const label& sJ
-        );  
+            const label idI,
+            const label idJ,
+            const label sI,
+            const label sJ
+        ) const;  
 
         scalar force
         (
-            const label& k,
-            const scalar& r
-        );
+            const label k,
+            const scalar r
+        ) const;
         
         scalar energy
         (
-            const label& k,
-            const scalar& r
-        );
+            const label k,
+            const scalar r
+        ) const;
 
         bool rCutSqr
         (
-            const label& k,
-            const scalar& r
-        );         
+            const label k,
+            const scalar r
+        ) const;         
 
         scalar rMin
         (

@@ -84,7 +84,7 @@ pairPotentialModel::pairPotentialModel
     // splitting the name using a delimeter "A-B" => "A" and "B"
     idList_.setSize(2);
     
-    Info << nl << "name = " << name_ << endl;
+//     Info << nl << "name = " << name_ << endl;
     
     std::string s = name_;
     std::string delimiter = "-";
@@ -99,7 +99,7 @@ pairPotentialModel::pairPotentialModel
         idList_[1]=s;
     }
     
-    Info << " idList = " << idList_ << endl;
+//     Info << " idList = " << idList_ << endl;
     
     
     // exclusions 
@@ -115,6 +115,9 @@ pairPotentialModel::pairPotentialModel
             exclusions_ = true;
         }
     }
+    
+/*    Info << "pairPotentialModel, " << name_ <<" exclusionModel =  " 
+    << exclusions_ << endl;  */  
 }
 
 

@@ -22,7 +22,7 @@ potentials/pairPotentials/derived/pairPotentialModels/lennardJones/lennardJones.
 potentials/pairPotentials/derived/pairPotentialModels/noInteraction/noInteraction.C
 potentials/pairPotentials/derived/pairPotentialModels/coulomb/coulomb.C
 
-
+/* energy scaling functions */
 potentials/energyScalingFunction/basic/energyScalingFunction.C
 potentials/energyScalingFunction/derived/shiftedForce/shiftedForce.C
 potentials/energyScalingFunction/derived/shifted/shifted.C
@@ -30,8 +30,11 @@ potentials/energyScalingFunction/derived/sigmoid/sigmoid.C
 potentials/energyScalingFunction/derived/noScaling/noScaling.C
 potentials/energyScalingFunction/derived/doubleSigmoid/doubleSigmoid.C
 
+/* potentials exclusions */
 potentials/exclusions/basic/exclusionModel.C
 potentials/exclusions/derived/noExclusions/noExclusions.C
+potentials/exclusions/derived/excludeAll/excludeAll.C
+
 
 /*
 tetherPotential/tetherPotentialList/tetherPotentialList.C
