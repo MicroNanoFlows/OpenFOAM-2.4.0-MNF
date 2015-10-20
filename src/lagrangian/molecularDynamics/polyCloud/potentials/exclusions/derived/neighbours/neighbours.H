@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,27 +23,38 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    polyPDBreader
+
 
 Description
-    (new version)
-
+    Allows interaction only between specific pairs of molecules 
+    
+    E.g. for Morse, FENE potentials etc 
+    
+    code changes required for changes in fluid density 
+    
+    
+    reminder:
+    
+    FALSE = interact
+    TRUE = do not interact 
+    
+    OR
+    
+    FALSE = do not exclude interactions
+    TRUE = exclude interactions
+    
 SourceFiles
-    polyPDBreaderI.H
-    polyPDBreader.C
-    polyPDBreaderIO.C
-
+    neighboursI.H
+    neighbours.C
+    neighboursIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef polyPDBreader_H
-#define polyPDBreader_H
+#ifndef neighbours_H
+#define neighbours_H
 
-#include "polyConfiguration.H"
-#include "vector.H"
-#include "polyMesh.H"
-#include "volFields.H"
 #include "polyMoleculeCloud.H"
+#include "exclusionModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,74 +62,99 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class polyPDBreader Declaration
+                           Class neighbours Declaration
 \*---------------------------------------------------------------------------*/
 
-class polyPDBreader
+class neighbours
 :
-	public polyConfiguration
+    public exclusionModel
 {
 
 private:
 
     // Private data
 
-        //- subDictionary containing the properties
-//         dictionary propsDict_;
+        dictionary propsDict_;
 
-        scalar temperature_;
-        
-        vector bulkVelocity_;
-        
-        vector startPoint_;
-        
-        bool tethered_;
-        bool frozen_;
-        
-        
-        List<label> molIds_;
-        List<word> molIdNames_;      
-        
-        
-    // Private Member Functions
+        List<label> tNsA_;
+        List<label> tNsB_;
 
-        void testForBoundBox
-        (
-            vector& vMin,
-            vector& vMax,
-            const vector& globalPosition
-        );
+        List<DynamicList<label> > fullTNs_;
         
+
 public:
 
     //- Runtime type information
-    TypeName("polyPDBreader");
+    TypeName("neighbours");
+
+    // Static data members
 
     // Constructors
 
-        //- Construct from components
-        polyPDBreader
-		(
+        //- construct from components
+        neighbours
+        (
+            const polyMesh& mesh,
             polyMoleculeCloud& molCloud,
             const dictionary& dict
-//             const word& name
-		);
+        );
+
+    // Selectors
+
 
     // Destructor
 
- 		~polyPDBreader();
-
+        ~neighbours();
 
     // Member Functions
 
-        void setInitialConfiguration();
+        // Access
 
+        // Check
+
+        // Edit
+
+        bool excludeMolecules
+        (
+            polyMolecule* molI,
+            polyMolecule* molJ
+        );
+        
+        bool excludeSites
+        (
+            polyMolecule* molI,
+            polyMolecule* molJ,
+            const label& siteI,
+            const label& siteJ
+        );
+        
+
+        // Write
+
+
+
+
+
+    // Member Operators
+
+//         void operator=(const neighbours&);
+
+    // Friend Functions
+
+    // Friend Operators
+
+    // IOstream Operators
+
+//         friend Ostream& operator<<(Ostream&, const neighbours&);
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

@@ -39,7 +39,7 @@ SourceFiles
 #ifndef polySphere_H
 #define polySphere_H
 
-#include "polyAllConfigurations.H"
+#include "polyConfiguration.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"

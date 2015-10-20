@@ -77,7 +77,7 @@ inline void Foam::polyMoleculeCloud::evaluatePair
                 
                 if(p_.pairPots().rCutSqr(k, rsIsJMagSq))
                 {
-//                     if(!p_.pairPots().excludeSites(molI, molJ, sI, sJ, k))
+                    if(!p_.pairPots().excludeSites(molI, molJ, sI, sJ, k))
                     {
                         scalar rsIsJMag = mag(rsIsJ);
 

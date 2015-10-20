@@ -27,6 +27,14 @@ Class
 
 Description
 
+    FALSE = interact
+    TRUE = do not interact 
+    
+    OR
+    
+    FALSE = do not exclude interactions
+    TRUE = exclude interactions
+    
 SourceFiles
     exclusionModelI.H
     exclusionModel.C

@@ -38,8 +38,8 @@ SourceFiles
 
 #ifndef polyCNT_H
 #define polyCNT_H
-
-#include "polyAllConfigurations.H"
+// 
+#include "polyConfiguration.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"

@@ -20,7 +20,9 @@ potentials/pairPotentials/basic/pairPotentialModel/pairPotentialModel.C
 /* Derived Pair Potentials */
 potentials/pairPotentials/derived/pairPotentialModels/lennardJones/lennardJones.C
 potentials/pairPotentials/derived/pairPotentialModels/noInteraction/noInteraction.C
-potentials/pairPotentials/derived/pairPotentialModels/coulomb/coulomb.C
+potentials/pairPotentials/derived/pairPotentialModels/morse/morse.C
+
+potentials/pairPotentials/derived/electrostaticPotentialModels/coulomb/coulomb.C
 
 /* energy scaling functions */
 potentials/energyScalingFunction/basic/energyScalingFunction.C
@@ -34,7 +36,7 @@ potentials/energyScalingFunction/derived/doubleSigmoid/doubleSigmoid.C
 potentials/exclusions/basic/exclusionModel.C
 potentials/exclusions/derived/noExclusions/noExclusions.C
 potentials/exclusions/derived/excludeAll/excludeAll.C
-
+potentials/exclusions/derived/neighbours/neighbours.C
 
 /*
 tetherPotential/tetherPotentialList/tetherPotentialList.C

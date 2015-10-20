@@ -23,26 +23,23 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    polyPDBreader
+    morse
+
 
 Description
-    (new version)
+    to write out a pdb file for creating movies
 
 SourceFiles
-    polyPDBreaderI.H
-    polyPDBreader.C
-    polyPDBreaderIO.C
-
+    morseI.H
+    morse.C
+    morseIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef polyPDBreader_H
-#define polyPDBreader_H
+#ifndef morse_H
+#define morse_H
 
-#include "polyConfiguration.H"
-#include "vector.H"
-#include "polyMesh.H"
-#include "volFields.H"
+#include "pairPotentialModel.H"
 #include "polyMoleculeCloud.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -51,12 +48,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class polyPDBreader Declaration
+                           Class morse Declaration
 \*---------------------------------------------------------------------------*/
 
-class polyPDBreader
+class morse
 :
-	public polyConfiguration
+    public pairPotentialModel
 {
 
 private:
@@ -64,55 +61,49 @@ private:
     // Private data
 
         //- subDictionary containing the properties
-//         dictionary propsDict_;
+        dictionary propsDict_;
 
-        scalar temperature_;
-        
-        vector bulkVelocity_;
-        
-        vector startPoint_;
-        
-        bool tethered_;
-        bool frozen_;
-        
-        
-        List<label> molIds_;
-        List<word> molIdNames_;      
-        
+        scalar Kcr_;
+        scalar gamma_;
+        scalar rC_;    
+
         
     // Private Member Functions
 
-        void testForBoundBox
-        (
-            vector& vMin,
-            vector& vMax,
-            const vector& globalPosition
-        );
-        
+
+
 public:
 
     //- Runtime type information
-    TypeName("polyPDBreader");
+    TypeName("morse");
 
     // Constructors
 
         //- Construct from components
-        polyPDBreader
-		(
-            polyMoleculeCloud& molCloud,
+        morse
+        (
+            const polyMesh& mesh,
+            polyMoleculeCloud& molCloud,         
+            const reducedUnits& redUnits,
+            const word& name,         
             const dictionary& dict
-//             const word& name
-		);
+        );
 
     // Destructor
 
- 		~polyPDBreader();
-
+        ~morse();
 
     // Member Functions
 
-        void setInitialConfiguration();
+        scalar unscaledEnergy(const scalar r) const;
 
+        //- Read dictionary
+//         bool read
+//         (
+//             const dictionary& pairPotentialProperties,
+//         );
+
+        const dictionary& dict() const;
 };
 
 

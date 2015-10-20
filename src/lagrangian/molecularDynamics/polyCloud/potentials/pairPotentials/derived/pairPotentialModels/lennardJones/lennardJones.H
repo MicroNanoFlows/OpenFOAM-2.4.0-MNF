@@ -66,7 +66,6 @@ private:
         scalar sigma_;
         scalar epsilon_;
 
-        // exclusion lists may go here
 
         
         
