@@ -107,11 +107,12 @@ polyFieldProperties::polyFieldProperties
         // create directory: case/fieldMeasurements/poly
         fileName polyFieldsPath(fieldPath/"poly");
 
+/*
         if(isDir(polyFieldsPath) )
         {
             rmDir(polyFieldsPath);
         }
-
+*/
         mkDir(polyFieldsPath);
 
         Info << "Creating fields: " << nl << endl;
