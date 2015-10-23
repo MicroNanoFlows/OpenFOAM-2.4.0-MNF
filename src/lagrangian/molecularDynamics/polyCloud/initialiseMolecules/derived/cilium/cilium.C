@@ -96,12 +96,8 @@ void cilium::setInitialConfiguration()
     
     vector endPoint = mdInitialiseDict_.lookup("endPoint");
     
-    bool frozen = false;
 
-    if (mdInitialiseDict_.found("frozen"))
-    {
-        frozen = Switch(mdInitialiseDict_.lookup("frozen"));
-    }
+    
     
     bool tethered = false;
     
@@ -134,6 +130,30 @@ void cilium::setInitialConfiguration()
 
     Info << nl << " No of sites found = " << positions.size() << endl;
 
+    DynamicList<label> frozenAtoms(0);
+    
+    if(mdInitialiseDict_.found("frozenAtoms"))
+    {
+        List<label> molecules = List<label>(mdInitialiseDict_.lookup("frozenAtoms"));
+        
+        if(molecules.size() > positions.size())
+        {
+            FatalErrorIn("cilium::setInitialConfiguration()")
+                << "You can't have more frozen atoms than you have atoms = " << positions.size() 
+                << exit(FatalError);            
+        }
+        
+        forAll(molecules, i)
+        {
+            frozenAtoms.append(molecules[i]);
+        }
+        
+        Info << "frozen atoms = " << frozenAtoms << endl;
+    }
+    
+    
+    
+    
     // insert molecules in cloud
     label nMolsInserted = 0;
     
@@ -150,6 +170,13 @@ void cilium::setInitialConfiguration()
             tetFace,
             tetPt
         );
+        
+        bool frozen = false;
+        
+        if(findIndex(frozenAtoms, i) != -1)
+        {
+            frozen = true;
+        }
         
         if(cell != -1)
         {

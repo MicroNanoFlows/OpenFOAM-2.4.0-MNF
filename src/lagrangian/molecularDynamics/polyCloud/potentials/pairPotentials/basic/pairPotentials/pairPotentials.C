@@ -300,6 +300,17 @@ bool pairPotentials::excludeSites
     }
 }
 
+void pairPotentials::initialiseExclusionModels()
+{
+    forAll(pairPotentials_, k)
+    {
+        if(exclusions_[k])
+        {
+            pairPotentials_[k]->excludeModel()->initialiseExclusions();
+        }
+    }
+}
+
 const List< List<label> >& pairPotentials::pairPotIdList_to_pairPotentials() const
 {
     return pairPotIdList_to_pairPotentials_;

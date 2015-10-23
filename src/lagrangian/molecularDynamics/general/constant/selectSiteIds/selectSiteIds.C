@@ -114,15 +114,15 @@ selectSiteIds::selectSiteIds
             }
         }
     }
-    else
-    {
-        FatalErrorIn
-        (
-            "selectSiteIds::selectSiteIds()"
-        )
-            << "siteIds need to be greater than 0 in dictionary."
-            << exit(FatalError);
-    }
+//     else
+//     {
+//         FatalErrorIn
+//         (
+//             "selectSiteIds::selectSiteIds()"
+//         )
+//             << "siteIds need to be greater than 0 in dictionary."
+//             << exit(FatalError);
+//     }
 }
 
 selectSiteIds::selectSiteIds
@@ -190,15 +190,15 @@ selectSiteIds::selectSiteIds
             }
         }
     }
-    else
-    {
-        FatalErrorIn
-        (
-            "selectSiteIds::selectSiteIds()"
-        )
-            << "siteIds need to be greater than 0 in dictionary."
-            << exit(FatalError);
-    }
+//     else
+//     {
+//         FatalErrorIn
+//         (
+//             "selectSiteIds::selectSiteIds()"
+//         )
+//             << "siteIds need to be greater than 0 in dictionary."
+//             << exit(FatalError);
+//     }
 }
 
 

@@ -36,8 +36,8 @@ potentials/energyScalingFunction/derived/doubleSigmoid/doubleSigmoid.C
 potentials/exclusions/basic/exclusionModel.C
 potentials/exclusions/derived/noExclusions/noExclusions.C
 potentials/exclusions/derived/excludeAll/excludeAll.C
-potentials/exclusions/derived/neighbours/neighbours.C
-
+potentials/exclusions/derived/neighbourInclusions/neighbourInclusions.C
+potentials/exclusions/derived/neighbourExclusions/neighbourExclusions.C
 /*
 tetherPotential/tetherPotentialList/tetherPotentialList.C
 tetherPotential/basic/tetherPotential.C

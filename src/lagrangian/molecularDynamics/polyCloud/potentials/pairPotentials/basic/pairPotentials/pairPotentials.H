@@ -188,6 +188,9 @@ public:
         
         const List< List<label> >& pairPotIdList_to_pairPotentials() const;
         
+        
+        void initialiseExclusionModels();
+        
 //         
     // Ostream Operator
 

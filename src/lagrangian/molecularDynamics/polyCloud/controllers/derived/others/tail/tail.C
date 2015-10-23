@@ -48,12 +48,11 @@ addToRunTimeSelectionTable(polyStateController, tail, dictionary);
 tail::tail
 (
     Time& t,
-//     const polyMesh& mesh,
     polyMoleculeCloud& molCloud,
     const dictionary& dict
 )
 :
-    polyStateController(t, /*mesh,*/ molCloud, dict),
+    polyStateController(t, molCloud, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
     molIds_()
 {
@@ -67,7 +66,7 @@ tail::tail
 
     selectIds ids
     (
-        molCloud_.pot(),
+        molCloud_.cP(),
         propsDict_
     );
 

@@ -26,9 +26,7 @@ Class
 
 
 Description
-    Allows interaction only between specific pairs of molecules 
-    
-    E.g. for Morse, FENE potentials etc 
+    Prevents interaction only between specific pairs of molecules 
     
     code changes required for changes in fluid density 
     
@@ -44,14 +42,14 @@ Description
     TRUE = exclude interactions
     
 SourceFiles
-    neighboursI.H
-    neighbours.C
-    neighboursIO.C
+    neighbourExclusionsI.H
+    neighbourExclusions.C
+    neighbourExclusionsIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef neighbours_H
-#define neighbours_H
+#ifndef neighbourExclusions_H
+#define neighbourExclusions_H
 
 #include "polyMoleculeCloud.H"
 #include "exclusionModel.H"
@@ -62,10 +60,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class neighbours Declaration
+                           Class neighbourExclusions Declaration
 \*---------------------------------------------------------------------------*/
 
-class neighbours
+class neighbourExclusions
 :
     public exclusionModel
 {
@@ -85,14 +83,14 @@ private:
 public:
 
     //- Runtime type information
-    TypeName("neighbours");
+    TypeName("neighbourExclusions");
 
     // Static data members
 
     // Constructors
 
         //- construct from components
-        neighbours
+        neighbourExclusions
         (
             const polyMesh& mesh,
             polyMoleculeCloud& molCloud,
@@ -104,7 +102,7 @@ public:
 
     // Destructor
 
-        ~neighbours();
+        ~neighbourExclusions();
 
     // Member Functions
 
@@ -113,6 +111,8 @@ public:
         // Check
 
         // Edit
+        
+        void initialiseExclusions();
 
         bool excludeMolecules
         (
@@ -137,7 +137,7 @@ public:
 
     // Member Operators
 
-//         void operator=(const neighbours&);
+//         void operator=(const neighbourExclusions&);
 
     // Friend Functions
 
@@ -145,7 +145,7 @@ public:
 
     // IOstream Operators
 
-//         friend Ostream& operator<<(Ostream&, const neighbours&);
+//         friend Ostream& operator<<(Ostream&, const neighbourExclusions&);
 };
 
 

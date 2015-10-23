@@ -126,6 +126,10 @@ public:
         virtual ~exclusionModel();
 
     // Member Functions
+
+        virtual void initialiseExclusions
+        (
+        ) = 0;
         
         virtual bool excludeMolecules
         (

@@ -699,7 +699,8 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
 
     // read in tracking numbers
     updateTrackingNumbersAfterRead();
-
+    p_.pairPots().initialiseExclusionModels();
+    
     //check and remove high energy overalps
     checkForOverlaps();
     

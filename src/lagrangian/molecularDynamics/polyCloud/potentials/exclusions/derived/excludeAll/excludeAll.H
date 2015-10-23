@@ -94,6 +94,7 @@ public:
         // Check
 
         // Edit
+        void initialiseExclusions();
 
         bool excludeMolecules
         (

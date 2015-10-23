@@ -72,7 +72,10 @@ excludeAll::~excludeAll()
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
+void excludeAll::initialiseExclusions()
+{
+    
+}
 
 bool excludeAll::excludeMolecules
 (

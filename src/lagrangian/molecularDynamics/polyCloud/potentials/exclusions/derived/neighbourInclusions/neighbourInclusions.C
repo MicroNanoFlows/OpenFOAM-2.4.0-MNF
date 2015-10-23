@@ -23,13 +23,13 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    noExclusions
+    neighbourInclusions
 
 Description
 
 \*----------------------------------------------------------------------------*/
 
-#include "noExclusions.H"
+#include "neighbourInclusions.H"
 #include "addToRunTimeSelectionTable.H"
 
 namespace Foam
@@ -37,9 +37,9 @@ namespace Foam
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(noExclusions, 0);
+defineTypeNameAndDebug(neighbourInclusions, 0);
 
-addToRunTimeSelectionTable(exclusionModel, noExclusions, dictionary);
+addToRunTimeSelectionTable(exclusionModel, neighbourInclusions, dictionary);
 
 
 
@@ -49,44 +49,81 @@ addToRunTimeSelectionTable(exclusionModel, noExclusions, dictionary);
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 //- Construct from components
-noExclusions::noExclusions
+neighbourInclusions::neighbourInclusions
 (
     const polyMesh& mesh,
     polyMoleculeCloud& molCloud,
     const dictionary& dict
 )
 :
-    exclusionModel(mesh, molCloud, dict)
+    exclusionModel(mesh, molCloud, dict),
+    propsDict_(dict.subDict(typeName + "Properties"))
+{
+}
 
-{}
 
-
+void neighbourInclusions::initialiseExclusions()
+{
+    // read in tracking numbers 
+    List<label> molPointsA = List<label>(propsDict_.lookup("trackingNumbersA"));
+    List<label> molPointsB = List<label>(propsDict_.lookup("trackingNumbersB"));
+    
+    if(molPointsA.size() != molPointsB.size())
+    {
+        FatalErrorIn("neighbourInclusions::neighbourInclusions()")
+            << "size of trackingNumbersA = " << molPointsA
+            << " is not the same as trackingNumbersB = : " << molPointsA
+            << nl << "in system/potentialDict"
+            << exit(FatalError);        
+    }
+    
+    tNsA_.setSize(molPointsA.size());
+    tNsB_.setSize(molPointsB.size());
+    
+    forAll(tNsA_, i)
+    {
+        tNsA_[i]=molPointsA[i];
+        tNsB_[i]=molPointsB[i];
+    }
+    
+    label N=molCloud_.moleculeTracking().getMaxTrackingNumber();
+    
+    Info << "N = " << N << endl;
+    
+    fullTNs_.setSize(N);
+    
+    forAll(tNsA_, i)
+    {
+        label tNA = tNsA_[i];
+        label tNB = tNsB_[i];        
+        
+        fullTNs_[tNA].append(tNB);
+        fullTNs_[tNB].append(tNA);
+    }
+}
 
 // * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * * //
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-noExclusions::~noExclusions()
+neighbourInclusions::~neighbourInclusions()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void noExclusions::initialiseExclusions()
-{
-    
-}
-bool noExclusions::excludeMolecules
+
+bool neighbourInclusions::excludeMolecules
 (
     polyMolecule* molI,
     polyMolecule* molJ
 )
 {
-    return false;
+    return true;
 }
 
-bool noExclusions::excludeSites
+bool neighbourInclusions::excludeSites
 (
     polyMolecule* molI,
     polyMolecule* molJ,
@@ -94,7 +131,29 @@ bool noExclusions::excludeSites
     const label& siteJ
 )
 {
-    return false;
+    if(molI->trackingNumber() < fullTNs_.size())
+    {
+        if(findIndex(fullTNs_[molI->trackingNumber()], molJ->trackingNumber()) == -1)
+        {
+            return true;
+        }
+        else
+        {
+            forAll(fullTNs_[molI->trackingNumber()], i)
+            {
+                if(fullTNs_[molI->trackingNumber()][i] == molJ->trackingNumber())
+                {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+    }
+    else
+    {
+        return true;
+    }
 }
 
 

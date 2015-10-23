@@ -25,7 +25,7 @@ Class
     potentials
 
 Description
-    The first point of contact of storage of potentials 
+    The first point of contact of storage and access of potentials 
     
 
 SourceFiles

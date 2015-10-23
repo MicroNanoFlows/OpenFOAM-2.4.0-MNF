@@ -26,16 +26,32 @@ Class
 
 
 Description
-
+    Allows interaction only between specific pairs of molecules 
+    
+    E.g. for Morse, FENE potentials etc 
+    
+    code changes required for changes in fluid density 
+    
+    
+    reminder:
+    
+    FALSE = interact
+    TRUE = do not interact 
+    
+    OR
+    
+    FALSE = do not exclude interactions
+    TRUE = exclude interactions
+    
 SourceFiles
-    noExclusionsI.H
-    noExclusions.C
-    noExclusionsIO.C
+    neighbourInclusionsI.H
+    neighbourInclusions.C
+    neighbourInclusionsIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef noExclusions_H
-#define noExclusions_H
+#ifndef neighbourInclusions_H
+#define neighbourInclusions_H
 
 #include "polyMoleculeCloud.H"
 #include "exclusionModel.H"
@@ -46,10 +62,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class noExclusions Declaration
+                           Class neighbourInclusions Declaration
 \*---------------------------------------------------------------------------*/
 
-class noExclusions
+class neighbourInclusions
 :
     public exclusionModel
 {
@@ -60,20 +76,23 @@ private:
 
         dictionary propsDict_;
 
+        List<label> tNsA_;
+        List<label> tNsB_;
 
-
+        List<DynamicList<label> > fullTNs_;
+        
 
 public:
 
     //- Runtime type information
-    TypeName("noExclusions");
+    TypeName("neighbourInclusions");
 
     // Static data members
 
     // Constructors
 
         //- construct from components
-        noExclusions
+        neighbourInclusions
         (
             const polyMesh& mesh,
             polyMoleculeCloud& molCloud,
@@ -85,7 +104,7 @@ public:
 
     // Destructor
 
-        ~noExclusions();
+        ~neighbourInclusions();
 
     // Member Functions
 
@@ -94,8 +113,9 @@ public:
         // Check
 
         // Edit
-        void initialiseExclusions();
         
+        void initialiseExclusions();
+
         bool excludeMolecules
         (
             polyMolecule* molI,
@@ -119,7 +139,7 @@ public:
 
     // Member Operators
 
-//         void operator=(const noExclusions&);
+//         void operator=(const neighbourInclusions&);
 
     // Friend Functions
 
@@ -127,7 +147,7 @@ public:
 
     // IOstream Operators
 
-//         friend Ostream& operator<<(Ostream&, const noExclusions&);
+//         friend Ostream& operator<<(Ostream&, const neighbourInclusions&);
 };
 
 
