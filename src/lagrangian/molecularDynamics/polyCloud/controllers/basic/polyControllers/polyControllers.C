@@ -287,33 +287,24 @@ void polyControllers::initialConfig()
     }
 }
 
-//- control molecular state -- call this after the intermolecular force calulation
-void polyControllers::controlState()
-{
-    forAll(stateControllers_, sC)
-    {
-        stateControllers_[sC]->controlMols();
-    }
-}
-
-
 void polyControllers::controlVelocitiesI()
 {
     forAll(stateControllers_, sC)
     {
-        stateControllers_[sC]->controlMolsBeg();
+        stateControllers_[sC]->controlBeforeVelocityI();
     }
 }
 
-void polyControllers::controlVelocitiesII()
+void polyControllers::controlBeforeMove()
 {
     forAll(stateControllers_, sC)
     {
-        stateControllers_[sC]->controlMolsEnd();
-    }
+        stateControllers_[sC]->controlBeforeMove();
+    }    
 }
 
-void polyControllers::controlPriorToForces()
+
+void polyControllers::controlBeforeForces()
 {
     forAll(stateControllers_, sC)
     {
@@ -326,30 +317,31 @@ void polyControllers::controlDuringForceComputation
 (
     polyMolecule* molI,
     polyMolecule* molJ
-//     bool electrostaticPair
 )
 {
     forAll(controllersDuringForceComp_, n)
     {
         const label& sC = controllersDuringForceComp_[n];
-        stateControllers_[sC]->controlDuringForces(molI, molJ /*electrostaticPair*/);
+        stateControllers_[sC]->controlDuringForces(molI, molJ);
     }
 }
 
-// void polyControllers::controlDuringForceComputation
-// (
-//     polyMolecule* molReal,
-//     polyReferredMolecule* molRef
-// //     bool electrostaticPair
-// )
-// {
-//     forAll(controllersDuringForceComp_, n)
-//     {
-//         const label& sC = controllersDuringForceComp_[n];
-//         stateControllers_[sC]->controlDuringForces(molReal, molRef /*electrostaticPair*/);
-//     }
-// }
+//- control molecular state -- call this after the intermolecular force calulation
+void polyControllers::controlAfterForces()
+{
+    forAll(stateControllers_, sC)
+    {
+        stateControllers_[sC]->controlAfterForces();
+    }
+}
 
+void polyControllers::controlVelocitiesII()
+{
+    forAll(stateControllers_, sC)
+    {
+        stateControllers_[sC]->controlAfterVelocityII();
+    }
+}
 
 //- calculate properties -- call this at the end of the MD time-step.
 void polyControllers::calculateStateProps()

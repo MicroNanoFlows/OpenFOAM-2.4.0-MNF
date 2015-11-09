@@ -23,21 +23,20 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    polyTemperatureBerendsen
+    polyLangevin
 
 Description
-	The Berendsen thermostat rescales the kinetic temperature over variable time periods rather 
-    than instantaneously.
+    Applied properly to global control zones.
 
 SourceFiles
-    polyTemperatureBerendsenI.H
-    polyTemperatureBerendsen.C
-    polyTemperatureBerendsenIO.C
+    polyLangevinI.H
+    polyLangevin.C
+    polyLangevinIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef polyTemperatureBerendsen_H
-#define polyTemperatureBerendsen_H
+#ifndef polyLangevin_H
+#define polyLangevin_H
 
 #include "polyStateController.H"
 #include "vector.H"
@@ -51,10 +50,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class polyTemperatureBerendsen Declaration
+                           Class polyLangevin Declaration
 \*---------------------------------------------------------------------------*/
 
-class polyTemperatureBerendsen
+class polyLangevin
 :
 	public polyStateController
 {
@@ -66,33 +65,45 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-        //- time constant
-        scalar tauT_;
-        
         List<label> molIds_;
-
+        
+        List<label> trackingNumbers_;        
+       
+        vectorField storedVelocities_;
+        
+        //- strength-constant
+        scalar gamma_;
+        scalar sigma1_;
+        scalar sigma2_;
+        scalar deltaT_;
+        
         scalar temperature_;
         
-        bool componentControl_;
-        bool X_;
-        bool Y_;
-        bool Z_;
-
-        bool peculiar_;
+        bool controlOn_;
+        bool switchOffAfterTime_;
+        scalar currentTime_;
+        scalar switchOffTime_;
+        
+        
+        bool variableGamma_;
+        scalar timeInterval_;
+        scalar elapsedtime_;
+        scalar deltaGamma_;
+        
         
     // Private Member Functions
-            
-//         void readProperties();
+
+        void measureTemperature();
 
 public:
 
     //- Runtime type information
-    TypeName("polyTemperatureBerendsen");
+    TypeName("polyLangevin");
 
     // Constructors
 
         //- Construct from components
-        polyTemperatureBerendsen
+        polyLangevin
         (
             Time& t,
             polyMoleculeCloud& molCloud,
@@ -101,11 +112,11 @@ public:
 
     // Destructor
 
-        ~polyTemperatureBerendsen();
+        ~polyLangevin();
 
 
     // Member Functions
-
+        
         //- create an initial configuration
         void initialConfiguration();
 
@@ -133,6 +144,7 @@ public:
         
         //- update properties from a modified dictionary (optional)
         void updateProperties(const dictionary&);
+
 };
 
 

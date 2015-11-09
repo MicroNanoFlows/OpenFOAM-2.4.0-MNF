@@ -26,7 +26,7 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "polyForce.H"
+#include "polyFadeEquilibrateMolecules.H"
 #include "addToRunTimeSelectionTable.H"
 #include "IFstream.H"
 #include "graph.H"
@@ -36,13 +36,13 @@ Description
 namespace Foam
 {
 
-defineTypeNameAndDebug(polyForce, 0);
-addToRunTimeSelectionTable(polyStateController, polyForce, dictionary);
+defineTypeNameAndDebug(polyFadeEquilibrateMolecules, 0);
+addToRunTimeSelectionTable(polyStateController, polyFadeEquilibrateMolecules, dictionary);
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-polyForce::polyForce
+polyFadeEquilibrateMolecules::polyFadeEquilibrateMolecules
 (
     Time& t,
     polyMoleculeCloud& molCloud,
@@ -51,10 +51,10 @@ polyForce::polyForce
 :
     polyStateController(t, molCloud, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
-    model_(),
-    molIds_(),
-    nTimeSteps_(0.0),
-    force_(vector::zero)
+
+    molIds_()
+//     nTimeSteps_(0.0),
+//     force_(vector::zero)
 {
 
     writeInTimeDir_ = true;
@@ -62,10 +62,6 @@ polyForce::polyForce
 
 //     singleValueController() = true;
 
-    model_ = autoPtr<gravityForce>
-    (
-        gravityForce::New(t, propsDict_)
-    );
 
     molIds_.clear();
 
@@ -76,101 +72,106 @@ polyForce::polyForce
     );
 
     molIds_ = ids.molIds();
+    
+    tauT_ = readScalar(propsDict_.lookup("tauT"));
 
+    if(tauT_ > 0.0)
+    {
+        n_ = readLabel(propsDict_.lookup("n"));
+    }
+    
+    deltaT_ = time_.deltaT().value(); 
+    t_ = 0.0;
+    
     readProperties();
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-polyForce::~polyForce()
+polyFadeEquilibrateMolecules::~polyFadeEquilibrateMolecules()
 {}
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void polyForce::initialConfiguration()
+void polyFadeEquilibrateMolecules::initialConfiguration()
+{
+    IDLList<polyMolecule>::iterator mol(molCloud_.begin());
+
+    for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
+    {
+        if(findIndex(molIds_, mol().id()) != -1)
+        {
+            mol().fraction() = 0;
+        }
+    }
+}
+
+void polyFadeEquilibrateMolecules::controlBeforeVelocityI()
 {}
 
-void polyForce::controlBeforeVelocityI()
+void polyFadeEquilibrateMolecules::controlBeforeMove()
 {}
 
-void polyForce::controlBeforeMove()
+void polyFadeEquilibrateMolecules::controlBeforeForces()
 {}
 
-void polyForce::controlBeforeForces()
-{}
-
-void polyForce::controlDuringForces
+void polyFadeEquilibrateMolecules::controlDuringForces
 (
     polyMolecule* molI,
     polyMolecule* molJ
 )
 {}
 
-void polyForce::controlAfterForces()
+void polyFadeEquilibrateMolecules::controlAfterForces()
 {
-    //set target velocity of wall
-    model_->updateForce();
-
-    // - if control switch is on
-    if(control_) 
+    IDLList<polyMolecule>::iterator mol(molCloud_.begin());
+    
+    t_ += deltaT_;
+    
+    for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
     {
-        Info << "polyForce: control" << endl;
-
-        forAll(controlZone(), c)
+        if(findIndex(molIds_, mol().id()) != -1)
         {
-            const label& cellI = controlZone()[c];
-    
-            const List<polyMolecule*>& molsInCell = molCloud_.cellOccupancy()[cellI];
-    
-            forAll(molsInCell, m)
+            if(t_ < 0.5*tauT_)
             {
-                polyMolecule* molI = molsInCell[m];
-    
-                if(findIndex(molIds_, molI->id()) != -1)
-                {
-                    const scalar& massI = molCloud_.cP().mass(molI->id());
-
-                    vector force = model_->force(molI->position());
-
-                    molI->a() += force/massI;
-
-                    force_ += force;
-                }
+                mol().fraction() = 0.5*Foam::pow((2.0*t_/tauT_), scalar(n_));
             }
+            else
+            {
+                mol().fraction() = 1.0 
+                        - 0.5*mag(Foam::pow((2.0*(t_-tauT_)/tauT_), scalar(n_)));
+            }            
         }
-
-        nTimeSteps_ += 1.0;
     }
 }
 
-void polyForce::controlAfterVelocityII()
+void polyFadeEquilibrateMolecules::controlAfterVelocityII()
 {}
 
-void polyForce::calculateProperties()
+void polyFadeEquilibrateMolecules::calculateProperties()
 {}
 
-void polyForce::output
+void polyFadeEquilibrateMolecules::output
 (
     const fileName& fixedPathName,
     const fileName& timePath
 )
 {
-    model_->write(fixedPathName, timePath);
+
 }
 
-void polyForce::updateProperties(const dictionary& newDict)
+void polyFadeEquilibrateMolecules::updateProperties(const dictionary& newDict)
 {
     //- the main controller properties should be updated first
     updateStateControllerProperties(newDict);
 
     propsDict_ = newDict.subDict(typeName + "Properties");
 
-    model_->updateProperties(propsDict_);
 
     readProperties();
 }
 
-void polyForce::readProperties()
+void polyFadeEquilibrateMolecules::readProperties()
 {}
 
 } // End namespace Foam

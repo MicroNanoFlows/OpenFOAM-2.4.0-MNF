@@ -67,11 +67,13 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-		autoPtr<wallMotion> wallMotionModel_;
+        autoPtr<wallMotion> wallMotionModel_;
 
         //- ids of mols
         List<label> molIds_;
 
+        vector velocity_;
+        
     // Private Member Functions
 
         void readProperties();
@@ -97,34 +99,34 @@ public:
 
 
     // Member Functions
-
+        
+        //- create an initial configuration
         void initialConfiguration();
 
-        //- calculate any required properties
-        void calculateProperties();
-
-        //- control the mols
-        void controlMols();
-        void controlMolsBeg();
-        void controlMolsEnd();
+        //- control molecules at various stages of time-step
+        void controlBeforeVelocityI();
+        void controlBeforeMove();
         void controlBeforeForces();
         void controlDuringForces
         (
             polyMolecule* molI,
             polyMolecule* molJ
-        );
-
-        //- output data
+        );        
+        void controlAfterForces();
+        void controlAfterVelocityII();
+        
+        //- calculate any required properties (end of time-step)
+        void calculateProperties(); 
+        
+        //- output data (optional)
         void output
         (
             const fileName& fixedPathName, 
             const fileName& timePath
         );
-
-        //- update properties from a modified dictionary
+        
+        //- update properties from a modified dictionary (optional)
         void updateProperties(const dictionary&);
-
-        // Access
  };
 
 

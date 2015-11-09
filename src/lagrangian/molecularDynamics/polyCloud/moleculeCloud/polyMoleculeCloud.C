@@ -908,16 +908,61 @@ void  Foam::polyMoleculeCloud::createMolecule
     );
 }
 
-void Foam::polyMoleculeCloud::preliminaries()
+
+// Evolve functions 
+
+void Foam::polyMoleculeCloud::evolve()
 {
-    // control
+    evolveBeforeForces();
+    calculateForce();
+    evolveAfterForces();
+}
+
+void Foam::polyMoleculeCloud::evolveBeforeForces()
+{
+    controlBeforeVelocity();
+    updateVelocity();
+    controlBeforeMove();
+    move();
+    controlAfterMove();
+    buildCellOccupancy();
+    controlBeforeForces();
+    clearLagrangianFields();
+}
+
+void Foam::polyMoleculeCloud::evolveAfterForces()
+{
+    updateAcceleration();
+    controlAfterForces();
+    updateVelocity();
+    controlAfterVelocity();
+    postTimeStep();
+}
+
+void Foam::polyMoleculeCloud::controlBeforeVelocity()
+{
     controllers_.controlVelocitiesI();
 }
 
-// update initial half velocity
-void Foam::polyMoleculeCloud::initialHalfVelocity()
+void Foam::polyMoleculeCloud::updateVelocity()
 {
     velocityUpdate(mesh_.time().deltaT().value());
+}
+
+void Foam::polyMoleculeCloud::velocityUpdate(const scalar& trackTime)
+{
+    forAllIter(polyMoleculeCloud, *this, mol)
+    {
+        if(!mol().frozen())
+        {
+            mol().updateHalfVelocity(cP_, trackTime);
+        }
+    }
+}
+
+void Foam::polyMoleculeCloud::controlBeforeMove()
+{
+    controllers_.controlBeforeMove();
 }
 
 // move molecules (tracking)
@@ -929,10 +974,56 @@ void Foam::polyMoleculeCloud::move()
     updateAfterMove(mesh_.time().deltaT().value());
 }
 
+void Foam::polyMoleculeCloud::updateAfterMove(const scalar& trackTime)
+{
+    forAllIter(polyMoleculeCloud, *this, mol)
+    {
+        if(!mol().frozen())
+        {
+//             const polyMolecule::constantProperties& cP = constProps(mol().id());
+            mol().updateAfterMove(cP_, trackTime);
+        }
+    }
+}
+
+
+void Foam::polyMoleculeCloud::controlAfterMove()
+{
+    boundaries_.controlAfterMove();
+}
+
+
+
 // control
 void Foam::polyMoleculeCloud::controlBeforeForces()
 {
-    controllers_.controlPriorToForces();
+    controllers_.controlBeforeForces();
+}
+
+void Foam::polyMoleculeCloud::clearLagrangianFields()
+{
+    iterator mol(this->begin());
+
+    // Set accumulated quantities to zero
+    for (mol = this->begin(); mol != this->end(); ++mol)
+    {
+        mol().a() = vector::zero;
+
+        mol().tau() = vector::zero;
+
+        mol().siteForces() = vector::zero;
+
+        mol().potentialEnergy() = 0.0;
+
+        mol().rf() = tensor::zero;
+
+        mol().R() = GREAT;
+    }
+}
+
+void Foam::polyMoleculeCloud::calculateForce()
+{
+    calculatePairForces();
 }
 
 // update acceleration from net forces
@@ -941,24 +1032,31 @@ void Foam::polyMoleculeCloud::updateAcceleration()
     accelerationUpdate();
 }
 
+void Foam::polyMoleculeCloud::accelerationUpdate()
+{
+    forAllIter(polyMoleculeCloud, *this, mol)
+    {
+        if(!mol().frozen())
+        {
+            mol().updateAcceleration(cP_);
+        }
+    }
+}
+
 // control
 void Foam::polyMoleculeCloud::controlAfterForces()
 {
     boundaries_.controlAfterForces();
-    controllers_.controlState();
+    controllers_.controlAfterForces();
 }
 
-// update final half velocity
-void Foam::polyMoleculeCloud::finalHalfVelocity()
+void Foam::polyMoleculeCloud::controlAfterVelocity()
 {
-    velocityUpdate(mesh_.time().deltaT().value());
+    controllers_.controlVelocitiesII();    
 }
 
-void Foam::polyMoleculeCloud::postPreliminaries()
+void Foam::polyMoleculeCloud::postTimeStep()
 {
-    // control
-    controllers_.controlVelocitiesII();
-
     fields_.calculateFields();
     fields_.writeFields();
 
@@ -976,67 +1074,14 @@ void Foam::polyMoleculeCloud::postPreliminaries()
     trackingInfo_.clean(); 
 }
 
-void Foam::polyMoleculeCloud::evolve()
-{
-    evolveBeforeForces();
-    calculateForce();
-    evolveAfterForces();
-}
 
-void Foam::polyMoleculeCloud::evolveBeforeForces()
-{
-    preliminaries();
-    initialHalfVelocity();
-    move();
-    boundaries_.controlAfterMove();
-    buildCellOccupancy();
-    controlBeforeForces();
-    clearLagrangianFields();
-}
 
-void Foam::polyMoleculeCloud::evolveAfterForces()
-{
-    updateAcceleration();
-    controlAfterForces();
-    finalHalfVelocity();
-    postPreliminaries();
-}
 
-void Foam::polyMoleculeCloud::updateAfterMove(const scalar& trackTime)
-{
-    forAllIter(polyMoleculeCloud, *this, mol)
-    {
-        if(!mol().frozen())
-        {
-//             const polyMolecule::constantProperties& cP = constProps(mol().id());
-            mol().updateAfterMove(cP_, trackTime);
-        }
-    }
-}
 
-void Foam::polyMoleculeCloud::velocityUpdate(const scalar& trackTime)
-{
-    forAllIter(polyMoleculeCloud, *this, mol)
-    {
-        if(!mol().frozen())
-        {
-//             const polyMolecule::constantProperties& cP = constProps(mol().id());
-            mol().updateHalfVelocity(cP_, trackTime);
-        }
-    }
-}
 
-void Foam::polyMoleculeCloud::accelerationUpdate()
-{
-    forAllIter(polyMoleculeCloud, *this, mol)
-    {
-        if(!mol().frozen())
-        {
-//             const polyMolecule::constantProperties& cP = constProps(mol().id());
-            mol().updateAcceleration(cP_);
-        }
-    }
-}
+
+
+
 
 //- used if you want to read a new field at every time-step from an input file
 //- e.g. to be used in a utility that computes measurements
@@ -1077,31 +1122,8 @@ void Foam::polyMoleculeCloud::readNewField()
     setSiteSizesAndPositions();    
 }
 
-void Foam::polyMoleculeCloud::clearLagrangianFields()
-{
-    iterator mol(this->begin());
 
-    // Set accumulated quantities to zero
-    for (mol = this->begin(); mol != this->end(); ++mol)
-    {
-        mol().a() = vector::zero;
 
-        mol().tau() = vector::zero;
-
-        mol().siteForces() = vector::zero;
-
-        mol().potentialEnergy() = 0.0;
-
-        mol().rf() = tensor::zero;
-
-        mol().R() = GREAT;
-    }
-}
-
-void Foam::polyMoleculeCloud::calculateForce()
-{
-    calculatePairForces();
-}
 
 void Foam::polyMoleculeCloud::setIPL()
 {

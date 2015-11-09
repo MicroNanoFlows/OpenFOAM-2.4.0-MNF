@@ -67,6 +67,23 @@ private:
 
         List<label> molIds_;
         
+//         List <label> trackingNumbers_;
+        
+        label trackingNumber_;
+        
+        vector centre_;
+        scalar a_;
+        scalar b_;
+        
+        // time 
+        scalar t_;
+        scalar deltaT_;
+        
+//         List< List <scalar> > xs_;
+        
+//         List< List <scalar> > ys_;
+
+        
     // Private Member Functions
 
         
@@ -79,46 +96,46 @@ public:
 
         //- Construct from components
         tail
-		(
+        (
             Time& t,
             polyMoleculeCloud& molCloud,
             const dictionary& dict
-		);
+        );
 
     // Destructor
 
- 		~tail();
+        ~tail();
 
 
     // Member Functions
-
+        
+        //- create an initial configuration
         void initialConfiguration();
 
-        //- calculate any required properties
-        void calculateProperties();
-
-        //- control the mols
-        void controlMols();
-        void controlMolsBeg();
-        void controlMolsEnd();
+        //- control molecules at various stages of time-step
+        void controlBeforeVelocityI();
+        void controlBeforeMove();
         void controlBeforeForces();
         void controlDuringForces
         (
             polyMolecule* molI,
             polyMolecule* molJ
-        );
-
-        //- output data
+        );        
+        void controlAfterForces();
+        void controlAfterVelocityII();
+        
+        //- calculate any required properties (end of time-step)
+        void calculateProperties(); 
+        
+        //- output data (optional)
         void output
         (
             const fileName& fixedPathName, 
             const fileName& timePath
         );
-
-        //- update properties from a modified dictionary
+        
+        //- update properties from a modified dictionary (optional)
         void updateProperties(const dictionary&);
-
-        // Access
 };
 
 

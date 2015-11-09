@@ -37,11 +37,6 @@ namespace Foam
 defineTypeNameAndDebug(polyTemperatureBerendsen, 0);
 addToRunTimeSelectionTable(polyStateController, polyTemperatureBerendsen, dictionary);
 
-void polyTemperatureBerendsen::readProperties()
-{
-	temperature_ = readScalar(propsDict_.lookup("temperature"));
-    tauT_ = readScalar(propsDict_.lookup("tauT"));
-}
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -63,10 +58,6 @@ polyTemperatureBerendsen::polyTemperatureBerendsen
     peculiar_(false)
 {
     temperature_ = readScalar(propsDict_.lookup("temperature"));
-
-    readProperties();
-
-    // added by Jun Zhang, choose molecule ids to sample
     
     molIds_.clear();
 
@@ -125,13 +116,10 @@ polyTemperatureBerendsen::~polyTemperatureBerendsen()
 void polyTemperatureBerendsen::initialConfiguration()
 {}
 
-void polyTemperatureBerendsen::calculateProperties()
+void polyTemperatureBerendsen::controlBeforeVelocityI()
 {}
 
-void polyTemperatureBerendsen::controlMolsBeg()
-{}
-
-void polyTemperatureBerendsen::controlMols()
+void polyTemperatureBerendsen::controlBeforeMove()
 {}
 
 void polyTemperatureBerendsen::controlBeforeForces()
@@ -144,7 +132,10 @@ void polyTemperatureBerendsen::controlDuringForces
 )
 {}
 
-void polyTemperatureBerendsen::controlMolsEnd()
+void polyTemperatureBerendsen::controlAfterForces()
+{}
+
+void polyTemperatureBerendsen::controlAfterVelocityII()
 {
 	const scalar deltaTMD = time_.deltaT().value(); 
     
@@ -291,6 +282,9 @@ void polyTemperatureBerendsen::controlMolsEnd()
     }
 }
 
+void polyTemperatureBerendsen::calculateProperties()
+{}
+
 void polyTemperatureBerendsen::output
 (
     const fileName& fixedPathName, 
@@ -305,7 +299,7 @@ void polyTemperatureBerendsen::updateProperties(const dictionary& newDict)
 
     propsDict_ = newDict.subDict(typeName + "Properties");
 
-    readProperties();
+//     readProperties();
 }
 
 } // End namespace Foam

@@ -69,7 +69,7 @@ protected:
         polyMoleculeCloud& molCloud_;
 
         //- subDictionary containing the properties
-        dictionary controllerDict_;
+//         dictionary controllerDict_;
 
         Time& time_; 
 
@@ -77,37 +77,16 @@ protected:
         word regionName_;
         label regionId_;
 
+        // on/off
         bool control_;
 
+        // expensive control within intermolecular force computation
         bool controlInterForces_;
 
-        bool readStateFromFile_;
+//         bool singleValueController_;
 
-        //- set all the properties below from model if required
-
-            bool singleValueController_;
-    
-            // target values
-            scalar density_;
-            vector velocity_;
-            scalar temperature_;
-            scalar pressure_;
-    
-            tensor strainRate_;
-            vector tempGradient_;
-    
-            // set this in model
-            bool fieldController_;
-    
-            //- targeted fields
-            scalarField densities_;
-            vectorField velocities_;
-            scalarField temperatures_;
-            scalarField pressures_;
-    
-            // set these in model
-            bool writeInTimeDir_;
-            bool writeInCase_;
+        bool writeInTimeDir_;
+        bool writeInCase_;
 
     // Private Member Functions
 
@@ -135,7 +114,7 @@ public:
         //- Construct from components
         polyStateController
         (
-			Time& t,
+            Time& t,
             polyMoleculeCloud& molCloud,
             const dictionary& dict
         );
@@ -145,7 +124,7 @@ public:
 
         static autoPtr<polyStateController> New
         (
-			Time& t,
+            Time& t,
             polyMoleculeCloud& molCloud,
             const dictionary& dict
         );
@@ -162,27 +141,28 @@ public:
         //- create an initial configuration
         virtual void initialConfiguration() = 0;
 
-        //- calculate any required properties
-        virtual void calculateProperties() = 0;
-
-        //- control molecules at different stages of the integration time-step
-        virtual void controlMolsBeg() = 0;
-
+        //- control molecules at various stages of time-step
+        virtual void controlBeforeVelocityI() = 0;
+        
+        virtual void controlBeforeMove() = 0;
+        
         virtual void controlBeforeForces() = 0;
-
-        virtual void controlMols() = 0;
-
-        virtual void controlMolsEnd() = 0;
-
-
+        
         virtual void controlDuringForces
         (
             polyMolecule* molI,
             polyMolecule* molJ
         ) = 0;
+        
+        virtual void controlAfterForces() = 0;
+        
+        virtual void controlAfterVelocityII() = 0;
 
+        //- calculate any required properties
+        virtual void calculateProperties() = 0;
+        
         //- output data
- 		virtual void output
+        virtual void output
         (
             const fileName& fixedPathName,
             const fileName& timePath
@@ -204,51 +184,8 @@ public:
             const bool& controlInterForces() const;
             bool& controlInterForces();
 
-            //- return the targeted fields 
-            const scalar& density() const;
-            scalar& density();
-
-            const vector& velocity() const;
-            vector& velocity();
-
-            const scalar& temperature() const;
-            scalar& temperature();
-
-            const scalar& pressure() const;
-            scalar& pressure();
-
-            const tensor& strainRate() const;
-            tensor& strainRate();
-
-            const vector& tempGradient() const;
-            vector& tempGradient();
-
-            //- return the targeted fields 
-            const scalarField& densityField() const;
-            scalarField& densityField();
-
-            const vectorField& velocityField() const;
-            vectorField& velocityField();
-
-            const scalarField& temperatureField() const;
-            scalarField& temperatureField();
-
-            const scalarField& pressureField() const;
-            scalarField& pressureField();
-
-            const bool& singleValueController() const;
-            bool& singleValueController();
-
-            const bool& fieldController() const;
-            bool& fieldController();
-
             const bool& writeInTimeDir() const;
             const bool& writeInCase() const;
-
-            scalar avReqDensity();
-            vector avReqVelocity();
-            scalar avReqTemperature();
-            scalar avReqPressure();
 };
 
 

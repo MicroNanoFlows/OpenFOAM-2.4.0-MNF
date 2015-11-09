@@ -73,6 +73,14 @@ private:
         //- probability of collision
         scalar p_;
 
+        vector velocity_;
+        
+        List<vector> velocities_;
+        
+        scalar temperature_;
+        
+        List<scalar> temperatures_;
+        
         List<label> molIds_;
 
     // Private Member Functions
@@ -86,45 +94,46 @@ public:
 
         //- Construct from components
         polyTemperatureMaxwellDemon
-		(
+        (
             Time& t,
             polyMoleculeCloud& molCloud,
             const dictionary& dict
-		);
+        );
 
     // Destructor
 
- 		~polyTemperatureMaxwellDemon();
+        ~polyTemperatureMaxwellDemon();
 
 
     // Member Functions
-
+        
+        //- create an initial configuration
         void initialConfiguration();
 
-        //- B. calculate any required properties
-        void calculateProperties();
-
-        //- C. control the mols
-        void controlMols();
-
-        //- D. output data
-        void output
-        (
-            const fileName& fixedPathName, 
-            const fileName& timePath
-        );
-
-        //- E.  update properties from a modified dictionary
-        void updateProperties(const dictionary&);
-
-        void controlMolsBeg();
-        void controlMolsEnd();
+        //- control molecules at various stages of time-step
+        void controlBeforeVelocityI();
+        void controlBeforeMove();
         void controlBeforeForces();
         void controlDuringForces
         (
             polyMolecule* molI,
             polyMolecule* molJ
+        );        
+        void controlAfterForces();
+        void controlAfterVelocityII();
+        
+        //- calculate any required properties (end of time-step)
+        void calculateProperties(); 
+        
+        //- output data (optional)
+        void output
+        (
+            const fileName& fixedPathName, 
+            const fileName& timePath
         );
+        
+        //- update properties from a modified dictionary (optional)
+        void updateProperties(const dictionary&);
 };
 
 

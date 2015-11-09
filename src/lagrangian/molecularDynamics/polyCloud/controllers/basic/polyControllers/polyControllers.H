@@ -70,18 +70,18 @@ class polyControllers
         label nFluxControllers_;
 
         //- state polyControllers
-		PtrList<entry> stateControllersList_;
+        PtrList<entry> stateControllersList_;
         List<word> sCNames_;
         List<label> sCIds_;
         List<fileName> sCFixedPathNames_;
         List< autoPtr<polyStateController> > stateControllers_;
 
         //- flux polyControllers
-		PtrList<entry> fluxControllersList_;
+        PtrList<entry> fluxControllersList_;
         List<word> fCNames_;
         List<label> fCIds_;
         List<fileName> fCFixedPathNames_;
-		List< autoPtr<polyFluxController> > fluxControllers_;
+        List< autoPtr<polyFluxController> > fluxControllers_;
 
         labelList controllersDuringForceComp_;
         
@@ -112,20 +112,18 @@ public:
         //- initial configuration
         void initialConfig();
 
-        //- control state of molecules
-        void controlState();
-
         void controlVelocitiesI();
-        void controlVelocitiesII();
-
-        void controlPriorToForces();
-
+        void controlBeforeMove();
+        void controlBeforeForces();
         void controlDuringForceComputation
         (
             polyMolecule* molI,
             polyMolecule* molJ
         );
-
+        void controlAfterForces();
+        void controlVelocitiesII();
+        
+        
         //- calculate controller properties
         void calculateStateProps();
 

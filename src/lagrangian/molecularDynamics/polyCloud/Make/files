@@ -151,6 +151,7 @@ controllers/derived/velocity/polyVelocity2DBins/polyVelocity2DBins.C
 controllers/derived/temperature/polyTemperatureMaxwellDemon/polyTemperatureMaxwellDemon.C
 controllers/derived/temperature/polyTemperatureBerendsen/polyTemperatureBerendsen.C
 controllers/derived/temperature/polyTemperatureBerendsenBinsNew/polyTemperatureBerendsenBinsNew.C
+controllers/derived/temperature/polyLangevin/polyLangevin.C
 
 
 /*  - DENSITY  */
@@ -167,6 +168,8 @@ controllers/derived/others/polyForce/polyForce.C
 controllers/derived/others/polyBoundedForce/polyBoundedForce.C
 controllers/derived/others/polyPressureForce/polyPressureForce.C
 controllers/derived/others/polyInternalWall/polyInternalWall.C
+controllers/derived/others/tail/tail.C
+controllers/derived/others/polyFadeEquilibrateMolecules/polyFadeEquilibrateMolecules.C
 
 
 /*  BOUNDARIES  */

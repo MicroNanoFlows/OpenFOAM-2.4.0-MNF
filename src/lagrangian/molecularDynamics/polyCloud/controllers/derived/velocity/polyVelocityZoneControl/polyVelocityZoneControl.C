@@ -60,7 +60,7 @@ polyVelocityZoneControl::polyVelocityZoneControl
     writeInTimeDir_ = false;
     writeInCase_ = false;
 
-    singleValueController() = true;
+//     singleValueController() = true;
 
     velocity_ = propsDict_.lookup("velocity");
 
@@ -107,10 +107,10 @@ polyVelocityZoneControl::~polyVelocityZoneControl()
 void polyVelocityZoneControl::initialConfiguration()
 {}
 
-void polyVelocityZoneControl::calculateProperties()
+void polyVelocityZoneControl::controlBeforeVelocityI()
 {}
 
-void polyVelocityZoneControl::controlMolsBeg()
+void polyVelocityZoneControl::controlBeforeMove()
 {}
 
 void polyVelocityZoneControl::controlBeforeForces()
@@ -123,7 +123,7 @@ void polyVelocityZoneControl::controlDuringForces
 )
 {}
 
-void polyVelocityZoneControl::controlMols()
+void polyVelocityZoneControl::controlAfterForces()
 {
     // - if control switch is on
 	if(control_)
@@ -205,7 +205,11 @@ void polyVelocityZoneControl::controlMols()
     }
 }
 
-void polyVelocityZoneControl::controlMolsEnd()
+
+void polyVelocityZoneControl::controlAfterVelocityII()
+{}
+
+void polyVelocityZoneControl::calculateProperties()
 {}
 
 void polyVelocityZoneControl::output
@@ -222,9 +226,9 @@ void polyVelocityZoneControl::updateProperties(const dictionary& newDict)
 
     propsDict_ = newDict.subDict(typeName + "Properties");
 
-    lambda_ = readScalar(propsDict_.lookup("lambda"));
+//     lambda_ = readScalar(propsDict_.lookup("lambda"));
 
-    velocity_ = propsDict_.lookup("velocity");
+//     velocity_ = propsDict_.lookup("velocity");
 }
 
 } // End namespace Foam

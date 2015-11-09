@@ -72,7 +72,7 @@ polyDensityFadeBounded::polyDensityFadeBounded
     writeInTimeDir_ = true;
     writeInCase_ = true;
 
-    singleValueController() = true;
+//     singleValueController() = true;
 
     setBoundBox(propsDict_, bbsampling_, "samplingBoundBox");
     setBoundBox(propsDict_, bbcontrol_, "controlBoundBox");
@@ -214,11 +214,25 @@ void polyDensityFadeBounded::initialConfiguration()
     insertionScheme_.output(time_);
 }
 
-
-void polyDensityFadeBounded::calculateProperties()
+void polyDensityFadeBounded::controlBeforeVelocityI()
 {}
 
-void polyDensityFadeBounded::controlMols()
+void polyDensityFadeBounded::controlBeforeMove()
+{}
+
+void polyDensityFadeBounded::controlBeforeForces()
+{}
+
+void polyDensityFadeBounded::controlDuringForces
+(
+    polyMolecule* molI,
+    polyMolecule* molJ
+)
+{}
+
+
+
+void polyDensityFadeBounded::controlAfterForces()
 {
     insertionScheme_.checkFractions(molCloud_);
     
@@ -506,32 +520,21 @@ void polyDensityFadeBounded::nMolsToInsert(label& molsToControl)
     molsToControl = newMolsToControl;    
 }
 
-void polyDensityFadeBounded::controlMolsEnd()
+
+void polyDensityFadeBounded::controlAfterVelocityII()
 {
 
 }
+
+void polyDensityFadeBounded::calculateProperties()
+{}
 
 void polyDensityFadeBounded::output
 (
     const fileName& fixedPathName,
     const fileName& timePath
 )
-{
-    /*
-	const Time& runTime = time_.time();
-
-    if(runTime.outputTime())
-    {
-        if(Pstream::master())
-        {
-            if(output_)
-            {
-
-            }
-        }
-    }
-    */
-}
+{}
 
 void polyDensityFadeBounded::updateProperties(const dictionary& newDict)
 {
@@ -542,21 +545,6 @@ void polyDensityFadeBounded::updateProperties(const dictionary& newDict)
 
     insertionScheme_.updateProperties(propsDict_);
 }
-
-void polyDensityFadeBounded::controlMolsBeg()
-{}
-
-
-void polyDensityFadeBounded::controlBeforeForces()
-{}
-
-void polyDensityFadeBounded::controlDuringForces
-(
-    polyMolecule* molI,
-    polyMolecule* molJ
-)
-{}
-
 
 
 } // End namespace Foam

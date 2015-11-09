@@ -49,22 +49,6 @@ void polyVelocityBounded::setBoundBox()
     bb_.resetBoundedBox(startPoint, endPoint);
 }
 
-void polyVelocityBounded::readProperties()
-{
-//     avMass_ = 0.0;
-// 
-//     forAll(molIds_, i)
-//     {
-//         const scalar& massI = molCloud_.cP().mass(molI->id());
-//         avMass_ +=  molCloud_.constProps(molIds_[i]).mass();
-//     }
-// 
-//     avMass_ /= scalar(molIds_.size());
-
-    lambda_ = readScalar(propsDict_.lookup("lambda"));
-    velocity_ = propsDict_.lookup("velocity");
-}
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
@@ -92,7 +76,7 @@ polyVelocityBounded::polyVelocityBounded
     writeInTimeDir_ = false;
     writeInCase_ = false;
 
-    singleValueController() = true;
+//     singleValueController() = true;
 
     setBoundBox();
     
@@ -106,6 +90,7 @@ polyVelocityBounded::polyVelocityBounded
 
     molIds_ = ids.molIds();
 
+    velocity_ = propsDict_.lookup("velocity");
 
     if (propsDict_.found("componentControl"))
     {
@@ -159,13 +144,12 @@ polyVelocityBounded::~polyVelocityBounded()
 
 void polyVelocityBounded::initialConfiguration()
 {
-	readProperties();
+// 	readProperties();
 }
 
-void polyVelocityBounded::calculateProperties()
-{}
 
-void polyVelocityBounded::controlMolsBeg()
+
+void polyVelocityBounded::controlBeforeVelocityI()
 {
     scalar mass = 0.0;
     scalar mols = 0.0;
@@ -248,13 +232,10 @@ void polyVelocityBounded::controlMolsBeg()
     }
 }
 
+void polyVelocityBounded::controlBeforeMove()
+{}
+
 void polyVelocityBounded::controlBeforeForces()
-{}
-
-void polyVelocityBounded::controlMols()
-{}
-
-void polyVelocityBounded::controlMolsEnd()
 {}
 
 void polyVelocityBounded::controlDuringForces
@@ -262,6 +243,17 @@ void polyVelocityBounded::controlDuringForces
     polyMolecule* molI,
     polyMolecule* molJ
 )
+{}
+
+void polyVelocityBounded::controlAfterForces()
+{}
+
+void polyVelocityBounded::controlAfterVelocityII()
+{}
+
+
+
+void polyVelocityBounded::calculateProperties()
 {}
 
 void polyVelocityBounded::output
@@ -277,8 +269,6 @@ void polyVelocityBounded::updateProperties(const dictionary& newDict)
     updateStateControllerProperties(newDict);
 
     propsDict_ = newDict.subDict(typeName + "Properties");
-
-    readProperties();
 }
 
 } // End namespace Foam

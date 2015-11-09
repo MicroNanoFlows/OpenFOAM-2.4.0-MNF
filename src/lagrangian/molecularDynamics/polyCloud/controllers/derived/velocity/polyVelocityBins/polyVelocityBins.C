@@ -62,7 +62,7 @@ polyVelocityBins::polyVelocityBins
     writeInTimeDir_ = true;
     writeInCase_ = true;
 
-    singleValueController() = true;
+//     singleValueController() = true;
 
     velocity_ = propsDict_.lookup("velocity");
 
@@ -129,12 +129,7 @@ void polyVelocityBins::initialConfiguration()
 {
 }
 
-void polyVelocityBins::calculateProperties()
-{
-    
-}
-
-void polyVelocityBins::controlMolsBeg()
+void polyVelocityBins::controlBeforeVelocityI()
 {
     const List< DynamicList<polyMolecule*> >& cellOccupancy
         = molCloud_.cellOccupancy();
@@ -239,17 +234,11 @@ void polyVelocityBins::controlMolsBeg()
    
 }
 
-void polyVelocityBins::controlMols()
-{
-}
+void polyVelocityBins::controlBeforeMove()
+{}
 
 void polyVelocityBins::controlBeforeForces()
 {}
-
-void polyVelocityBins::controlMolsEnd()
-{
-
-}
 
 void polyVelocityBins::controlDuringForces
 (
@@ -258,7 +247,16 @@ void polyVelocityBins::controlDuringForces
 )
 {}
 
+void polyVelocityBins::controlAfterForces()
+{}
 
+
+void polyVelocityBins::controlAfterVelocityII()
+{}
+
+
+void polyVelocityBins::calculateProperties()
+{}
 
 void polyVelocityBins::output
 (

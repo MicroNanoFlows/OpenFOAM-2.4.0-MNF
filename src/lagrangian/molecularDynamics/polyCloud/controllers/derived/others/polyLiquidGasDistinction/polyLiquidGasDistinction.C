@@ -238,7 +238,14 @@ void polyLiquidGasDistinction::initialConfiguration()
     
 }
 
-void polyLiquidGasDistinction::calculateProperties()
+void polyLiquidGasDistinction::controlBeforeVelocityI()
+{}
+
+void polyLiquidGasDistinction::controlBeforeMove()
+{}
+
+
+void polyLiquidGasDistinction::controlBeforeForces()
 {}
 
 void polyLiquidGasDistinction::controlDuringForces
@@ -248,30 +255,12 @@ void polyLiquidGasDistinction::controlDuringForces
 )
 {}
 
-void polyLiquidGasDistinction::controlMols()
+void polyLiquidGasDistinction::controlAfterForces()
 {}
 
-void polyLiquidGasDistinction::output
-(
-    const fileName& fixedPathName, 
-    const fileName& timePath
-)
-{}
 
-void polyLiquidGasDistinction::updateProperties(const dictionary& newDict)
-{
-    //- the main properties should be updated first
-    updateStateControllerProperties(newDict);
-    
-    propsDict_ = newDict.subDict(typeName + "Properties");
-    
-    readProperties();
-}
 
-void polyLiquidGasDistinction::controlMolsBeg()
-{}
-
-void polyLiquidGasDistinction::controlMolsEnd()
+void polyLiquidGasDistinction::controlAfterVelocityII()
 {
     Info << "polyLiquidGasDistinction: control" << endl;
     
@@ -386,8 +375,27 @@ void polyLiquidGasDistinction::controlMolsEnd()
     
 }
 
-void polyLiquidGasDistinction::controlBeforeForces() 
+
+
+void polyLiquidGasDistinction::calculateProperties()
 {}
+
+void polyLiquidGasDistinction::output
+(
+    const fileName& fixedPathName, 
+    const fileName& timePath
+)
+{}
+
+void polyLiquidGasDistinction::updateProperties(const dictionary& newDict)
+{
+    //- the main properties should be updated first
+    updateStateControllerProperties(newDict);
+    
+    propsDict_ = newDict.subDict(typeName + "Properties");
+    
+    readProperties();
+}
     
 } // End namespace Foam
 

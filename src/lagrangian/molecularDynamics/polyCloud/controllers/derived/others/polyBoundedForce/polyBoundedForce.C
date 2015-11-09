@@ -67,12 +67,11 @@ void polyBoundedForce::setBoundBoxes()
 polyBoundedForce::polyBoundedForce
 (
     Time& t,
-//     const polyMesh& mesh,
     polyMoleculeCloud& molCloud,
     const dictionary& dict
 )
 :
-    polyStateController(t, /*mesh,*/ molCloud, dict),
+    polyStateController(t,  molCloud, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
     model_(),
     molIds_(),
@@ -85,7 +84,7 @@ polyBoundedForce::polyBoundedForce
     writeInTimeDir_ = true;
     writeInCase_ = true;
 
-    singleValueController() = true;
+//     singleValueController() = true;
 
     model_ = autoPtr<gravityForce>
     (
@@ -123,16 +122,23 @@ polyBoundedForce::~polyBoundedForce()
 void polyBoundedForce::initialConfiguration()
 {}
 
-void polyBoundedForce::calculateProperties()
+void polyBoundedForce::controlBeforeVelocityI()
 {}
 
-void polyBoundedForce::controlMolsBeg()
+void polyBoundedForce::controlBeforeMove()
 {}
 
 void polyBoundedForce::controlBeforeForces()
 {}
 
-void polyBoundedForce::controlMols()
+void polyBoundedForce::controlDuringForces
+(
+    polyMolecule* molI,
+    polyMolecule* molJ
+)
+{}
+
+void polyBoundedForce::controlAfterForces()
 {
     // time changes in forces
     model_->updateForce();
@@ -168,21 +174,11 @@ void polyBoundedForce::controlMols()
     }
 }
 
-void polyBoundedForce::controlDuringForces
-(
-    polyMolecule* molI,
-    polyMolecule* molJ
-)
+
+void polyBoundedForce::controlAfterVelocityII()
 {}
 
-// void polyBoundedForce::controlDuringForces
-// (
-//     polyMolecule* molReal,
-//     polyReferredMolecule* molRef
-// )
-// {}
-
-void polyBoundedForce::controlMolsEnd()
+void polyBoundedForce::calculateProperties()
 {}
 
 void polyBoundedForce::output

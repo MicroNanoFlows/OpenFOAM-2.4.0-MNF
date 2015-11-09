@@ -63,7 +63,7 @@ polyVelocity2DBins::polyVelocity2DBins
     writeInTimeDir_ = true;
     writeInCase_ = true;
 
-    singleValueController() = true;
+//     singleValueController() = true;
 
     velocity_ = propsDict_.lookup("velocity");
 
@@ -130,12 +130,7 @@ void polyVelocity2DBins::initialConfiguration()
 {
 }
 
-void polyVelocity2DBins::calculateProperties()
-{
-    
-}
-
-void polyVelocity2DBins::controlMolsBeg()
+void polyVelocity2DBins::controlBeforeVelocityI()
 {
 /*    const List< DynamicList<polyMolecule*> >& cellOccupancy
         = molCloud_.cellOccupancy();
@@ -265,7 +260,20 @@ void polyVelocity2DBins::controlMolsBeg()
    
 }
 
-void polyVelocity2DBins::controlMols()
+void polyVelocity2DBins::controlBeforeMove()
+{}
+
+void polyVelocity2DBins::controlBeforeForces()
+{}
+
+void polyVelocity2DBins::controlDuringForces
+(
+    polyMolecule* molI,
+    polyMolecule* molJ
+)
+{}
+
+void polyVelocity2DBins::controlAfterForces()
 {
     const List< DynamicList<polyMolecule*> >& cellOccupancy
         = molCloud_.cellOccupancy();
@@ -410,33 +418,19 @@ void polyVelocity2DBins::controlMols()
     
 }
 
-void polyVelocity2DBins::controlBeforeForces()
-{}
-
-void polyVelocity2DBins::controlMolsEnd()
-{
-
-}
-
-void polyVelocity2DBins::controlDuringForces
-(
-    polyMolecule* molI,
-    polyMolecule* molJ
-)
+void polyVelocity2DBins::controlAfterVelocityII()
 {}
 
 
+void polyVelocity2DBins::calculateProperties()
+{}
 
 void polyVelocity2DBins::output
 (
     const fileName& fixedPathName, 
     const fileName& timePath
 )
-{
-
-}
-
-
+{}
 
 void polyVelocity2DBins::updateProperties(const dictionary& newDict)
 {

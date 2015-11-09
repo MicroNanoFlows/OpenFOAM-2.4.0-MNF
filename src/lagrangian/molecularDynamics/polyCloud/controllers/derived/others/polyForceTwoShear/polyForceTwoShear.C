@@ -59,7 +59,7 @@ polyForceTwoShear::polyForceTwoShear
     writeInTimeDir_ = true;
     writeInCase_ = true;
 
-    singleValueController() = true;
+//     singleValueController() = true;
     
     setBoundBox(propsDict_, bb_liquid_A_, "liquidA");
     setBoundBox(propsDict_, bb_liquid_B_, "liquidB");    
@@ -89,16 +89,24 @@ polyForceTwoShear::~polyForceTwoShear()
 void polyForceTwoShear::initialConfiguration()
 {}
 
-void polyForceTwoShear::calculateProperties()
+void polyForceTwoShear::controlBeforeVelocityI()
 {}
 
-void polyForceTwoShear::controlMolsBeg()
+
+void polyForceTwoShear::controlBeforeMove()
 {}
 
 void polyForceTwoShear::controlBeforeForces()
 {}
 
-void polyForceTwoShear::controlMols()
+void polyForceTwoShear::controlDuringForces
+(
+    polyMolecule* molI,
+    polyMolecule* molJ
+)
+{}
+
+void polyForceTwoShear::controlAfterForces()
 {
     scalar molsLiquid = 0.0;
     scalar molsGas = 0.0;     
@@ -192,14 +200,10 @@ void polyForceTwoShear::controlMols()
          << endl;
 }
 
-void polyForceTwoShear::controlDuringForces
-(
-    polyMolecule* molI,
-    polyMolecule* molJ
-)
+void polyForceTwoShear::controlAfterVelocityII()
 {}
 
-void polyForceTwoShear::controlMolsEnd()
+void polyForceTwoShear::calculateProperties()
 {}
 
 void polyForceTwoShear::output

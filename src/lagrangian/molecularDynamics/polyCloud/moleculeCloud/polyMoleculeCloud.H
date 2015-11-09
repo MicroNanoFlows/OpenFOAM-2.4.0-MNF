@@ -201,20 +201,26 @@ public:
         
         void updateTrackingNumbersAfterRead();
         
-        //- Evolve the molecules (move, calculate forces, control state etc)
-        void preliminaries();
-        void initialHalfVelocity();
-        void move();
-        void controlBeforeForces();
-        void updateAcceleration();
-        void controlAfterForces();
-        void finalHalfVelocity();
-        void postPreliminaries();
+        //- Evolve the molecules (move, calculate forces, etc)
+        
         void evolve();
         void evolveBeforeForces();
         void evolveAfterForces();
+        
+        void controlBeforeVelocity();
+        void updateVelocity();
+        void controlBeforeMove();
+        void move();
+        void controlAfterMove();
+        void controlBeforeForces();
         void clearLagrangianFields();
         void calculateForce();
+        void updateAcceleration();
+        void controlAfterForces();
+        void controlAfterVelocity();
+        void postTimeStep();
+
+        
         void prepareInteractions();
         void buildCellOccupancy();
         void rebuildCellOccupancy();

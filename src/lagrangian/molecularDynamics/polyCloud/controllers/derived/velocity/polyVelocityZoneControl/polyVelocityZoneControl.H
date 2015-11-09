@@ -70,6 +70,8 @@ private:
         // - relaxation parameter
         scalar lambda_;
 
+        vector velocity_;
+        
         bool componentControl_;
         bool X_;
         bool Y_;
@@ -86,48 +88,46 @@ public:
 
         //- Construct from components
         polyVelocityZoneControl
-		(
+        (
             Time& t,
             polyMoleculeCloud& molCloud,
             const dictionary& dict
-		);
+        );
 
     // Destructor
 
- 		~polyVelocityZoneControl();
+        ~polyVelocityZoneControl();
 
 
     // Member Functions
 
+        //- create an initial configuration
         void initialConfiguration();
 
-        //- B. calculate any required properties
-        void calculateProperties();
-
-        //- C. control the mols
-        void controlMols();
-
-        //- D. output data
+        //- control molecules at various stages of time-step
+        void controlBeforeVelocityI();
+        void controlBeforeMove();
+        void controlBeforeForces();
+        void controlDuringForces
+        (
+            polyMolecule* molI,
+            polyMolecule* molJ
+        );        
+        void controlAfterForces();
+        void controlAfterVelocityII();
+        
+        //- calculate any required properties (end of time-step)
+        void calculateProperties(); 
+        
+        //- output data (optional)
         void output
         (
             const fileName& fixedPathName, 
             const fileName& timePath
         );
-
-        //- E.  update properties from a modified dictionary
+        
+        //- update properties from a modified dictionary (optional)
         void updateProperties(const dictionary&);
-
-        void controlMolsBeg();
-        void controlMolsEnd();
-        void controlBeforeForces();
-
-        void controlDuringForces
-        (
-            polyMolecule* molI,
-            polyMolecule* molJ
-        );
-
-        // Access
 };
 
 

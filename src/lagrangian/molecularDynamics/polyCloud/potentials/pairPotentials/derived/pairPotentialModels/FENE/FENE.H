@@ -23,26 +23,23 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    polyTemperatureBerendsen
+    FENE
+
 
 Description
-	The Berendsen thermostat rescales the kinetic temperature over variable time periods rather 
-    than instantaneously.
+    to write out a pdb file for creating movies
 
 SourceFiles
-    polyTemperatureBerendsenI.H
-    polyTemperatureBerendsen.C
-    polyTemperatureBerendsenIO.C
+    FENEI.H
+    FENE.C
+    FENEIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef polyTemperatureBerendsen_H
-#define polyTemperatureBerendsen_H
+#ifndef FENE_H
+#define FENE_H
 
-#include "polyStateController.H"
-#include "vector.H"
-#include "polyMesh.H"
-#include "volFields.H"
+#include "pairPotentialModel.H"
 #include "polyMoleculeCloud.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -51,12 +48,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class polyTemperatureBerendsen Declaration
+                           Class FENE Declaration
 \*---------------------------------------------------------------------------*/
 
-class polyTemperatureBerendsen
+class FENE
 :
-	public polyStateController
+    public pairPotentialModel
 {
 
 private:
@@ -66,73 +63,46 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-        //- time constant
-        scalar tauT_;
-        
-        List<label> molIds_;
+        scalar K_;
+        scalar r0_;
 
-        scalar temperature_;
-        
-        bool componentControl_;
-        bool X_;
-        bool Y_;
-        bool Z_;
-
-        bool peculiar_;
         
     // Private Member Functions
-            
-//         void readProperties();
+
+
 
 public:
 
     //- Runtime type information
-    TypeName("polyTemperatureBerendsen");
+    TypeName("FENE");
 
     // Constructors
 
         //- Construct from components
-        polyTemperatureBerendsen
+        FENE
         (
-            Time& t,
-            polyMoleculeCloud& molCloud,
+            const polyMesh& mesh,
+            polyMoleculeCloud& molCloud,         
+            const reducedUnits& redUnits,
+            const word& name,         
             const dictionary& dict
         );
 
     // Destructor
 
-        ~polyTemperatureBerendsen();
-
+        ~FENE();
 
     // Member Functions
 
-        //- create an initial configuration
-        void initialConfiguration();
+        scalar unscaledEnergy(const scalar r) const;
 
-        //- control molecules at various stages of time-step
-        void controlBeforeVelocityI();
-        void controlBeforeMove();
-        void controlBeforeForces();
-        void controlDuringForces
-        (
-            polyMolecule* molI,
-            polyMolecule* molJ
-        );        
-        void controlAfterForces();
-        void controlAfterVelocityII();
-        
-        //- calculate any required properties (end of time-step)
-        void calculateProperties(); 
-        
-        //- output data (optional)
-        void output
-        (
-            const fileName& fixedPathName, 
-            const fileName& timePath
-        );
-        
-        //- update properties from a modified dictionary (optional)
-        void updateProperties(const dictionary&);
+        //- Read dictionary
+//         bool read
+//         (
+//             const dictionary& pairPotentialProperties,
+//         );
+
+        const dictionary& dict() const;
 };
 
 

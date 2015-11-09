@@ -23,21 +23,20 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    polyTemperatureBerendsen
+    polyFadeEquilibrateMolecules
 
 Description
-	The Berendsen thermostat rescales the kinetic temperature over variable time periods rather 
-    than instantaneously.
+    Model that applies a gravitational force on all molecules.
 
 SourceFiles
-    polyTemperatureBerendsenI.H
-    polyTemperatureBerendsen.C
-    polyTemperatureBerendsenIO.C
+    polyFadeEquilibrateMoleculesI.H
+    polyFadeEquilibrateMolecules.C
+    polyFadeEquilibrateMoleculesIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef polyTemperatureBerendsen_H
-#define polyTemperatureBerendsen_H
+#ifndef polyFadeEquilibrateMolecules_H
+#define polyFadeEquilibrateMolecules_H
 
 #include "polyStateController.H"
 #include "vector.H"
@@ -45,16 +44,17 @@ SourceFiles
 #include "volFields.H"
 #include "polyMoleculeCloud.H"
 
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class polyTemperatureBerendsen Declaration
+                           Class polyFadeEquilibrateMolecules Declaration
 \*---------------------------------------------------------------------------*/
 
-class polyTemperatureBerendsen
+class polyFadeEquilibrateMolecules
 :
 	public polyStateController
 {
@@ -66,46 +66,43 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-        //- time constant
-        scalar tauT_;
-        
+
+        //- ids of mols
         List<label> molIds_;
 
-        scalar temperature_;
-        
-        bool componentControl_;
-        bool X_;
-        bool Y_;
-        bool Z_;
 
-        bool peculiar_;
-        
+        scalar tauT_;
+        label n_;
+        scalar deltaT_;
+        scalar t_;
+
     // Private Member Functions
-            
-//         void readProperties();
+
+        void readProperties();
 
 public:
 
     //- Runtime type information
-    TypeName("polyTemperatureBerendsen");
+    TypeName("polyFadeEquilibrateMolecules");
 
     // Constructors
 
         //- Construct from components
-        polyTemperatureBerendsen
-        (
+        polyFadeEquilibrateMolecules
+		(
             Time& t,
             polyMoleculeCloud& molCloud,
             const dictionary& dict
-        );
+		);
 
     // Destructor
 
-        ~polyTemperatureBerendsen();
+ 		~polyFadeEquilibrateMolecules();
 
 
     // Member Functions
 
+        
         //- create an initial configuration
         void initialConfiguration();
 

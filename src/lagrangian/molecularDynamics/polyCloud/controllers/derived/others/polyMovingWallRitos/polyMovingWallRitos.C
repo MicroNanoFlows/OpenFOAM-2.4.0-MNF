@@ -57,7 +57,7 @@ polyMovingWallRitos::polyMovingWallRitos
 	writeInTimeDir_ = false;
     writeInCase_ = false;
 
-    singleValueController() = true;
+//     singleValueController() = true;
 
     wallMotionModel_ = autoPtr<wallMotion>
     (
@@ -87,10 +87,7 @@ polyMovingWallRitos::~polyMovingWallRitos()
 void polyMovingWallRitos::initialConfiguration()
 {}
 
-void polyMovingWallRitos::calculateProperties()
-{}
-
-void polyMovingWallRitos::controlMolsBeg()
+void polyMovingWallRitos::controlBeforeVelocityI()
 {
     wallMotionModel_->updateVelocity();
     velocity_ = wallMotionModel_->velocity();
@@ -116,12 +113,12 @@ void polyMovingWallRitos::controlMolsBeg()
     }
 }
 
+void polyMovingWallRitos::controlBeforeMove()
+{}
+
 void polyMovingWallRitos::controlBeforeForces()
 {}
 
-void polyMovingWallRitos::controlMols()
-{
-}
 
 void polyMovingWallRitos::controlDuringForces
 (
@@ -130,7 +127,14 @@ void polyMovingWallRitos::controlDuringForces
 )
 {}
 
-void polyMovingWallRitos::controlMolsEnd()
+void polyMovingWallRitos::controlAfterForces()
+{}
+
+void polyMovingWallRitos::controlAfterVelocityII()
+{}
+
+
+void polyMovingWallRitos::calculateProperties()
 {}
 
 void polyMovingWallRitos::output

@@ -68,7 +68,7 @@ polyTemperatureBerendsenBinsNew::polyTemperatureBerendsenBinsNew
     writeInTimeDir_ = true;
     writeInCase_ = true;
 
-    singleValueController() = true;
+//     singleValueController() = true;
 
 
     temperature_ = readScalar(propsDict_.lookup("temperature"));
@@ -253,6 +253,98 @@ void polyTemperatureBerendsenBinsNew::initialConfiguration()
         }
     }
 
+}
+
+
+
+void polyTemperatureBerendsenBinsNew::controlBeforeVelocityI()
+{}
+
+void polyTemperatureBerendsenBinsNew::controlBeforeMove()
+{
+}
+
+void polyTemperatureBerendsenBinsNew::controlBeforeForces()
+{}
+
+
+void polyTemperatureBerendsenBinsNew::controlDuringForces
+(
+    polyMolecule* molI,
+    polyMolecule* molJ
+)
+{}
+
+void polyTemperatureBerendsenBinsNew::controlAfterForces()
+{}
+
+void polyTemperatureBerendsenBinsNew::controlAfterVelocityII()
+{
+    {
+        Info << "polyTemperatureBerendsenBinsNew: measurement and control" << endl;
+
+        const labelList& cells = mesh_.cellZones()[regionId_];
+
+        const List< DynamicList<polyMolecule*> >& cellOccupancy
+            = molCloud_.cellOccupancy();
+
+        forAll(cells, c)
+        {
+            const label& cell = cells[c];
+            const List<polyMolecule*>& molsInCell = cellOccupancy[cell];
+    
+            forAll(molsInCell, mIC)
+            {
+                polyMolecule* molI = molsInCell[mIC];
+                const vector& rI = molI->position();
+    
+                label n = binModel_->isPointWithinBin(rI, cell);
+    
+                if(n != -1)
+                {
+                    if(findIndex(molIds_, molI->id()) != -1)
+                    {
+//                         vector oldVel = molI->v();
+
+                        if(!peculiar_)
+                        {
+                            if(componentControl_)
+                            {
+                                if(X_)
+                                {
+                                    molI->v().x() *= chi_[n];
+                                }
+                                if(Y_)
+                                {
+                                    molI->v().y() *= chi_[n];
+                                }
+                                if(Z_)
+                                {
+                                    molI->v().z() *= chi_[n];
+                                }
+                            }
+                            else
+                            {
+                                molI->v() *= chi_[n];
+                            }
+                        }
+                        else
+                        {
+                            if(angularControl_)
+                            {
+                                molI->v() = velocity_[n] + (chiLin_[n]*(molI->v() - velocity_[n]));
+                                molI->pi() *= chiAng_[n];
+                            }
+                            else
+                            {
+                                molI->v() = velocity_[n] + (chi_[n]*(molI->v() - velocity_[n]));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 void polyTemperatureBerendsenBinsNew::calculateProperties()
@@ -474,92 +566,6 @@ void polyTemperatureBerendsenBinsNew::calculateProperties()
     }
 }
 
-void polyTemperatureBerendsenBinsNew::controlMolsBeg()
-{}
-
-void polyTemperatureBerendsenBinsNew::controlMols()
-{
-}
-
-void polyTemperatureBerendsenBinsNew::controlBeforeForces()
-{}
-
-void polyTemperatureBerendsenBinsNew::controlMolsEnd()
-{
-    {
-        Info << "polyTemperatureBerendsenBinsNew: measurement and control" << endl;
-
-        const labelList& cells = mesh_.cellZones()[regionId_];
-
-        const List< DynamicList<polyMolecule*> >& cellOccupancy
-            = molCloud_.cellOccupancy();
-
-        forAll(cells, c)
-        {
-            const label& cell = cells[c];
-            const List<polyMolecule*>& molsInCell = cellOccupancy[cell];
-    
-            forAll(molsInCell, mIC)
-            {
-                polyMolecule* molI = molsInCell[mIC];
-                const vector& rI = molI->position();
-    
-                label n = binModel_->isPointWithinBin(rI, cell);
-    
-                if(n != -1)
-                {
-                    if(findIndex(molIds_, molI->id()) != -1)
-                    {
-//                         vector oldVel = molI->v();
-
-                        if(!peculiar_)
-                        {
-                            if(componentControl_)
-                            {
-                                if(X_)
-                                {
-                                    molI->v().x() *= chi_[n];
-                                }
-                                if(Y_)
-                                {
-                                    molI->v().y() *= chi_[n];
-                                }
-                                if(Z_)
-                                {
-                                    molI->v().z() *= chi_[n];
-                                }
-                            }
-                            else
-                            {
-                                molI->v() *= chi_[n];
-                            }
-                        }
-                        else
-                        {
-                            if(angularControl_)
-                            {
-                                molI->v() = velocity_[n] + (chiLin_[n]*(molI->v() - velocity_[n]));
-                                molI->pi() *= chiAng_[n];
-                            }
-                            else
-                            {
-                                molI->v() = velocity_[n] + (chi_[n]*(molI->v() - velocity_[n]));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-void polyTemperatureBerendsenBinsNew::controlDuringForces
-(
-    polyMolecule* molI,
-    polyMolecule* molJ
-)
-{}
-
 
 
 void polyTemperatureBerendsenBinsNew::output
@@ -579,7 +585,7 @@ void polyTemperatureBerendsenBinsNew::updateProperties(const dictionary& newDict
     updateStateControllerProperties(newDict);
 
     propsDict_ = newDict.subDict(typeName + "Properties");
-
+/*
     if(propsDict_.found("tauT"))
     {
         tauT_ = readScalar(propsDict_.lookup("tauT"));
@@ -588,7 +594,7 @@ void polyTemperatureBerendsenBinsNew::updateProperties(const dictionary& newDict
     if (readStateFromFile_)
     {
         temperature_ = readScalar(propsDict_.lookup("temperature"));
-    }
+    }*/
 
 }
 

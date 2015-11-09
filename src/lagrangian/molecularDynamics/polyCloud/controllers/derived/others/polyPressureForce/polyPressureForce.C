@@ -61,7 +61,7 @@ polyPressureForce::polyPressureForce
     writeInTimeDir_ = true;
     writeInCase_ = true;
 
-    singleValueController() = true;
+//     singleValueController() = true;
 
     molIds_.clear();
 
@@ -198,7 +198,7 @@ void polyPressureForce::initialConfiguration()
     // set initial velocities on all carbon atoms the same
     setVelocities();
     
-    controlMols();
+    controlAfterForces();
 }
 
 void polyPressureForce::setVelocities()
@@ -278,18 +278,23 @@ void polyPressureForce::centreOfMass()
 }
 
 
-void polyPressureForce::calculateProperties()
+void polyPressureForce::controlBeforeVelocityI()
 {}
 
-void polyPressureForce::controlMolsBeg()
-{
-}
+void polyPressureForce::controlBeforeMove()
+{}
 
 void polyPressureForce::controlBeforeForces()
 {}
 
+void polyPressureForce::controlDuringForces
+(
+    polyMolecule* molI,
+    polyMolecule* molJ
+)
+{}
 
-void polyPressureForce::controlMols()
+void polyPressureForce::controlAfterForces()
 {
     centreOfMass();
     
@@ -362,15 +367,13 @@ void polyPressureForce::controlMols()
     }    
 }
 
-void polyPressureForce::controlDuringForces
-(
-    polyMolecule* molI,
-    polyMolecule* molJ
-)
+void polyPressureForce::controlAfterVelocityII()
 {}
 
-void polyPressureForce::controlMolsEnd()
+
+void polyPressureForce::calculateProperties()
 {}
+
 
 void polyPressureForce::output
 (
@@ -431,9 +434,7 @@ void polyPressureForce::updateProperties(const dictionary& newDict)
 
 
 void polyPressureForce::readProperties()
-{
-
-}
+{}
 
 
 

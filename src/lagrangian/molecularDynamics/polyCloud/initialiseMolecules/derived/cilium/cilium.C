@@ -101,8 +101,9 @@ void cilium::setInitialConfiguration()
     
     bool tethered = false;
     
-    scalar spacing = readScalar(mdInitialiseDict_.lookup("spacing"));
+    scalar spacing = readScalar(mdInitialiseDict_.lookup("spacingSI"));
     
+    spacing /= rU.refLength();
 
     DynamicList<vector> positions;
     
@@ -252,10 +253,12 @@ void cilium::insertMoleculeLocal
 
 //     const polyMolecule::constantProperties& cP = molCloud_.constProps(id);
 
-    vector v = equipartitionLinearVelocity(temperature, molCloud_.cP().mass(id));
+//     vector v = equipartitionLinearVelocity(temperature, molCloud_.cP().mass(id));
 
-    v += bulkVelocity;
-
+//     v += bulkVelocity;
+    
+    vector v = bulkVelocity;
+    
     vector pi = vector::zero;
 
     tensor Q = I;

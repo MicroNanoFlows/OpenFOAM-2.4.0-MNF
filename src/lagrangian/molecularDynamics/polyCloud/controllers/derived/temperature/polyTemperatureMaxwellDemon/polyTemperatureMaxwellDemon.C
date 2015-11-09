@@ -68,7 +68,7 @@ polyTemperatureMaxwellDemon::polyTemperatureMaxwellDemon
         velocities_[c] = velocity_;
     }
 
-    fieldController() = true;
+//     fieldController() = true;
 
     temperature_ = readScalar(propsDict_.lookup("temperature"));
 
@@ -103,19 +103,30 @@ polyTemperatureMaxwellDemon::~polyTemperatureMaxwellDemon()
 {}
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
 void polyTemperatureMaxwellDemon::initialConfiguration()
 {}
 
-void polyTemperatureMaxwellDemon::calculateProperties()
+void polyTemperatureMaxwellDemon::controlBeforeVelocityI()
 {}
 
-void polyTemperatureMaxwellDemon::controlMolsBeg()
+void polyTemperatureMaxwellDemon::controlBeforeMove()
 {}
 
-void polyTemperatureMaxwellDemon::controlMols()
+void polyTemperatureMaxwellDemon::controlBeforeForces()
 {}
 
-void polyTemperatureMaxwellDemon::controlMolsEnd()
+void polyTemperatureMaxwellDemon::controlDuringForces
+(
+    polyMolecule* molI,
+    polyMolecule* molJ
+)
+{}
+
+void polyTemperatureMaxwellDemon::controlAfterForces()
+{}
+
+void polyTemperatureMaxwellDemon::controlAfterVelocityII()
 {
     if(control_)
     {
@@ -154,14 +165,8 @@ void polyTemperatureMaxwellDemon::controlMolsEnd()
     }
 }
 
-void polyTemperatureMaxwellDemon::controlDuringForces
-(
-    polyMolecule* molI,
-    polyMolecule* molJ
-)
-{}
 
-void polyTemperatureMaxwellDemon::controlBeforeForces()
+void polyTemperatureMaxwellDemon::calculateProperties()
 {}
 
 void polyTemperatureMaxwellDemon::output
@@ -177,7 +182,7 @@ void polyTemperatureMaxwellDemon::updateProperties(const dictionary& newDict)
     updateStateControllerProperties(newDict);
 
     propsDict_ = newDict.subDict(typeName + "Properties");
-
+/*
     if (propsDict_.found("tauT"))
     {
         tauT_ = readScalar(propsDict_.lookup("tauT"));
@@ -202,7 +207,7 @@ void polyTemperatureMaxwellDemon::updateProperties(const dictionary& newDict)
         {
             temperatures_[c] = temperature_;
         }
-    }
+    }*/
 }
 
 } // End namespace Foam

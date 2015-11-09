@@ -65,7 +65,7 @@ polyInternalWall::polyInternalWall
     writeInTimeDir_ = true;
     writeInCase_ = true;
 
-    singleValueController() = true;
+//     singleValueController() = true;
 
     molIds_.clear();
 
@@ -99,18 +99,25 @@ polyInternalWall::~polyInternalWall()
 void polyInternalWall::initialConfiguration()
 {}
 
-void polyInternalWall::calculateProperties()
+void polyInternalWall::controlBeforeVelocityI()
 {}
 
-void polyInternalWall::controlMolsBeg()
+void polyInternalWall::controlBeforeMove()
 {}
 
 void polyInternalWall::controlBeforeForces()
 {}
 
-void polyInternalWall::controlMols()
-{
 
+void polyInternalWall::controlDuringForces
+(
+    polyMolecule* molI,
+    polyMolecule* molJ
+)
+{}
+
+void polyInternalWall::controlAfterForces()
+{
     // - if control switch is on
     if(control_)
     {
@@ -138,21 +145,7 @@ void polyInternalWall::controlMols()
     }
 }
 
-void polyInternalWall::controlDuringForces
-(
-    polyMolecule* molI,
-    polyMolecule* molJ
-)
-{}
-
-// void polyInternalWall::controlDuringForces
-// (
-//     polyMolecule* molReal,
-//     polyReferredMolecule* molRef
-// )
-// {}
-
-void polyInternalWall::controlMolsEnd()
+void polyInternalWall::controlAfterVelocityII()
 {}
 
 void polyInternalWall::output
@@ -161,7 +154,6 @@ void polyInternalWall::output
     const fileName& timePath
 )
 {
-    
     const Time& runTime = time_.time();
 
     if(runTime.outputTime())
@@ -169,6 +161,10 @@ void polyInternalWall::output
 
     }
 }
+
+
+void polyInternalWall::calculateProperties()
+{}
 
 void polyInternalWall::updateProperties(const dictionary& newDict)
 {

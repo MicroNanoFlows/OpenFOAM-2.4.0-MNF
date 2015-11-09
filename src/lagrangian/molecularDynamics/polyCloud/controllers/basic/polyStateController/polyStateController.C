@@ -53,25 +53,12 @@ polyStateController::polyStateController
 :
     mesh_(refCast<const fvMesh>(molCloud.mesh())),
     molCloud_(molCloud),
-    controllerDict_(dict.subDict("controllerProperties")),
+//     controllerDict_(dict.subDict("controllerProperties")),
 	time_(t), 
-    regionName_(controllerDict_.lookup("zoneName")),
+    regionName_(dict.lookup("zoneName")),
     regionId_(-1),
     control_(true),
     controlInterForces_(false),
-    readStateFromFile_(true),
-    singleValueController_(false),
-    density_(0.0),
-    velocity_(vector::zero),
-    temperature_(0.0),
-    pressure_(0.0),
-    strainRate_(tensor::zero),
-    tempGradient_(vector::zero),
-    fieldController_(false),
-    densities_(),
-    velocities_(),
-    temperatures_(),
-    pressures_(),
     writeInTimeDir_(true),
     writeInCase_(true)
 {
@@ -85,9 +72,12 @@ polyStateController::polyStateController
             << time_.time().system()/"controllersDict"
             << exit(FatalError);
     }
-
-    control_ = Switch(controllerDict_.lookup("controlSwitch"));
-    readStateFromFile_ = Switch(controllerDict_.lookup("readStateFromFile"));
+    
+    if(dict.found("control"))
+    {    
+        control_ = Switch(dict.lookup("control"));
+    }
+//     readStateFromFile_ = Switch(dict.lookup("readStateFromFile"));
 }
 
 
@@ -142,7 +132,7 @@ void polyStateController::updateStateControllerProperties
     const dictionary& newDict
 )
 {
-    controllerDict_ = newDict.subDict("controllerProperties");
+//     controllerDict_ = newDict.subDict("controllerProperties");
 
     //- you can reset the controlling zone from here. This essentially
     //  means that the coupling zone can infact move arbitrarily. To make
@@ -150,15 +140,15 @@ void polyStateController::updateStateControllerProperties
     //  changing the cellZone else where, and then calling this function to
     //  reset the controlling zone in which the controller operates in.
 
-    if (controllerDict_.found("controlSwitch"))
+    if (newDict.found("control"))
     {
-        control_ = Switch(controllerDict_.lookup("controlSwitch"));
+        control_ = Switch(newDict.lookup("control"));
     }
-
-    if (controllerDict_.found("readStateFromFile"))
+/*
+    if (newDict.found("readStateFromFile"))
     {
-        readStateFromFile_ = Switch(controllerDict_.lookup("readStateFromFile"));
-    }
+        readStateFromFile_ = Switch(newDict.lookup("readStateFromFile"));
+    }*/
 }
 
 const labelList& polyStateController::controlZone() const
@@ -181,126 +171,6 @@ bool& polyStateController::controlInterForces()
     return controlInterForces_;
 }
 
-const scalar& polyStateController::density() const
-{
-    return density_;
-}
-
-scalar& polyStateController::density()
-{
-    return density_;
-}
-
-const vector& polyStateController::velocity() const
-{
-    return velocity_;
-}
-
-vector& polyStateController::velocity()
-{
-    return velocity_;
-}
-
-const scalar& polyStateController::temperature() const
-{
-    return temperature_;
-}
-
-scalar& polyStateController::temperature()
-{
-    return temperature_;
-}
-
-const scalar& polyStateController::pressure() const
-{
-    return pressure_;
-}
-
-scalar& polyStateController::pressure()
-{
-    return pressure_;
-}
-
-const tensor& polyStateController::strainRate() const
-{
-    return strainRate_;
-}
-
-tensor& polyStateController::strainRate()
-{
-    return strainRate_;
-}
-
-const vector& polyStateController::tempGradient() const
-{
-    return tempGradient_;
-}
-
-vector& polyStateController::tempGradient()
-{
-    return tempGradient_;
-}
-
-const scalarField& polyStateController::densityField() const
-{
-    return densities_;
-}
-
-scalarField& polyStateController::densityField()
-{
-    return densities_;
-}
-
-const vectorField& polyStateController::velocityField() const
-{
-    return velocities_;
-}
-vectorField& polyStateController::velocityField()
-{
-    return velocities_;
-}
-
-const scalarField& polyStateController::temperatureField() const
-{
-    return temperatures_;
-}
-
-scalarField& polyStateController::temperatureField()
-{
-    return temperatures_;
-}
-
-
-const scalarField& polyStateController::pressureField() const
-{
-    return pressures_;
-}
-
-scalarField& polyStateController::pressureField()
-{
-    return pressures_;
-}
-
-
-const bool& polyStateController::singleValueController() const
-{
-    return singleValueController_;
-}
-
-bool& polyStateController::singleValueController()
-{
-    return singleValueController_;
-}
-
-const bool& polyStateController::fieldController() const
-{
-    return fieldController_;
-}
-
-bool& polyStateController::fieldController()
-{
-    return fieldController_;
-}
 
 const bool& polyStateController::writeInTimeDir() const
 {
@@ -313,134 +183,6 @@ const bool& polyStateController::writeInCase() const
 }
 
 
-
-scalar polyStateController::avReqDensity()
-{
-    scalar totalDensity = 0.0;
-
-    if(singleValueController_) 
-    {
-        totalDensity = density_;
-    }
-    else if(fieldController_)
-    {
-        label controlCells = controlZone().size();
-    
-        forAll(densities_, c)
-        {
-            totalDensity += densities_[c];
-        }
-    
-        if (Pstream::parRun())
-        {
-            reduce(totalDensity, sumOp<scalar>());
-            reduce(controlCells, sumOp<label>());
-        }
-    
-        if(controlCells > 0)
-        {
-            totalDensity /= scalar(controlCells);
-        }
-    }
-
-    return totalDensity;
-}
-
-vector polyStateController::avReqVelocity()
-{
-    vector totalVel = vector::zero;
-
-    if(singleValueController_) 
-    {
-        totalVel = velocity_;
-    }
-    else if(fieldController_)
-    {
-        label controlCells = controlZone().size();
-    
-        forAll(velocities_, c)
-        {
-            totalVel += velocities_[c];
-        }
-    
-        if (Pstream::parRun())
-        {
-            reduce(totalVel, sumOp<vector>());
-            reduce(controlCells, sumOp<label>());
-        }
-    
-        if(controlCells > 0)
-        {
-            totalVel /= scalar(controlCells);
-        }
-    }
-
-    return totalVel;
-}
-
-
-scalar polyStateController::avReqTemperature()
-{
-    scalar totalTemp = 0.0;
-
-    if(singleValueController_) 
-    {
-        totalTemp = temperature_;
-    }
-    else if(fieldController_)
-    {
-        label controlCells = controlZone().size();
-    
-        forAll(temperatures_, c)
-        {
-            totalTemp += temperatures_[c];
-        }
-    
-        if (Pstream::parRun())
-        {
-            reduce(totalTemp, sumOp<scalar>());
-            reduce(controlCells, sumOp<label>());
-        }
-    
-        if(controlCells > 0)
-        {
-            totalTemp /= scalar(controlCells);
-        }
-    }
-    return totalTemp;
-}
-
-scalar polyStateController::avReqPressure()
-{
-    scalar totalPressure = 0.0;
-
-    if(singleValueController_) 
-    {
-        totalPressure = pressure_;
-    }
-    else if(fieldController_)
-    {
-        label controlCells = controlZone().size();
-    
-        forAll(pressures_, c)
-        {
-            totalPressure += pressures_[c];
-        }
-    
-        if (Pstream::parRun())
-        {
-            reduce(totalPressure, sumOp<scalar>());
-            reduce(controlCells, sumOp<label>());
-        }
-    
-        if(controlCells > 0)
-        {
-            totalPressure /= scalar(controlCells);
-        }
-    }
-
-    return totalPressure;
-}
 
 } // End namespace Foam
 

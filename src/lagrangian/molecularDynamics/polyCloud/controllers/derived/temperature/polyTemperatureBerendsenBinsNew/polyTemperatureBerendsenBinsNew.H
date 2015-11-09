@@ -81,6 +81,8 @@ private:
 
         List<label> molIds_;
 
+        scalar temperature_;
+        
         bool measureFullTemperature_;
 
 
@@ -119,45 +121,46 @@ public:
 
         //- Construct from components
         polyTemperatureBerendsenBinsNew
-		(
+        (
             Time& t,
             polyMoleculeCloud& molCloud,
             const dictionary& dict
-		);
+        );
 
     // Destructor
 
- 		~polyTemperatureBerendsenBinsNew();
+        ~polyTemperatureBerendsenBinsNew();
 
 
     // Member Functions
 
+        //- create an initial configuration
         void initialConfiguration();
 
-        //- B. calculate any required properties
-        void calculateProperties();
-
-        //- C. control the mols
-        void controlMols();
-
-        //- D. output data
-        void output
-        (
-            const fileName& fixedPathName, 
-            const fileName& timePath
-        );
-
-        //- E.  update properties from a modified dictionary
-        void updateProperties(const dictionary&);
-
-        void controlMolsBeg();
-        void controlMolsEnd();
+        //- control molecules at various stages of time-step
+        void controlBeforeVelocityI();
+        void controlBeforeMove();
         void controlBeforeForces();
         void controlDuringForces
         (
             polyMolecule* molI,
             polyMolecule* molJ
+        );        
+        void controlAfterForces();
+        void controlAfterVelocityII();
+        
+        //- calculate any required properties (end of time-step)
+        void calculateProperties(); 
+        
+        //- output data (optional)
+        void output
+        (
+            const fileName& fixedPathName, 
+            const fileName& timePath
         );
+        
+        //- update properties from a modified dictionary (optional)
+        void updateProperties(const dictionary&);
 };
 
 

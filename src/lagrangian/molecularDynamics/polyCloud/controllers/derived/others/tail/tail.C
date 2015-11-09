@@ -30,6 +30,7 @@ Description
 #include "addToRunTimeSelectionTable.H"
 #include "IFstream.H"
 #include "graph.H"
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -60,7 +61,7 @@ tail::tail
     writeInTimeDir_ = true;
     writeInCase_ = true;
 
-    singleValueController() = true;
+//     singleValueController() = true;
 
     molIds_.clear();
 
@@ -71,6 +72,18 @@ tail::tail
     );
 
     molIds_ = ids.molIds();
+    
+    // read in tracking numbers
+//     trackingNumbers_ = List<label>(propsDict_.lookup("trackingNumbers"));
+    trackingNumber_ = readLabel(propsDict_.lookup("trackingNumber"));
+
+    centre_ = propsDict_.lookup("centre");
+    a_ = readScalar(propsDict_.lookup("a"));
+    b_ = readScalar(propsDict_.lookup("b"));
+    deltaT_ = readScalar(propsDict_.lookup("deltaT"));    
+    t_ = 0.0;
+    
+//     deltaT_ = time_.deltaT().value(); 
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -83,35 +96,66 @@ tail::~tail()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void tail::initialConfiguration()
-{}
-
-void tail::calculateProperties()
-{}
-
-void tail::controlMolsBeg()
-{}
-
-void tail::controlBeforeForces()
-{}
-
-void tail::controlMols()
 {
-    Info << "tail: control" << endl;
-
     IDLList<polyMolecule>::iterator mol(molCloud_.begin());
 
     for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
     {
-        if(findIndex(molIds_, mol().id()) != -1)
+        if(mol().trackingNumber() == trackingNumber_)
         {
-            const scalar& massI = molCloud_.cP().mass(mol().id());
+            Info << "centre y before = " << centre_.y() << endl;
+            
+            centre_.y() = mol().position().y()-b_;
+            
+            Info << "centre y after = " << centre_.y() << endl;
+            
+        }
+    }    
+    
+}
 
-            mol().a() += force/massI;
 
-            force_ += force;
+void tail::controlBeforeVelocityI()
+{
+    Info << "tail: control" << endl;
+    
+    t_ += deltaT_;
+    
+    IDLList<polyMolecule>::iterator mol(molCloud_.begin());
+
+    for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
+    {
+//         if(findIndex(molIds_, mol().id()) != -1)
+        {
+//             Info << "mol().trackingNumber() = " << mol().trackingNumber() << endl;
+            
+            if(mol().trackingNumber() == trackingNumber_)
+            {
+                scalar xNew = -a_*cos(t_+(constant::mathematical::pi/2)) + centre_.x();
+                scalar yNew = b_*sin(t_+(constant::mathematical::pi/2)) + centre_.y();
+                
+                mol().v().z() = 0;
+                
+                vector rNew = vector(xNew, yNew, 0.0);
+                
+                vector deltaR = rNew - mol().position();
+                
+                mol().a() = vector::zero;
+                mol().v() = deltaR/deltaT_;
+                Info << "position x = " << mol().position().x()
+                     << ", position y = " << mol().position().y()
+                     << endl;
+            }
         }
     }
 }
+
+void tail::controlBeforeMove()
+{}
+
+
+void tail::controlBeforeForces()
+{}
 
 void tail::controlDuringForces
 (
@@ -120,14 +164,13 @@ void tail::controlDuringForces
 )
 {}
 
-// void tail::controlDuringForces
-// (
-//     polyMolecule* molReal,
-//     polyReferredMolecule* molRef
-// )
-// {}
+void tail::controlAfterForces()
+{}
 
-void tail::controlMolsEnd()
+void tail::controlAfterVelocityII()
+{}
+
+void tail::calculateProperties()
 {}
 
 void tail::output
@@ -136,8 +179,6 @@ void tail::output
     const fileName& timePath
 )
 {
-    model_->write(fixedPathName, timePath);
-
     const Time& runTime = time_.time();
 
     if(runTime.outputTime())
