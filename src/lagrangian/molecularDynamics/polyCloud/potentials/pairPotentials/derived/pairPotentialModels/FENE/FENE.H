@@ -27,7 +27,7 @@ Class
 
 
 Description
-    to write out a pdb file for creating movies
+    FENE potential implemented in non-tabular format
 
 SourceFiles
     FENEI.H
@@ -63,9 +63,9 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-        scalar K_;
+        scalar k_;
         scalar r0_;
-
+        scalar r0in_;
         
     // Private Member Functions
 
@@ -96,11 +96,18 @@ public:
 
         scalar unscaledEnergy(const scalar r) const;
 
+        scalar force(const scalar r) const;
+        
+        scalar energy(const scalar r) const;    
+        
+        
         //- Read dictionary
 //         bool read
 //         (
 //             const dictionary& pairPotentialProperties,
 //         );
+        
+        void write(const fileName& pathName);
 
         const dictionary& dict() const;
 };

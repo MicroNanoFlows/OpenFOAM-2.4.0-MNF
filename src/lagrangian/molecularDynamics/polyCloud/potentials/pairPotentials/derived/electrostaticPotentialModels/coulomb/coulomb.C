@@ -80,11 +80,26 @@ scalar coulomb::unscaledEnergy(const scalar r) const
 }
 
 
+
+scalar coulomb::force(const scalar r) const
+{
+    return forceLookUpFromTable(r);
+}
+    
+scalar coulomb::energy(const scalar r) const
+{
+    return energyLookUpFromTable(r);
+}
+
 const dictionary& coulomb::dict() const
 {
     return pairPotentialProperties_;
 }
 
+void  coulomb::write(const fileName& pathName)
+{
+    
+}
 
 } // End namespace Foam
 

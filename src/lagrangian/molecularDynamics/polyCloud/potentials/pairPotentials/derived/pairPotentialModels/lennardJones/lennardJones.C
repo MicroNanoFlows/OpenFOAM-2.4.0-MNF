@@ -83,6 +83,15 @@ scalar lennardJones::unscaledEnergy(const scalar r) const
     return 4.0 * epsilon_*(ir6*(ir6 - 1.0));
 }
 
+scalar lennardJones::force(const scalar r) const
+{
+    return forceLookUpFromTable(r);
+}
+    
+scalar lennardJones::energy(const scalar r) const
+{
+    return energyLookUpFromTable(r);
+}
 
 // bool lennardJones::read
 // (
@@ -105,6 +114,11 @@ scalar lennardJones::unscaledEnergy(const scalar r) const
 // 
 //     return true;
 // }
+
+void lennardJones::write(const fileName& pathName)
+{
+    
+}
 
 const dictionary& lennardJones::dict() const
 {

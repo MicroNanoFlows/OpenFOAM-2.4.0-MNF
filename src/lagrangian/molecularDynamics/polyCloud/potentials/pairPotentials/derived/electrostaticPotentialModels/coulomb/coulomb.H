@@ -27,7 +27,7 @@ Class
 
 
 Description
-    
+    coulomb potential implemented in table format
 
 SourceFiles
     coulombI.H
@@ -98,11 +98,19 @@ public:
 
         scalar unscaledEnergy(const scalar r) const;
 
+
+        scalar force(const scalar r) const;
+        
+        scalar energy(const scalar r) const;        
+        
         //- Read dictionary
 //         bool read
 //         (
 //             const dictionary& pairPotentialProperties,
 //         );
+        
+
+        void write(const fileName& pathName);
 
         const dictionary& dict() const;
 };

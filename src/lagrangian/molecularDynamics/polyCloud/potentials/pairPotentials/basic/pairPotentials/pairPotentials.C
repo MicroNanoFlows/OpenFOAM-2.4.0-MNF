@@ -74,7 +74,7 @@ pairPotentials::pairPotentials
             const entry& potI = pairPotentialsList_[i];
             const dictionary& potIDict = potI.dict();
             const word& headerName=potI.keyword();
-            
+            Info << "headerName = " << headerName << endl;
             pairPotentials_[i] = autoPtr<pairPotentialModel>
             (
                 pairPotentialModel::New(mesh, molCloud, redUnits, headerName, potIDict)
@@ -100,6 +100,15 @@ pairPotentials::pairPotentials
                 << nl << abort(FatalError);       
     }
     
+    // making directory
+    pathName_ = mesh_.time().path()/"potentials";
+
+    if(isDir(pathName_) )
+    {
+        rmDir(pathName_);
+    }     
+    
+    mkDir(pathName_);    
    
     // electrostatic potential 
     
@@ -116,6 +125,16 @@ pairPotentials::pairPotentials
     
     rCut_ = maxRCut();
 //     rCutSqr_ = rCut_*rCut_;
+    
+    
+    // write out potentials
+    forAll(pairPotentials_, i)
+    {
+        pairPotentials_[i]->output(pathName_);
+    }
+    
+    electrostaticPotential_->output(pathName_);
+
 }
 
 

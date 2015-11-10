@@ -63,7 +63,7 @@ morse::morse
         gamma_ *= redUnits.refLength();        
         rC_ /= redUnits.refLength();
     }
-
+    
     setLookupTables();    
 }
 
@@ -80,6 +80,16 @@ scalar morse::unscaledEnergy(const scalar r) const
     scalar exp = Foam::exp(exponent);
     
     return Kcr_*(exp-1.0)*(exp-1.0);
+}
+
+scalar morse::force(const scalar r) const
+{
+    return forceLookUpFromTable(r);
+}
+    
+scalar morse::energy(const scalar r) const
+{
+    return energyLookUpFromTable(r);
 }
 
 
@@ -104,6 +114,10 @@ scalar morse::unscaledEnergy(const scalar r) const
 // 
 //     return true;
 // }
+void morse::write(const fileName& pathName)
+{
+    
+}
 
 const dictionary& morse::dict() const
 {

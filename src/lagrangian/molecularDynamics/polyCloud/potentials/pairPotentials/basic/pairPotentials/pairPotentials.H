@@ -64,6 +64,8 @@ class pairPotentials
         
         IOdictionary potentialsDict_;
 
+        fileName pathName_;
+        
         // maximum rCut
         scalar rCut_;
 //         scalar rCutSqr_;

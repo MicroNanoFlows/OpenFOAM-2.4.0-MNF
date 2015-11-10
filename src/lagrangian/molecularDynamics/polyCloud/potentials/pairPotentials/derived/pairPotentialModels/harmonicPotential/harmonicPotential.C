@@ -26,7 +26,7 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "FENE.H"
+#include "harmonicPotential.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -34,15 +34,15 @@ Description
 namespace Foam
 {
 
-defineTypeNameAndDebug(FENE, 0);
-addToRunTimeSelectionTable(pairPotentialModel, FENE, dictionary);
+defineTypeNameAndDebug(harmonicPotential, 0);
+addToRunTimeSelectionTable(pairPotentialModel, harmonicPotential, dictionary);
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-FENE::FENE
+harmonicPotential::harmonicPotential
 (
     const polyMesh& mesh,
     polyMoleculeCloud& molCloud, 
@@ -54,131 +54,107 @@ FENE::FENE
     pairPotentialModel(mesh, molCloud, redUnits, name, dict),
     propsDict_(dict.subDict(typeName + "Coeffs")),
     k_(readScalar(propsDict_.lookup("k"))),
-    r0_(readScalar(propsDict_.lookup("r0"))),
-    r0in_(readScalar(propsDict_.lookup("r0in")))
+    r0_(readScalar(propsDict_.lookup("r0")))
 {
     if(redUnits.runReducedUnits())
     {
         k_ /= (redUnits.refMass()/ (redUnits.refTime()*redUnits.refTime()));
         r0_ /= redUnits.refLength();
-        r0in_ /= redUnits.refLength();
-        
+       
         Info << "k = " << k_ << endl;
     }
     
-    useTables_ = false;
-//     setLookupTables();    
+//     useTables_ = false;
+    setLookupTables();    
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-FENE::~FENE()
+harmonicPotential::~harmonicPotential()
 {}
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-scalar FENE::unscaledEnergy(const scalar r) const
+scalar harmonicPotential::unscaledEnergy(const scalar r) const
 {
-    return 0.0;
+    return 0.5*k_*(r-r0_)*(r-r0_);
 }
 
-scalar FENE::energy(const scalar r) const
+scalar harmonicPotential::energy(const scalar r) const
 {
-    scalar U = 0;
-    
-    if(r < r0in_)
-    {
-        U = -0.5*k_*r0_*r0_*Foam::log(1- ((r/r0_)*(r/r0_)));
-    }
-    else
-    {
-       U = -0.5*k_*r0_*r0_*Foam::log(1- ((r0in_/r0_)*(r0in_/r0_)));
-    }    
-    
-    return U;    
+    return energyLookUpFromTable(r);  
 }
 
-scalar FENE::force(const scalar r) const
+scalar harmonicPotential::force(const scalar r) const
 {
-    scalar F = 0;
-    
-    if(r < r0in_)
-    {
-        F = -k_*r/(1.0-((r/r0_)*(r/r0_))); 
-    }
-    else
-    {
-        F = -k_*r0in_/(1.0-((r0in_/r0_)*(r0in_/r0_)));
-    }
-    
-    return F;
+    return forceLookUpFromTable(r);
 }
 
-const dictionary& FENE::dict() const
+const dictionary& harmonicPotential::dict() const
 {
     return propsDict_;
 }
 
-void FENE::write(const fileName& pathName)
+void harmonicPotential::write(const fileName& pathName)
 {
-    Info<< "Writing energy and force to file for potential "
-            << name_ << endl;
-            
-    label nBins = 10000;
-    scalar dr = r0_/nBins;
-    scalarField U(nBins, 0.0);
-    scalarField f(nBins, 0.0);
-    
-    for (label i=0; i<nBins; ++i)
-    {
-        scalar r = dr*i;
-        
-        U[i] = energy(r);
-        f[i] = force(r);
-    }
-    {
-        OFstream file(pathName/name_+"-FENE-RU.xy");
-
-        if(file.good())
-        {
-            forAll(U, i)
-            {
-                file 
-                    << dr*i << "\t"
-                    << U[i] << "\t"
-                    << f[i]
-                    << endl;
-            }
-        }
-        else
-        {
-            FatalErrorIn("void FENE::write()")
-                << "Cannot open file " << file.name()
-                << abort(FatalError);
-        }
-    }
-    
-    {
-        OFstream file(pathName/name_+"-FENE-SI.xy");
-
-        if(file.good())
-        {
-            forAll(U, i)
-            {
-                file 
-                    << dr*i*rU_.refLength() << "\t"
-                    << U[i]*rU_.refEnergy() << "\t"
-                    << f[i]*rU_.refForce()
-                    << endl;
-            }
-        }
-        else
-        {
-            FatalErrorIn("void FENE::write()")
-                << "Cannot open file " << file.name()
-                << abort(FatalError);
-        }  
-    }
+//     Info<< "Writing energy and force to file for potential "
+//             << name_ << endl;
+//             
+//     label nBins = 10000;
+//     scalar dr = r0_/nBins;
+//     scalarField U(nBins, 0.0);
+//     scalarField f(nBins, 0.0);
+//     
+//     for (label i=0; i<nBins; ++i)
+//     {
+//         scalar r = dr*i;
+//         
+//         U[i] = energy(r);
+//         f[i] = force(r);
+//     }
+//     {
+//         OFstream file(pathName/name_+"-harmonicPotential-RU.xy");
+// 
+//         if(file.good())
+//         {
+//             forAll(U, i)
+//             {
+//                 file 
+//                     << dr*i << "\t"
+//                     << U[i] << "\t"
+//                     << f[i]
+//                     << endl;
+//             }
+//         }
+//         else
+//         {
+//             FatalErrorIn("void harmonicPotential::write()")
+//                 << "Cannot open file " << file.name()
+//                 << abort(FatalError);
+//         }
+//     }
+//     
+//     {
+//         OFstream file(pathName/name_+"-harmonicPotential-SI.xy");
+// 
+//         if(file.good())
+//         {
+//             forAll(U, i)
+//             {
+//                 file 
+//                     << dr*i*rU_.refLength() << "\t"
+//                     << U[i]*rU_.refEnergy() << "\t"
+//                     << f[i]*rU_.refForce()
+//                     << endl;
+//             }
+//         }
+//         else
+//         {
+//             FatalErrorIn("void harmonicPotential::write()")
+//                 << "Cannot open file " << file.name()
+//                 << abort(FatalError);
+//         }  
+//     }
 }
 
 

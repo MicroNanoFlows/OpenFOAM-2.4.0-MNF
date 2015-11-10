@@ -23,21 +23,21 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    noInteraction
+    harmonicPotential
 
 
 Description
-    to write out a pdb file for creating movies
+    harmonicPotential potential implemented in non-tabular format
 
 SourceFiles
-    noInteractionI.H
-    noInteraction.C
-    noInteractionIO.C
+    harmonicPotentialI.H
+    harmonicPotential.C
+    harmonicPotentialIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef noInteraction_H
-#define noInteraction_H
+#ifndef harmonicPotential_H
+#define harmonicPotential_H
 
 #include "pairPotentialModel.H"
 #include "polyMoleculeCloud.H"
@@ -48,10 +48,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class noInteraction Declaration
+                           Class harmonicPotential Declaration
 \*---------------------------------------------------------------------------*/
 
-class noInteraction
+class harmonicPotential
 :
     public pairPotentialModel
 {
@@ -63,7 +63,8 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-        
+        scalar k_;
+        scalar r0_;
         
     // Private Member Functions
 
@@ -72,15 +73,15 @@ private:
 public:
 
     //- Runtime type information
-    TypeName("noInteraction");
+    TypeName("harmonicPotential");
 
     // Constructors
 
         //- Construct from components
-        noInteraction
+        harmonicPotential
         (
             const polyMesh& mesh,
-            polyMoleculeCloud& molCloud,
+            polyMoleculeCloud& molCloud,         
             const reducedUnits& redUnits,
             const word& name,         
             const dictionary& dict
@@ -88,7 +89,7 @@ public:
 
     // Destructor
 
-        ~noInteraction();
+        ~harmonicPotential();
 
     // Member Functions
 
@@ -96,15 +97,16 @@ public:
 
         scalar force(const scalar r) const;
         
-        scalar energy(const scalar r) const;        
-
-        void write(const fileName& pathName);
+        scalar energy(const scalar r) const;    
+        
         
         //- Read dictionary
 //         bool read
 //         (
 //             const dictionary& pairPotentialProperties,
 //         );
+        
+        void write(const fileName& pathName);
 
         const dictionary& dict() const;
 };

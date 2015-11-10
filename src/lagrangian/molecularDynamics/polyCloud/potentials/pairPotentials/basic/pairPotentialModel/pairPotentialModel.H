@@ -90,7 +90,7 @@ protected:
         
         scalar dr_;        
         
-        
+        bool useTables_;
         
 //         word energyScalingFunction_;
 
@@ -176,8 +176,13 @@ public:
 
 
 
-        scalar energy (const scalar r) const;
-        scalar force (const scalar r) const;
+        scalar energyLookUpFromTable (const scalar r) const;
+        scalar forceLookUpFromTable (const scalar r) const;
+        
+        virtual scalar energy (const scalar r) const = 0;
+        virtual scalar force (const scalar r) const = 0;
+        
+        
         
         List<Pair<scalar> > energyTable() const;
         List<Pair<scalar> > forceTable() const;
@@ -200,7 +205,9 @@ public:
 
         const dictionary& pairPotentialProperties() const;
 
-        bool writeEnergyAndForceTables(Ostream& os) const;
+        void output(const fileName& pathName);
+        
+        void writeEnergyAndForceTables(const fileName& pathName);
 
         //- Read pairPotential dictionary
 //         virtual bool read
@@ -208,6 +215,7 @@ public:
 //             const dictionary& pairPotentialProperties
 //         ) = 0;
 
+        virtual void write(const fileName& pathName) = 0;
         
 
         inline const word& name() const;

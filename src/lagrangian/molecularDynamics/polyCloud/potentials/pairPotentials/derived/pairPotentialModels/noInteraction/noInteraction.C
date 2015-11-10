@@ -69,6 +69,17 @@ scalar noInteraction::unscaledEnergy(const scalar r) const
 }
 
 
+scalar noInteraction::force(const scalar r) const
+{
+    return forceLookUpFromTable(r);
+}
+    
+scalar noInteraction::energy(const scalar r) const
+{
+    return energyLookUpFromTable(r);
+}
+
+
 // bool noInteraction::read
 // (
 //     const dictionary& pairPotentialProperties,
@@ -95,7 +106,10 @@ const dictionary& noInteraction::dict() const
 {
     return propsDict_;
 }
-
+void noInteraction::write(const fileName& pathName)
+{
+    
+}
 
 } // End namespace Foam
 
