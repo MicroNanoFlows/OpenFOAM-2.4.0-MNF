@@ -82,7 +82,7 @@ class pairPotentials
         // outer list size of cP_.pairPotSiteIdList()
         // inner list size of cP_.pairPotSiteIdList()
         // store index of pairPotentials_
-        List<List<label> > pairPotIdList_to_pairPotentials_;
+//         List<List<label> > pairPotIdList_to_pairPotentials_;
 
         // linking siteIdList_ with pairPotentials_
         // outer list size of cP_.siteIds()
@@ -139,21 +139,29 @@ public:
         inline autoPtr<pairPotentialModel>& electrostaticPot();
         inline const autoPtr<pairPotentialModel>& electrostaticPot() const;        
         
-        label getIndexFromPairPotentialSites
-        (
-            const label idI,
-            const label idj,
-            const label i,
-            const label j
-        ) const; 
+//         label getIndexFromPairPotentialSites
+//         (
+//             const label idI,
+//             const label idj,
+//             const label i,
+//             const label j
+//         ) const; 
+//         
+//         label getIndexFromSites
+//         (
+//             const label idI,
+//             const label idJ,
+//             const label sI,
+//             const label sJ
+//         ) const;  
         
-        label getIndexFromSites
+        label pairPotentialIndex
         (
             const label idI,
             const label idJ,
             const label sI,
             const label sJ
-        ) const;  
+        ) const;
 
         scalar force
         (
@@ -188,7 +196,7 @@ public:
         );
         
         
-        const List< List<label> >& pairPotIdList_to_pairPotentials() const;
+//         const List< List<label> >& pairPotIdList_to_pairPotentials() const;
         
         
         void initialiseExclusionModels();

@@ -358,7 +358,7 @@ void pairPotentialModel::output(const fileName& pathName)
 
 void pairPotentialModel::writeEnergyAndForceTables(const fileName& pathName)
 {
-    Info<< "ERR= Writing energy and force tables to file for potential " << name_ << endl;
+//     Info<< "ERR= Writing energy and force tables to file for potential " << name_ << endl;
     if(useTables_)
     {
         Info<< "Writing energy and force tables to file for potential "
@@ -424,10 +424,10 @@ void pairPotentialModel::writeEnergyAndForceTables(const fileName& pathName)
             } 
         }
         
-        Info << "Err1 = done " << endl;
+//         Info << "Err1 = done " << endl;
     }
     
-    Info << "Err2 = done " << endl;
+//     Info << "Err2 = done " << endl;
 }
 
 const dictionary& pairPotentialModel::pairPotentialProperties() const

@@ -57,15 +57,15 @@ inline void Foam::polyMoleculeCloud::evaluatePair
         }
         
         // looping over just pair potential sites
-        forAll(cP_.pairPotNamesToSites()[idI], i)
+        forAll(cP_.pairSitesLinks()[idI], i)
         {
             // sI is the index of the full list of sites
-            label sI = cP_.pairPotNamesToSites()[idI][i];
+            label sI = cP_.pairSitesLinks()[idI][i];
             
-            forAll(cP_.pairPotNamesToSites()[idJ], j)
+            forAll(cP_.pairSitesLinks()[idJ], j)
             {
                 // sJ is the index of the full list of sites
-                label sJ = cP_.pairPotNamesToSites()[idJ][j];
+                label sJ = cP_.pairSitesLinks()[idJ][j];
 
                 vector rsIsJ = molI->sitePositions()[sI] - molJ->sitePositions()[sJ];
 
@@ -73,8 +73,26 @@ inline void Foam::polyMoleculeCloud::evaluatePair
                 
                 // determine index of pairPotential from list of pairPotentials_
                 
-                label k = p_.pairPots().getIndexFromPairPotentialSites(idI, idJ, i, j);
+//                 label k = p_.pairPots().getIndexFromPairPotentialSites(idI, idJ, i, j);
                 
+                label k = p_.pairPots().pairPotentialIndex(idI, idJ, sI, sJ);
+                
+//                 Info << "idI = " << idI << " = " << cP_.siteNames(idI) 
+//                      << ", idJ = " << idJ << " = " << cP_.siteNames(idJ)
+//                      << endl;
+//                      
+//                 Info << "posI = " << molI->position() 
+//                      << ", posJ = " << molJ->position() 
+//                      << endl;
+//                      
+//                 Info << "sIdI = " << sI << ", sIdJ = " << sJ 
+//                      << ", siteI = " << molI->sitePositions()[sI]
+//                      << ", siteJ = " << molJ->sitePositions()[sJ]
+//                      << ", mag = " << mag(rsIsJ)        
+//                      << endl;                
+//                      
+//                 Info << "k = " << k << endl;
+                     
                 if(p_.pairPots().rCutSqr(k, rsIsJMagSq))
                 {
                     if(!p_.pairPots().excludeSites(molI, molJ, sI, sJ, k))
@@ -83,6 +101,9 @@ inline void Foam::polyMoleculeCloud::evaluatePair
 
                         vector fsIsJ = f*(rsIsJ/rsIsJMag)*p_.pairPots().force(k, rsIsJMag);
 
+//                         Info << "force mag = "<< p_.pairPots().force(k, rsIsJMag) << endl;
+//                         Info << "force = " << fsIsJ << endl;
+                             
                         molI->siteForces()[sI] += fsIsJ;
                         molJ->siteForces()[sJ] += -fsIsJ;
 
@@ -130,20 +151,34 @@ inline void Foam::polyMoleculeCloud::evaluatePair
         }
 
         
-        
-        forAll(cP_.chargePotNamesToSites()[idI], pI)
+        //chargePotNamesToSites
+        forAll(cP_.chargeSitesLinks()[idI], pI)
         {
-            label sI = cP_.chargePotNamesToSites()[idI][pI];
+            label sI = cP_.chargeSitesLinks()[idI][pI];
     
-            forAll(cP_.chargePotNamesToSites()[idJ], pJ)
+            forAll(cP_.chargeSitesLinks()[idJ], pJ)
             {
-                label sJ = cP_.chargePotNamesToSites()[idJ][pJ];
+                label sJ = cP_.chargeSitesLinks()[idJ][pJ];
     
                 vector rsIsJ =
                 molI->sitePositions()[sI] - molJ->sitePositions()[sJ];
     
                 scalar rsIsJMagSq = magSqr(rsIsJ);
 
+/*                Info << "idI = " << idI << " = " << cP_.siteNames(idI) 
+                     << ", idJ = " << idJ << " = " << cP_.siteNames(idJ)
+                     << endl;
+                     
+                Info << "posI = " << molI->position() 
+                     << ", posJ = " << molJ->position() 
+                     << endl;
+                     
+                Info << "sIdI = " << sI << ", sIdJ = " << sJ 
+                     << ", siteI = " << molI->sitePositions()[sI]
+                     << ", siteJ = " << molJ->sitePositions()[sJ]
+                     << ", mag = " << mag(rsIsJ)        
+                     << endl;    */                   
+                
                 if(rsIsJMagSq < p_.pairPots().electrostaticPot()->rCutSqr())
                 {
                     scalar rsIsJMag = mag(rsIsJ);
@@ -155,7 +190,9 @@ inline void Foam::polyMoleculeCloud::evaluatePair
                         f*(rsIsJ/rsIsJMag)
                         *chargeI*chargeJ
                         *p_.pairPots().electrostaticPot()->force(rsIsJMag);
-        
+
+//                     Info << "force = " << fsIsJ << endl;                        
+                        
                     molI->siteForces()[sI] += fsIsJ;
         
                     molJ->siteForces()[sJ] += -fsIsJ;
@@ -211,21 +248,21 @@ inline bool Foam::polyMoleculeCloud::evaluatePotentialLimit
         }
         
         // looping over just pair potential sites
-        forAll(cP_.pairPotNamesToSites()[idI], i)
+        forAll(cP_.pairSitesLinks()[idI], i)
         {
             // sI is the index of the full list of sites
-            label sI = cP_.pairPotNamesToSites()[idI][i];
+            label sI = cP_.pairSitesLinks()[idI][i];
             
-            forAll(cP_.pairPotNamesToSites()[idJ], j)
+            forAll(cP_.pairSitesLinks()[idJ], j)
             {
                 // sJ is the index of the full list of sites
-                label sJ = cP_.pairPotNamesToSites()[idJ][j];
+                label sJ = cP_.pairSitesLinks()[idJ][j];
 
                 vector rsIsJ = molI->sitePositions()[sI] - molJ->sitePositions()[sJ];
 
                 scalar rsIsJMagSq = magSqr(rsIsJ);
                 
-                label k = p_.pairPots().getIndexFromPairPotentialSites(idI, idJ, i, j);
+                label k = p_.pairPots().pairPotentialIndex(idI, idJ, sI, sJ);
                 
                 if(p_.pairPots().rCutSqr(k, rsIsJMagSq))
                 {
@@ -266,13 +303,13 @@ inline bool Foam::polyMoleculeCloud::evaluatePotentialLimit
             }
         }
         
-        forAll(cP_.chargePotNamesToSites()[idI], pI)
+        forAll(cP_.chargeSitesLinks()[idI], pI)
         {
-            label sI = cP_.chargePotNamesToSites()[idI][pI];
+            label sI = cP_.chargeSitesLinks()[idI][pI];
     
-            forAll(cP_.chargePotNamesToSites()[idJ], pJ)
+            forAll(cP_.chargeSitesLinks()[idJ], pJ)
             {
-                label sJ = cP_.chargePotNamesToSites()[idJ][pJ];
+                label sJ = cP_.chargeSitesLinks()[idJ][pJ];
     
                 vector rsIsJ =
                 molI->sitePositions()[sI] - molJ->sitePositions()[sJ];

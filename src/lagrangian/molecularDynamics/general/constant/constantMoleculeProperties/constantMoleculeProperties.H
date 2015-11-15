@@ -81,15 +81,23 @@ class constantMoleculeProperties
         // entry = name
         List<List<word> > siteNames_;
 
+        
         // outer list = molecule types
-        // inner list = just pair-pot sites in molecule 
+        // inner list = all sites in molecule
+        // entry true/false if site is a pair potential
+        List<List<bool> > pairPots_;        
+        
+        // outer list = molecule types
+        // inner list = only pair potential sites
+        // entry = link to siteNames_
+        List<List<label> > pairSitesLinks_;
+        
+        // outer list = molecule types
+        // inner list = just pair-pot sites in molecule // duplicates allowed
         // entry = name
-        List<List<word> > pairPotNames_;        
+        List<List<word> > pairPotNames_;
 
-        // outer list = molecule types
-        // inner list = just charge sites in molecule // duplicates allowed
-        // entry = name
-        List<List<word> > chargeNames_;         
+     
         
         // outer list = molecule types
         // inner list = all sites in molecule 
@@ -101,10 +109,22 @@ class constantMoleculeProperties
         // entry = site mass
         List<List<scalar> > siteMasses_;
         
+        
         // outer list = molecule types
         // inner list = all sites in molecule 
         // entry = site charge
         List<List<scalar> > siteCharges_;
+
+        // outer list = molecule types
+        // inner list = only charged sites
+        // entry = link to siteNames_
+        List<List<label> > chargeSitesLinks_;        
+
+        // outer list = molecule types
+        // inner list = just charge sites in molecule // duplicates allowed
+        // entry = name
+        List<List<word> > chargeNames_;   
+        
         
         label nSites_;
         label nPairPotSites_;
@@ -134,29 +154,10 @@ class constantMoleculeProperties
         // outer list = molecule types
         // inner list = linked to pairPotNames_
         // each entry is an index to pairPotSiteIdList_
-        List< List<label> > pairPotNames_to_pairPotSitesList_;
+//         List< List<label> > pairPotNames_to_pairPotSitesList_;
 
-        // link between pairPotNames_ and siteNames_
-        // outer list = molecule types
-        // inner list = linked to pairPotNames_
-        // each entry is an index to siteNames_
-        List< List<label> > pairPotNamesToSites_;   
         
-        
-        // link between chargeNames_ and chargeSiteIdList_
-        // outer list = molecule types
-        // inner list = linked to chargeNames_
-        // each entry is an index to chargeSiteIdList_
-        List< List<label> > chargePotNamesToChargePotSitesList_;        
-        
-        
-        // link between chargeNames_ and siteNames_
-        // outer list = molecule types
-        // inner list = linked to chargeNames_
-        // each entry is an index to siteNames_
-        List< List<label> > chargePotNamesToSites_;           
-        
-        
+        // link between siteNames_ and siteIdList_
         
         List<List<label> > siteNames_to_siteIdList_;
         
@@ -210,6 +211,8 @@ public:
         const List<word>& pairPotNames(const word& idName) const;
         const List<word>& pairPotNames(const label& id) const;
         
+        const List<List<label> >& pairSitesLinks() const;
+        
         const List<List<vector> >& siteRefPositions() const;
         const List<vector>& siteRefPositions(const word& idName) const;
         const List<vector>& siteRefPositions(const label& id) const;
@@ -220,6 +223,7 @@ public:
         const List<scalar>& siteCharges(const word& idName) const;
         const List<scalar>& siteCharges(const label& id) const;  
         
+        const List<List<label> >& chargeSitesLinks() const;
         
         const label& nSiteTypes() const;
         const label& nPairPotTypes() const;
@@ -232,13 +236,13 @@ public:
         
         
 
-        const List<List<label> >& pairPotNamesToSites() const;        
-        const List<List<label> >& chargePotNamesToChargePotSitesList() const; 
-        const List<List<label> >& chargePotNamesToSites() const; 
+//         const List<List<label> >& pairPotNamesToSites() const;        
+//         const List<List<label> >& chargePotNamesToChargePotSitesList() const; 
+//         const List<List<label> >& chargePotNamesToSites() const; 
         
         
         // IMP:
-        const List<List<label> >& pairPotNames_to_pairPotSitesList() const;        
+//         const List<List<label> >& pairPotNames_to_pairPotSitesList() const;        
         const List<List<label> >& siteNames_to_siteIdList() const; 
 };
 

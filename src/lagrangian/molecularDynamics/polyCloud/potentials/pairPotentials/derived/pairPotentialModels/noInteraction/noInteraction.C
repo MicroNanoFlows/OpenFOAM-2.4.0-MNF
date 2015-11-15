@@ -54,6 +54,7 @@ noInteraction::noInteraction
     pairPotentialModel(mesh, molCloud, redUnits, name, dict) 
 {
 //     exclusions_ = true;
+    useTables_ = false;
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -71,12 +72,14 @@ scalar noInteraction::unscaledEnergy(const scalar r) const
 
 scalar noInteraction::force(const scalar r) const
 {
-    return forceLookUpFromTable(r);
+//     return forceLookUpFromTable(r);
+    return 0.0;
 }
     
 scalar noInteraction::energy(const scalar r) const
 {
-    return energyLookUpFromTable(r);
+//     return energyLookUpFromTable(r);
+    return 0.0;
 }
 
 

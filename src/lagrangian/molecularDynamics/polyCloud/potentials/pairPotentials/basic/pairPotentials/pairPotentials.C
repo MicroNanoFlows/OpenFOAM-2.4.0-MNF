@@ -149,7 +149,7 @@ void pairPotentials::testPairPotentials()
 
     // check that all pair sites have pair potential combinations defined in potentialDict
     // and create the linked lists 
-    
+/*    
     const List<word>& pairSites = cP_.pairPotSiteIdList();
     
     Info << "cP_.pairPotSiteIdList() " << cP_.pairPotSiteIdList() << endl;
@@ -195,7 +195,7 @@ void pairPotentials::testPairPotentials()
             }
         }
     }
-     
+    */ 
     
     // create linked lists for sites
     
@@ -281,7 +281,7 @@ bool pairPotentials::rCutSqr
     const scalar rIJSqr
 ) const
 {
-    if(rIJSqr <= pairPotentials_[k]->rCutSqr())
+    if(rIJSqr < pairPotentials_[k]->rCutSqr())
     {
         return true;
     }
@@ -330,31 +330,44 @@ void pairPotentials::initialiseExclusionModels()
     }
 }
 
-const List< List<label> >& pairPotentials::pairPotIdList_to_pairPotentials() const
-{
-    return pairPotIdList_to_pairPotentials_;
-}
+// const List< List<label> >& pairPotentials::pairPotIdList_to_pairPotentials() const
+// {
+//     return pairPotIdList_to_pairPotentials_;
+// }
 
+
+
+// label pairPotentials::pairPotentialIndex
+// (
+//     const label idI,
+//     const label idJ,
+//     const label sI,
+//     const label sJ
+// ) const
+// {
+//     
+//     
+// }
 
 // supply molId I, molId J and i and j pot site indexes (see format of pairPotNames_ in cP_)
 //make inline
-label pairPotentials::getIndexFromPairPotentialSites
-(
-    const label idI,
-    const label idJ,
-    const label i,
-    const label j
-) const
-{
-    label idsI=cP_.pairPotNames_to_pairPotSitesList()[idI][i];
-    label idsJ=cP_.pairPotNames_to_pairPotSitesList()[idJ][j];
-    return pairPotIdList_to_pairPotentials_[idsI][idsJ];
-}
+// label pairPotentials::getIndexFromPairPotentialSites
+// (
+//     const label idI,
+//     const label idJ,
+//     const label i,
+//     const label j
+// ) const
+// {
+//     label idsI=cP_.pairPotNames_to_pairPotSitesList()[idI][i];
+//     label idsJ=cP_.pairPotNames_to_pairPotSitesList()[idJ][j];
+//     return pairPotIdList_to_pairPotentials_[idsI][idsJ];
+// }
 
 // supply molId I, molId J and sI and sJ site indexes (see format of siteNames_ in cP_)
 //make inline
 
-label pairPotentials::getIndexFromSites
+label pairPotentials::pairPotentialIndex
 (
     const label idI,
     const label idJ,
