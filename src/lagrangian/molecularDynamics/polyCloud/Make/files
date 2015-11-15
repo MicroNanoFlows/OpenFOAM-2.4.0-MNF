@@ -118,6 +118,9 @@ measurements/derived/combinedFields/polyInstantPropertiesZoneBounded/polyInstant
 measurements/derived/combinedFields/polyARCHER/polyARCHER.C
 measurements/derived/combinedFields/polyARCHER/polyARCHER_outputFiles.C
 
+/* DENSITY */
+
+measurements/derived/density/polyDensity/polyDensity.C
 
 /*  - MASS FLUX  */
 

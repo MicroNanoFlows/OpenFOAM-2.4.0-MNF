@@ -139,7 +139,7 @@ class constantMoleculeProperties
         
         // just those that are pair potential (unique list)
         // Outer list = total number of pair pot sites in system
-        // Entry = name
+        // Entry = name          // duplicates not allowed      
         List<word> pairPotSiteIdList_;
         
         // just those sites that are charged (unique list)
@@ -150,15 +150,10 @@ class constantMoleculeProperties
 
         // linked lists
         
-        // link between pairPotNames_ and pairPotSiteIdList_
-        // outer list = molecule types
-        // inner list = linked to pairPotNames_
-        // each entry is an index to pairPotSiteIdList_
-//         List< List<label> > pairPotNames_to_pairPotSitesList_;
-
-        
         // link between siteNames_ and siteIdList_
-        
+        // outer list = molecule types
+        // inner list = all sites in molecule
+        // entry = index to siteIdList_
         List<List<label> > siteNames_to_siteIdList_;
         
         
@@ -198,6 +193,7 @@ public:
         // namelist of cloud types (redundant, unless various clouds exist)
         const List<word>& cloudTypes() const;
         
+        
         const List<scalar>& mass() const;
         const scalar& mass(const label& id) const;        
         
@@ -235,14 +231,7 @@ public:
         const List<word>& chargeSiteIdList() const;
         
         
-
-//         const List<List<label> >& pairPotNamesToSites() const;        
-//         const List<List<label> >& chargePotNamesToChargePotSitesList() const; 
-//         const List<List<label> >& chargePotNamesToSites() const; 
         
-        
-        // IMP:
-//         const List<List<label> >& pairPotNames_to_pairPotSitesList() const;        
         const List<List<label> >& siteNames_to_siteIdList() const; 
 };
 

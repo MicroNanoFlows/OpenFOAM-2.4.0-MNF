@@ -153,7 +153,7 @@ constantMoleculeProperties::constantMoleculeProperties
             siteNames_[i][j] = siteIdNames[j];
         }
         
-        // **** NEW
+        // pair potential sites 
         
         List<label> pairIds = subDict.lookup("pairPotentials");
         
@@ -204,31 +204,6 @@ constantMoleculeProperties::constantMoleculeProperties
         
         pairSitesLinks_[i].setSize(pairPotLinks.size());
         pairSitesLinks_[i].transfer(pairPotLinks);  
-        
-        //**** OLD -------------
-/*        
-        List<word> pairIdNames = subDict.lookup("pairPotentialSiteIds");
-        pairPotNames_[i].setSize(pairIdNames.size());
-        
-        forAll(pairIdNames, j)
-        {
-            if (findIndex(siteIdNames, pairIdNames[j]) == -1)
-            {
-                FatalErrorIn("constantMoleculeProperties.C")
-                    << "site id = " << pairIdNames[j] 
-                    << " in pairPotentialSiteIds is not in its original siteIds: "
-                    << siteIdNames << nl << abort(FatalError);
-            }
-            
-            if (findIndex(pairPotentialSiteIdList, pairIdNames[j]) == -1)
-            {
-                pairPotentialSiteIdList.append(pairIdNames[j]);
-            }
-            
-            pairPotNames_[i][j] = pairIdNames[j];
-        }*/
-
-        //**** ----------------
         
         
         // site reference positions 
@@ -346,20 +321,6 @@ constantMoleculeProperties::constantMoleculeProperties
     chargeSiteIdList_.transfer(chargeSiteIdList);
     
     // setting linked lists for pairPotentials class
-/*    
-    pairPotNames_to_pairPotSitesList_.setSize(N_);
-
-    forAll(pairPotNames_to_pairPotSitesList_, i)
-    {
-        pairPotNames_to_pairPotSitesList_[i].setSize(pairPotNames_[i].size());
-        
-        forAll(pairPotNames_[i], j)
-        {
-            const word& name = pairPotNames_[i][j];
-            label k = findIndex(pairPotSiteIdList_, name);
-            pairPotNames_to_pairPotSitesList_[i][j] = k;
-        }
-    }*/
     
     siteNames_to_siteIdList_.setSize(N_);
     
@@ -375,52 +336,6 @@ constantMoleculeProperties::constantMoleculeProperties
         }
     }    
 
-//     pairPotNamesToSites_.setSize(N_);
-// 
-//     forAll(pairPotNamesToSites_, i)
-//     {
-//         pairPotNamesToSites_[i].setSize(pairPotNames_[i].size());
-//         
-//         forAll(pairPotNames_[i], j)
-//         {
-//             const word& name = pairPotNames_[i][j];
-//             label k = findIndex(siteNames_[i], name);
-//             pairPotNamesToSites_[i][j] = k;
-//         }
-//     }
-    
-//     chargePotNamesToChargePotSitesList_.setSize(N_);
-// 
-//     forAll(chargePotNamesToChargePotSitesList_, i)
-//     {
-//         chargePotNamesToChargePotSitesList_[i].setSize(chargeNames_[i].size());
-//         
-//         forAll(chargeNames_[i], j)
-//         {
-//             const word& name = chargeNames_[i][j];
-//             label k = findIndex(chargeSiteIdList_, name);
-//             chargePotNamesToChargePotSitesList_[i][j] = k;
-//         }
-//     }
-//     
-/*    chargePotNamesToSites_.setSize(N_);
-
-    forAll(chargePotNamesToSites_, i)
-    {
-        chargePotNamesToSites_[i].setSize(chargeNames_[i].size());
-        
-        forAll(chargeNames_[i], j)
-        {
-            const word& name = chargeNames_[i][j];
-            label k = findIndex(siteNames_[i], name);
-            chargePotNamesToSites_[i][j] = k;
-        }
-    }    
-    
-    */
-    
-
-
     // Output tests - debug
     Info << "siteNames_ = " << siteNames_ << endl;
     Info << "pairPotNames_ = " << pairPotNames_ << endl;    
@@ -428,9 +343,11 @@ constantMoleculeProperties::constantMoleculeProperties
     Info << "siteIdList_ = " << siteIdList_ << endl;
     Info << "pairPotSiteIdList_" << pairPotSiteIdList_ << endl;
     Info << "chargeSiteIdList_ = " << chargeSiteIdList_ << endl;
-    Info << "pairPotNames_to_pairPotSitesList_ = " << pairPotNames_to_pairPotSitesList_ << endl;
     Info << "siteNames_to_siteIdList_ = " << siteNames_to_siteIdList_ << endl;
 
+    
+    // procedure which was originally placed in polyMoleculeI.H
+    
     // set mass
     
     masses_.setSize(N_, 0.0);
@@ -444,7 +361,7 @@ constantMoleculeProperties::constantMoleculeProperties
         }
     }
     
-// apply adjustments and calculate moment of intertia
+    // apply adjustments and calculate moment of intertia
     
     momentOfInertia_.setSize(N_);
     
@@ -912,29 +829,7 @@ const List<word>& constantMoleculeProperties::chargeSiteIdList() const
     return chargeSiteIdList_;
 }
 
-        
 
-
-// const List<List<label> >& constantMoleculeProperties::pairPotNamesToSites() const
-// {
-//     return pairPotNamesToSites_;
-// }
-
-// const List<List<label> >& constantMoleculeProperties::chargePotNamesToChargePotSitesList() const
-// {
-//     return chargePotNamesToChargePotSitesList_;
-// }
-
-// const List<List<label> >& constantMoleculeProperties::chargePotNamesToSites() const
-// {
-//     return chargePotNamesToSites_;
-// }
-
-// IMP:
-// const List<List<label> >& constantMoleculeProperties::pairPotNames_to_pairPotSitesList() const
-// {
-//     return pairPotNames_to_pairPotSitesList_;
-// }
 
 const List<List<label> >& constantMoleculeProperties::siteNames_to_siteIdList() const
 {

@@ -77,7 +77,7 @@ inline void Foam::polyMoleculeCloud::evaluatePair
                 
                 label k = p_.pairPots().pairPotentialIndex(idI, idJ, sI, sJ);
                 
-//                 Info << "idI = " << idI << " = " << cP_.siteNames(idI) 
+//                 Info << nl << "idI = " << idI << " = " << cP_.siteNames(idI) 
 //                      << ", idJ = " << idJ << " = " << cP_.siteNames(idJ)
 //                      << endl;
 //                      
