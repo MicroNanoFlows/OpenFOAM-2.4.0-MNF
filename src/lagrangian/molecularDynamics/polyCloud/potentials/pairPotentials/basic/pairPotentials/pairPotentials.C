@@ -149,7 +149,7 @@ void pairPotentials::testPairPotentials()
 
     // check that all pair sites have pair potential combinations defined in potentialDict
     // and create the linked lists 
-/*    
+
     const List<word>& pairSites = cP_.pairPotSiteIdList();
     
     Info << "cP_.pairPotSiteIdList() " << cP_.pairPotSiteIdList() << endl;
@@ -195,7 +195,6 @@ void pairPotentials::testPairPotentials()
             }
         }
     }
-    */ 
     
     // create linked lists for sites
     
@@ -252,6 +251,7 @@ scalar pairPotentials::maxRCut()
         rCut = electrostaticPotential_->rCut();
     }    
 
+    Info << nl  << "rCut = " << rCut << nl << endl;
     
     return rCut;
 }        

@@ -82,7 +82,7 @@ class pairPotentials
         // outer list size of cP_.pairPotSiteIdList()
         // inner list size of cP_.pairPotSiteIdList()
         // store index of pairPotentials_
-//         List<List<label> > pairPotIdList_to_pairPotentials_;
+        List<List<label> > pairPotIdList_to_pairPotentials_;
 
         // linking siteIdList_ with pairPotentials_
         // outer list size of cP_.siteIds()
