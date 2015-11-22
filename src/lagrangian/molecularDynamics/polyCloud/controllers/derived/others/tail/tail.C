@@ -82,8 +82,16 @@ tail::tail
     b_ = readScalar(propsDict_.lookup("b"));
     deltaT_ = readScalar(propsDict_.lookup("deltaT"));    
     t_ = 0.0;
+    tI_= 0.0;
     
-//     deltaT_ = time_.deltaT().value(); 
+    relaxationTime_ = readScalar(propsDict_.lookup("relaxationTime"));    
+    
+    startPoint_ = propsDict_.lookup("startPoint");
+    deltaTMD_ = time_.deltaT().value(); 
+    
+
+      
+        
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -97,61 +105,97 @@ tail::~tail()
 
 void tail::initialConfiguration()
 {
+    getPosition();
+    label nSteps = label((relaxationTime_)/deltaTMD_) - 1;     
+    deltaR_ = (startPoint_ - rI_)/scalar(nSteps);
+    Info << "DeltaR = " << deltaR_ << endl;
+}
+    
+
+
+void tail::getPosition()
+{
+    rI_ = vector::zero;
+    
     IDLList<polyMolecule>::iterator mol(molCloud_.begin());
 
     for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
     {
         if(mol().trackingNumber() == trackingNumber_)
         {
-            Info << "centre y before = " << centre_.y() << endl;
-            
-            centre_.y() = mol().position().y()-b_;
-            
-            Info << "centre y after = " << centre_.y() << endl;
+           
+            rI_ = mol().position();
             
         }
+    }
+    
+    //- parallel processing
+    if(Pstream::parRun())
+    {
+        reduce(rI_, sumOp<vector>());
     }    
     
+    Info << "mol position = " << rI_ << endl; 
 }
-
 
 void tail::controlBeforeVelocityI()
 {
-    Info << "tail: control" << endl;
     
-    t_ += deltaT_;
-    
-    IDLList<polyMolecule>::iterator mol(molCloud_.begin());
+}
 
-    for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
+void tail::controlBeforeMove()
+{
+    getPosition();
+    
+    t_ += deltaTMD_;
+    
+    if(t_ < relaxationTime_)
     {
-//         if(findIndex(molIds_, mol().id()) != -1)
+        Info << "tail: relaxation" << endl;        
+        
+        IDLList<polyMolecule>::iterator mol(molCloud_.begin());
+
+        for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
         {
-//             Info << "mol().trackingNumber() = " << mol().trackingNumber() << endl;
-            
             if(mol().trackingNumber() == trackingNumber_)
             {
-                scalar xNew = -a_*cos(t_+(constant::mathematical::pi/2)) + centre_.x();
-                scalar yNew = b_*sin(t_+(constant::mathematical::pi/2)) + centre_.y();
-                
-                mol().v().z() = 0;
-                
-                vector rNew = vector(xNew, yNew, 0.0);
-                
-                vector deltaR = rNew - mol().position();
-                
                 mol().a() = vector::zero;
-                mol().v() = deltaR/deltaT_;
-                Info << "position x = " << mol().position().x()
-                     << ", position y = " << mol().position().y()
-                     << endl;
+                mol().v() = deltaR_/deltaTMD_;
+            }
+        }
+    }
+    
+    if(t_ > relaxationTime_) 
+    {
+        tI_ += deltaT_;
+        
+        Info << "tail: control, t = " << tI_ << endl;
+        
+        IDLList<polyMolecule>::iterator mol(molCloud_.begin());
+
+        for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
+        {
+            {
+                if(mol().trackingNumber() == trackingNumber_)
+                {
+                    scalar xNew = -a_*cos(tI_+(constant::mathematical::pi/2)) + centre_.x();
+                    scalar yNew = b_*sin(tI_+(constant::mathematical::pi/2)) + centre_.y();
+                    
+                    Info << "xNew = " << xNew
+                        << ", yNew = " << yNew
+                        << endl;
+                    
+                    vector rNew = vector(xNew, yNew, centre_.z());
+                    
+                    vector deltaR = rNew - mol().position();
+                    
+                    mol().a() = vector::zero;
+                    mol().v() = deltaR/deltaTMD_;
+                }
             }
         }
     }
 }
-
-void tail::controlBeforeMove()
-{}
 
 
 void tail::controlBeforeForces()

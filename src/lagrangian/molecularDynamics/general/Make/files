@@ -114,4 +114,9 @@ davesInterpolant/davesInterpolant.C
 
 trackingNumber/trackingNumber.C
 
+
+multiscale/boundaryConditions/mixedFixedValueSlipFvPatchFields.C
+multiscale/boundaryConditions/nonLinMaxwellSlipUFvPatchVectorField.C
+
+
 LIB = $(FOAM_LIBBIN)/libgeneralMolecule

@@ -77,15 +77,25 @@ private:
         
         // time 
         scalar t_;
-        scalar deltaT_;
+        scalar deltaTMD_;
         
+        scalar tI_;
+        scalar deltaT_; // a smaller deltaT
+        
+        scalar relaxationTime_;
+        
+        vector startPoint_;
+        
+        vector rI_;
+        vector deltaR_;
 //         List< List <scalar> > xs_;
         
 //         List< List <scalar> > ys_;
 
         
     // Private Member Functions
-
+        
+         void getPosition();
         
 public:
 

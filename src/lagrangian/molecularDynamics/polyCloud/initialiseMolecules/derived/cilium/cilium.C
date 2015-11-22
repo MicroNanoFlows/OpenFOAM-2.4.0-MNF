@@ -265,6 +265,8 @@ void cilium::insertMoleculeLocal
 
     if (!molCloud_.cP().pointMolecule(id))
     {
+//         Info << "temperature = " << temperature << ", id = " << id << endl;
+        
         pi = equipartitionAngularMomentum(temperature, id);
         scalar phi(molCloud_.rndGen().sample01<scalar>()*constant::mathematical::twoPi);
         scalar theta(molCloud_.rndGen().sample01<scalar>()*constant::mathematical::twoPi);
