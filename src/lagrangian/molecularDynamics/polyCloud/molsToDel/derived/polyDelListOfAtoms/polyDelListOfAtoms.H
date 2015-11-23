@@ -16,29 +16,32 @@ License
     OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-    for more deciliumMotions.
+    for more details.
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    ciliumMotion
+    polyDelListOfAtoms
 
 Description
-    Model that applies a gravitational force on all molecules.
+    Model which deletes polyMolecules from the mesh. Method should be used to delete
+    polyMolecules using their id number. If oneSpecie = no, then all polyMolecules from
+    the mesh are deleted.
+
 
 SourceFiles
-    ciliumMotionI.H
-    ciliumMotion.C
-    ciliumMotionIO.C
+    polyDelListOfAtomsI.H
+    polyDelListOfAtoms.C
+    polyDelListOfAtomsIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef ciliumMotion_H
-#define ciliumMotion_H
+#ifndef polyDelListOfAtoms_H
+#define polyDelListOfAtoms_H
 
-#include "polyStateController.H"
+#include "polyMolsToDeleteModel.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
@@ -50,12 +53,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class ciliumMotion Declaration
+                           Class polyDelListOfAtoms Declaration
 \*---------------------------------------------------------------------------*/
 
-class ciliumMotion
+class polyDelListOfAtoms
 :
-	public polyStateController
+	public polyMolsToDeleteModel
 {
 
 private:
@@ -64,78 +67,39 @@ private:
 
         //- subDictionary containing the properties
         dictionary propsDict_;
-
+                
         List<label> molIds_;
         
-        List <label> trackingNumbers_;
+        List<vector>molPoints_;
         
-        scalar deltaTMD_;
-
-        label nC_;
-        
-        label nT_;
-        
-        List< List <scalar> > x_;
-        
-        List< List <scalar> > y_;
-
-        vector startPoint_;
-        
-        label tI_;
         
     // Private Member Functions
-        
-//          void getPosition();
-        
+
+
+        void findMolsToDel();
+
 public:
 
     //- Runtime type information
-    TypeName("ciliumMotion");
+    TypeName("polyDelListOfAtoms");
 
     // Constructors
 
         //- Construct from components
-        ciliumMotion
-        (
-            Time& t,
+        polyDelListOfAtoms
+		(
             polyMoleculeCloud& molCloud,
             const dictionary& dict
-        );
+		);
 
     // Destructor
 
-        ~ciliumMotion();
+ 		~polyDelListOfAtoms();
 
 
     // Member Functions
-        
-        //- create an initial configuration
-        void initialConfiguration();
 
-        //- control molecules at various stages of time-step
-        void controlBeforeVelocityI();
-        void controlBeforeMove();
-        void controlBeforeForces();
-        void controlDuringForces
-        (
-            polyMolecule* molI,
-            polyMolecule* molJ
-        );        
-        void controlAfterForces();
-        void controlAfterVelocityII();
-        
-        //- calculate any required properties (end of time-step)
-        void calculateProperties(); 
-        
-        //- output data (optional)
-        void output
-        (
-            const fileName& fixedPathName, 
-            const fileName& timePath
-        );
-        
-        //- update properties from a modified dictionary (optional)
-        void updateProperties(const dictionary&);
+ 
 };
 
 

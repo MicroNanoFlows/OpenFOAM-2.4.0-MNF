@@ -81,7 +81,7 @@ ciliumMotion::ciliumMotion
     
     x_.setSize(nT_);
     y_.setSize(nT_);
-    t_.setSize(nT_);
+//     t_.setSize(nT_);
     
     forAll(x_, i)
     {
