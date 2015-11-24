@@ -89,13 +89,7 @@ polyBinsMethod::polyBinsMethod
     nAvTimeSteps_(0.0),
     resetAtOutput_(true)
 {
-   
-    bool readFromStore = true;
-    
-    if (propsDict_.found("readFromStorage"))
-    {
-        readFromStore = Switch(propsDict_.lookup("readFromStorage"));
-    }
+ 
     
     const cellZoneMesh& cellZones = mesh_.cellZones();
     
@@ -121,48 +115,6 @@ polyBinsMethod::polyBinsMethod
 
     molIds_ = ids.molIds();
 
-    // read in stored data from dictionary
-
-    resetAtOutput_ = Switch(propsDict_.lookup("resetAtOutput"));
-    
-    if (!resetAtOutput_ && readFromStore )
-    {
-        Info << " Averaging across many runs. Reading from dictionary:" << endl;
-
-        pathName_ = time_.time().path()/"storage";
-        nameFile_ = "binsData_"+fieldName_;
-
-        if( !isDir(pathName_) )
-        {
-            mkDir(pathName_);
-
-            Info << nl << "Storage not found!"  << nl << endl;
-            Info << ".... creating"  << nl << endl;
-        }
-
-        bool fileFound = readFromStorage();
-
-        if(!fileFound)
-        {
-            Info << nl << "File not found: " << nameFile_ << nl << endl;
-            Info << ".... creating"  << nl << endl;
-            writeToStorage();
-
-            Info << "setting properties to default values. " << endl;
-        }
-        else
-        {
-            Info << "Reading from storage, e.g. noAvTimeSteps = " << nAvTimeSteps_ << endl;
-            
-//             Pout<< "Properties read-in are: mols = " << mols_ 
-//                 << ", mass = " << mass_
-//                 << ", averagingTime = " << nAvTimeSteps_
-//                 << endl;
-        }
-       
-    }
-
-   
     
     // create bin model
     binModel_ = autoPtr<binModel>
@@ -199,6 +151,73 @@ polyBinsMethod::polyBinsMethod
     p_.setSize(nBins, 0.0);
     pVir_.setSize(nBins, 0.0);
     pKin_.setSize(nBins, 0.0);
+
+
+  
+    {
+        Info << nl << "Storage..." << endl;
+        
+        bool resetStorage = false;
+        
+        if (propsDict_.found("resetStorage"))
+        {
+            resetStorage = Switch(propsDict_.lookup("resetStorage"));
+        }    
+        
+        if(resetStorage)
+        {
+            Info<< "WARNING: storage will be reset."
+                << " This is not good if you would like to average over many runs. "
+                << endl;
+        }
+        else
+        {
+            Info << "WARNING: storage will NOT be reset."
+                << " This is good if you would like to average over many runs. "
+                << " This is NOT good if you have been testing your simulation a number of times "
+                << " Delete your storage directory before moving to important runs"
+                << " or type resetStorage = yes, for just the first simulation run."
+                << endl;            
+        }
+        
+        resetAtOutput_ = Switch(propsDict_.lookup("resetAtOutput"));    
+        
+        
+        // stored data activation in dictionary        
+
+        pathName_ = time_.time().path()/"storage";
+        nameFile_ = "binsData_"+fieldName_;
+
+        if( !isDir(pathName_) )
+        {
+            mkDir(pathName_);
+
+            Info << nl << "Storage not found!"  << nl << endl;
+            Info << ".... creating"  << nl << endl;
+        }
+
+        if(!resetStorage)
+        {
+            readFromStorage();
+        }
+
+        IFstream file(pathName_/nameFile_);
+
+        bool foundFile = file.good();
+        
+        if(!foundFile)
+        {
+            Info << nl << "File not found: " << nameFile_ << nl << endl;
+            Info << ".... creating"  << nl << endl;
+            writeToStorage();
+
+            Info << "setting properties to default values. " << endl;
+        }
+        else
+        {
+            Info << "Reading from storage, e.g. noAvTimeSteps = " << nAvTimeSteps_ << endl;
+        }
+    }
 
     // choice of measurement property to output
 

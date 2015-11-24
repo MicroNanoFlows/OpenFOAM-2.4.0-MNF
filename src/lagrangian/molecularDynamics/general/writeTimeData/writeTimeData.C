@@ -82,6 +82,32 @@ writeTimeData::writeTimeData
     outputGraph.write(writeFile, "raw");
 }
 
+//- scalar field
+writeTimeData::writeTimeData
+(
+    const fileName& pathName,
+    const word& nameFile,
+    const scalarField& xData
+)
+{
+    OFstream file(pathName/nameFile);
+
+    if(file.good())
+    {
+        forAll(xData, n)
+        {
+            file 
+                << xData[n]
+                << endl;
+        }
+    }
+    else
+    {
+        FatalErrorIn("void writeTimeData::writeTimeData()")
+            << "Cannot open file " << file.name()
+            << abort(FatalError);
+    }
+}
 
 //- scalar field, scalar field
 writeTimeData::writeTimeData

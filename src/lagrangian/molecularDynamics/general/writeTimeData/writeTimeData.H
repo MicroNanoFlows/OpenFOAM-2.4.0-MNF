@@ -83,6 +83,14 @@ public:
             const List< Pair<scalar> >& data,
             const label& dummy
         );
+        
+        //- scalar field
+        writeTimeData
+        (
+            const fileName& pathName,
+            const word& nameFile,
+            const scalarField& xData
+        );        
 
         //- scalar field, scalar field
         writeTimeData
@@ -137,6 +145,9 @@ public:
             const vectorField& xData,
             const tensorField& yData
         );
+        
+        
+        
         
         // WITH APPEND POSSIBLE
 

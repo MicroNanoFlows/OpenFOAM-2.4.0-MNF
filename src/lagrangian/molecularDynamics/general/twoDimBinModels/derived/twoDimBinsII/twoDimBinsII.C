@@ -121,27 +121,24 @@ List<label> twoDimBinsII::isPointWithinBin
         label nX = label(rDx/binWidthX_);
         label nY = label(rDy/binWidthY_);
         
-        if(nX >= 0)
+        if( (nX >= 0) && (nY >= 0) )
         {
             if(nX == nBinsX_) 
             {
                 nX--;
             }
             
-            binNumbers[0] = nX;            
-        }    
+            binNumbers[0] = nX;
         
-        if(nY >= 0)
-        {
             if(nY == nBinsY_) 
             {
                 nY--;
             }
             
             binNumbers[1] = nY;            
-        }
+        }    
     }
-
+    
     return binNumbers;
 }
 
