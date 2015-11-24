@@ -26,16 +26,7 @@ Class
     poly2DBinsSites
 
 Description
-    The method of bins measures 1D distribution properties localised in a
-    user-specified zone.
 
-    Parallelised.
-
-    Any binModel may be applied. So far implemented the following:
-
-        normal, cylindrical, multi sub-zones, cuboid 
-
-    Choice of properties to output also available.
 
 SourceFiles
     poly2DBinsSitesI.H
@@ -87,14 +78,15 @@ private:
         label regionId_;
         word fieldName_;
 
-        List<label> molIds_;
+        List<label> molSiteIds_;
 
-        List<scalarField> mass_;
-        List<vectorField> mom_;
+        List<scalarField> atoms_;
+
 
         // fields
-        List<scalarField> rhoM_;
-        List<vectorField> UCAM_;
+        // av number of molecules
+        List<scalarField> N_;
+
 
         scalar nAvTimeSteps_;
         

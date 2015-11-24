@@ -58,13 +58,12 @@ poly2DBinsSites::poly2DBinsSites
     regionId_(-1),
     fieldName_(propsDict_.lookup("fieldName")),
 
-    molIds_(),
+    molSiteIds_(),
 
-    mass_(),
-    mom_(),
+    atoms_(),
 
-    rhoM_(),
-    UCAM_(),
+    N_(),
+    
 
     nAvTimeSteps_(0.0),
     resetAtOutput_(true)
@@ -84,15 +83,15 @@ poly2DBinsSites::poly2DBinsSites
     
     // choose molecule ids to sample
 
-    molIds_.clear();
+    molSiteIds_.clear();
 
-    selectIds ids
+    selectSiteIds ids
     (
         molCloud_.cP(),
         propsDict_
     );
 
-    molIds_ = ids.molIds();
+    molSiteIds_ = ids.siteIds();
 
 
     
@@ -110,22 +109,17 @@ poly2DBinsSites::poly2DBinsSites
 //     Info << "nBinsX = " << nBinsX << endl;
 //     Info << "nBinsY = " << nBinsY << endl;
     
-    mass_.setSize(nBinsX);
-    mom_.setSize(nBinsX);
+    atoms_.setSize(nBinsX);
 
-    rhoM_.setSize(nBinsX);
-    UCAM_.setSize(nBinsX);
+    N_.setSize(nBinsX);
     
-    forAll(mass_, i)
+    forAll(atoms_, i)
     {
-        mass_[i].setSize(nBinsY, 0.0);
-        mom_[i].setSize(nBinsY, vector::zero);
-        
-        rhoM_[i].setSize(nBinsY, 0.0);
-        UCAM_[i].setSize(nBinsY, vector::zero);
+        atoms_[i].setSize(nBinsY, 0.0);
+        N_[i].setSize(nBinsY, 0.0);
     }
     
-//     Info << "mass_ = " << mass_ << endl;
+//     Info << "atoms_ = " << atoms_ << endl;
 //     Info << "mom_ = " << mom_ << endl;        
     
    
@@ -216,7 +210,7 @@ void poly2DBinsSites::createField()
 
 void poly2DBinsSites::calculateField()
 {
-//     Info << "mass = " << mass_ << endl;
+//     Info << "atoms = " << atoms_ << endl;
 //     Info << "mom = " << mom_ << endl;
     
     nAvTimeSteps_ += 1.0;
@@ -229,55 +223,57 @@ void poly2DBinsSites::calculateField()
         forAll(molsInCell, mIC)
         {
             polyMolecule* molI = molsInCell[mIC];
-
-            const vector& rI = molI->position();
-
-            List<label> n = binModel_->isPointWithinBin(rI, cellI);
-//             Info << "n = "<< n << endl;
-            if((n[0]+n[1]) >= 0)
+            
+            forAll(molI->sitePositions(), i)
             {
-                if(findIndex(molIds_, molI->id()) != -1)
+                label siteId = molCloud_.cP().siteNames_to_siteIdList()[molI->id()][i];
+        
+                if(findIndex(molSiteIds_, siteId) != -1)
                 {
-                    const scalar& massI = molCloud_.cP().mass(molI->id());
+//                     Info<< "siteId = " << siteId 
+//                         << ", in siteIdList = " << molCloud_.cP().siteIds()[siteId]
+//                         << endl;
+                    
+                    const vector& rI = molI->sitePositions()[i];
+                    
+                    List<label> n = binModel_->isPointWithinBin(rI, cellI);
 
-                    mass_[n[0]][n[1]] += massI;
-                    mom_[n[0]][n[1]] += massI*molI->v();
+                    if((n[0]+n[1]) >= 0)
+                    {
+                        atoms_[n[0]][n[1]] += 1.0;
+                    }
                 }
             }
+
         }
     }
 
     if(time_.outputTime()) 
     {
-        List<scalarField> mass = mass_;
-        List<vectorField> mom = mom_;        
+        List<scalarField> atoms = atoms_;
+       
 
         if(Pstream::parRun())
         {
-            forAll(mass, i)
+            forAll(atoms, i)
             {
-                forAll(mass[i], j)
+                forAll(atoms[i], j)
                 {
-                    reduce(mass[i][j], sumOp<scalar>());
-                    reduce(mom[i][j], sumOp<vector>());
+                    reduce(atoms[i][j], sumOp<scalar>());
                 }
             }
         }
         
         const scalar& nAvTimeSteps = nAvTimeSteps_;
         
-        forAll(mass, i)
+        forAll(atoms, i)
         {
-            scalar volume = binModel_->binVolume(i);
+//             scalar volume = binModel_->binVolume(i);
             
-            forAll(mass[i], j)
+            forAll(atoms[i], j)
             {       
-                rhoM_[i][j] = mass[i][j]/(nAvTimeSteps*volume);
-                
-                if(mass[i][j] > 0)
-                {
-                    UCAM_[i][j] = mom[i][j]/mass[i][j];
-                }
+                N_[i][j] = atoms[i][j]/(nAvTimeSteps);
+
             }
         }
     
@@ -288,12 +284,11 @@ void poly2DBinsSites::calculateField()
             //- reset fields
             nAvTimeSteps_ = 0.0;
             
-            forAll(mass, i)
+            forAll(atoms, i)
             {
-                forAll(mass[i], j)
+                forAll(atoms[i], j)
                 {
-                    mass_[i][j]=0.0;
-                    mom_[i][j]=vector::zero;
+                    atoms_[i][j]=0.0;
                 }
             }
         }
@@ -311,8 +306,8 @@ void poly2DBinsSites::writeToStorage()
     if(file.good())
     {
         file << nAvTimeSteps_ << endl;
-        file << mass_ << endl;
-        file << mom_ << endl; 
+        file << atoms_ << endl;
+//         file << mom_ << endl; 
     }
     else
     {
@@ -333,8 +328,8 @@ bool poly2DBinsSites::readFromStorage()
         scalar nAvTimeSteps;
 
         file >> nAvTimeSteps;
-        file >> mass_;
-        file >> mom_;
+        file >> atoms_;
+//         file >> mom_;
 
         nAvTimeSteps_ = nAvTimeSteps;
     }
@@ -373,33 +368,9 @@ void poly2DBinsSites::writeField()
             writeTimeData
             (
                 timePath_,
-                "bins_twoDim_"+fieldName_+"_rhoM.xy",
-                rhoM_
+                "bins_twoDim_"+fieldName_+"_N.xy",
+                N_
             );           
-            
-            writeTimeData
-            (
-                timePath_,
-                "bins_twoDim_"+fieldName_+"_U_CAM_X.xy",
-                UCAM_,
-                "x"
-            );  
-            
-            writeTimeData
-            (
-                timePath_,
-                "bins_twoDim_"+fieldName_+"_U_CAM_Y.xy",
-                UCAM_,
-                "y"
-            ); 
-
-            writeTimeData
-            (
-                timePath_,
-                "bins_twoDim_"+fieldName_+"_U_CAM_Z.xy",
-                UCAM_,
-                "z"
-            );            
             
             
             
@@ -418,85 +389,6 @@ void poly2DBinsSites::writeField()
                 "bins_twoDim_"+fieldName_+"_binsY_SI.xy",
                 binsY*rU.refLength()
             );           
-
-            writeTimeData
-            (
-                timePath_,
-                "bins_twoDim_"+fieldName_+"_rhoM_SI.xy",
-                rhoM_*rU.refMassDensity()
-            );           
-            
-            writeTimeData
-            (
-                timePath_,
-                "bins_twoDim_"+fieldName_+"_U_CAM_X_SI.xy",
-                UCAM_*rU.refVelocity(),
-                "x"
-            );  
-            
-            writeTimeData
-            (
-                timePath_,
-                "bins_twoDim_"+fieldName_+"_U_CAM_Y_SI.xy",
-                UCAM_*rU.refVelocity(),
-                "y"
-            ); 
-
-            writeTimeData
-            (
-                timePath_,
-                "bins_twoDim_"+fieldName_+"_U_CAM_Z_SI.xy",
-                UCAM_*rU.refVelocity(),
-                "z"
-            );             
-
-//             scalarField bins = binModel_->binPositionsX();
-//             scalarField binsY = binModel_->binPositionsY();
-// 
-//             forAll(rhoM_, i)
-//             {
-//                 std::string s;
-//                 std::stringstream out;
-//                 out << bins[i];
-//                 s = out.str();
-// 
-//                 writeTimeData
-//                 (
-//                     timePath_,
-//                     "bins_twoDim_"+fieldName_+"_"+s+"_rhoM.xy",
-//                     binsY,
-//                     rhoM_[i]
-//                 );
-// 
-//                 writeTimeData
-//                 (
-//                     timePath_,
-//                     "bins_twoDim_"+fieldName_+"_"+s+"_U_CAM.xyz",
-//                     binsY,
-//                     UCAM_[i]
-//                 );
-//                 
-//                 const reducedUnits& rU = molCloud_.redUnits();
-//     
-//                 if(rU.outputSIUnits())
-//                 {
-//                     writeTimeData
-//                     (
-//                         timePath_,
-//                         "bins_twoDim_"+fieldName_+"_"+s+"_rhoM_SI.xy",
-//                         binsY*rU.refLength(),
-//                         rhoM_[i]*rU.refMassDensity()
-//                     );
-// 
-//                     writeTimeData
-//                     (
-//                         timePath_,
-//                         "bins_twoDim_"+fieldName_+"_"+s+"_U_CAM_SI.xyz",
-//                         binsY*rU.refLength(),
-//                         UCAM_[i]*rU.refVelocity()
-//                     );
-//                 }
-//             }
         }
     }
 }
