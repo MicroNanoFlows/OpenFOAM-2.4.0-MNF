@@ -77,10 +77,61 @@ void polyARCHER::createField()
     outputInitialisation();
 }
 
+scalar polyARCHER::getTotalEnergy()
+{
+    scalar kE = 0.0;
+    scalar angularKE = 0.0;
+    scalar PE = 0.0;
+
+    label nMols = molCloud_.size();
+
+    {
+        IDLList<polyMolecule>::iterator mol(molCloud_.begin());
+    
+        for
+        (
+            mol = molCloud_.begin();
+            mol != molCloud_.end();
+            ++mol
+        )
+        {
+            label molId = mol().id();
+    
+            scalar molMass(molCloud_.cP().mass(molId));
+
+            const vector& molV(mol().v());
+
+            const diagTensor& molMoI(molCloud_.cP().momentOfInertia(mol().id()));
+
+            const vector& molOmega(inv(molMoI) & mol().pi());
+    
+            kE += 0.5*molMass*magSqr(molV);
+            angularKE += 0.5*(molOmega & molMoI & molOmega);
+            PE += mol().potentialEnergy();
+        }
+    }
+
+    if (Pstream::parRun())
+    {
+        reduce(kE, sumOp<scalar>());
+        reduce(angularKE, sumOp<scalar>());
+        reduce(PE, sumOp<scalar>());
+        reduce(nMols, sumOp<label>());
+    }
+
+    scalar totalEnergy = 0.0;
+    
+    if(nMols > 0)
+    {
+        totalEnergy = (kE + angularKE + PE)/nMols;
+    }            
+    
+    return totalEnergy;
+}
 
 void polyARCHER::calculateField()
 {
-//     if(runTime.outputTime())
+    if(time_.outputTime())
     {
         outputTime();
     }

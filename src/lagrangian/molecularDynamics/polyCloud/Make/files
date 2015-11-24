@@ -118,7 +118,7 @@ measurements/derived/combinedFields/polyPropertyFields/polyPropertyFields.C
 measurements/derived/combinedFields/polyInstantPropertiesZoneBounded/polyInstantPropertiesZoneBounded.C
 measurements/derived/combinedFields/polyARCHER/polyARCHER.C
 measurements/derived/combinedFields/polyARCHER/polyARCHER_outputFiles.C
-measurements/derived/combinedFields/poly2DBins/poly2DBins.C
+
 /* DENSITY */
 
 measurements/derived/density/polyDensity/polyDensity.C
@@ -138,7 +138,8 @@ measurements/derived/otherFields/polyMoleculePotentialEnergy/polyMoleculePotenti
 measurements/derived/otherFields/polyPDB/polyPDB.C
 measurements/derived/otherFields/polyXMOL/polyXMOL.C
 measurements/derived/otherFields/polyZoneRdf/polyZoneRdf.C
-
+measurements/derived/otherFields/poly2DBins/poly2DBins.C
+measurements/derived/otherFields/poly2DBinsSites/poly2DBinsSites.C
 
 /*measurements/derived/otherFields/forceInstantProperties/forceInstantProperties.C */
 

@@ -23,27 +23,37 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
+    poly2DBinsSites
 
 Description
-    The model which outputs standard properties to the terminal screen 
-    in an MD simulation run.
+    The method of bins measures 1D distribution properties localised in a
+    user-specified zone.
+
+    Parallelised.
+
+    Any binModel may be applied. So far implemented the following:
+
+        normal, cylindrical, multi sub-zones, cuboid 
+
+    Choice of properties to output also available.
 
 SourceFiles
-    polyARCHERI.H
-    polyARCHER.C
-    polyARCHERIO.C
+    poly2DBinsSitesI.H
+    poly2DBinsSites.C
+    poly2DBinsSitesIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef polyARCHER_H
-#define polyARCHER_H
+#ifndef poly2DBinsSites_H
+#define poly2DBinsSites_H
 
 #include "polyField.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
 #include "polyMoleculeCloud.H"
-
+#include "distribution.H"
+#include "twoDimBinModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,10 +61,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class polyARCHER Declaration
+                           Class poly2DBinsSites Declaration
 \*---------------------------------------------------------------------------*/
 
-class polyARCHER
+class poly2DBinsSites
 :
 	public polyField
 {
@@ -65,28 +75,49 @@ private:
 
         //- subDictionary containing the properties
         dictionary propsDict_;
-        
-        propertyField fields_;
-        
-        word nameOfFile_;
-        
+
         fileName pathName_;
+        fileName nameFile_;
+
+        propertyField fields_;
+
+        autoPtr<twoDimBinModel> binModel_;
+
+        word regionName_;
+        label regionId_;
+        word fieldName_;
+
+        List<label> molIds_;
+
+        List<scalarField> mass_;
+        List<vectorField> mom_;
+
+        // fields
+        List<scalarField> rhoM_;
+        List<vectorField> UCAM_;
+
+        scalar nAvTimeSteps_;
+        
+        bool resetAtOutput_;
+        
+        
         
     // Private Member Functions
-    
-        void outputInitialisation();
-        void outputTime();
         
-        scalar getTotalEnergy();
+        
+            void writeToStorage();
+
+            bool readFromStorage();
+
 public:
 
     //- Runtime type information
-    TypeName("polyARCHER");
+    TypeName("poly2DBinsSites");
 
     // Constructors
 
         //- Construct from components
-        polyARCHER
+        poly2DBinsSites
 		(
             Time& t,
             const polyMesh& mesh,
@@ -96,7 +127,8 @@ public:
 
     // Destructor
 
- 		~polyARCHER();
+ 		~poly2DBinsSites();
+
 
     // Member Functions
 
@@ -106,8 +138,8 @@ public:
         //- calculate field
         void calculateField();
 
-        //- write field
-        void writeField();
+        //- return field
+        const propertyField& fields() const;
 
         void measureDuringForceComputation
         (
@@ -123,7 +155,8 @@ public:
             label sJ
         );
 
-        const propertyField& fields() const;
+        //- write field
+        void writeField();
 }; 		
 
 

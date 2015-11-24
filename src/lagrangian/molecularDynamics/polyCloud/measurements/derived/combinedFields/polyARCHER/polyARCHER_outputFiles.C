@@ -90,12 +90,15 @@ void polyARCHER::outputTime()
 {
     fileName fName(pathName_/nameOfFile_);
 
+    scalar TE = getTotalEnergy();
+    
     std::ofstream file(fName.c_str(),ios_base::app);
     file.precision(11);
 
     if(file.is_open())
     {
         file<< "Time = " << time_.timeOutputValue() << nl;
+        file<< "total energy = " << TE << nl;
         file<< "Duration: " << molCloud_.clock().instantDuration()
          << " s   av. write int. = " << molCloud_.clock().averageTimeWriteInterval()
          << " s   av. sim. = " << molCloud_.clock().averageTime()
