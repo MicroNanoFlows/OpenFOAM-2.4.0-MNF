@@ -122,7 +122,7 @@ measurements/derived/combinedFields/polyARCHER/polyARCHER_outputFiles.C
 /* DENSITY */
 
 measurements/derived/density/polyDensity/polyDensity.C
-
+measurements/derived/density/polyTwoDimDropletDensity/polyTwoDimDropletDensity.C
 /*  - MASS FLUX  */
 
 measurements/derived/massFlux/polyMassFluxMultiSurfaces/polyMassFluxMultiSurfaces.C
@@ -132,7 +132,7 @@ measurements/derived/massFlux/polyMassFlux/polyMassFlux.C
 
 /*  - OTHER  */
 
-measurements/derived/otherFields/polyDensityMOB2DRadialCOM/polyDensityMOB2DRadialCOM.C
+/*measurements/derived/otherFields/polyDensityMOB2DRadialCOM/polyDensityMOB2DRadialCOM.C*/
 measurements/derived/otherFields/polyForceTwoMolecules/polyForceTwoMolecules.C
 measurements/derived/otherFields/polyMoleculePotentialEnergy/polyMoleculePotentialEnergy.C
 measurements/derived/otherFields/polyPDB/polyPDB.C
