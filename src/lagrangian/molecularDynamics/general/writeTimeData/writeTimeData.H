@@ -235,6 +235,17 @@ public:
             const word& option 
         );        
 
+        // write out List<vectorField>  component only (with append possible)
+        writeTimeData
+        (
+            const fileName& pathName,
+            const word& nameFile,
+            const List<vectorField>& data,
+            const word& option,
+            const bool& dummy
+        );        
+        
+        
         // write out List<tensorField>  component only      
         writeTimeData
         (
@@ -243,6 +254,9 @@ public:
             const List<tensorField>& data,
             const word& option 
         );        
+        
+
+        
         
         ~writeTimeData();
 

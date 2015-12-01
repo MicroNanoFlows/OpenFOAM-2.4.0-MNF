@@ -269,12 +269,78 @@ void ciliumMotion::output
         
         if(Pstream::master())
         {
+            List<vectorField> forces(1);
+            List<vectorField> velocities(1);
+            
+            forces[0].setSize(forces_.size());
+            velocities[0].setSize(velocities_.size());
+            
+            forAll(forces_, i)
+            {
+                forces[0]=forces_[i];
+                velocities[0]=velocities_[i];
+            }
+
+
             
 
-            std::string s;
-            std::stringstream out;
-            out << nWrite_;
-            s = out.str();
+            writeTimeData
+            (
+                fixedPathName,
+                "ciliumMotion_"+fieldName_+"_Fx.xy",
+                forces,
+                "x",
+                true
+            );
+            
+            writeTimeData
+            (
+                fixedPathName,
+                "ciliumMotion_"+fieldName_+"_Fy.xy",
+                forces,
+                "y",
+                true
+            );  
+            
+            writeTimeData
+            (
+                fixedPathName,
+                "ciliumMotion_"+fieldName_+"_Fz.xy",
+                forces,
+                "z",
+                true
+            );                
+
+            writeTimeData
+            (
+                fixedPathName,
+                "ciliumMotion_"+fieldName_+"_Ux.xy",
+                velocities,
+                "x",
+                true
+            );
+           
+            writeTimeData
+            (
+                fixedPathName,
+                "ciliumMotion_"+fieldName_+"_Uy.xy",
+                velocities,
+                "y",
+                true
+            );
+            writeTimeData
+            (
+                fixedPathName,
+                "ciliumMotion_"+fieldName_+"_Uz.xy",
+                velocities,
+                "z",
+                true
+            );            
+          
+//             std::string s;
+//             std::stringstream out;
+//             out << nWrite_;
+//             s = out.str();
             
 //                 writeTimeData
 //                 (
@@ -284,7 +350,7 @@ void ciliumMotion::output
 //                     rhoM_[i]
 //                 );        
    
-            writeTimeData
+/*            writeTimeData
             (
                 fixedPathName,
                 "ciliumMotion_"+fieldName_+"_"+ s +"_forces.xyz",
@@ -295,7 +361,7 @@ void ciliumMotion::output
                 fixedPathName,
                 "ciliumMotion_"+fieldName_+"_"+ s +"_velocities.xyz",
                 velocities_
-            );            
+            ); */           
         }
         
         // reset
