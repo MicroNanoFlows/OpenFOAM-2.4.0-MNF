@@ -109,6 +109,37 @@ writeTimeData::writeTimeData
     }
 }
 
+//- vector field
+writeTimeData::writeTimeData
+(
+    const fileName& pathName,
+    const word& nameFile,
+    const vectorField& xData
+)
+{
+    OFstream file(pathName/nameFile);
+
+    if(file.good())
+    {
+        forAll(xData, n)
+        {
+            file 
+                << xData[n].x() << "\t" 
+                << xData[n].y() << "\t" 
+                << xData[n].z() << "\t"
+                << endl;
+        }
+    }
+    else
+    {
+        FatalErrorIn("void writeTimeData::writeTimeData()")
+            << "Cannot open file " << file.name()
+            << abort(FatalError);
+    }
+}
+
+
+
 //- scalar field, scalar field
 writeTimeData::writeTimeData
 (

@@ -64,10 +64,14 @@ private:
 
         //- subDictionary containing the properties
         dictionary propsDict_;
-
+        
+        word fieldName_;
+        
         List<label> molIds_;
         
         List <label> trackingNumbers_;
+        
+
         
         scalar deltaTMD_;
 
@@ -82,6 +86,12 @@ private:
         vector startPoint_;
         
         label tI_;
+        
+        
+        vectorField velocities_;
+        vectorField forces_;
+        scalar nAvTimeSteps_;
+        label nWrite_;
         
     // Private Member Functions
         

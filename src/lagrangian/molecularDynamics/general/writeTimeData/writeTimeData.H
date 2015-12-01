@@ -90,6 +90,14 @@ public:
             const fileName& pathName,
             const word& nameFile,
             const scalarField& xData
+        );    
+        
+        //- vector field
+        writeTimeData
+        (
+            const fileName& pathName,
+            const word& nameFile,
+            const vectorField& xData
         );        
 
         //- scalar field, scalar field

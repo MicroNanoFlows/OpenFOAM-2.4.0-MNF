@@ -55,6 +55,7 @@ ciliumMotion::ciliumMotion
 :
     polyStateController(t, molCloud, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
+    fieldName_(propsDict_.lookup("fieldName")),    
     molIds_()
 {
 
@@ -135,10 +136,12 @@ ciliumMotion::ciliumMotion
     
     deltaTMD_ = time_.deltaT().value(); 
     
-
-      tI_ = 0;
-      
-        
+    tI_ = 0;
+    
+    nWrite_ = 0;
+    nAvTimeSteps_ = 0.0;
+    velocities_.setSize(trackingNumbers_.size(), vector::zero);
+    forces_.setSize(trackingNumbers_.size(), vector::zero);
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -152,38 +155,11 @@ ciliumMotion::~ciliumMotion()
 
 void ciliumMotion::initialConfiguration()
 {
-//     getPosition();
-//     label nSteps = label((relaxationTime_)/deltaTMD_) - 1;     
-//     deltaR_ = (startPoint_ - rI_)/scalar(nSteps);
-//     Info << "DeltaR = " << deltaR_ << endl;
 }
     
 
 
-// void ciliumMotion::getPosition()
-// {
-//     rI_ = vector::zero;
-//     
-//     IDLList<polyMolecule>::iterator mol(molCloud_.begin());
-// 
-//     for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
-//     {
-//         if(mol().trackingNumber() == trackingNumber_)
-//         {
-//            
-//             rI_ = mol().position();
-//             
-//         }
-//     }
-//     
-//     //- parallel processing
-//     if(Pstream::parRun())
-//     {
-//         reduce(rI_, sumOp<vector>());
-//     }    
-//     
-//     Info << "mol position = " << rI_ << endl; 
-// }
+
 
 void ciliumMotion::controlBeforeVelocityI()
 {
@@ -198,6 +174,8 @@ void ciliumMotion::controlBeforeMove()
     {
         tI_ = 0;
     }
+    
+    nAvTimeSteps_ += 1.0;
     
 //     Info << "ciliumMotion: control, t = " << tI_ << endl;
     
@@ -217,64 +195,11 @@ void ciliumMotion::controlBeforeMove()
                 
                 mol().a() = vector::zero;
                 mol().v() = deltaR/deltaTMD_;
+                
+                velocities_[id] += mol().v();
             }
         }
     }    
-    
-
-    
-    
-
-//     getPosition();
-//     
-//     t_ += deltaTMD_;
-//     
-//     if(t_ < relaxationTime_)
-//     {
-//         Info << "ciliumMotion: relaxation" << endl;        
-//         
-//         IDLList<polyMolecule>::iterator mol(molCloud_.begin());
-// 
-//         for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
-//         {
-//             if(mol().trackingNumber() == trackingNumber_)
-//             {
-//                 mol().a() = vector::zero;
-//                 mol().v() = deltaR_/deltaTMD_;
-//             }
-//         }
-//     }
-//     
-//     if(t_ > relaxationTime_) 
-//     {
-//         tI_ += deltaT_;
-//         
-//         Info << "ciliumMotion: control, t = " << tI_ << endl;
-//         
-//         IDLList<polyMolecule>::iterator mol(molCloud_.begin());
-// 
-//         for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
-//         {
-//             {
-//                 if(mol().trackingNumber() == trackingNumber_)
-//                 {
-//                     scalar xNew = -a_*cos(tI_+(constant::mathematical::pi/2)) + centre_.x();
-//                     scalar yNew = b_*sin(tI_+(constant::mathematical::pi/2)) + centre_.y();
-//                     
-//                     Info << "xNew = " << xNew
-//                         << ", yNew = " << yNew
-//                         << endl;
-//                     
-//                     vector rNew = vector(xNew, yNew, centre_.z());
-//                     
-//                     vector deltaR = rNew - mol().position();
-//                     
-//                     mol().a() = vector::zero;
-//                     mol().v() = deltaR/deltaTMD_;
-//                 }
-//             }
-//         }
-//     }
 }
 
 
@@ -289,13 +214,32 @@ void ciliumMotion::controlDuringForces
 {}
 
 void ciliumMotion::controlAfterForces()
-{}
+{
+    IDLList<polyMolecule>::iterator mol(molCloud_.begin());
+
+    for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
+    {
+        if(findIndex(molIds_, mol().id()) != -1)
+        {
+            label id = findIndex(trackingNumbers_, mol().trackingNumber());
+            
+            if(id != -1)
+            {
+                const scalar& massI = molCloud_.cP().mass(mol().id());                
+                forces_[id] += massI*mol().a();
+            }
+        }
+    }    
+}
 
 void ciliumMotion::controlAfterVelocityII()
 {}
 
 void ciliumMotion::calculateProperties()
-{}
+{
+    
+    
+}
 
 void ciliumMotion::output
 (
@@ -303,32 +247,61 @@ void ciliumMotion::output
     const fileName& timePath
 )
 {
-    const Time& runTime = time_.time();
-
-    if(runTime.outputTime())
+    if(time_.outputTime())
     {
-//         vector force = force_;
-// 
-//         if(Pstream::parRun())
-//         {
-//             reduce(force, sumOp<vector>());
-//         }
-// 
-//         if(Pstream::master())
-//         {
-//             vectorField forces(1, force/nTimeSteps_);
-//             
-//             scalarField timeField(1, time_.time().timeOutputValue());
-//    
-//             writeTimeData
-//             (
-//                 fixedPathName,
-//                 "ciliumMotion_force.xyz",
-//                 timeField,
-//                 forces,
-//                 true
-//             );            
-//         }
+        nWrite_++;
+        
+        if(Pstream::parRun())
+        {
+            forAll(forces_, i)
+            {
+                reduce(forces_[i], sumOp<vector>());
+                reduce(velocities_[i], sumOp<vector>());
+            }
+        }
+        
+        forAll(forces_, i)
+        {
+            forces_[i] /= nAvTimeSteps_;
+            velocities_[i] /= nAvTimeSteps_;
+        }
+
+        
+        if(Pstream::master())
+        {
+            
+
+            std::string s;
+            std::stringstream out;
+            out << nWrite_;
+            s = out.str();
+            
+//                 writeTimeData
+//                 (
+//                     timePath_,
+//                     "bins_twoDim_"+fieldName_+"_"+s+"_rhoM.xy",
+//                     binsY,
+//                     rhoM_[i]
+//                 );        
+   
+            writeTimeData
+            (
+                fixedPathName,
+                "ciliumMotion_"+fieldName_+"_"+ s +"_forces.xyz",
+                forces_
+            );            
+            writeTimeData
+            (
+                fixedPathName,
+                "ciliumMotion_"+fieldName_+"_"+ s +"_velocities.xyz",
+                velocities_
+            );            
+        }
+        
+        // reset
+        nAvTimeSteps_ = 0.0;
+        forces_ = vector::zero;
+        velocities_ = vector::zero;
     }
 }
 
