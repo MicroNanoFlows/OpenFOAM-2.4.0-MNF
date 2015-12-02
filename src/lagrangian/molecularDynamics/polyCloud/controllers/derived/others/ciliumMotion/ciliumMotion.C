@@ -110,6 +110,8 @@ ciliumMotion::ciliumMotion
         }
     }
     
+//     Pout << "X_" << X_[1][0] << endl;
+    
 //     Info << "x = " << x_ << endl;
   
     {
@@ -215,6 +217,15 @@ void ciliumMotion::controlDuringForces
 
 void ciliumMotion::controlAfterForces()
 {
+    
+}
+
+void ciliumMotion::controlAfterVelocityII()
+{}
+
+void ciliumMotion::calculateProperties()
+{
+    
     IDLList<polyMolecule>::iterator mol(molCloud_.begin());
 
     for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
@@ -229,16 +240,7 @@ void ciliumMotion::controlAfterForces()
                 forces_[id] += massI*mol().a();
             }
         }
-    }    
-}
-
-void ciliumMotion::controlAfterVelocityII()
-{}
-
-void ciliumMotion::calculateProperties()
-{
-    
-    
+    }
 }
 
 void ciliumMotion::output
@@ -277,8 +279,8 @@ void ciliumMotion::output
             
             forAll(forces_, i)
             {
-                forces[0]=forces_[i];
-                velocities[0]=velocities_[i];
+                forces[0][i]=forces_[i];
+                velocities[0][i]=velocities_[i];
             }
 
 

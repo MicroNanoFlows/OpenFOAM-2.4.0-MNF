@@ -481,29 +481,30 @@ void polyCNT::setInitialConfiguration()
                 tetPt
             );
         
-            if (cell == -1)
+            if (cell != -1)
             {
-                
-                Info << "WARNING - Specified position " << p
-                     << ", does not correspond to a mesh cell." << nl
+                insertMolecule
+                (
+                    p,
+                    cell,
+                    tetFace,
+                    tetPt,
+                    molId,
+                    tethered,
+                    frozen,
+                    temperature,
+                    bulkVelocity
+                );
+
+                noCatomsCreated += 1;
+            }
+            else
+            {
+                Info << "WARNING - Atom at specified position " << p
+                     << ", does not correspond to a mesh cell.... deleting"
+                     << nl
                      << endl;
             }
-
-            insertMolecule
-            (
-                p,
-                cell,
-                tetFace,
-                tetPt,
-                molId,
-                tethered,
-                frozen,
-                temperature,
-                bulkVelocity
-            );
-
-            noCatomsCreated += 1;
-
         }
     
         if (Pstream::parRun())

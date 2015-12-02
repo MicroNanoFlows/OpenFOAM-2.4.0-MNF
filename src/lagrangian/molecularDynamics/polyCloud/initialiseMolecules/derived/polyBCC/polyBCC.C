@@ -201,26 +201,26 @@ void polyBCC::setInitialConfiguration()
             
             mesh_.findCellFacePt
             (
-             positions[i],
-             cell,
-             tetFace,
-             tetPt
-             );
+                positions[i],
+                cell,
+                tetFace,
+                tetPt
+            );
             
             if(cell != -1)
             {
                 insertMolecule
                 (
-                 positions[i],
-                 cell,
-                 tetFace,
-                 tetPt,
-                 molId,
-                 tethered,
-                 frozen,
-                 temperature,
-                 bulkVelocity
-                 );
+                    positions[i],
+                    cell,
+                    tetFace,
+                    tetPt,
+                    molId,
+                    tethered,
+                    frozen,
+                    temperature,
+                    bulkVelocity
+                );
                 
                 nMolsInserted++;
             }
@@ -240,10 +240,58 @@ void polyBCC::setInitialConfiguration()
         
         DynamicList<vector> rejectedPositions;
         
+        
         // insert molecules
         forAll(positions, i)
         {
             if(molCloud_.rndGen().sample01<scalar>() <= p)
+            {
+                if(nMolsInserted < N)
+                {
+                    label cell = -1;
+                    label tetFace = -1;
+                    label tetPt = -1;
+                    
+                    mesh_.findCellFacePt
+                    (
+                        positions[i],
+                        cell,
+                        tetFace,
+                        tetPt
+                    );
+                    
+                    if(cell != -1)
+                    {
+                        insertMolecule
+                        (
+                            positions[i],
+                            cell,
+                            tetFace,
+                            tetPt,
+                            molId,
+                            tethered,
+                            frozen,
+                            temperature,
+                            bulkVelocity
+                        );
+                        
+                        nMolsInserted++;
+                    }
+                }
+            }
+            else
+            {
+                rejectedPositions.append(positions[i]);
+            }
+        }
+        
+        Info << "Nmols inserted = " << nMolsInserted << endl;
+        
+        
+        // add missing ones:
+        forAll(rejectedPositions, i)
+        {
+            if(nMolsInserted < N)
             {
                 label cell = -1;
                 label tetFace = -1;
@@ -251,33 +299,31 @@ void polyBCC::setInitialConfiguration()
                 
                 mesh_.findCellFacePt
                 (
-                  positions[i],
-                  cell,
-                  tetFace,
-                  tetPt
+                    rejectedPositions[i],
+                    cell,
+                    tetFace,
+                    tetPt
                 );
                 
                 if(cell != -1)
                 {
                     insertMolecule
                     (
-                     positions[i],
-                     cell,
-                     tetFace,
-                     tetPt,
-                     molId,
-                     tethered,
-                     frozen,
-                     temperature,
-                     bulkVelocity
-                     );
+                        rejectedPositions[i],
+                        cell,
+                        tetFace,
+                        tetPt,
+                        molId,
+                        tethered,
+                        frozen,
+                        temperature,
+                        bulkVelocity
+                    );
                     
                     nMolsInserted++;
-                }
+                }            
             }
         }
-        
-        Info << "Nmols inserted = " << nMolsInserted << endl;
     }
     
     scalar V = bb.volume();

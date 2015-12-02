@@ -79,6 +79,9 @@ private:
         
         label nT_;
         
+        
+        // outer list = time 
+        // inner list = cilium positions
         List< List <scalar> > x_;
         
         List< List <scalar> > y_;
