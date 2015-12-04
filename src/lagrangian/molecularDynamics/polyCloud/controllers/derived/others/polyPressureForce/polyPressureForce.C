@@ -136,6 +136,10 @@ void polyPressureForce::initialConfiguration()
             if(findIndex(molIds_, mol().id()) != -1)
             {
                 trackingNumbers.append(mol().trackingNumber());
+                
+                // change from non-frozen to frozen 
+                
+                mol().special() = 0;
             }
         }
     } 
@@ -227,7 +231,14 @@ void polyPressureForce::setVelocities()
         reduce(velocity, sumOp<vector>());        
     }
     
-    velocity /= nMols;
+    if(nMols > 0)
+    {
+        velocity /= nMols;
+    }
+    else
+    {
+        Info << "WARNING: polyPressureForce: no mols - something is wrong " << endl;
+    }
     
     {
         IDLList<polyMolecule>::iterator mol(molCloud_.begin());

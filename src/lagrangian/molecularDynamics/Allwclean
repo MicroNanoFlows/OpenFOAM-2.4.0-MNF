@@ -4,9 +4,6 @@ makeType=${1:-libso}
 set -x
 
 wclean $makeType general
-wclean $makeType potentials
 wclean $makeType polyCloud
-# wclean $makeType molecularMeasurements
-# wclean $makeType molecule
 
 # ----------------------------------------------------------------- end-of-file
