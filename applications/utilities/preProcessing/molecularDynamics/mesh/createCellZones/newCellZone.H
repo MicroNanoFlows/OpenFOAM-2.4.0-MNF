@@ -37,21 +37,11 @@ SourceFiles
 #ifndef newCellZone_H
 #define newCellZone_H
 
-// #include "labelVector.H"
-// #include "scalar.H"
-// #include "vector.H"
-// #include "labelField.H"
-// #include "scalarField.H"
-// #include "vectorField.H"
-// #include "IOField.H"
-// #include "EulerCoordinateRotation.H"
-// #include "Random.H"
-
-// #include "Time.H"
-// #include "IOdictionary.H"
+#include "IOdictionary.H"
 // #include "IOstreams.H"
 #include "polyMesh.H"
-#include "boundBox.H"
+#include "boundedBox.H"
+#include "Switch.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -67,29 +57,20 @@ class newCellZone
     // Private data
 
         const polyMesh& mesh_;
-
-        word regionName_;
-
-        vector startPoint_;
-        vector endPoint_;
         
-        boundBox bb_;
-//         vector rES_;
-
-//         vectorField faceNormals_;
-//         vectorField faceCentres_;
+        const dictionary& dict_;
+        
+        word regionName_;
 
         labelField cells_;
 
-    
+        word option_;
+
+        bool writeCellSet_;
+        
+        
     // Private Member Functions
 
-        void checkBoundBox
-        (
-            boundBox& b,
-            const vector& startPoint,
-            const vector& endPoint
-        );
 
 public:
 
@@ -99,9 +80,7 @@ public:
         newCellZone
         (
             const polyMesh& mesh,
-            const word& zoneName,
-            const vector& startPoint,
-            const vector& endPoint
+            const dictionary& dict
         );
 
     // Destructor
@@ -114,11 +93,11 @@ public:
 
         // Access
 
-//         inline const List<word>& molIdList() const;
-
         inline const labelField& cells() const;
 
         inline const word& name() const;
+        
+        inline const bool& writeCellSet() const;        
 
         // Check
 

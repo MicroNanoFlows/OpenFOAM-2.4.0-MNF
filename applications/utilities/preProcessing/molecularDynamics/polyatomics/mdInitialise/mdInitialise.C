@@ -39,12 +39,21 @@ int main(int argc, char *argv[])
 #   include "createMesh.H"
 #   include "createRandom.H"    
 
-    reducedUnits redUnits(runTime, mesh);
+    reducedUnits rU(runTime, mesh);
 
-    potential pot(mesh, redUnits);
-
-    polyMoleculeCloud molecules(runTime, mesh, pot, redUnits, rndGen, "mdInitialise", true);
-
+    constantMoleculeProperties cP (mesh, rU);
+        
+    polyMoleculeCloud molecules
+    (
+        runTime,
+        mesh,
+        rU,
+        cP,
+        rndGen,
+        "mdInitialise",
+        true
+    );    
+    
     IOstream::defaultPrecision(15);
 
     if (!mesh.write())

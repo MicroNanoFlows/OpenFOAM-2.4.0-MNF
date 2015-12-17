@@ -36,47 +36,6 @@ Description
 namespace Foam
 {
 
-void newCellZone::checkBoundBox
-(
-    boundBox& b,
-    const vector& startPoint,
-    const vector& endPoint
-)
-{
-    vector& vMin = b.min();
-    vector& vMax = b.max();
-
-    if(startPoint.x() < endPoint.x())
-    {
-        vMin.x() = startPoint.x();
-        vMax.x() = endPoint.x();
-    }
-    else
-    {
-        vMin.x() = endPoint.x();
-        vMax.x() = startPoint.x();
-    }
-    if(startPoint.y() < endPoint.y())
-    {
-        vMin.y() = startPoint.y();
-        vMax.y() = endPoint.y();
-    }
-    else
-    {
-        vMin.y() = endPoint.y();
-        vMax.y() = startPoint.y();
-    }
-    if(startPoint.z() < endPoint.z())
-    {
-        vMin.z() = startPoint.z();
-        vMax.z() = endPoint.z();
-    }
-    else
-    {
-        vMin.z() = endPoint.z();
-        vMax.z() = startPoint.z();
-    }
-}    
     
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -84,23 +43,45 @@ void newCellZone::checkBoundBox
 newCellZone::newCellZone
 (
     const polyMesh& mesh,
-    const word& zoneName,
-    const vector& startPoint,
-    const vector& endPoint
+    const dictionary& dict
 )
 :
     mesh_(mesh),
-    regionName_(zoneName),
-    startPoint_(startPoint),
-    endPoint_(endPoint),
+    dict_(dict),
     cells_()
 {
-    checkBoundBox
-    (
-        bb_,
-        startPoint_,
-        endPoint_
-    );
+    
+    const word zoneName = dict.lookup("zoneName");
+    regionName_ = zoneName;
+    
+    Info << " -> " << zoneName << endl;
+        
+    const cellZoneMesh& cellZones = mesh.cellZones();
+    
+    const label& regionId = cellZones.findZoneID(zoneName);
+    
+    if(regionId != -1)
+    {
+        FatalErrorIn("createCellZones")
+            << "CellZone: " << zoneName << " exists on the mesh."
+            << nl << " Check: "
+            << "zoneDict"
+            << nl << "Solve this by executing:"
+            << nl << "> rm constant/polyMesh/*Zones"
+            << nl << "> blockMesh"
+            << nl << "> createCellZones"            
+            << exit(FatalError);
+    }    
+    
+    
+    if(dict.found("writeCellSet"))
+    {
+        writeCellSet_ = Switch(dict.lookup("writeCellSet"));
+    }
+
+    const word option(dict.lookup("option"));
+    option_ = option;    
+
 
     setZone();
 }
@@ -117,21 +98,32 @@ void newCellZone::setZone()
 {
     DynamicList<label> cells(0);
     
-    for (label i = 0; i < mesh_.nCells(); i++)
-    {
-        const vector& cellCentreI = mesh_.cellCentres()[i];        
+    if(option_ == "boundBox")
+    {    
+        vector startPoint = dict_.lookup("startPoint");
+        vector endPoint = dict_.lookup("endPoint");
+    
+        boundedBox bb;
+        bb.resetBoundedBox(startPoint, endPoint);
         
-        bool acceptedCell = false;
-        
-        if(bb_.contains(cellCentreI))
+        for (label i = 0; i < mesh_.nCells(); i++)
         {
-            cells.append(i);
-            acceptedCell = true;
+            const vector& cellCentreI = mesh_.cellCentres()[i];        
+            
+            bool acceptedCell = false;
+            
+            if(bb.contains(cellCentreI))
+            {
+                cells.append(i);
+                acceptedCell = true;
+            }
+            
+            // further step of refinement can go here
+            
         }
-        
-        // further step of refinement can go here
-        
     }
+    
+    // other options can go here
     
     cells.shrink();
 
@@ -142,11 +134,7 @@ void newCellZone::setZone()
         cells_[i] = cells[i];
     }    
 
-    Info << "Target bound box: " 
-         << bb_
-         << endl;
-
-    //- computing the size of the square
+    //- TEST: computing the size of the square
 
     scalar minX = GREAT;
     scalar maxX = 0.0;

@@ -1,9 +1,16 @@
 cellInteractions/referredCell/referredCell.C
 cellInteractions/patchLayer/patchLayer.C
 
+
+constant/constantMoleculeProperties/constantMoleculeProperties.C
+constant/selectSiteIds/selectSiteIds.C
+constant/selectIds/selectIds.C
+
+
 boundedBox/boundedBox.C
 
 distributePoints/distributePoints.C
+
 
 /* BOUNDARIES */
 
@@ -13,9 +20,6 @@ boundaries/derived/standardCyclic/standardCyclic.C
 
 constructCyclicBoundaries/constructCyclicBoundaries.C
 
-/* MOLECULES */
-
-constPropSite/constPropSite.C
 
 /* REDUCED UNITS*/
 
@@ -87,6 +91,7 @@ gravityForce/derived/oneDimForce/oneDimForce.C
 gravityForce/derived/gaussianForce/gaussianForce.C
 gravityForce/derived/standardGaussian/standardGaussian.C
 gravityForce/derived/rampForce/rampForce.C
+gravityForce/derived/rampForceII/rampForceII.C
 gravityForce/derived/multiRampForce/multiRampForce.C
 gravityForce/derived/timeVaryingForce/timeVaryingForce.C
 gravityForce/derived/mixedOscillatingForce/mixedOscillatingForce.C
@@ -108,5 +113,10 @@ fitting/leastSquaresFit/leastSquaresFit.C
 davesInterpolant/davesInterpolant.C
 
 trackingNumber/trackingNumber.C
+
+
+multiscale/boundaryConditions/mixedFixedValueSlipFvPatchFields.C
+multiscale/boundaryConditions/nonLinMaxwellSlipUFvPatchVectorField.C
+
 
 LIB = $(FOAM_LIBBIN)/libgeneralMolecule

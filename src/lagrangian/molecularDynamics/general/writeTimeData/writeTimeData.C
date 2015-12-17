@@ -82,6 +82,63 @@ writeTimeData::writeTimeData
     outputGraph.write(writeFile, "raw");
 }
 
+//- scalar field
+writeTimeData::writeTimeData
+(
+    const fileName& pathName,
+    const word& nameFile,
+    const scalarField& xData
+)
+{
+    OFstream file(pathName/nameFile);
+
+    if(file.good())
+    {
+        forAll(xData, n)
+        {
+            file 
+                << xData[n]
+                << endl;
+        }
+    }
+    else
+    {
+        FatalErrorIn("void writeTimeData::writeTimeData()")
+            << "Cannot open file " << file.name()
+            << abort(FatalError);
+    }
+}
+
+//- vector field
+writeTimeData::writeTimeData
+(
+    const fileName& pathName,
+    const word& nameFile,
+    const vectorField& xData
+)
+{
+    OFstream file(pathName/nameFile);
+
+    if(file.good())
+    {
+        forAll(xData, n)
+        {
+            file 
+                << xData[n].x() << "\t" 
+                << xData[n].y() << "\t" 
+                << xData[n].z() << "\t"
+                << endl;
+        }
+    }
+    else
+    {
+        FatalErrorIn("void writeTimeData::writeTimeData()")
+            << "Cannot open file " << file.name()
+            << abort(FatalError);
+    }
+}
+
+
 
 //- scalar field, scalar field
 writeTimeData::writeTimeData
@@ -608,7 +665,7 @@ writeTimeData::writeTimeData
 
 
         
-// write out List<scalarField>        
+// write out List<scalarField>     component only    
 writeTimeData::writeTimeData
 (
     const fileName& pathName,
@@ -639,7 +696,7 @@ writeTimeData::writeTimeData
     }
 } 
 
-// write out List<vectorField>        
+// write out List<vectorField>        component only
 writeTimeData::writeTimeData
 (
     const fileName& pathName,
@@ -704,6 +761,57 @@ writeTimeData::writeTimeData
     }
 } 
 
+// List<vectorField> component only (with append possible)
+writeTimeData::writeTimeData
+(
+    const fileName& pathName,
+    const word& nameFile,
+    const List<vectorField>& data,
+    const word& option,
+    const bool& dummy
+)
+{
+    fileName fName(pathName/nameFile);
+
+    std::ofstream file(fName.c_str(),ios_base::app);
+    file.precision(11);
+
+    if(file.is_open())
+    {
+        forAll(data, i)
+        {
+            forAll(data[i], j)
+            {
+            
+                if(option == "x")
+                {
+                    file << data[i][j].x() << " ";
+                }
+                if(option == "y")
+                {
+                    file << data[i][j].y() << " ";
+                }
+                if(option == "z")
+                {
+                    file << data[i][j].z() << " ";
+                }
+            }
+            
+            file << nl;
+                
+        }
+    }
+    else
+    {
+        FatalErrorIn("void writeTimeData::writeTimeData()")
+            << "Cannot open file " << fName
+            << abort(FatalError);
+    }
+
+    file.close();
+}
+
+// write out List<tensorField>  component only
 writeTimeData::writeTimeData
 (
     const fileName& pathName,

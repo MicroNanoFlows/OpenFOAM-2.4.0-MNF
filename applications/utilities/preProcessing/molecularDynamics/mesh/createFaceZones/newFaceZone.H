@@ -26,6 +26,7 @@ Class
     newFaceZone
 
 Description
+    set a face zone 
 
 SourceFiles
     newFaceZoneI.H
@@ -39,10 +40,11 @@ SourceFiles
 
 
 // #include "Time.H"
-// #include "IOdictionary.H"
+#include "IOdictionary.H"
 #include "IOstreams.H"
 #include "polyMesh.H"
-#include "boundBox.H"
+#include "boundedBox.H"
+#include "Switch.H"
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
@@ -58,39 +60,30 @@ class newFaceZone
 
         const polyMesh& mesh_;
 
+        const dictionary& dict_;
+        
         word regionName_;
 
-        vector startPoint_;
-        vector endPoint_;
-
-        boundBox bb_;
-        
         labelField faces_;
 
+        word option_;
 
+        bool writeFaceSets_;
     
     // Private Member Functions
-    
-        void checkBoundBox
-        (
-            boundBox& b,
-            const vector& startPoint,
-            const vector& endPoint
-        );
+
         
 public:
 
     // Constructors
 
         //- Construct from properties
+
         newFaceZone
         (
             const polyMesh& mesh,
-            const word& zoneName,
-            const vector& startPoint,
-            const vector& endPoint
+            const dictionary& dict
         );
-
     // Destructor
 
         ~newFaceZone();
@@ -105,6 +98,7 @@ public:
 
         inline const word& name() const;
 
+        inline const bool& writeFaceSets() const;
         // Check
 
         // Edit

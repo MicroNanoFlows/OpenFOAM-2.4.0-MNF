@@ -83,6 +83,22 @@ public:
             const List< Pair<scalar> >& data,
             const label& dummy
         );
+        
+        //- scalar field
+        writeTimeData
+        (
+            const fileName& pathName,
+            const word& nameFile,
+            const scalarField& xData
+        );    
+        
+        //- vector field
+        writeTimeData
+        (
+            const fileName& pathName,
+            const word& nameFile,
+            const vectorField& xData
+        );        
 
         //- scalar field, scalar field
         writeTimeData
@@ -137,6 +153,11 @@ public:
             const vectorField& xData,
             const tensorField& yData
         );
+        
+        
+        
+        
+        // WITH APPEND POSSIBLE
 
         // two scalar fields (with append possible)
         writeTimeData
@@ -195,6 +216,8 @@ public:
             const bool& dummy
         );
         
+        
+        
         // write out List<scalarField>
         writeTimeData
         (
@@ -212,6 +235,17 @@ public:
             const word& option 
         );        
 
+        // write out List<vectorField>  component only (with append possible)
+        writeTimeData
+        (
+            const fileName& pathName,
+            const word& nameFile,
+            const List<vectorField>& data,
+            const word& option,
+            const bool& dummy
+        );        
+        
+        
         // write out List<tensorField>  component only      
         writeTimeData
         (
@@ -220,6 +254,9 @@ public:
             const List<tensorField>& data,
             const word& option 
         );        
+        
+
+        
         
         ~writeTimeData();
 

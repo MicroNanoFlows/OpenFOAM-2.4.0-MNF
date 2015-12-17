@@ -68,19 +68,38 @@ int main(int argc, char *argv[])
 #   include "createMesh.H"
 #   include "createRandom.H"
     
-    reducedUnits redUnits(runTime, mesh);
+    reducedUnits rU(runTime, mesh);
 
-    potential pot(mesh, redUnits);
-
-    polyMoleculeCloud molecules(runTime, mesh, pot, redUnits, rndGen, "NULL", false);
+    constantMoleculeProperties cP (mesh, rU);
+        
+    polyMoleculeCloud molecules
+    (
+        runTime,
+        mesh,
+        rU,
+        cP,
+        rndGen,
+        "NULL",
+        false
+    );    
 
     runTime++;
 
     label initialSize = molecules.size();
 
     {
-        polyMoleculeCloud oldMolecules(runTime, mesh, pot, redUnits, rndGen, "mapping", true);
-
+        
+        polyMoleculeCloud oldMolecules
+        (
+            runTime,
+            mesh,
+            rU,
+            cP,
+            rndGen,
+            "mapping",
+            true
+        );    
+        
         IDLList<polyMolecule>::iterator mol(oldMolecules.begin());
 
         for
