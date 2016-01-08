@@ -23,32 +23,21 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    polyInstantBinsMethod
+    poly1DMassFluxZone
 
 Description
-    The method of bins measures 1D distribution properties localised in a
-    user-specified zone.
 
-    Parallelised.
-
-    Any binModel may be applied. So far implemented the following:
-
-        normal, cylindrical, multi sub-zones, cuboid 
-
-    Choice of properties to output also available.
-
-    This is an implemented model for running transient measurements ( very costly )
     
     
 SourceFiles
-    polyInstantBinsMethodI.H
-    polyInstantBinsMethod.C
-    polyInstantBinsMethodIO.C
+    poly1DMassFluxZoneI.H
+    poly1DMassFluxZone.C
+    poly1DMassFluxZoneIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef polyInstantBinsMethod_H
-#define polyInstantBinsMethod_H
+#ifndef poly1DMassFluxZone_H
+#define poly1DMassFluxZone_H
 
 #include "polyField.H"
 #include "vector.H"
@@ -64,10 +53,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class polyInstantBinsMethod Declaration
+                           Class poly1DMassFluxZone Declaration
 \*---------------------------------------------------------------------------*/
 
-class polyInstantBinsMethod
+class poly1DMassFluxZone
 :
 	public polyField
 {
@@ -92,36 +81,14 @@ private:
         label regionId_;
         word fieldName_;
 
+        scalar length_;
+        
+        vector unitVector_;
+        
         List<label> molIds_;
 
 
-        List<DynamicList<scalar> > mols_;
-        List<DynamicList<scalar> > mass_;
-        List<DynamicList<vector> > mom_;
-//         Field<DynamicList<vector> > velocityB_;
-//         Field<DynamicList<scalar> > kE_;
-//         Field<DynamicList<scalar> > angularKeSum_;
-//         Field<DynamicList<scalar> > dof_;
-//         Field<DynamicList<tensor> > kineticTensor_;
-//         Field<DynamicList<tensor> > virialTensor_        
-
-        // fields
-//         Field<DynamicList<scalar> > N_;
-        List<DynamicList<scalar> > rhoN_;
-        List<DynamicList<scalar> > rhoM_;
-//         Field<DynamicList<vector> > USAM_;
-        List<DynamicList<vector> > UCAM_;
-        List<DynamicList<scalar> > T_;
-//         Field<DynamicList<tensor> > stress_;
-        List<DynamicList<scalar> > p_;
-
-
-        bool overideVolume_;
-        List<scalar> volumes_;
-        
-//         scalar nAvTimeSteps_;
-        
-//         bool resetAtOutput_;
+        List<DynamicList<scalar> > massFlowRate_;
         
         
         
@@ -135,12 +102,12 @@ private:
 public:
 
     //- Runtime type information
-    TypeName("polyInstantBinsMethod");
+    TypeName("poly1DMassFluxZone");
 
     // Constructors
 
         //- Construct from components
-        polyInstantBinsMethod
+        poly1DMassFluxZone
 		(
             Time& t,
             const polyMesh& mesh,
@@ -150,7 +117,7 @@ public:
 
     // Destructor
 
- 		~polyInstantBinsMethod();
+ 		~poly1DMassFluxZone();
 
 
     // Member Functions

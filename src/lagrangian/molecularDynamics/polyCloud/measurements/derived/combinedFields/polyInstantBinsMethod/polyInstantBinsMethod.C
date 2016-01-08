@@ -58,34 +58,34 @@ polyInstantBinsMethod::polyInstantBinsMethod
     regionId_(-1),
     fieldName_(propsDict_.lookup("fieldName")),
 
-    molIds_(),
+    molIds_()
 
-    mols_(),
-    mass_(),
-    mom_(),
-    velocityB_(),
-    kE_(),
-    angularKeSum_(),
-    dof_(),
-    kineticTensor_(),
-    virialTensor_(),
-
-    molsV_(),
-    massV_(),
-    momV_(),
-    velocity_(),
-    angularSpeed_(),
-    angularVelocity_(),
-
-    N_(),
-    rhoN_(),
-    rhoM_(),
-    USAM_(),
-    UCAM_(),
-    T_(),
-    stress_(),
-    p_(),
-    outputField_(4, true)
+//     mols_(),
+//     mass_(),
+//     mom_(),
+//     velocityB_(),
+//     kE_(),
+//     angularKeSum_(),
+//     dof_(),
+//     kineticTensor_(),
+//     virialTensor_(),
+// 
+//     molsV_(),
+//     massV_(),
+//     momV_(),
+//     velocity_(),
+//     angularSpeed_(),
+//     angularVelocity_(),
+// 
+//     N_(),
+//     rhoN_(),
+//     rhoM_(),
+//     USAM_(),
+//     UCAM_(),
+//     T_(),
+//     stress_(),
+//     p_(),
+//     outputField_(4, true)
 //     nAvTimeSteps_(0.0),
 //     resetAtOutput_(true)
 {
@@ -124,95 +124,84 @@ polyInstantBinsMethod::polyInstantBinsMethod
 
     const label& nBins = binModel_->nBins();
 
-    mols_.setSize(nBins, 0.0);
-    mass_.setSize(nBins, 0.0);
-    mom_.setSize(nBins, vector::zero);
-    velocityB_.setSize(nBins, vector::zero);
-    kE_.setSize(nBins, 0.0);
-    angularKeSum_.setSize(nBins, 0.0);
-    dof_.setSize(nBins, 0.0);
-    kineticTensor_.setSize(nBins, tensor::zero);
-    virialTensor_.setSize(nBins, tensor::zero);
+    mols_.setSize(nBins);
+    mass_.setSize(nBins);
+    mom_.setSize(nBins);
+//     velocityB_.setSize(nBins, vector::zero);
+//     kE_.setSize(nBins, 0.0);
+//     angularKeSum_.setSize(nBins, 0.0);
+//     dof_.setSize(nBins, 0.0);
+//     kineticTensor_.setSize(nBins, tensor::zero);
+//     virialTensor_.setSize(nBins, tensor::zero);
 
-    molsV_.setSize(nBins, 0.0);
-    massV_.setSize(nBins, 0.0);
-    momV_.setSize(nBins, vector::zero);
-    velocity_.setSize(nBins, vector::zero);
-    angularSpeed_.setSize(nBins, vector::zero);
-    angularVelocity_.setSize(nBins, vector::zero);
+//     molsV_.setSize(nBins, 0.0);
+//     massV_.setSize(nBins, 0.0);
+//     momV_.setSize(nBins, vector::zero);
+//     velocity_.setSize(nBins, vector::zero);
+//     angularSpeed_.setSize(nBins, vector::zero);
+//     angularVelocity_.setSize(nBins, vector::zero);
 
-    N_.setSize(nBins);
+//     N_.setSize(nBins);
     rhoN_.setSize(nBins);
     rhoM_.setSize(nBins);
-    USAM_.setSize(nBins);
+//     USAM_.setSize(nBins);
     UCAM_.setSize(nBins);
     T_.setSize(nBins);
-    stress_.setSize(nBins);
+//     stress_.setSize(nBins);
     p_.setSize(nBins);
 
     nBins_ = nBins;
     
-    // choice of measurement property to output
-
-    if (propsDict_.found("outputProperties"))
-    {
-
-        const List<word> measurements (propsDict_.lookup("outputProperties"));
-
-        DynamicList<word> propertyNames(0);
-
-        forAll(measurements, i)
-        {
-            const word& propertyName(measurements[i]);
+    overideVolume_ = false;
     
-            if(findIndex(propertyNames, propertyName) == -1)
-            {
-                propertyNames.append(propertyName);
-            }
-        }
+    if (propsDict_.found("overideVolume"))
+    {
+        overideVolume_ = Switch(propsDict_.lookup("overideVolume"));  
+    }
+    
+    if(overideVolume_)
+    {
+        const word name = propsDict_.lookup("volumesFileName");
 
-        //propertyNames.shrink();
+        fileName timePath(time_.time().system()/name);
 
-        if(findIndex(propertyNames, "density") == -1)
+        IFstream file(timePath);
+
+        List<scalar> volumes;
+
+        if (file.good())
         {
-            outputField_[0] = false;
+            file >> volumes;
         }
-
-        if(findIndex(propertyNames, "velocity") == -1)
+        else
         {
-            outputField_[1] = false;
-        }
-
-        if(findIndex(propertyNames, "temperature") == -1)
-        {
-            outputField_[2] = false;
-        }
-
-        if(findIndex(propertyNames, "pressure") == -1)
-        {
-            outputField_[3] = false;
-        }
-
-        // check for user:
-        forAll(propertyNames, i)
-        {
-            const word& propertyName(propertyNames[i]);
-
-            if
+            FatalErrorIn
             (
-                (propertyName != "density") &&
-                (propertyName != "velocity") &&
-                (propertyName != "temperature") &&
-                (propertyName != "pressure")
+                "void polyInstantBinsMethod::polyInstantBinsMethod()"
             )
-            {    
-                FatalErrorIn("polyInstantBinsMethod::polyInstantBinsMethod()")
-                    << "Cannot find measurement property: " << propertyName
-                    << nl << "in: "
-                    << time_.time().system()/"fieldPropertiesDict"
-                    << exit(FatalError);            
-            }
+                << "Cannot open file " << file.name()
+                << abort(FatalError);
         }
+
+        if(volumes.size() != nBins_)
+        {
+            FatalErrorIn
+            (
+                "void polyInstantBinsMethod::polyInstantBinsMethod()"
+            )
+                << "Size of volumes " << volumes.size()
+                << " not equal to nBins = " << nBins
+                << abort(FatalError);                
+        }
+        
+        volumes_.setSize(nBins_, 0.0);
+
+        forAll(volumes, i)
+        {
+            volumes_[i] = volumes[i];
+        }
+        
+        Info << "volumes = " << volumes_ << endl;
     }
 }
 
@@ -225,108 +214,7 @@ polyInstantBinsMethod::~polyInstantBinsMethod()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void polyInstantBinsMethod::createField()
-{
-    Info << "Initialising polyInstantBinsMethod fields" << endl;
-
-    const List< DynamicList<polyMolecule*> >& cellOccupancy
-        = molCloud_.cellOccupancy();
-
-    const labelList& cells = mesh_.cellZones()[regionId_];
-
-    scalarField mols(mass_.size(), 0.0);
-    scalarField mass(mass_.size(), 0.0);
-    vectorField mom(mom_.size(), vector::zero);
-    vectorField angularSpeed(mom_.size(), vector::zero);
-
-    forAll(cells, c)
-    {
-        const label& cellI = cells[c];
-        const List<polyMolecule*>& molsInCell = cellOccupancy[cellI];
-
-        forAll(molsInCell, mIC)
-        {
-            polyMolecule* molI = molsInCell[mIC];
-
-            const vector& rI = molI->position();
-
-            label n = binModel_->isPointWithinBin(rI, cellI);
-
-            if(n != -1)
-            {
-                if(findIndex(molIds_, molI->id()) != -1)
-                {
-//                     const polyMolecule::constantProperties& constProp 
-//                                 = molCloud_.constProps(molI->id());
-
-                    mols[n] += 1.0;
-
-                    const scalar& massI = molCloud_.cP().mass(molI->id());
-                    
-                    mass[n] += massI;
-
-                    mom[n] += massI*molI->v();
-
-                    const diagTensor& molMoI(molCloud_.cP().momentOfInertia(molI->id()));
-
-                    // angular speed 
-                    const vector& molOmega(inv(molMoI) & molI->pi());
-
-                    angularSpeed[n] += molOmega;
-                }
-            }
-        }
-    }
-
-
-    // parallel processing
-    if(Pstream::parRun())
-    {
-        // sending
-        for (int p = 0; p < Pstream::nProcs(); p++)
-        {
-            if(p != Pstream::myProcNo())
-            {
-                const int proc = p;
-                {
-                    OPstream toNeighbour(Pstream::blocking, proc);
-                    toNeighbour << mols << mass << mom << angularSpeed;
-                }
-            }
-        }
-    
-        //- receiving
-        for (int p = 0; p < Pstream::nProcs(); p++)
-        {
-            if(p != Pstream::myProcNo())
-            {
-                scalarField molsProc;
-                scalarField massProc;
-                vectorField momProc;
-                vectorField angularSpeedProc;
-
-                const int proc = p;
-                {
-                    IPstream fromNeighbour(Pstream::blocking, proc);
-                    fromNeighbour >> molsProc >> massProc >> momProc >> angularSpeedProc;
-                }
-
-                mols += molsProc;
-                mass += massProc;
-                mom += momProc;
-                angularSpeed += angularSpeedProc;
-            }
-        }
-    }
-
-    forAll(velocity_, n)
-    {
-        if(mass[n] > 0.0)
-        {
-            angularVelocity_[n] = angularSpeed[n]/mols[n];
-            velocity_[n] = mom[n]/mass[n];
-        }
-    }
-}
+{}
 
 
 void polyInstantBinsMethod::calculateField()
@@ -378,13 +266,10 @@ void polyInstantBinsMethod::calculateField()
     {
         forAll(mass, i)
         {
-            forAll(mass[i], j)
-            {
-                reduce(mols[i][j], sumOp<scalar>());
-                reduce(mass[i][j], sumOp<scalar>());
-                reduce(mom[i][j], sumOp<vector>());
-                reduce(angularSpeed[i][j], sumOp<vector>());
-            }
+            reduce(mols[i], sumOp<scalar>());
+            reduce(mass[i], sumOp<scalar>());
+            reduce(mom[i], sumOp<vector>());
+            reduce(angularSpeed[i], sumOp<vector>());
         }        
     }
     
@@ -425,7 +310,7 @@ void polyInstantBinsMethod::calculateField()
                 {
                     const scalar& massI = molCloud_.cP().mass(molI->id());
 
-                    kE[n] += 0.5*massI*magSqr(molI->v() - velocity_[n]);
+                    kE[n] += 0.5*massI*magSqr(molI->v() - velocity[n]);
 
                     dof[n] += molCloud_.cP().degreesOfFreedom(molI->id());
 
@@ -436,9 +321,9 @@ void polyInstantBinsMethod::calculateField()
 
                     angularKeSum[n] += 0.5*(molOmega & molMoI & molOmega);
 
-                    kineticTensor[n] += ( massI*(molI->v() - velocity_[n])*(molI->v() - velocity_[n]) ) 
-                                            + ( ((molOmega - angularVelocity_[n]) & molMoI)
-                                            *(molOmega-angularVelocity_[n]) 
+                    kineticTensor[n] += ( massI*(molI->v() - velocity[n])*(molI->v() - velocity[n]) ) 
+                                            + ( ((molOmega - angularVelocity[n]) & molMoI)
+                                            *(molOmega-angularVelocity[n]) 
                                             );
 
                     virialTensor[n] += 0.5*molI->rf();
@@ -452,14 +337,11 @@ void polyInstantBinsMethod::calculateField()
     {
         forAll(mass, i)
         {
-            forAll(mass[i], j)
-            {
-                reduce(dof[i][j], sumOp<scalar>());
-                reduce(kE[i][j], sumOp<scalar>());
-                reduce(angularKeSum[i][j], sumOp<scalar>());
-                reduce(kineticTensor[i][j], sumOp<tensor>());
-                reduce(virialTensor[i][j], sumOp<tensor>());
-            }
+            reduce(dof[i], sumOp<scalar>());
+            reduce(kE[i], sumOp<scalar>());
+            reduce(angularKeSum[i], sumOp<scalar>());
+            reduce(kineticTensor[i], sumOp<tensor>());
+            reduce(virialTensor[i], sumOp<tensor>());
         }        
     }
 
@@ -476,11 +358,11 @@ void polyInstantBinsMethod::calculateField()
         mols_[n].append(mols[n]);
         mass_[n].append(mass[n]);
         mom_[n].append(mom[n]);
-        kE_[n].append(kE[n]);
-        angularKeSum_[n].append(angularKeSum[n]);
-        dof_[n].append(dof[n]);
-        kineticTensor_[n].append(kineticTensor[n]);
-        virialTensor_[n].append(virialTensor[n]);
+//         kE_[n].append(kE[n]);
+//         angularKeSum_[n].append(angularKeSum[n]);
+//         dof_[n].append(dof[n]);
+//         kineticTensor_[n].append(kineticTensor[n]);
+//         virialTensor_[n].append(virialTensor[n]);
         
         scalar volume = binModel_->binVolume(n);
 
@@ -489,13 +371,13 @@ void polyInstantBinsMethod::calculateField()
             volume = volumes_[n];
         }
         
-        N_[n].append(mols[n]/nAvTimeSteps);
+//         N_[n].append(mols[n]/nAvTimeSteps);
         rhoN_[n].append(mols[n]/(nAvTimeSteps*volume));
         rhoM_[n].append(mass[n]/(nAvTimeSteps*volume));
 
         if(mass[n] > 0.0)
         {
-            UCAM_[n].append(mom[n]/mass[n];
+            UCAM_[n].append(mom[n]/mass[n]);
         }
         else
         {
@@ -517,13 +399,13 @@ void polyInstantBinsMethod::calculateField()
             p_[n].append( tr( (3.0*mols[n]*kineticTensor[n]/dof[n]) + virialTensor[n])
                                     /( 3.0*volume*nAvTimeSteps ) );
 
-            stress_[n].append(((3.0*mols[n]*kineticTensor[n]/dof[n]) + virialTensor[n])
-                                    /( volume*nAvTimeSteps ) );
+//             stress_[n].append(((3.0*mols[n]*kineticTensor[n]/dof[n]) + virialTensor[n])
+//                                     /( volume*nAvTimeSteps ) );
         }
         else
         {
             p_[n].append(0.0);
-            stress_[n].append(tensor::zero);
+//             stress_[n].append(tensor::zero);
         }
     }
     
@@ -542,12 +424,18 @@ void polyInstantBinsMethod::writeField()
             scalarField bins = binModel_->binPositions();
             vectorField vectorBins = binModel_->bins();
 
-            label nBins = bins.size();
-            label nTimeSteps = N_[0].size();
+            label nBins = nBins_;
+            label nTimeSteps = mols_[0].size();
             
             for (int j = 0; j < nTimeSteps; j++)
             {
-                scalarField N(nBins, 0.0);
+                scalarField mols(nBins, 0.0);
+                scalarField mass(nBins, 0.0);
+                scalarField mom_X(nBins, 0.0);
+                scalarField mom_Y(nBins, 0.0);
+                scalarField mom_Z(nBins, 0.0);
+                
+//                 scalarField N(nBins, 0.0);
                 scalarField rhoN(nBins, 0.0);
                 scalarField rhoM(nBins, 0.0);
                 scalarField UCAM_X(nBins, 0.0);
@@ -556,9 +444,15 @@ void polyInstantBinsMethod::writeField()
                 scalarField T(nBins, 0.0);
                 scalarField p(nBins, 0.0);  
                 
-                forAll(N_, i)
+                forAll(mols_, i)
                 {
-                    N[i] = N_[i][j];
+                    mols[i] = mols_[i][j];
+                    mass[i] = mass_[i][j];
+                    mom_X[i] = mom_[i][j].x();
+                    mom_Y[i] = mom_[i][j].y();
+                    mom_Z[i] = mom_[i][j].z();
+                    
+//                     N[i] = N_[i][j];
                     rhoN[i] = rhoN_[i][j];
                     rhoM[i] = rhoM_[i][j];
                     UCAM_X[i] = UCAM_[i][j].x();
@@ -567,21 +461,61 @@ void polyInstantBinsMethod::writeField()
                     T[i] = T_[i][j];
                     p[i] = p_[i][j];
                 }
-            
+                
+//                 Info << "mols = " << mols << endl;
+                
                 writeTimeData
                 (
                     casePath_,
-                    "bins_instant_oneDim_"+fieldName_+"_N_SI.xy",
-                    N,
-                    "sidewaysAppend"
+                    "bins_instant_oneDim_"+fieldName_+"_mols_SI.xy",
+                    mols,
+                    "sidewaysAppend",
+                    true
                 );
 
                 writeTimeData
                 (
                     casePath_,
+                    "bins_instant_oneDim_"+fieldName_+"_mass_SI.xy",
+                    rhoN*rU.refMass(),
+                    "sidewaysAppend",
+                    true
+                );
+                
+                writeTimeData
+                (
+                    casePath_,
+                    "bins_instant_oneDim_"+fieldName_+"_mom_X_SI.xy",
+                    mom_X*rU.refMass()*rU.refVelocity(),
+                    "sidewaysAppend",
+                    true
+                );
+                
+                writeTimeData
+                (
+                    casePath_,
+                    "bins_instant_oneDim_"+fieldName_+"_mom_Y_SI.xy",
+                    mom_Y*rU.refMass()*rU.refVelocity(),
+                    "sidewaysAppend",
+                    true
+                );
+                
+                writeTimeData
+                (
+                    casePath_,
+                    "bins_instant_oneDim_"+fieldName_+"_mom_Z_SI.xy",
+                    mom_Z*rU.refMass()*rU.refVelocity(),
+                    "sidewaysAppend",
+                    true
+                );                
+                
+                writeTimeData
+                (
+                    casePath_,
                     "bins_instant_oneDim_"+fieldName_+"_rhoN_SI.xy",
                     rhoN*rU.refNumberDensity(),
-                    "sidewaysAppend"
+                    "sidewaysAppend",
+                    true
                 );
                 
                 writeTimeData
@@ -589,7 +523,8 @@ void polyInstantBinsMethod::writeField()
                     casePath_,
                     "bins_instant_oneDim_"+fieldName_+"_rhoM_SI.xy",
                     rhoM*rU.refMassDensity(),
-                    "sidewaysAppend"
+                    "sidewaysAppend",
+                    true
                 );
                 
                 writeTimeData
@@ -597,21 +532,24 @@ void polyInstantBinsMethod::writeField()
                     casePath_,
                     "bins_instant_oneDim_"+fieldName_+"_UCAM_X_SI.xy",
                     UCAM_X*rU.refVelocity(),
-                    "sidewaysAppend"
+                    "sidewaysAppend",
+                    true
                 );                    
                 writeTimeData
                 (
                     casePath_,
                     "bins_instant_oneDim_"+fieldName_+"_UCAM_Y_SI.xy",
                     UCAM_Y*rU.refVelocity(),
-                    "sidewaysAppend"
+                    "sidewaysAppend",
+                    true
                 ); 
                 writeTimeData
                 (
                     casePath_,
                     "bins_instant_oneDim_"+fieldName_+"_UCAM_Z_SI.xy",
                     UCAM_Z*rU.refVelocity(),
-                    "sidewaysAppend"
+                    "sidewaysAppend",
+                    true
                 );
                 
                 writeTimeData
@@ -619,7 +557,8 @@ void polyInstantBinsMethod::writeField()
                     casePath_,
                     "bins_instant_oneDim_"+fieldName_+"_T_SI.xy",
                     T*rU.refTemp(),
-                    "sidewaysAppend"
+                    "sidewaysAppend",
+                    true
                 );
                 
                 writeTimeData
@@ -627,9 +566,25 @@ void polyInstantBinsMethod::writeField()
                     casePath_,
                     "bins_instant_oneDim_"+fieldName_+"_p_SI.xy",
                     p*rU.refPressure(),
-                    "sidewaysAppend"
+                    "sidewaysAppend",
+                    true
                 );                
             }
+        }
+        
+            
+        // clear fields 
+        forAll(mols_, i)
+        {
+            mols_[i].clear();
+            mass_[i].clear();
+            mom_[i].clear();
+            
+            rhoN_[i].clear();
+            rhoM_[i].clear();
+            UCAM_[i].clear();
+            T_[i].clear();
+            p_[i].clear();
         }
     }
 }

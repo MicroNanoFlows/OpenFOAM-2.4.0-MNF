@@ -502,7 +502,9 @@ writeTimeData::writeTimeData
     const fileName& pathName,
     const word& nameFile,
     const scalarField& xData,
-    const word& option
+    const word& option, 
+    const bool& dummy     
+
 )
 {
     if(option == "once")
@@ -550,6 +552,8 @@ writeTimeData::writeTimeData
     }    
     if(option == "sidewaysAppend")
     {
+//         Pout <<"xData = " << xData << endl;
+        
         fileName fName(pathName/nameFile);
 
         std::ofstream file(fName.c_str(),ios_base::app);

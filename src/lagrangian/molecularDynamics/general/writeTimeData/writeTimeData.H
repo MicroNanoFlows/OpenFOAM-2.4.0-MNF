@@ -190,7 +190,8 @@ public:
             const fileName& pathName,
             const word& nameFile,
             const scalarField& xData,
-            const word& option
+            const word& option,
+            const bool& dummy             
         );        
 
 
