@@ -77,8 +77,6 @@ private:
         scalar nTimeSteps_;
         vector force_;
 
-        bool timeVarying_;
-
     // Private Member Functions
 
         void readProperties();

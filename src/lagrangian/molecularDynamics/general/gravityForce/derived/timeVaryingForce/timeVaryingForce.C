@@ -70,6 +70,8 @@ timeVaryingForce::timeVaryingForce
 
         
 {
+    timeVarying_ = true;
+    
     forceDirection_ /= mag(forceDirection_);
 
     const word distributionName = propsDict_.lookup("forceDistributionName");
@@ -123,7 +125,7 @@ timeVaryingForce::~timeVaryingForce()
 
 vector timeVaryingForce::force(const vector& position)
 {
-    return force_;
+    return vector::zero;
 }
 
 vector timeVaryingForce::force(const scalar& time)
@@ -136,15 +138,7 @@ vector timeVaryingForce::force(const scalar& time)
 }
 
 void timeVaryingForce::updateForce()
-{
-//     index_++;
-
-//     elapsedTime_ += deltaT_;
-//     
-//     scalar actualTime = elapsedTime_ + offsetTime_;
-//     
-//     force_ = getForce(actualTime);
-}
+{}
 
 vector timeVaryingForce::getForce(const scalar& t)
 {

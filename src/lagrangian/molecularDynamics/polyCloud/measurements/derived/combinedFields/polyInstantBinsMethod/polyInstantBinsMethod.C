@@ -201,7 +201,7 @@ polyInstantBinsMethod::polyInstantBinsMethod
             volumes_[i] = volumes[i];
         }
         
-        Info << "volumes = " << volumes_ << endl;
+//         Info << "volumes = " << volumes_ << endl;
     }
 }
 
