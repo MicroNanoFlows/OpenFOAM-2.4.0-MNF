@@ -77,6 +77,7 @@ macroscopicProperties/derived/otherFields/polyPDB/polyPDB.C
 macroscopicProperties/derived/otherFields/polyXMOL/polyXMOL.C
 macroscopicProperties/derived/otherFields/polyZoneRdf/polyZoneRdf.C
 macroscopicProperties/derived/otherFields/forceInstantProperties/forceInstantProperties.C
+macroscopicProperties/derived/otherFields/poly2DBins/poly2DBins.C
 
 /*  CONTROLLERS  */
 
