@@ -24,9 +24,9 @@ potentials/pairPotentials/derived/pairPotentialModels/morse/morse.C
 potentials/pairPotentials/derived/pairPotentialModels/FENE/FENE.C
 potentials/pairPotentials/derived/pairPotentialModels/harmonicPotential/harmonicPotential.C
 
-
+/* electrostatics */
 potentials/pairPotentials/derived/electrostaticPotentialModels/coulomb/coulomb.C
-
+potentials/pairPotentials/derived/electrostaticPotentialModels/shortRangeElectrostatic/shortRangeElectrostatic.C
 
 /* energy scaling functions */
 potentials/energyScalingFunction/basic/energyScalingFunction.C
@@ -142,6 +142,9 @@ measurements/derived/otherFields/polyXMOL/polyXMOL.C
 measurements/derived/otherFields/polyZoneRdf/polyZoneRdf.C
 measurements/derived/otherFields/poly2DBins/poly2DBins.C
 measurements/derived/otherFields/poly2DBinsSites/poly2DBinsSites.C
+
+/*  - GREEN KUBO  */
+measurements/derived/greenKubo/axialSelfDiffusion/axialSelfDiffusion.C
 
 /*measurements/derived/otherFields/forceInstantProperties/forceInstantProperties.C */
 

@@ -134,6 +134,8 @@ vector timeVaryingForce::force(const scalar& time)
     
     force_ = getForce(t);
     
+//     Info << "force = " << force_ << endl;
+    
     return force_;
 }
 
