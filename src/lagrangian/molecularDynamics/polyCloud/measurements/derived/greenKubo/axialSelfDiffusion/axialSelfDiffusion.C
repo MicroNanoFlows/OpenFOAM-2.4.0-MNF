@@ -268,6 +268,7 @@ void axialSelfDiffusion::calculateField()
    
     if(nS_ >= nSteps_)
     {
+        Info << "axialSelfDiffusion averaging " << endl; 
         nS_ = 0;
         nAveragingSteps_ += 1.0;
         
@@ -348,7 +349,7 @@ void axialSelfDiffusion::writeField()
             writeTimeData
             (
                 casePath_,
-                "axialSelfDiffusionCoefficient_"+regionName_+"_"+fieldName_+"_D.xy",
+                "axialSelfDiffusionCoeff_"+regionName_+"_"+fieldName_+"_D.xy",
                 timeFieldI,
                 D,
                 true
