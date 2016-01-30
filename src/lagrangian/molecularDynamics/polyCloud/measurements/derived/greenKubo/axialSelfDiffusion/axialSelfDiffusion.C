@@ -150,9 +150,13 @@ void axialSelfDiffusion::createField()
     nMols_ = molCloud_.moleculeTracking().getMaxTrackingNumber();
     
     
-    initialVelocities_.clear();
-    initialVelocities_.setSize(nMols_, 0.0);
-
+    velocities_.clear();
+    velocities_.setSize(nSteps_);
+    
+    forAll(velocities_, i)
+    {
+        velocities_.setSize(nMols_, 0.0);    
+    }
     
     mols_.clear();
     mols_.setSize(nMols_, 0);
@@ -183,13 +187,13 @@ void axialSelfDiffusion::createField()
                 {
                     if(bb_.contains(molI->position()))
                     {
-                        initialVelocities_[tN] = molI->v() & unitVector_;
+                        velocities_[nS_][tN] = molI->v() & unitVector_;
                         mols_[tN] = 1;
                     }
                 }
                 else
                 {
-                    initialVelocities_[tN] = molI->v() & unitVector_;
+                    velocities_[nS_][tN] = molI->v() & unitVector_;
                     mols_[tN] = 1;
                 }
             }
@@ -198,9 +202,8 @@ void axialSelfDiffusion::createField()
     
     if(Pstream::parRun())
     {
-        forAll(initialVelocities_, i)
+        forAll(mols_, i)
         {
-            reduce(initialVelocities_[i], sumOp<scalar>());
             reduce(mols_[i], sumOp<label>());
         }
     }    
@@ -237,41 +240,35 @@ void axialSelfDiffusion::calculateField()
                 {
                     if(bb_.contains(molI->position()))
                     {
-                        vDotV[tN] = (molI->v() & unitVector_) * initialVelocities_[tN];
+                        velocities_[nS_][tN] = molI->v() & unitVector_;                        
+/*                        
+                        vDotV[tN] = (molI->v() & unitVector_) * initialVelocities_[tN];*/
                     }
                 }
                 else
                 {
-                    vDotV[tN] =  (molI->v() & unitVector_) * initialVelocities_[tN];
+                    velocities_[nS_][tN] = molI->v() & unitVector_;                        
                 }
             }
         }
     }    
-
-    if(Pstream::parRun())
-    {
-        forAll(vDotV, i)
-        {
-            reduce(vDotV[i], sumOp<scalar>());
-        }
-    }
     
-    // sum vDotV over all molecules in the system
-    scalar sum = 0.0;
-    
-    forAll(vDotV, i)
-    {
-        sum += vDotV[i]*mols_[i];
-    }
-    
-    acfTime_[nS_] += sum;
-   
     if(nS_ >= nSteps_)
     {
         Info << "axialSelfDiffusion averaging " << endl; 
         nS_ = 0;
         nAveragingSteps_ += 1.0;
         
+        List<scalar> acfTime(nSteps_, 0.0);
+        
+        forAll(velocities_, i)
+        {
+            forAll(velocities_, j)
+            {
+                acfTime[i]
+            }
+        }
+            
         List<scalar> acfTime = acfTime_;
         
         forAll(acfTime, i)
@@ -289,7 +286,29 @@ void axialSelfDiffusion::calculateField()
     else
     {
         nS_++;    
-    }
+    }    
+    
+    
+/*
+    if(Pstream::parRun())
+    {
+        forAll(vDotV, i)
+        {
+            reduce(vDotV[i], sumOp<scalar>());
+        }
+    }*/
+    
+//     // sum vDotV over all molecules in the system
+//     scalar sum = 0.0;
+//     
+//     forAll(vDotV, i)
+//     {
+//         sum += vDotV[i]*mols_[i];
+//     }
+    
+    acfTime_[nS_] += sum;
+   
+
 }
 
 scalar axialSelfDiffusion::getIntegral(const List<scalar>& f)

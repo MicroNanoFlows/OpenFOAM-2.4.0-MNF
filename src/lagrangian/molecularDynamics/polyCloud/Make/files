@@ -144,7 +144,7 @@ measurements/derived/otherFields/poly2DBins/poly2DBins.C
 measurements/derived/otherFields/poly2DBinsSites/poly2DBinsSites.C
 
 /*  - GREEN KUBO  */
-measurements/derived/greenKubo/axialSelfDiffusion/axialSelfDiffusion.C
+/*measurements/derived/greenKubo/axialSelfDiffusion/axialSelfDiffusion.C*/
 
 /*measurements/derived/otherFields/forceInstantProperties/forceInstantProperties.C */
 
@@ -186,6 +186,7 @@ controllers/derived/others/polyInternalWall/polyInternalWall.C
 controllers/derived/others/tail/tail.C
 controllers/derived/others/polyFadeEquilibrateMolecules/polyFadeEquilibrateMolecules.C
 controllers/derived/others/ciliumMotion/ciliumMotion.C
+controllers/derived/others/pressureFlux/pressureFlux.C
 
 
 /*  BOUNDARIES  */
