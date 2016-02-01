@@ -275,6 +275,12 @@ void poly2DBins::calculateField()
             {       
                 rhoM_[i][j] = mass[i][j]/(nAvTimeSteps*volume);
                 
+                Info << "rho = " << rhoM_[i][j] 
+                << ", mass = " << mass[i][j] 
+                << ", volume = " << volume
+                << ", nAvTimeSteps = " << nAvTimeSteps
+                << endl;
+                
                 if(mass[i][j] > 0)
                 {
                     UCAM_[i][j] = mom[i][j]/mass[i][j];
