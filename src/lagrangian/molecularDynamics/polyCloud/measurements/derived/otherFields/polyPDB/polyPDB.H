@@ -91,7 +91,7 @@ private:
         label nSteps_;
         
         bool variableMols_;
-        label nMolsEstimate_;
+        label nSiteEstimate_;
         vector rDummy_;
     
         scalar startTime_;
@@ -99,6 +99,8 @@ private:
         scalar accumulatedTime_;
         scalar deltaT_;
     
+        bool writeFirstTimeStep_;
+        
     // Private Member Functions
 
             void write();
