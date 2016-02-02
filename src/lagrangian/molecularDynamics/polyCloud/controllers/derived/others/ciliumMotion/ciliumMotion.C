@@ -140,6 +140,16 @@ ciliumMotion::ciliumMotion
     
     tI_ = 0;
     
+    // allow start from latest time
+    if(time_.time().timeOutputValue() > 0.0)
+    {
+        scalar nTimeSteps = time_.time().timeOutputValue()/deltaTMD_;
+        label factor = label(nTimeSteps/scalar(nT_));
+        tI_ = label(nTimeSteps-factor*nT_);
+        Info << "starting at time index = " << tI_ << endl;
+    }
+    
+    
     nWrite_ = 0;
     nAvTimeSteps_ = 0.0;
     velocities_.setSize(trackingNumbers_.size(), vector::zero);

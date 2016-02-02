@@ -76,15 +76,11 @@ polyBoundedForce::polyBoundedForce
     model_(),
     molIds_(),
     nTimeSteps_(0.0),
-    force_(vector::zero),
-    timeVarying_(false)
-    
+    force_(vector::zero)
+   
 {
-
     writeInTimeDir_ = true;
     writeInCase_ = true;
-
-//     singleValueController() = true;
 
     model_ = autoPtr<gravityForce>
     (
@@ -104,10 +100,6 @@ polyBoundedForce::polyBoundedForce
     readProperties();
 
     setBoundBoxes();
-    
-    // incorporate the ability for this model to handle both
-    // time-varying and spatially varying flows
-    
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -158,10 +150,20 @@ void polyBoundedForce::controlAfterForces()
                 {
                     if(boxes_[b].contains(mol().position()))
                     {
+                        vector force = vector::zero;
+                        
+                        if(model_->timeVarying())   
+                        {
+                            const scalar t = time_.timeOutputValue();
+                            
+                            force = model_->force(t);
+                        }
+                        else if(model_->spaceVarying())
+                        {
+                            force = model_->force(mol().position());
+                        }
                         const scalar& massI = molCloud_.cP().mass(mol().id());
                         
-                        vector force = model_->force(mol().position());
-
                         mol().a() += force/massI;
 
                         force_ += force;

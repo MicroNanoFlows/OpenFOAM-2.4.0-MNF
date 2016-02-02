@@ -24,9 +24,9 @@ potentials/pairPotentials/derived/pairPotentialModels/morse/morse.C
 potentials/pairPotentials/derived/pairPotentialModels/FENE/FENE.C
 potentials/pairPotentials/derived/pairPotentialModels/harmonicPotential/harmonicPotential.C
 
-
+/* electrostatics */
 potentials/pairPotentials/derived/electrostaticPotentialModels/coulomb/coulomb.C
-
+potentials/pairPotentials/derived/electrostaticPotentialModels/shortRangeElectrostatic/shortRangeElectrostatic.C
 
 /* energy scaling functions */
 potentials/energyScalingFunction/basic/energyScalingFunction.C
@@ -94,7 +94,7 @@ molsToDel/derived/polyDelFromMesh/polyDelFromMesh.C
 molsToDel/derived/polyDelFromBoundBox/polyDelFromBoundBox.C
 molsToDel/derived/polyDelFromEnclosedPoints/polyDelFromEnclosedPoints.C
 molsToDel/derived/polyDelListOfAtoms/polyDelListOfAtoms.C
-
+molsToDel/derived/polyDelFromCosineWave/polyDelFromCosineWave.C
 /* Mapping */
 
 mappingModels/basic/polyMappingModel/polyMappingModel.C
@@ -118,6 +118,7 @@ measurements/derived/combinedFields/polyPropertyFields/polyPropertyFields.C
 measurements/derived/combinedFields/polyInstantPropertiesZoneBounded/polyInstantPropertiesZoneBounded.C
 measurements/derived/combinedFields/polyARCHER/polyARCHER.C
 measurements/derived/combinedFields/polyARCHER/polyARCHER_outputFiles.C
+measurements/derived/combinedFields/polyInstantBinsMethod/polyInstantBinsMethod.C
 
 /* DENSITY */
 
@@ -129,6 +130,7 @@ measurements/derived/massFlux/polyMassFluxMultiSurfaces/polyMassFluxMultiSurface
 measurements/derived/massFlux/polyMassFluxSurface/polyMassFluxSurface.C
 measurements/derived/massFlux/polyMassFluxZone/polyMassFluxZone.C
 measurements/derived/massFlux/polyMassFlux/polyMassFlux.C
+measurements/derived/massFlux/poly1DMassFluxZone/poly1DMassFluxZone.C
 
 /*  - OTHER  */
 
@@ -140,6 +142,9 @@ measurements/derived/otherFields/polyXMOL/polyXMOL.C
 measurements/derived/otherFields/polyZoneRdf/polyZoneRdf.C
 measurements/derived/otherFields/poly2DBins/poly2DBins.C
 measurements/derived/otherFields/poly2DBinsSites/poly2DBinsSites.C
+
+/*  - GREEN KUBO  */
+/*measurements/derived/greenKubo/axialSelfDiffusion/axialSelfDiffusion.C*/
 
 /*measurements/derived/otherFields/forceInstantProperties/forceInstantProperties.C */
 
@@ -181,6 +186,7 @@ controllers/derived/others/polyInternalWall/polyInternalWall.C
 controllers/derived/others/tail/tail.C
 controllers/derived/others/polyFadeEquilibrateMolecules/polyFadeEquilibrateMolecules.C
 controllers/derived/others/ciliumMotion/ciliumMotion.C
+controllers/derived/others/pressureFlux/pressureFlux.C
 
 
 /*  BOUNDARIES  */

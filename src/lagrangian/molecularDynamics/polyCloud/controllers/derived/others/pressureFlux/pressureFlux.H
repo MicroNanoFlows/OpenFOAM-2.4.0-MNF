@@ -23,20 +23,20 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    polyBoundedForce
+    pressureFlux
 
 Description
-    Model that applies a gravitational force on all molecules.
+    Model that applies an adaptive force on molecules to ste a pressure
 
 SourceFiles
-    polyBoundedForceI.H
-    polyBoundedForce.C
-    polyBoundedForceIO.C
+    pressureFluxI.H
+    pressureFlux.C
+    pressureFluxIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef polyBoundedForce_H
-#define polyBoundedForce_H
+#ifndef pressureFlux_H
+#define pressureFlux_H
 
 #include "polyStateController.H"
 #include "vector.H"
@@ -52,10 +52,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class polyBoundedForce Declaration
+                           Class pressureFlux Declaration
 \*---------------------------------------------------------------------------*/
 
-class polyBoundedForce
+class pressureFlux
 :
 	public polyStateController
 {
@@ -67,31 +67,41 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-        autoPtr<gravityForce> model_;
-
+        word fileName_;  
+        
         //- ids of mols
         List<label> molIds_;
 
-        List<boundedBox> boxes_;
+        boundedBox box_;
+        
+        vector d_;
+        scalar area_;
+        scalar targetPressure_;
+        scalar min_;
         
         scalar nTimeSteps_;
         vector force_;
-
+        scalar nMols_;
+        
     // Private Member Functions
 
-        void readProperties();
         
-        void setBoundBoxes();      
+        void setBoundBox
+        (
+            const dictionary& propsDict,
+            boundedBox& bb,
+            const word& name 
+        );
 
 public:
 
     //- Runtime type information
-    TypeName("polyBoundedForce");
+    TypeName("pressureFlux");
 
     // Constructors
 
         //- Construct from components
-        polyBoundedForce
+        pressureFlux
         (
             Time& t,
             polyMoleculeCloud& molCloud,
@@ -100,7 +110,7 @@ public:
 
     // Destructor
 
-        ~polyBoundedForce();
+        ~pressureFlux();
 
 
     // Member Functions

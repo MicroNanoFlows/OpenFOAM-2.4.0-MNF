@@ -84,18 +84,21 @@ time/clockTimer/clockTimer.C
 
 gravityForce/basic/gravityForce.C
 gravityForce/derived/uniformForce/uniformForce.C
+gravityForce/derived/timeVaryingForce/timeVaryingForce.C
 gravityForce/derived/oscillatingForce/oscillatingForce.C
+gravityForce/derived/rampForceII/rampForceII.C
+
+/*
 gravityForce/derived/oscillatingSquareForce/oscillatingSquareForce.C
 gravityForce/derived/oscillatingLowResolutionForce/oscillatingLowResolutionForce.C
 gravityForce/derived/oneDimForce/oneDimForce.C
 gravityForce/derived/gaussianForce/gaussianForce.C
 gravityForce/derived/standardGaussian/standardGaussian.C
 gravityForce/derived/rampForce/rampForce.C
-gravityForce/derived/rampForceII/rampForceII.C
 gravityForce/derived/multiRampForce/multiRampForce.C
-gravityForce/derived/timeVaryingForce/timeVaryingForce.C
 gravityForce/derived/mixedOscillatingForce/mixedOscillatingForce.C
 gravityForce/derived/gaussianBoundedForce/gaussianBoundedForce.C
+*/
 
 /*  MD PRIMITIVES  */
 

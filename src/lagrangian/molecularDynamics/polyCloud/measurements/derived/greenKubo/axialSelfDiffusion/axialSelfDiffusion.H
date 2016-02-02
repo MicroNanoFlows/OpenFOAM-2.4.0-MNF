@@ -23,27 +23,29 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    polyBoundedForce
+    axialSelfDiffusion
+
 
 Description
-    Model that applies a gravitational force on all molecules.
+    Used to determine self diffusion coefficient inside a carbon nanotube. 
+
 
 SourceFiles
-    polyBoundedForceI.H
-    polyBoundedForce.C
-    polyBoundedForceIO.C
+    axialSelfDiffusionI.H
+    axialSelfDiffusion.C
+    axialSelfDiffusionIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef polyBoundedForce_H
-#define polyBoundedForce_H
+#ifndef axialSelfDiffusion_H
+#define axialSelfDiffusion_H
 
-#include "polyStateController.H"
+#include "polyField.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
 #include "polyMoleculeCloud.H"
-#include "gravityForce.H" 
+#include "distribution.H"
 #include "boundedBox.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -52,12 +54,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class polyBoundedForce Declaration
+                           Class axialSelfDiffusion Declaration
 \*---------------------------------------------------------------------------*/
 
-class polyBoundedForce
+class axialSelfDiffusion
 :
-	public polyStateController
+	public polyField
 {
 
 private:
@@ -67,75 +69,109 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-        autoPtr<gravityForce> model_;
+        propertyField fields_;
 
-        //- ids of mols
-        List<label> molIds_;
+        word fieldName_;
 
-        List<boundedBox> boxes_;
+        word regionName_;
+
+        label regionId_;
+
+        List<label> molIds_;        
+
+        bool useBoundBox_;
+
+        boundedBox bb_;
+
+        vector unitVector_;
+
+        // counter for one acf
+        label nS_;        
         
-        scalar nTimeSteps_;
-        vector force_;
+        // number of MD time-steps for generating one acf
+        label nSteps_;
 
+        // outer counter to average over all acfs
+        scalar nAveragingSteps_;          
+        
+        
+        
+        label nMols_;
+        
+        // outer list = time (nSteps_)
+        // inner list = tracking numbers
+        List<List<scalar> > velocities_;
+        
+        // outer list = nSteps_
+        // inner list accumulation of sum over all mols of v(t=0) dot v(t)
+        List<scalar> acfTime_;
+        
+        List<label> mols_;
+        
+        // self diffusion
+        scalar D_;
+
+        
     // Private Member Functions
-
-        void readProperties();
         
-        void setBoundBoxes();      
+        void setBoundBox
+        (
+            const dictionary& propsDict,
+            boundedBox& bb,
+            const word& name 
+        );
+        
+        scalar getIntegral(const List<scalar>& f);
 
+        
 public:
 
     //- Runtime type information
-    TypeName("polyBoundedForce");
+    TypeName("axialSelfDiffusion");
 
     // Constructors
 
         //- Construct from components
-        polyBoundedForce
-        (
+        axialSelfDiffusion
+		(
             Time& t,
+            const polyMesh& mesh,
             polyMoleculeCloud& molCloud,
             const dictionary& dict
-        );
+		);
 
     // Destructor
 
-        ~polyBoundedForce();
+ 		~axialSelfDiffusion();
 
 
     // Member Functions
-    // Member Functions
-        
-        //- create an initial configuration
-        void initialConfiguration();
 
-        //- control molecules at various stages of time-step
-        void controlBeforeVelocityI();
-        void controlBeforeMove();
-        void controlBeforeForces();
-        void controlDuringForces
+        //- create initial field
+        void createField();
+
+        //- calculate field
+        void calculateField();
+
+        void measureDuringForceComputation
         (
             polyMolecule* molI,
             polyMolecule* molJ
-        );        
-        void controlAfterForces();
-        void controlAfterVelocityII();
-        
-        //- calculate any required properties (end of time-step)
-        void calculateProperties(); 
-        
-        //- output data (optional)
-        void output
-        (
-            const fileName& fixedPathName, 
-            const fileName& timePath
         );
-        
-        //- update properties from a modified dictionary (optional)
-        void updateProperties(const dictionary&);
 
-        // Access
-};
+        void measureDuringForceComputationSite
+        (
+            polyMolecule* molI,
+            polyMolecule* molJ,
+            label sI,
+            label sJ
+        );
+
+        const propertyField& fields() const;
+
+        //- write field
+        void writeField();
+}; 		
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
