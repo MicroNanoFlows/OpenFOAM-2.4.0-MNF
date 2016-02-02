@@ -47,10 +47,6 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// inline const List<word>& newConfig::molIdList() const
-// {
-//     return idList_;
-// }
 
 inline const labelField& newCellZone::cells() const
 {
@@ -60,6 +56,11 @@ inline const labelField& newCellZone::cells() const
 inline const word& newCellZone::name() const
 {
     return regionName_;
+}
+
+inline const bool& newCellZone::writeCellSet() const
+{
+    return writeCellSet_;
 }
 
 

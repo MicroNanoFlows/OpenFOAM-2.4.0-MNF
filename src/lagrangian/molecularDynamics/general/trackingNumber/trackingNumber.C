@@ -184,6 +184,12 @@ trackingNumber::~trackingNumber()
 {}
 
 
+Foam::label& Foam::trackingNumber::trackingIndex()
+{
+    return trackingIndex_;
+}
+
+
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 

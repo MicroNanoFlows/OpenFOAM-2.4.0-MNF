@@ -46,47 +46,6 @@ addToRunTimeSelectionTable(twoDimBinModel, twoDimBinsII, dictionary);
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 
-void twoDimBinsII::checkBoundBox
-(
-    boundBox& b,
-    const vector& startPoint,
-    const vector& endPoint
-)
-{
-    vector& vMin = b.min();
-    vector& vMax = b.max();
-
-    if(startPoint.x() < endPoint.x())
-    {
-        vMin.x() = startPoint.x();
-        vMax.x() = endPoint.x();
-    }
-    else
-    {
-        vMin.x() = endPoint.x();
-        vMax.x() = startPoint.x();
-    }
-    if(startPoint.y() < endPoint.y())
-    {
-        vMin.y() = startPoint.y();
-        vMax.y() = endPoint.y();
-    }
-    else
-    {
-        vMin.y() = endPoint.y();
-        vMax.y() = startPoint.y();
-    }
-    if(startPoint.z() < endPoint.z())
-    {
-        vMin.z() = startPoint.z();
-        vMax.z() = endPoint.z();
-    }
-    else
-    {
-        vMin.z() = endPoint.z();
-        vMax.z() = startPoint.z();
-    }
-}
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -111,8 +70,8 @@ twoDimBinsII::twoDimBinsII
     unitVectorX_ /= mag(unitVectorX_);
     unitVectorY_ /= mag(unitVectorY_);
     
-    checkBoundBox(box_, startPoint_, endPoint_);    
-
+    box_.resetBoundedBox(startPoint_, endPoint_);
+    
     vector rS = box_.span();
     
     lengthX_ = rS & unitVectorX_;
@@ -162,27 +121,24 @@ List<label> twoDimBinsII::isPointWithinBin
         label nX = label(rDx/binWidthX_);
         label nY = label(rDy/binWidthY_);
         
-        if(nX >= 0)
+        if( (nX >= 0) && (nY >= 0) )
         {
             if(nX == nBinsX_) 
             {
                 nX--;
             }
             
-            binNumbers[0] = nX;            
-        }    
+            binNumbers[0] = nX;
         
-        if(nY >= 0)
-        {
             if(nY == nBinsY_) 
             {
                 nY--;
             }
             
             binNumbers[1] = nY;            
-        }
+        }    
     }
-
+    
     return binNumbers;
 }
 

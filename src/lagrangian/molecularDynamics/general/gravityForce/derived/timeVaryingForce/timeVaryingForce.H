@@ -68,16 +68,10 @@ private:
         
         scalar offsetTime_;
         
-//         scalar deltaT_;
-        
-//         scalar elapsedTime_;
-        
         scalar binWidth_;
         
-//         label index_;
-        
         // read in forces
-//         scalarField times_;        
+     
         scalarField forces_;
         
         

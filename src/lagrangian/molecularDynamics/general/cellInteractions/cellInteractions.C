@@ -1201,7 +1201,7 @@ void Foam::cellInteractions<ParticleType>::setReferredParticles
                                 
                             refCells_[r].transformPoint(newp.position());
                             newp.transformProperties(refCells_[r].translation());
-
+                            newp.setAsReferred();
                             referredCloud_.append(newParticles.remove(&newp));
                             refCellsParticles_[r].append(referredCloud_.last());
                             ++newpIter;
@@ -1249,7 +1249,7 @@ void Foam::cellInteractions<ParticleType>::setReferredParticles
                             
                         refCells_[r].transformPoint(newp.position());
                         newp.transformProperties(refCells_[r].translation());
-
+                        newp.setAsReferred();
                         referredCloud_.append(ownMeshTransferList.remove(&newp));
                         refCellsParticles_[r].append(referredCloud_.last());
                         ++newpIter;
@@ -1386,6 +1386,8 @@ void Foam::cellInteractions<ParticleType>::addParticle
             ParticleType* newMol = referredCloud_.last();
             
             refCells_[r].transformPoint(newMol->position());
+            
+            newMol->setAsReferred();
             
             const labelList& realCells = refCells_[r].neighbouringCells();
             

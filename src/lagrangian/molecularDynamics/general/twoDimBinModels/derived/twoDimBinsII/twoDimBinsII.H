@@ -29,6 +29,7 @@ Description
     startPoint and endPoint define the boundbox.
     unit vectors need to be defined from startPoint:
     
+    
 SourceFiles
     twoDimBinsIII.H
     twoDimBinsII.C
@@ -41,7 +42,7 @@ SourceFiles
 
 
 #include "twoDimBinModel.H"
-#include "boundBox.H" 
+#include "boundedBox.H" 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -66,13 +67,8 @@ private:
         vector startPoint_;
         vector endPoint_;
         
-        boundBox box_;
-        
-//         scalar h_;
-//         vector unitVector_;
-
-        
-        
+        boundedBox box_;
+                
         vector unitVectorX_;
         vector unitVectorY_;
         vector unitVectorZ_; // thickness
@@ -80,22 +76,12 @@ private:
         label nBinsX_;
         label nBinsY_;
 
-//         scalar dX_;
-//         scalar dY_;
-        
         scalar lengthX_;
         scalar lengthY_;
         scalar lengthZ_; // thickness
         
         scalar binWidthX_;
         scalar binWidthY_;
-        
-//         vector startPointX_;
-//         vector startPointY_;
-        
-//         vector endPointX_;
-//         vector endPointY_;
-        
         
         
     // Private Member Functions
