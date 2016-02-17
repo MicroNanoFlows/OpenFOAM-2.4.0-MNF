@@ -35,9 +35,24 @@ namespace Foam
 {
 
 defineTypeNameAndDebug(polyDensityMOB2DRadialCOM, 0);
+
 addToRunTimeSelectionTable(polyField, polyDensityMOB2DRadialCOM, dictionary);
 
+
+
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+// void polyDensityMOB2DRadialCOM::setRadii()
+// {
+//     for(label i = 0; i < nBinsX_; i++)
+//     {
+//         for(label j = 0; j < nBinsY_; j++)
+//         {
+//             magRadii_[i][j] = 0.5*binWidthX_ + scalar(i)*binWidthX_;
+//         }
+// //         radii_[i] = startPoint_ + (0.5 + scalar(i))*binWidth_*unitVector_;
+//     }
+// }
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -68,11 +83,14 @@ polyDensityMOB2DRadialCOM::polyDensityMOB2DRadialCOM
     binWidthY_(radius_/nBinsY_),
     mols_(nBinsX_),
     oldCenterOfMass_(propsDict_.lookup("startPoint")),
+
     densityField_(nBinsX_),
+
     magRadii_(),
     binWidths_(),
     volume_(),
     avVolume_(0.0),
+
     minBinWidth_(0.0),
     n_(),
     nAvTimeSteps_(0.0),
@@ -125,12 +143,12 @@ polyDensityMOB2DRadialCOM::polyDensityMOB2DRadialCOM
         {
             break;
         }
-
+        
     }
-
-    //binWidths.shrink();
-    //radii.shrink();
-
+    
+    binWidths.shrink();
+    radii.shrink(); 
+    
     nBinsY_ = binWidths.size();
 
     magRadii_.setSize(nBinsY_, 0.0);
@@ -147,7 +165,7 @@ polyDensityMOB2DRadialCOM::polyDensityMOB2DRadialCOM
     {
         magRadii_[n] = radii[n];
         binWidths_[n] = binWidths[n];
-
+        
         if(n == 0)
         {
             volume_[n] = constant::mathematical::pi*binWidths_[n]*binWidths_[n]*binWidthX_;
@@ -177,7 +195,9 @@ polyDensityMOB2DRadialCOM::polyDensityMOB2DRadialCOM
             }
         }
     }
+
 }
+
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
@@ -215,6 +235,9 @@ label polyDensityMOB2DRadialCOM::findBin(const scalar& r)
     return n;
 }
 
+
+
+
 void polyDensityMOB2DRadialCOM::createField()
 {}
 
@@ -222,234 +245,235 @@ void polyDensityMOB2DRadialCOM::createField()
 void polyDensityMOB2DRadialCOM::calculateField()
 {
     nAvTimeSteps_ += 1.0;
-
-    const boundBox& globalBb = mesh_.bounds();
     
+    const boundBox& globalBb = mesh_.bounds();
     vector domainLength = globalBb.max() - globalBb.min();
     scalar domainLengthX = fabs(domainLength.x());
     scalar domainLengthY = fabs(domainLength.y());
     scalar domainLengthZ = fabs(domainLength.z());
+        
 
-	const List< DynamicList<polyMolecule*> >& cellOccupancy = molCloud_.cellOccupancy();
+    {
+        const List< DynamicList<polyMolecule*> >& cellOccupancy
+            = molCloud_.cellOccupancy();
 
-	const labelList& cells = mesh_.cellZones()[regionId_];
-	scalar mass = 0.0;
-	vector centreOfMass = vector::zero;
+        const labelList& cells = mesh_.cellZones()[regionId_];
+        scalar mass = 0.0;
+        vector centreOfMass = vector::zero;
 
-	forAll(cells, c)
-	{
-		const label& cellI = cells[c];
-		const List<polyMolecule*>& molsInCell = cellOccupancy[cellI];
+        forAll(cells, c)
+        {
+            const label& cellI = cells[c];
+            const List<polyMolecule*>& molsInCell = cellOccupancy[cellI];
 
-		if(molsInCell.size() > 0)
-		{
-			forAll(molsInCell, mIC)
-			{
-				polyMolecule* molI = molsInCell[mIC];
+            if(molsInCell.size() > 0)
+            {
+                forAll(molsInCell, mIC)
+                {                    
+                    polyMolecule* molI = molsInCell[mIC];
 
-				vector rI = molI->position();
-				vector roC = rI - oldCenterOfMass_;
+                    vector rI = molI->position(); 
+                    vector roC = rI - oldCenterOfMass_;
+                    
+                    if(fabs(roC.x())>domainLengthX/2.0)
+                    {
+                        if(rI.x() > oldCenterOfMass_.x())
+                        {    
+                            rI.x() -= domainLengthX;
+                        }
+                        else
+                        {    
+                            rI.x() += domainLengthX;
+                        }
+                    }
+                    
+                    if(fabs(roC.y())>domainLengthY/2.0)
+                    {                        
+                        if(rI.y() > oldCenterOfMass_.y())
+                        {    
+                            rI.y() -= domainLengthY;
+                        }
+                        else
+                        {    
+                            rI.y() += domainLengthY;
+                        }   
+                    }
+                    
+                    if(fabs(roC.z())>domainLengthZ/2.0)
+                    {                        
+                        if(rI.z() > oldCenterOfMass_.z())
+                        {    
+                            rI.z() -= domainLengthZ;
+                        }
+                        else
+                        {    
+                            rI.z() += domainLengthZ;
+                        }   
+                    }
+                    
+                    if(findIndex(molIds_, molI->id()) != -1)
+                    {
+                        const scalar& massI = molCloud_.cP().mass(molI->id());
+                        mass += massI;
+                        centreOfMass += massI*rI;
+                    }
+                }
+            }
+        }
 
-				if(fabs(roC.x())>domainLengthX/2.0)
-				{
-					if(rI.x() > oldCenterOfMass_.x())
-					{
-						rI.x() -= domainLengthX;
-					}
-					else
-					{
-						rI.x() += domainLengthX;
-					}
-				}
+        if(Pstream::parRun())
+        {
+            //-sending
+            for (int p = 0; p < Pstream::nProcs(); p++)
+            {
+                if(p != Pstream::myProcNo())
+                {
+                    const int proc = p;
+                    {
+                        OPstream toNeighbour(Pstream::blocking, proc);
+                        toNeighbour << mass << centreOfMass;
+                    }
+                }
+            }
 
-				if(fabs(roC.y())>domainLengthY/2.0)
-				{
-					if(rI.y() > oldCenterOfMass_.y())
-					{
-						rI.y() -= domainLengthY;
-					}
-					else
-					{
-						rI.y() += domainLengthY;
-					}
-				}
+            //- receiving
+            for (int p = 0; p < Pstream::nProcs(); p++)
+            {
+                if(p != Pstream::myProcNo())
+                {
+                    scalar massProc;
+                    vector centreOfMassProc;
 
-				if(fabs(roC.z())>domainLengthZ/2.0)
-				{
-					if(rI.z() > oldCenterOfMass_.z())
-					{
-						rI.z() -= domainLengthZ;
-					}
-					else
-					{
-						rI.z() += domainLengthZ;
-					}
-				}
+                    const int proc = p;
+                    {
+                        IPstream fromNeighbour(Pstream::blocking, proc);
+                        fromNeighbour >> massProc >> centreOfMassProc;
+                    }
+                    mass += massProc;
+                    centreOfMass += centreOfMassProc;
+                }
+            }
+        }
 
-				if(findIndex(molIds_, molI->id()) != -1)
-				{
-                    const scalar& massI = molCloud_.cP().mass(molI->id());
-                    mass += massI;
-                    centreOfMass += massI*rI;
-				}
-			}
-		}
-	}
+        centreOfMass /= mass;
 
-	if(Pstream::parRun())
-	{
-		//-sending
-		for (int p = 0; p < Pstream::nProcs(); p++)
-		{
-			if(p != Pstream::myProcNo())
-			{
-				const int proc = p;
-				{
-					OPstream toNeighbour(Pstream::blocking, proc);
-					toNeighbour << mass << centreOfMass;
-				}
-			}
-		}
+        centreOfMass =  ((centreOfMass ^ unitVectorX_)^ unitVectorX_)*(-1.0)
+                        + (startPoint_ & unitVectorX_) * unitVectorX_;
+           
+        if(centreOfMass.x() > globalBb.max().x())
+        {
+            centreOfMass.x() -= domainLengthX;
+        }
+        else if(centreOfMass.x() < globalBb.min().x())
+        {
+            centreOfMass.x() += domainLengthX;
+        }
+        if(centreOfMass.y() > globalBb.max().y())
+        {
+            centreOfMass.y() -= domainLengthY;
+        }
+        else if(centreOfMass.y() < globalBb.min().y())
+        {
+            centreOfMass.y() += domainLengthY;
+        }
+        if(centreOfMass.z() > globalBb.max().z())
+        {
+            centreOfMass.z() -= domainLengthZ;
+        }
+        else if(centreOfMass.z() < globalBb.min().z())
+        {
+            centreOfMass.z() += domainLengthZ;
+        }
+        
+         oldCenterOfMass_ = centreOfMass;
+            
+        forAll(cells, c)
+        {
+            const label& cellI = cells[c];
+            const List<polyMolecule*>& molsInCell = cellOccupancy[cellI];
 
-		//- receiving
-		for (int p = 0; p < Pstream::nProcs(); p++)
-		{
-			if(p != Pstream::myProcNo())
-			{
-				scalar massProc;
-				vector centreOfMassProc;
+            if(molsInCell.size() > 0)
+            {
+                forAll(molsInCell, mIC)
+                {
+                    polyMolecule* molI = molsInCell[mIC];
 
-				const int proc = p;
-				{
-					IPstream fromNeighbour(Pstream::blocking, proc);
-					fromNeighbour >> massProc >> centreOfMassProc;
-				}
-				mass += massProc;
-				centreOfMass += centreOfMassProc;
-			}
-		}
-	}
+                    vector rI = molI->position(); 
 
-	centreOfMass /= mass;
+                    vector rSI = rI - centreOfMass;
+                    
+                    if(fabs(rSI.x())>domainLengthX/2.0)
+                    {   
+                        if(rI.x() > centreOfMass.x())
+                        {    
+                            rI.x() -= domainLengthX;
+                        }
+                        else
+                        {    
+                            rI.x() += domainLengthX;
+                        }
+                    }
+                    
+                    if(fabs(rSI.y())>domainLengthY/2.0)
+                    {
+                        if(rI.y() > centreOfMass.y())
+                        {    
+                            rI.y() -= domainLengthY;
+                        }
+                        else
+                        {    
+                            rI.y() += domainLengthY;
+                        }
+                    }
+                    
+                    if(fabs(rSI.z())>domainLengthZ/2.0)
+                    { 
+                        if(rI.z() > centreOfMass.z())
+                        {    
+                            rI.z() -= domainLengthZ;
+                        }
+                        else
+                        {    
+                            rI.z() += domainLengthZ;
+                        }
+                    }
+                    
+                    scalar rD = rSI & unitVectorX_;
 
-	centreOfMass =  ((centreOfMass ^ unitVectorX_)^ unitVectorX_)*(-1.0)
-					+ (startPoint_ & unitVectorX_) * unitVectorX_;
+                    if((rD <= h_) && (rD >= 0.0))
+                    {   
+                        scalar rN = mag((rD*unitVectorX_ + centreOfMass) - rI);
+                        
+                        if(rN <= radius_)
+                        {
+                            label nY = findBin(rN);
+                            // nY defines the No. in the radial direction.
+                            if
+                            (
+                                nY != -1
+                            )
+                            {
+                                label nX = label(rD/binWidthX_);
+                                // nX defines the No. in the axial direction.
 
-	if(centreOfMass.x() > globalBb.max().x())
-	{
-		centreOfMass.x() -= domainLengthX;
-	}
-	else if(centreOfMass.x() < globalBb.min().x())
-	{
-		centreOfMass.x() += domainLengthX;
-	}
-	if(centreOfMass.y() > globalBb.max().y())
-	{
-		centreOfMass.y() -= domainLengthY;
-	}
-	else if(centreOfMass.y() < globalBb.min().y())
-	{
-		centreOfMass.y() += domainLengthY;
-	}
-	if(centreOfMass.z() > globalBb.max().z())
-	{
-		centreOfMass.z() -= domainLengthZ;
-	}
-	else if(centreOfMass.z() < globalBb.min().z())
-	{
-		centreOfMass.z() += domainLengthZ;
-	}
+                                if(nX == nBinsX_)
+                                {
+                                    nX--;
+                                }
 
-	oldCenterOfMass_ = centreOfMass;
+                                if(findIndex(molIds_, molI->id()) != -1)
+                                {
+                                    mols_[nX][nY] += 1.0;                                    
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
-	forAll(cells, c)
-	{
-		const label& cellI = cells[c];
-		const List<polyMolecule*>& molsInCell = cellOccupancy[cellI];
-
-		if(molsInCell.size() > 0)
-		{
-			forAll(molsInCell, mIC)
-			{
-				polyMolecule* molI = molsInCell[mIC];
-
-				vector rI = molI->position();
-
-				vector rSI = rI - centreOfMass;
-
-				if(fabs(rSI.x())>domainLengthX/2.0)
-				{
-					if(rI.x() > centreOfMass.x())
-					{
-						rI.x() -= domainLengthX;
-					}
-					else
-					{
-						rI.x() += domainLengthX;
-					}
-				}
-
-				if(fabs(rSI.y())>domainLengthY/2.0)
-				{
-					if(rI.y() > centreOfMass.y())
-					{
-						rI.y() -= domainLengthY;
-					}
-					else
-					{
-						rI.y() += domainLengthY;
-					}
-				}
-
-				if(fabs(rSI.z())>domainLengthZ/2.0)
-				{
-					if(rI.z() > centreOfMass.z())
-					{
-						rI.z() -= domainLengthZ;
-					}
-					else
-					{
-						rI.z() += domainLengthZ;
-					}
-				}
-
-				scalar rD = rSI & unitVectorX_;
-
-				if((rD <= h_) && (rD >= 0.0))
-				{
-
-					scalar rN = mag((rD*unitVectorX_ + centreOfMass) - rI);
-
-					if(rN <= radius_)
-					{
-						label nY = findBin(rN);
-						// nY defines the No. in the radial direction.
-						if
-						(
-							nY != -1
-						)
-						{
-							label nX = label(rD/binWidthX_);
-							// nX defines the No. in the axial direction.
-
-							if(nX == nBinsX_)
-							{
-								nX--;
-							}
-
-							if(findIndex(molIds_, molI->id()) != -1)
-							{
-							mols_[nX][nY] += 1.0;
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-
-    if(time_.outputTime()) 
+    if(time_.outputTime())
     {
         Field<scalarField> mols = mols_;
 
@@ -489,32 +513,35 @@ void polyDensityMOB2DRadialCOM::calculateField()
                 }
             }
         }
+        
+//         const scalar& nAvTimeSteps = time_.nAvTimeSteps().value();
 
-        const scalar& nAvTimeSteps = nAvTimeSteps_;
+
 
         forAll(densityField_, x)
         {
             forAll(densityField_[x], y)
             {
-                densityField_[x][y] = mols[x][y]/(nAvTimeSteps*volume_[y]);
+                densityField_[x][y] = mols[x][y]/(nAvTimeSteps_*volume_[y]);
             }
         }
-
+        
         //- reset fields
         if(resetAtOutput_)
         {
+            nAvTimeSteps_ = 0.0;
+            
             forAll(mols_, x)
             {
                 mols_[x] = 0.0;
             }
         }
-
     }
 }
 
 void polyDensityMOB2DRadialCOM::writeField()
 {
-    const Time& runTime = time_;
+    const Time& runTime = time_.time();
 
     if(runTime.outputTime())
     {
@@ -556,8 +583,13 @@ void polyDensityMOB2DRadialCOM::measureDuringForceComputation
 (
     polyMolecule* molI,
     polyMolecule* molJ
-)
-{}
+){}
+
+// void polyDensityMOB2DRadialCOM::measureDuringForceComputation
+// (
+//     polyMolecule* molReal,
+//     polyReferredMolecule* molRef
+// ){}
 
 void polyDensityMOB2DRadialCOM::measureDuringForceComputationSite
 (
@@ -565,13 +597,27 @@ void polyDensityMOB2DRadialCOM::measureDuringForceComputationSite
     polyMolecule* molJ,
     label sI,
     label sJ
-)
-{}
+){}
+
+// void polyDensityMOB2DRadialCOM::measureDuringForceComputationSite
+// (
+//     polyMolecule* molReal,
+//     polyReferredMolecule* molRef,
+//     label sReal,
+//     label sRef
+// ){}
 
 const propertyField& polyDensityMOB2DRadialCOM::fields() const
 {
     return  fields_;
 }
+
+// void polyDensityMOB2DRadialCOM::updateProperties(const dictionary& newDict)
+// {
+//     //- the main properties should be updated first
+//     updateBasicFieldProperties(newDict);
+// 
+// }
 
 } // End namespace Foam
 

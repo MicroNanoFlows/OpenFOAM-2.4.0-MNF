@@ -136,7 +136,7 @@ measurements/derived/massFlux/poly1DMassFluxZone/poly1DMassFluxZone.C
 
 /*  - OTHER  */
 
-/*measurements/derived/otherFields/polyDensityMOB2DRadialCOM/polyDensityMOB2DRadialCOM.C*/
+measurements/derived/otherFields/polyDensityMOB2DRadialCOM/polyDensityMOB2DRadialCOM.C
 measurements/derived/otherFields/polyForceTwoMolecules/polyForceTwoMolecules.C
 measurements/derived/otherFields/polyMoleculePotentialEnergy/polyMoleculePotentialEnergy.C
 measurements/derived/otherFields/polyPDB/polyPDB.C
