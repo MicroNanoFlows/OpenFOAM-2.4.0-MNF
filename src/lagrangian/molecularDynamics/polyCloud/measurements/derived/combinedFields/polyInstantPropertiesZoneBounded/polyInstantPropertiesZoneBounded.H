@@ -77,7 +77,7 @@ private:
         List<label> molIds_;
         
         DynamicList<vector> velocityField_;
-        DynamicList<vector> forceField_;      
+//         DynamicList<vector> forceField_;      
         
         // Private Member Functions
 
