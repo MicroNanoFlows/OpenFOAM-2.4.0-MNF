@@ -95,6 +95,8 @@ molsToDel/derived/polyDelFromBoundBox/polyDelFromBoundBox.C
 molsToDel/derived/polyDelFromEnclosedPoints/polyDelFromEnclosedPoints.C
 molsToDel/derived/polyDelListOfAtoms/polyDelListOfAtoms.C
 molsToDel/derived/polyDelFromCosineWave/polyDelFromCosineWave.C
+molsToDel/derived/polyClosestDistance/polyClosestDistance.C
+
 /* Mapping */
 
 mappingModels/basic/polyMappingModel/polyMappingModel.C
