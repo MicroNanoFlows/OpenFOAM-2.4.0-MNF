@@ -94,6 +94,8 @@ molsToDel/derived/polyDelFromMesh/polyDelFromMesh.C
 molsToDel/derived/polyDelFromBoundBox/polyDelFromBoundBox.C
 molsToDel/derived/polyDelFromEnclosedPoints/polyDelFromEnclosedPoints.C
 molsToDel/derived/polyDelListOfAtoms/polyDelListOfAtoms.C
+molsToDel/derived/polyClosestDistance/polyClosestDistance.C
+
 
 /* Mapping */
 
