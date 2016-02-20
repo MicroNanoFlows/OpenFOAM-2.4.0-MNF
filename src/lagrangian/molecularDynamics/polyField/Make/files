@@ -98,6 +98,7 @@ controllers/derived/temperature/polyTemperatureMaxwellDemon/polyTemperatureMaxwe
 controllers/derived/temperature/polyTemperatureBerendsen/polyTemperatureBerendsen.C
 controllers/derived/temperature/polyTemperatureBerendsenBins/polyTemperatureBerendsenBins.C
 controllers/derived/temperature/polyTemperatureBerendsenBinsNew/polyTemperatureBerendsenBinsNew.C
+controllers/derived/temperature/polyTemperatureMaxwellDemonInputVelocity/polyTemperatureMaxwellDemonInputVelocity.C
 
 
 /*  - DENSITY  */
