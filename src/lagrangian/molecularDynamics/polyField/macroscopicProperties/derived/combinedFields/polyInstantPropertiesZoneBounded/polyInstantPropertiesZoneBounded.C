@@ -195,7 +195,7 @@ void polyInstantPropertiesZoneBounded::writeField()
                 velocity,
                 true
             );
-            
+            /*
             writeTimeData
             (
                 casePath_,
@@ -204,6 +204,7 @@ void polyInstantPropertiesZoneBounded::writeField()
                 force,
                 true
             );
+			*/
         }
     }
 }
