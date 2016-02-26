@@ -59,7 +59,7 @@ polyPDB::polyPDB
     fieldName_(propsDict_.lookup("fieldName")),
 //     n_(readLabel(propsDict_.lookup("numberOfFiles"))),
     iteration_(0),
-    zone_(false),
+//     zone_(false),
     regionName_(),
     regionId_(-1),
     timeIndex_(0),    
@@ -81,10 +81,16 @@ polyPDB::polyPDB
 
     molIds_ = ids.molIds();
 
-    if(propsDict_.found("zoneName"))
+    option_ = "mesh";
+    
+    if(propsDict_.found("option"))
     {
-        zone_ = true;
-
+        const word option = propsDict_.lookup("option");
+        option_ = option;
+    }
+    
+    if(option_ == "zone")
+    {
         const word regionName = propsDict_.lookup("zoneName");
         regionName_ = regionName;
 
@@ -100,6 +106,23 @@ polyPDB::polyPDB
                 << exit(FatalError);
         }
     }
+    
+    if(option_ == "boundBox")
+    {
+        PtrList<entry> boxList(propsDict_.lookup("boxes"));
+
+        boxes_.setSize(boxList.size());
+
+        forAll(boxList, b)
+        {
+            const entry& boxI = boxList[b];
+            const dictionary& dict = boxI.dict();
+
+            vector startPoint = dict.lookup("startPoint");
+            vector endPoint = dict.lookup("endPoint");
+            boxes_[b].resetBoundedBox(startPoint, endPoint);
+        }
+    }    
    
     if (propsDict_.found("variableMols"))
     {
@@ -274,6 +297,44 @@ void polyPDB::writeInMesh(List<labelField>& molIds, List<vectorField>& sites)
     molIds[myProc].transfer(moleculeIds);
 }
 
+void polyPDB::writeInBoundBox(List<labelField>& molIds, List<vectorField>& sites)
+{
+    label myProc =  Pstream::myProcNo();
+
+    IDLList<polyMolecule>::iterator mol(molCloud_.begin());
+
+    DynamicList<vector> sitePositions(0);
+    DynamicList<label> moleculeIds(0);
+
+    for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
+    {
+        forAll(boxes_, b)
+        {
+            if(boxes_[b].contains(mol().position()))
+            {        
+                if(findIndex(molIds_, mol().id()) != -1)
+                {
+                    moleculeIds.append(mol().id());
+
+                    forAll(mol().sitePositions(), i)
+                    {
+                        if(findIndex(excludeSites_, molCloud_.cP().siteNames(mol().id())[i]) == -1)
+                        {
+                            sitePositions.append(mol().sitePositions()[i]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    //sites[myProc].transfer(sitePositions.shrink());
+    //molIds[myProc].transfer(moleculeIds.shrink());
+
+    sites[myProc].transfer(sitePositions);
+    molIds[myProc].transfer(moleculeIds);
+}
+
 void polyPDB::writeInZone(List<labelField>& molIds, List<vectorField>& sites)
 {
     label myProc =  Pstream::myProcNo();
@@ -327,13 +388,19 @@ void polyPDB::write()
 
     label myProc =  Pstream::myProcNo();
 
-    if(zone_)
+    if(option_ == "zone")
     {
         Info << "polyPDB: write in zone" << endl;
 
         writeInZone(molIds, sites);
     }
-    else
+    if(option_ == "boundBox")
+    {
+        Info << "polyPDB: write in mesh" << endl;
+
+        writeInBoundBox(molIds, sites);       
+    }
+    if(option_ == "mesh")
     {
         Info << "polyPDB: write in mesh" << endl;
 

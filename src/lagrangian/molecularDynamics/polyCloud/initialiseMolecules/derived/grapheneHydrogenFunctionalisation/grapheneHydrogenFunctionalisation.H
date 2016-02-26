@@ -23,29 +23,27 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    polyPDB
-
+    grapheneHydrogenFunctionalisation
 
 Description
-    to write out a pdb file for creating movies
+
 
 SourceFiles
-    polyPDBI.H
-    polyPDB.C
-    polyPDBIO.C
+    grapheneHydrogenFunctionalisationI.H
+    grapheneHydrogenFunctionalisation.C
+    grapheneHydrogenFunctionalisationIO.C
+
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef polyPDB_H
-#define polyPDB_H
+#ifndef grapheneHydrogenFunctionalisation_H
+#define grapheneHydrogenFunctionalisation_H
 
-#include "polyField.H"
+#include "polyConfiguration.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
 #include "polyMoleculeCloud.H"
-#include "distribution.H"
-#include "boundedBox.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -53,12 +51,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class polyPDB Declaration
+                           Class grapheneHydrogenFunctionalisation Declaration
 \*---------------------------------------------------------------------------*/
 
-class polyPDB
+class grapheneHydrogenFunctionalisation
 :
-	public polyField
+	public polyConfiguration
 {
 
 private:
@@ -66,107 +64,65 @@ private:
     // Private data
 
         //- subDictionary containing the properties
-        dictionary propsDict_;
-
-        propertyField fields_;
-
-        List<label> molIds_;
-
-        List<word> excludeSites_;
-
-        word fieldName_;
-
-        label n_;
-
-        List<label> minLimit_;
-        List<label> maxLimit_;
-
-        label iteration_;
-
+//         dictionary propsDict_;
+//         fileName timePath_;
         
         word option_;
         
-        // zone        
+        scalar dr_;
         
-        word regionName_;
-        label regionId_;
-
-        // bound boxes
-        
-        List<boundedBox> boxes_;
-        
-        label timeIndex_;
-        label nSteps_;
-        
-        bool variableMols_;
-        label nSiteEstimate_;
-        vector rDummy_;
-    
-        scalar startTime_;
-        scalar endTime_;
-        scalar accumulatedTime_;
-        scalar deltaT_;
-    
-        bool writeFirstTimeStep_;
+        label molIdC_;
+        label molIdCN_;        
+        label molIdH_;
         
     // Private Member Functions
 
-            void write();
 
-            void writeInZone(List<labelField>& molIds, List<vectorField>& sites);
+        void insertMolecule
+        (
+            const point& position,
+            const label& cell,
+            const label& id,
+            const label& tetFace,
+            const label& tetPt,         
+            const bool& tethered,
+            const bool& frozen,
+            const scalar& phi,
+            const scalar& theta,
+            const scalar& psi,
+//             const scalar& temperature,
+            const vector& velocity
+        );
 
-            void writeInMesh(List<labelField>& molIds, List<vectorField>& sites);
-            
-            void writeInBoundBox(List<labelField>& molIds, List<vectorField>& sites);            
-
-            
+        void fixedPropertiesFromDict();
+        
+        
+        
 public:
 
     //- Runtime type information
-    TypeName("polyPDB");
+    TypeName("grapheneHydrogenFunctionalisation");
 
     // Constructors
 
         //- Construct from components
-        polyPDB
+        grapheneHydrogenFunctionalisation
 		(
-            Time& t,
-            const polyMesh& mesh,
             polyMoleculeCloud& molCloud,
             const dictionary& dict
+//             const word& name
 		);
 
     // Destructor
 
- 		~polyPDB();
+ 		~grapheneHydrogenFunctionalisation();
+
 
     // Member Functions
 
-        //- create initial field
-        void createField();
+        void setInitialConfiguration();
 
-        //- calculate field
-        void calculateField();
-
-        void measureDuringForceComputation
-        (
-            polyMolecule* molI,
-            polyMolecule* molJ
-        );
-
-        void measureDuringForceComputationSite
-        (
-            polyMolecule* molI,
-            polyMolecule* molJ,
-            label sI,
-            label sJ
-        );
-
-        const propertyField& fields() const;
-
-        //- write field
-        void writeField();
-}; 		
+};
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

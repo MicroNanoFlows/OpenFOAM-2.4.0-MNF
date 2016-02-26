@@ -80,6 +80,8 @@ initialiseMolecules/derived/polyBCC/polyBCC.C
 initialiseMolecules/derived/polyCrystal/polyCrystal.C
 initialiseMolecules/derived/cilium/cilium.C
 initialiseMolecules/derived/ciliumIC/ciliumIC.C
+initialiseMolecules/derived/grapheneHydrogenFunctionalisation/grapheneHydrogenFunctionalisation.C
+
 
 /* Deletion */
 
@@ -96,6 +98,7 @@ molsToDel/derived/polyDelFromEnclosedPoints/polyDelFromEnclosedPoints.C
 molsToDel/derived/polyDelListOfAtoms/polyDelListOfAtoms.C
 molsToDel/derived/polyDelFromCosineWave/polyDelFromCosineWave.C
 molsToDel/derived/polyClosestDistance/polyClosestDistance.C
+molsToDel/derived/polySwitchMolecules/polySwitchMolecules.C
 
 /* Mapping */
 
@@ -170,6 +173,7 @@ controllers/derived/temperature/polyTemperatureBerendsenBinsNew/polyTemperatureB
 controllers/derived/temperature/polyTemperatureMaxwellDemon/polyTemperatureMaxwellDemon.C
 controllers/derived/temperature/polyTemperatureBerendsen/polyTemperatureBerendsen.C
 controllers/derived/temperature/polyLangevin/polyLangevin.C
+controllers/derived/temperature/polyTemperatureMaxwellDemonInputVelocity/polyTemperatureMaxwellDemonInputVelocity.C
 
 /*  - DENSITY  */
 

@@ -23,29 +23,27 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    polyPDB
-
+    polyTemperatureMaxwellDemonInputVelocity
 
 Description
-    to write out a pdb file for creating movies
-
+ 
 SourceFiles
-    polyPDBI.H
-    polyPDB.C
-    polyPDBIO.C
+    polyTemperatureMaxwellDemonInputVelocityI.H
+    polyTemperatureMaxwellDemonInputVelocity.C
+    polyTemperatureMaxwellDemonInputVelocityIO.C
+
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef polyPDB_H
-#define polyPDB_H
+#ifndef polyTemperatureMaxwellDemonInputVelocity_H
+#define polyTemperatureMaxwellDemonInputVelocity_H
 
-#include "polyField.H"
+#include "polyStateController.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
 #include "polyMoleculeCloud.H"
-#include "distribution.H"
-#include "boundedBox.H"
+// #include "binModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -53,12 +51,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class polyPDB Declaration
+        Class polyTemperatureMaxwellDemonInputVelocity Declaration
 \*---------------------------------------------------------------------------*/
 
-class polyPDB
+class polyTemperatureMaxwellDemonInputVelocity
 :
-	public polyField
+	public polyStateController
 {
 
 private:
@@ -68,105 +66,77 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-        propertyField fields_;
+        //- time-constant
+        scalar tauT_;
 
+        //- probability of collision
+        scalar p_;
+
+        label nBins_;
+        scalar binWidth_;
+        List<vector> velocities_;
+        
+        scalar zeroPoint_;
+        
+        
+        scalar temperature_;
+        
         List<label> molIds_;
 
-        List<word> excludeSites_;
-
-        word fieldName_;
-
-        label n_;
-
-        List<label> minLimit_;
-        List<label> maxLimit_;
-
-        label iteration_;
-
         
-        word option_;
-        
-        // zone        
-        
-        word regionName_;
-        label regionId_;
-
-        // bound boxes
-        
-        List<boundedBox> boxes_;
-        
-        label timeIndex_;
-        label nSteps_;
-        
-        bool variableMols_;
-        label nSiteEstimate_;
-        vector rDummy_;
-    
-        scalar startTime_;
-        scalar endTime_;
-        scalar accumulatedTime_;
-        scalar deltaT_;
-    
-        bool writeFirstTimeStep_;
         
     // Private Member Functions
 
-            void write();
-
-            void writeInZone(List<labelField>& molIds, List<vectorField>& sites);
-
-            void writeInMesh(List<labelField>& molIds, List<vectorField>& sites);
-            
-            void writeInBoundBox(List<labelField>& molIds, List<vectorField>& sites);            
-
-            
 public:
 
     //- Runtime type information
-    TypeName("polyPDB");
+    TypeName("polyTemperatureMaxwellDemonInputVelocity");
 
     // Constructors
 
         //- Construct from components
-        polyPDB
-		(
+        polyTemperatureMaxwellDemonInputVelocity
+        (
             Time& t,
-            const polyMesh& mesh,
             polyMoleculeCloud& molCloud,
             const dictionary& dict
-		);
+        );
 
     // Destructor
 
- 		~polyPDB();
+        ~polyTemperatureMaxwellDemonInputVelocity();
+
 
     // Member Functions
+        
+        //- create an initial configuration
+        void initialConfiguration();
 
-        //- create initial field
-        void createField();
-
-        //- calculate field
-        void calculateField();
-
-        void measureDuringForceComputation
+        //- control molecules at various stages of time-step
+        void controlBeforeVelocityI();
+        void controlBeforeMove();
+        void controlBeforeForces();
+        void controlDuringForces
         (
             polyMolecule* molI,
             polyMolecule* molJ
-        );
-
-        void measureDuringForceComputationSite
+        );        
+        void controlAfterForces();
+        void controlAfterVelocityII();
+        
+        //- calculate any required properties (end of time-step)
+        void calculateProperties(); 
+        
+        //- output data (optional)
+        void output
         (
-            polyMolecule* molI,
-            polyMolecule* molJ,
-            label sI,
-            label sJ
+            const fileName& fixedPathName, 
+            const fileName& timePath
         );
-
-        const propertyField& fields() const;
-
-        //- write field
-        void writeField();
-}; 		
+        
+        //- update properties from a modified dictionary (optional)
+        void updateProperties(const dictionary&);
+};
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

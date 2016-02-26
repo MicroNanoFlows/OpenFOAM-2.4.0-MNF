@@ -23,29 +23,28 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    polyPDB
-
+    polySwitchMolecules
 
 Description
-    to write out a pdb file for creating movies
+    Switch ids between molecules
+
 
 SourceFiles
-    polyPDBI.H
-    polyPDB.C
-    polyPDBIO.C
+    polySwitchMoleculesI.H
+    polySwitchMolecules.C
+    polySwitchMoleculesIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef polyPDB_H
-#define polyPDB_H
+#ifndef polySwitchMolecules_H
+#define polySwitchMolecules_H
 
-#include "polyField.H"
+#include "polyMolsToDeleteModel.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
 #include "polyMoleculeCloud.H"
-#include "distribution.H"
-#include "boundedBox.H"
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -53,12 +52,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class polyPDB Declaration
+                           Class polySwitchMolecules Declaration
 \*---------------------------------------------------------------------------*/
 
-class polyPDB
+class polySwitchMolecules
 :
-	public polyField
+	public polyMolsToDeleteModel
 {
 
 private:
@@ -67,106 +66,47 @@ private:
 
         //- subDictionary containing the properties
         dictionary propsDict_;
-
-        propertyField fields_;
-
-        List<label> molIds_;
-
-        List<word> excludeSites_;
-
-        word fieldName_;
-
-        label n_;
-
-        List<label> minLimit_;
-        List<label> maxLimit_;
-
-        label iteration_;
-
         
-        word option_;
-        
-        // zone        
-        
-        word regionName_;
-        label regionId_;
+       
+        label molIdStart_;
+        label molIdEnd_;
 
-        // bound boxes
-        
-        List<boundedBox> boxes_;
-        
-        label timeIndex_;
-        label nSteps_;
-        
-        bool variableMols_;
-        label nSiteEstimate_;
-        vector rDummy_;
-    
-        scalar startTime_;
-        scalar endTime_;
-        scalar accumulatedTime_;
-        scalar deltaT_;
-    
-        bool writeFirstTimeStep_;
+        List<vector> molPoints_;
         
     // Private Member Functions
 
-            void write();
+        void checkBoundBox
+        (
+            boundBox& b,
+            const vector& startPoint,
+            const vector& endPoint
+        );
 
-            void writeInZone(List<labelField>& molIds, List<vectorField>& sites);
+        void findMolsToDel();
 
-            void writeInMesh(List<labelField>& molIds, List<vectorField>& sites);
-            
-            void writeInBoundBox(List<labelField>& molIds, List<vectorField>& sites);            
-
-            
 public:
 
     //- Runtime type information
-    TypeName("polyPDB");
+    TypeName("polySwitchMolecules");
 
     // Constructors
 
         //- Construct from components
-        polyPDB
+        polySwitchMolecules
 		(
-            Time& t,
-            const polyMesh& mesh,
             polyMoleculeCloud& molCloud,
             const dictionary& dict
 		);
 
     // Destructor
 
- 		~polyPDB();
+ 		~polySwitchMolecules();
+
 
     // Member Functions
 
-        //- create initial field
-        void createField();
-
-        //- calculate field
-        void calculateField();
-
-        void measureDuringForceComputation
-        (
-            polyMolecule* molI,
-            polyMolecule* molJ
-        );
-
-        void measureDuringForceComputationSite
-        (
-            polyMolecule* molI,
-            polyMolecule* molJ,
-            label sI,
-            label sJ
-        );
-
-        const propertyField& fields() const;
-
-        //- write field
-        void writeField();
-}; 		
+ 
+};
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
