@@ -89,7 +89,7 @@ void grapheneHydrogenFunctionalisation::setInitialConfiguration()
     {    
         fixedPropertiesFromDict();
     }
-/*    
+    
     label finalSize = molCloud_.size();
 
     nMolsAdded_ = finalSize - initialSize;
@@ -99,7 +99,7 @@ void grapheneHydrogenFunctionalisation::setInitialConfiguration()
         reduce(nMolsAdded_, sumOp<label>());
     }
 
-    Info << tab << " molecules added: " << nMolsAdded_ << endl;  */  
+    Info << tab << " molecules added: " << nMolsAdded_ << endl; 
 }
 
 void grapheneHydrogenFunctionalisation::fixedPropertiesFromDict()
@@ -107,6 +107,31 @@ void grapheneHydrogenFunctionalisation::fixedPropertiesFromDict()
 
     // points on graphene 
     List<vector> molPoints = List<vector>(mdInitialiseDict_.lookup("molPoints"));
+    
+    // check for overlaps
+    scalar threshold = 0.01;
+    
+    forAll(molPoints, i)
+    {
+        forAll(molPoints, j)
+        {
+            if(i != j)
+            {
+                scalar magRIJ = mag(molPoints[i]-molPoints[j]);
+                
+                if(magRIJ < threshold)
+                {
+                    FatalErrorIn("grapheneHydrogenFunctionalisation::setInitialConfiguration()")
+                        << "You've specified similar atoms in the mdInitialiseDict: " 
+                        << molPoints[i]
+                        << ", " << molPoints[j]
+                        << ", magRIJ = " << magRIJ
+                        << exit(FatalError);
+                }
+            }
+        }
+    }
+    
     
 //     Info << "molPoints" << molPoints << endl;
     
@@ -226,7 +251,14 @@ void grapheneHydrogenFunctionalisation::fixedPropertiesFromDict()
         psi = readScalar(mdInitialiseDict_.lookup("psi"));
     }
 
+    
+    label nHydrogenInserted = 0;    
+    
     // For each carbon find it, and also find it's two neighbours 
+    // and then insert a hydrogen ion dr away 
+    
+    DynamicList<polyMolecule*> changeC;
+    
     
     forAll(molPoints, i)
     {    
@@ -354,13 +386,13 @@ void grapheneHydrogenFunctionalisation::fixedPropertiesFromDict()
         // average of all positions
         vector rM = (rA + rB + rC) / 3;
         
-        vector unit = rM - rA;
+        vector unit = rA - rM;
         unit /= mag(unit);
         
         // switch mol A to molIdCNew_
-        molsA[0]->id() = molIdCN_;
-        
-        
+//         molsA[0]->id() = molIdCN_;
+        changeC.append(molsA[0]);
+                
         // insert hydrogen atom
         
         vector globalPosition = rA + unit*dr_;
@@ -393,6 +425,8 @@ void grapheneHydrogenFunctionalisation::fixedPropertiesFromDict()
 //                 temperatureMols[i],
                 U
             );
+            
+            nHydrogenInserted++;
         }
         else
         {
@@ -403,6 +437,10 @@ void grapheneHydrogenFunctionalisation::fixedPropertiesFromDict()
         }        
     }
     
+    forAll(changeC, i)
+    {
+        changeC[i]->id() = molIdCN_;
+    }
     
     
 }
