@@ -101,6 +101,8 @@ polyDelFromEnclosedPoints::polyDelFromEnclosedPoints
             theta_ = -theta*constant::mathematical::pi/180;
         }
     }    
+  
+  
     
     normal_ = propsDict_.lookup("normal");
     
@@ -111,7 +113,7 @@ polyDelFromEnclosedPoints::polyDelFromEnclosedPoints
         points_[i] = points[i]+translate;
     }
     
-    Info << "points " << points_ << endl;
+//     Info << "points " << points_ << endl;
     
     if(!(points_.size() > 0))
     {
@@ -119,7 +121,9 @@ polyDelFromEnclosedPoints::polyDelFromEnclosedPoints
             << "Did not specify a list of points in dictionary!"
             << exit(FatalError);        
     }
-    // Rotate points here
+    
+    
+    // Rotate points here - not well tested
     
     if(rotate_)
     {
@@ -148,21 +152,99 @@ polyDelFromEnclosedPoints::polyDelFromEnclosedPoints
         }
     }
     
+    // Assume the list is ordered
     
-    // Assume 2D for now and list is ordered
+    option_ = "standard"; 
+  
     
-    // find centre point 
+    
+    if (propsDict_.found("option"))
+    {    
+        const word option(propsDict_.lookup("option"));    
+        option_ = option;
+    }
     
     centre_ = vector::zero;
     
-    forAll(points_, i)
+    // find centre point 
+    if(option_ == "standard")
     {
-        centre_ += points_[i];
+       
+        forAll(points_, i)
+        {
+            centre_ += points_[i];
+        }
+        
+        centre_ /= scalar(points_.size());
+        
+        Info << "Centre = " << centre_ << endl;    
     }
     
-    centre_ /= scalar(points_.size());
+    if(option_ == "centreLine")
+    {
+        // read in centreLine
+        
+        List<vector> centreLinePoints = List<vector>(propsDict_.lookup("centreLinePoints"));
+        
+        centreLine_.setSize(centreLinePoints.size(), vector::zero);
+        
+        forAll(centreLinePoints, i)
+        {
+            centreLine_[i] = centreLinePoints[i];
+        }
+        
+        label N = 3;
+        
+        if (propsDict_.found("N"))
+        {    
+            N = readLabel(propsDict_.lookup("N"));
+        }
+        
+        c_.setSize(points_.size());
+        
+        forAll(points_, i)
+        {
+            // find the three closest centreLine points?
+            const vector& rI = points_[i];
+            
+            c_[i].setSize(N, vector::zero);
+            
+            DynamicList<label> chosenIds;
+            
+            forAll(c_[i], j)
+            {
+                scalar rMin = GREAT;
+                vector rJ = vector::zero;
+                label id = -1;
+                
+                forAll(centreLine_, k)
+                {
+                    scalar rIJ = mag(rI - centreLine_[k]);
+                    
+                    if(rIJ < rMin)
+                    {
+                        if(findIndex(chosenIds, k) == -1)
+                        {
+                            rMin = rIJ;
+                            rJ = centreLine_[k];
+                            id = k;
+                        }
+                    }
+                }
+                
+                chosenIds.append(id);
+                c_[i][j]=rJ;
+            }
+        }
+        
+//         forAll(c_, i)
+//         {
+//              Info << "test, point = " << points_[i]
+//                   << ", neighbouring centres = " << c_[i]
+//                   << endl;        
+//         }
+    }
     
-    Info << "Centre = " << centre_ << endl;
     
     findMolsToDel();
     
@@ -180,6 +262,7 @@ polyDelFromEnclosedPoints::~polyDelFromEnclosedPoints()
 
 bool polyDelFromEnclosedPoints::isPointWithinTriangle
 (
+    const vector& centre,    
     const vector& r1,
     const vector& r2,
     const vector& rI
@@ -189,12 +272,12 @@ bool polyDelFromEnclosedPoints::isPointWithinTriangle
     
     // face centres
     vector fC12=(r1+r2)/2;
-    vector fC1C=(r1+centre_)/2;
-    vector fC2C=(r2+centre_)/2;
+    vector fC1C=(r1+centre)/2;
+    vector fC2C=(r2+centre)/2;
     
-    vector r1C = centre_ - r1;
+    vector r1C = centre - r1;
     vector r12 = r2 - r1;
-    vector r2C = centre_ - r2;
+    vector r2C = centre - r2;
     
     vector fN12 = r12 ^ normal_;
     fN12 /= mag(fN12);
@@ -207,7 +290,7 @@ bool polyDelFromEnclosedPoints::isPointWithinTriangle
     
     // solve for normals being inwards
     
-    vector localC = (r1 + r2 + centre_)/3.0;
+    vector localC = (r1 + r2 + centre)/3.0;
     
     if( ((localC-fC12) & fN12) < 0)
     {
@@ -228,7 +311,7 @@ bool polyDelFromEnclosedPoints::isPointWithinTriangle
 //     Info << "r1 = " << r1 << endl;
 //     Info << "r2 = " << r2 << endl;
 //     Info << "rI = " << rI << endl;
-//     Info << "centre = " << centre_ << endl;
+//     Info << "centre = " << centre << endl;
 //     Info << "fC12 = " << fC12 << endl;
 //     Info << "fC1C = " << fC1C << endl;
 //     Info << "fC2C = " << fC2C << endl;
@@ -281,38 +364,92 @@ bool polyDelFromEnclosedPoints::isPointWithinRegion(const vector& rI)
     
     bool inside = false;
     
-    forAll(points_, i)
+    if(option_ == "standard")
     {
-        label I = i;
-        label J = i+1;
-        
-        if(J > points_.size()-1)
+        forAll(points_, i)
         {
-            J = 0;
-        }
-        
-        if
-        (
-            isPointWithinTriangle
+            label I = i;
+            label J = i+1;
+            
+            if(J > points_.size()-1)
+            {
+                J = 0;
+            }
+            
+            if
             (
-                points_[I],
-                points_[J],
-                rI
+                isPointWithinTriangle
+                (
+                    centre_,
+                    points_[I],
+                    points_[J],
+                    rI
+                )
             )
-        )
-        {
-            inside = true;
+            {
+                inside = true;
+            }
         }
     }
     
-//     if (inside)
-//     {
-//         Info << "in" << endl;
-//     }
-//     else
-//     {
-//         Info << "out" <<  endl;
-//     }
+    if(option_ == "centreLine")
+    {
+        
+        forAll(points_, i)
+        {
+            label I = i;
+            label J = i+1;
+            
+            if(J > points_.size()-1)
+            {
+                J = 0;
+            }
+            
+            forAll(c_[i], j)
+            {
+                if
+                (
+                    isPointWithinTriangle
+                    (
+                        c_[i][j],
+                        points_[I],
+                        points_[J],
+                        rI
+                    )
+                )
+                {
+                    inside = true;
+                }
+            }
+            
+            forAll(c_[J], j)
+            {
+                if
+                (
+                    isPointWithinTriangle
+                    (
+                        c_[J][j],
+                        points_[I],
+                        points_[J],
+                        rI
+                    )
+                )
+                {
+                    inside = true;
+                }
+            }            
+        }
+        
+//         if(inside)
+//         {
+//             Info << "rI = " << rI << "; inside" << endl;
+//         }
+//         else
+//         {
+//             Info << "rI = " << rI << "; outside" << endl;
+//         }
+        
+    }
     
     return inside;
 }

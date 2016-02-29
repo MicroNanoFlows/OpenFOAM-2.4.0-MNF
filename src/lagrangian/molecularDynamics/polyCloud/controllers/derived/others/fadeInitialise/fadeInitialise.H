@@ -23,27 +23,27 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    polyDelFromEnclosedPoints
+    fadeInitialise
 
 Description
-    Apply 2D points 
+    Use FADE to initalise systems that produce overlaps.
+    
 
 SourceFiles
-    polyDelFromEnclosedPointsI.H
-    polyDelFromEnclosedPoints.C
-    polyDelFromEnclosedPointsIO.C
+    fadeInitialiseI.H
+    fadeInitialise.C
+    fadeInitialiseIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef polyDelFromEnclosedPoints_H
-#define polyDelFromEnclosedPoints_H
+#ifndef fadeInitialise_H
+#define fadeInitialise_H
 
-#include "polyMolsToDeleteModel.H"
+#include "polyStateController.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
 #include "polyMoleculeCloud.H"
-#include "boundBox.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,12 +51,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class polyDelFromEnclosedPoints Declaration
+                           Class fadeInitialise Declaration
 \*---------------------------------------------------------------------------*/
 
-class polyDelFromEnclosedPoints
+class fadeInitialise
 :
-	public polyMolsToDeleteModel
+	public polyStateController
 {
 
 private:
@@ -65,79 +65,75 @@ private:
 
         //- subDictionary containing the properties
         dictionary propsDict_;
-        
-        boundBox box_;
-        
+
+
+        //- ids of mols
         List<label> molIds_;
 
-        bool deleteExternalMols_;
-        
-        List<vector> points_;
-        
-        vector normal_;
-        
-        vector centre_;
-        
-        bool rotate_;
-        
-        // radians
-        scalar theta_;
-        
-        
-        word option_;
-        
-        
-        List<vector> centreLine_;
-        
-        // outer list = size of points_;
-        // inner list = 3 neighbours
-        // inner list = centreLine_;
-        List<List<vector> > c_;
-        
-        
-        
-        // local search
-//         bool local_;
-//         scalar radius_;
-        
+//         scalar nSteps_;
+//         scalar dF_;
+//         scalar runningSum_;
+        scalar deltaT_;
+        scalar t_;
+        scalar tauT_;
+        label n_;
         
     // Private Member Functions
 
-        void findMolsToDel();
-        
-        bool isPointWithinRegion(const vector& rI);
-        
-        bool isPointWithinTriangle
-        (
-            const vector& centre,
-            const vector& r1,
-            const vector& r2,
-            const vector& rI
-        );
-        
-        
+
+
 public:
 
     //- Runtime type information
-    TypeName("polyDelFromEnclosedPoints");
+    TypeName("fadeInitialise");
 
     // Constructors
 
         //- Construct from components
-        polyDelFromEnclosedPoints
-		(
+        fadeInitialise
+        (
+            Time& t,
             polyMoleculeCloud& molCloud,
             const dictionary& dict
-		);
+        );
 
     // Destructor
 
- 		~polyDelFromEnclosedPoints();
+        ~fadeInitialise();
 
 
     // Member Functions
+    // Member Functions
+        
+        //- create an initial configuration
+        void initialConfiguration();
 
- 
+        //- control molecules at various stages of time-step
+        void controlBeforeVelocityI();
+        void controlBeforeMove();
+        void controlBeforeForces();
+        void controlDuringForces
+        (
+            polyMolecule* molI,
+            polyMolecule* molJ
+        );        
+        void controlAfterForces();
+        void controlAfterVelocityII();
+        
+        //- calculate any required properties (end of time-step)
+        void calculateProperties(); 
+        
+        //- output data (optional)
+        void output
+        (
+            const fileName& fixedPathName, 
+            const fileName& timePath
+        );
+        
+        //- update properties from a modified dictionary (optional)
+        void updateProperties(const dictionary&);
+
+        // Access
 };
 
 

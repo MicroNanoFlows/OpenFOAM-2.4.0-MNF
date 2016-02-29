@@ -74,7 +74,9 @@ class potentials
         
         // largest rCut of all pair and electrostatic potentials
         scalar rCutMax_; 
-
+        
+        
+        bool checkPotentialOverlaps_;
         
         // add exclusions functionality here 
         
@@ -141,6 +143,7 @@ public:
             
             const scalar& rCutMax() const;
             
+            bool checkPotentialOverlaps();
 };
 
 

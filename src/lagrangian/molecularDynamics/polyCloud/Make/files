@@ -193,7 +193,7 @@ controllers/derived/others/tail/tail.C
 controllers/derived/others/polyFadeEquilibrateMolecules/polyFadeEquilibrateMolecules.C
 controllers/derived/others/ciliumMotion/ciliumMotion.C
 controllers/derived/others/pressureFlux/pressureFlux.C
-
+controllers/derived/others/fadeInitialise/fadeInitialise.C
 
 /*  BOUNDARIES  */
 
