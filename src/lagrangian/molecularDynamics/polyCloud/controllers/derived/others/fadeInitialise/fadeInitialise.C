@@ -94,7 +94,7 @@ void fadeInitialise::initialConfiguration()
     for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
     {
         if(findIndex(molIds_, mol().id()) != -1)
-        {
+        {         
             mol().fraction() = 0.0;
         }
     }
@@ -157,7 +157,10 @@ void fadeInitialise::calculateProperties()
         
         for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
         {
-            mol().fraction() = 1.0;
+            if(findIndex(molIds_, mol().id()) != -1)
+            {        
+                mol().fraction() = 1.0;
+            }
         }
     }
 

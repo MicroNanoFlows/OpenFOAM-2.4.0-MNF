@@ -706,15 +706,20 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     
     //check and remove high energy overalps
     checkForOverlaps();
+//     controllers_.initialConfig();
     
     buildCellOccupancy();
-    clearLagrangianFields();
-    calculateForce();
-    updateAcceleration();
+
     
     fields_.createFields();
     boundaries_.setInitialConfig();
     controllers_.initialConfig();
+    
+    clearLagrangianFields();
+    calculateForce();
+    updateAcceleration();
+    
+
     
     // TESTS
     writeReferredCloud();
