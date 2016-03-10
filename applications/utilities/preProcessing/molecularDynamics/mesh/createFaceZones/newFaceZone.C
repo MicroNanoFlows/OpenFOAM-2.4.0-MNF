@@ -36,47 +36,6 @@ Description
 namespace Foam
 {
 
-void newFaceZone::checkBoundBox
-(
-    boundBox& b,
-    const vector& startPoint,
-    const vector& endPoint
-)
-{
-    vector& vMin = b.min();
-    vector& vMax = b.max();
-
-    if(startPoint.x() < endPoint.x())
-    {
-        vMin.x() = startPoint.x();
-        vMax.x() = endPoint.x();
-    }
-    else
-    {
-        vMin.x() = endPoint.x();
-        vMax.x() = startPoint.x();
-    }
-    if(startPoint.y() < endPoint.y())
-    {
-        vMin.y() = startPoint.y();
-        vMax.y() = endPoint.y();
-    }
-    else
-    {
-        vMin.y() = endPoint.y();
-        vMax.y() = startPoint.y();
-    }
-    if(startPoint.z() < endPoint.z())
-    {
-        vMin.z() = startPoint.z();
-        vMax.z() = endPoint.z();
-    }
-    else
-    {
-        vMin.z() = endPoint.z();
-        vMax.z() = startPoint.z();
-    }
-}       
     
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -87,25 +46,43 @@ void newFaceZone::checkBoundBox
 newFaceZone::newFaceZone
 (
     const polyMesh& mesh,
-    const word& zoneName,
-    const vector& startPoint,
-    const vector& endPoint
+    const dictionary& dict
 )
 :
     mesh_(mesh),
-    regionName_(zoneName),
-    startPoint_(startPoint),
-    endPoint_(endPoint),
+    dict_(dict),
     faces_()
 {
-    checkBoundBox
-    (
-        bb_,
-        startPoint_,
-        endPoint_
-    );
+
+    const word zoneName = dict.lookup("zoneName");
+    regionName_ = zoneName;
+        
+    const faceZoneMesh& faceZones = mesh.faceZones();
+    const label& regionId = faceZones.findZoneID(zoneName);
     
-    setZone();
+    if(regionId != -1)
+    {
+        FatalErrorIn("createFaceZones")
+            << "FaceZone: " << zoneName << " exists on the mesh."
+            << nl << " Check: "
+            << "zoneDict"
+            << nl << "Solve this by executing:"
+            << nl << "> rm constant/polyMesh/*Zones"
+            << nl << "> blockMesh"
+            << nl << "> createFaceZones"            
+            << exit(FatalError);
+    }    
+    
+    
+    if(dict.found("writeFaceSet"))
+    {
+        writeFaceSets_ = Switch(dict.lookup("writeFaceSet"));
+    }
+
+    const word option(dict.lookup("option"));
+    option_ = option;
+    
+    setZone();    
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -118,27 +95,59 @@ newFaceZone::~newFaceZone()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 void newFaceZone::setZone()
 {
+    DynamicList<label> faces(0);    
     
-    DynamicList<label> faces(0);
-    
-    for (label i = 0; i < mesh_.nFaces(); i++)
+    if(option_ == "boundBox")
     {
-        const vector& faceCentreI = mesh_.faceCentres()[i];        
+
+        vector startPoint = dict_.lookup("startPoint");
+        vector endPoint = dict_.lookup("endPoint");
+    
+        boundedBox bb;
+        bb.resetBoundedBox(startPoint, endPoint);
         
-        bool acceptedFace = false;
-        
-        if(bb_.contains(faceCentreI))
+        for (label i = 0; i < mesh_.nFaces(); i++)
         {
-            faces.append(i);
-            acceptedFace = true;
+            const vector& faceCentreI = mesh_.faceCentres()[i];        
+            
+            bool acceptedFace = false;
+            
+            if(bb.contains(faceCentreI))
+            {
+                faces.append(i);
+                acceptedFace = true;
+            }
+            
+            // further step of refinement can go here
+            // Example if vertices of face + face centre amount to
+            // > 50% inside boundbox, accept the face in the faceZone
+            // FUTURE WORK
         }
-        
-        // further step of refinement can go here
-        // Example if vertices of face + face centre amount to
-        // > 50% inside boundbox, accept the face in the faceZone
-        // FUTURE WORK
     }
     
+    if(option_ == "pointToPoint")
+    {
+        // not yet implemented 
+        vector startPoint = dict_.lookup("startPoint");
+        vector endPoint = dict_.lookup("endPoint");        
+        vector rES = endPoint - startPoint;
+       
+        const vectorField& faceCentres = mesh_.faceCentres();
+
+        forAll(faceCentres, f)
+        {
+            const vector& fC = faceCentres[f];
+
+            scalar test1 = (fC - startPoint) & rES;
+            scalar test2 = (endPoint - fC) & rES;
+
+            if((test1 >= 0) && (test2 >= 0))
+            {
+                faces.append(f);
+            }
+        }
+    }
+        
     faces.shrink();
 
     faces_.setSize(faces.size());
@@ -146,7 +155,12 @@ void newFaceZone::setZone()
     forAll(faces, i)
     {
         faces_[i] = faces[i];
-    }    
+    }     
+    
+//     Info << "-> number of faces: "<< faces_.size() << endl; 
+    
+    // Test can be placed here to check faces all contain the 
+    // same normal to check if there are any bends on the plane
 }
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //

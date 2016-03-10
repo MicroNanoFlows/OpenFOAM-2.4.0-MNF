@@ -1,0 +1,3 @@
+testNewMD.C
+
+EXE = $(FOAM_APPBIN)/testNewMD

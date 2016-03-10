@@ -79,11 +79,18 @@ int main(int argc, char *argv[])
         dimensionedScalar("zero",  dimensionSet(0, -3, 0, 0, 0), 0.0)
     );
 
-    reducedUnits redUnits(runTime, mesh);
+    reducedUnits rU(runTime, mesh);
 
-    potential pot(mesh, redUnits);
-
-    polyMoleculeCloud molecules(runTime, mesh, pot, redUnits, rndGen);
+    constantMoleculeProperties cP (mesh, rU);
+        
+    polyMoleculeCloud molecules
+    (
+        runTime,
+        mesh,
+        rU,
+        cP,
+        rndGen
+    );    
 
     const List< DynamicList<polyMolecule*> >& cellOccupancy
         = molecules.cellOccupancy();

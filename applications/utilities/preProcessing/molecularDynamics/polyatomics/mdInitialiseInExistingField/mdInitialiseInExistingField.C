@@ -39,23 +39,20 @@ int main(int argc, char *argv[])
 #   include "createMesh.H"
 #   include "createRandom.H"
     
-    reducedUnits redUnits(runTime, mesh);
-    
-    IOdictionary moleculePropertiesDict
-    (
-        IOobject
-        (
-            "moleculeProperties",
-            mesh.time().constant(),
-            mesh,
-            IOobject::MUST_READ,
-            IOobject::NO_WRITE
-        )
-    );
-    
-    potential pot(mesh, redUnits, moleculePropertiesDict);
+    reducedUnits rU(runTime, mesh);
 
-    polyMoleculeCloud molecules(runTime, mesh, pot, redUnits, rndGen, "mdInitialise", false);
+    constantMoleculeProperties cP (mesh, rU);
+        
+    polyMoleculeCloud molecules
+    (
+        runTime,
+        mesh,
+        rU,
+        cP,
+        rndGen,
+        "mdInitialise",
+        false
+    );
 
     runTime++;
 

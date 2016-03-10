@@ -1,0 +1,23 @@
+In order to build this copy of OpenFOAM 2.4.0 with the added MicroNanoFlow code functionality please follow the following steps:
+
+1) Extract the most recent ThirdParty-2.4.0 archive to the same directory level as this OpenFOAM-2.4.0-MNF folder, i.e. if this folder resides at $HOME/OpenFOAM/OpenFOAM-2.4.0-MNF then the ThirdParty folder needs to be at $HOME/OpenFOAM/ThirdParty-2.4.0-MNF. Please note: you will need to rename the downloaded folder from ThirdParty-2.4.0 (or whatever is downloaded) to the form ThirdParty-2.4.0-MNF.
+    1.1) If you expect to need further ThirdParty functionality (such as Metis) then please follow the usual steps to add these to the ThirdParty folder.
+2) This installation is designed to be built with GCC (greater than 4.4) and applies system specific optimisations and random functionality optimisations. If you do NOT wish for this and want to build using typical GCC options or another compiler then you will need to:
+    2.1) Modify the line "export WM_COMPILER=GccMNFMD" in OpenFOAM-2.4.0-MNF-MD/etc/prefs.sh [MB: Stephen, can you double check this is correct]
+    2.2) If you want a standard GCC compilation, simply comment it out or if you want something else then replace GccMNFMD with your own option.
+    2.3) If using your own compiler option then ensure that an appropriate "rules" folder exists in OpenFOAM-2.4.0-MNF/wmake/rules.
+3) Now set your OpenFOAM home directory, this is the path to the OpenFOAM-2.4.0-MNF folder:
+    3.1) Edit /OpenFOAM-2.4.0-MNF/etc/bashc
+    3.2) Set foamInstall=$HOME/$WM_PROJECT on line 45 equal to the actual path of your installation (it is recommended you simply follow this default location though and clone the OpenFOAM-2.4.0-MNF directory to the default $HOME/OpenFOAM/OpenFOAM-2.4.0-MNF, in which case this does not need editing).
+4) You then need to source the OpenFOAM bashrc file to set up your system variables. It is recommended this is done by creating an alias in your .bashrc file, this example assumes your OpenFOAM directory is in the default location, however if you have put it somewhere else (i.e. the value you set foamInstall equal to in step 3) then please use this location instead:
+    3.1) Edit $HOME/.bashrc
+    3.2) At the end add (updating anythink in [] brackets): "alias of24MNF='source $HOME/OpenFOAM/OpenFOAM-2.4.0-MNF/etc/bashrc; export WM_NCOMPPROCS=[number of threads to compile with]'
+5) To compile the build please then follow these insturctions in this order:
+    5.1) Enter the ThirdParty-2.4.0-MNF folder and type ./Allwmake, once complete then type ./makeParaView4. If you get an error stating your Qt version is not high enough go to step 5.2, otherwise go to 3.3.
+    5.2) If the makeParaView4 script informs you your Qt version is not high enough then:
+        5.2.1) Ensure you have the latest Qt library installed in your machine (use your standard package manager)
+        5.2.2) Determine the location of the Qt4 libraries on your system, these are installed along with Qt5 for legacy purposes like this (this is likely to be something like /usr/lib/x86_64-linux-gnu/qt4, use qmake --version to help)
+        5.2.3) Try the makeParaView4 script again but this time with the added "-qmake" options, i.e. ./makeParaView4 -qmake /usr/lib/x86_64-linux-gnu/qt4
+    5.3) Once ParaView has built it informs you of 3 system variables that need to be exported, ParaView_Dir, PATH and PV_PLUGIN_PATH. It is recommended you add these as new exports to the end of your alias after the existing "export WM_NCOMPPROCS=".
+    5.4) Now all paths are set, either close the terminal and open a new one or resource your .bashrc file (source .bashrc) then load the alias (i.e. of24MNF) to set all paths.
+    5.5) Enter the OpenFOAM-2.4.0-MNF folder and type ./Allwmake, once this is complete you will have a working OpenFOAM-2.4.0 installation that also includes the MNF code (i.e. mdPolyFoam)

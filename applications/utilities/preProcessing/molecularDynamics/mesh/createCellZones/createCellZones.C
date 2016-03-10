@@ -68,32 +68,30 @@ int main(int argc, char *argv[])
 
 #   include "readZonesDict.H"
 
-    forAll(squareList, sL)
+    forAll(regionList, sL)
     {
+
+        Info << sL << "  creating cell zone: " << regionZoneNames[sL] << endl;
+
         newCellZone sZ
         (
             mesh,
-            regionZoneNames[sL],
-            startPoints[sL],
-            endPoints[sL]
+            dictionaries[sL]
         );
-
-        Info << sL << "  square zone: " << regionZoneNames[sL] 
-             << ", number of cells: "<< sZ.cells().size() 
-             << endl;
-
 
         if(sZ.cells().size() == 0)
         {
             Info << "WARNING: no cells have been created -- check" << endl;
         }
-
+        
+        Info << " number of cells: " << sZ.cells().size() << nl<< endl;
+        
         createCellZone(mesh, sZ.cells(), sZ.name());
     
         // visualisation of region
         cellsToFaceZone(mesh, sZ.cells(), sZ.name());
 
-        if(writeCellSets[sL])
+        if(sZ.writeCellSet())
         {
             createCellSet(mesh, sZ.cells(), sZ.name());
         }

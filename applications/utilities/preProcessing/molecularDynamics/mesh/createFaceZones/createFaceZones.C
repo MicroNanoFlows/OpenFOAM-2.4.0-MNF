@@ -71,14 +71,12 @@ int main(int argc, char *argv[])
 
     forAll(surfacesList, sL)
     {
-        Info << sL << ": Creating face: " << surfaceZoneNames[sL] << endl;
+        Info << sL << ": Creating face zone: " << surfaceNames[sL] << endl;
 
         newFaceZone surfaceI
         (
             mesh,
-            surfaceZoneNames[sL],
-            startingVectors[sL],
-            endingVectors[sL]
+            dictionaries[sL]
         );
 
         Info << " number of faces: " << surfaceI.faces().size() << nl<< endl;
@@ -86,7 +84,7 @@ int main(int argc, char *argv[])
         createFaceZone(mesh, surfaceI.faces(), surfaceI.name());
     
         // create sets
-        if(writeFaceSets[sL])
+        if(surfaceI.writeFaceSets())
         {
             createFaceSet(mesh, surfaceI.faces(), surfaceI.name());
         }

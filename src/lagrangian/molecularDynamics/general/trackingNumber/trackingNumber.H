@@ -95,10 +95,13 @@ public:
 
             label getTrackingNumber();
 
+            label& trackingIndex();
 
             label getMaxTrackingNumber();
 
             inline const bool& resetTracking() const;
+            
+            
         // Edit
 
         // Write
