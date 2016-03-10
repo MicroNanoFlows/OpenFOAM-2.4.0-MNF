@@ -686,34 +686,66 @@ void polyPDB::write()
                             }
                             else
                             {
-
-                                file << "HETATM";
-                                file.width(5);
-                                file << nSites-minLimit_[j];
-                                file << "  ";
-                                file.width(3);
-                                file << std::left << molCloud_.cP().siteNames(molId)[0];
-                                file << " ";
-                                file.width(3);
-                                file << std::right << "XXX";
-                                file << " ";
-                                file.width(5);
-                                file << nMols;
-                                file << "    ";
-                                file.width(8);
-                                file.precision(3);
-                                file.setf(std::ios::fixed,std::ios::floatfield);  
-                                file << rS.x();
-                                file.width(8);
-                                file.precision(3);
-                                file.setf(std::ios::fixed,std::ios::floatfield);  
-                                file << rS.y();
-                                file.width(8);
-                                file.precision(3);
-                                file.setf(std::ios::fixed,std::ios::floatfield);  
-                                file << rS.z();
-                                file << "  1.00  0.00 ";
-                                file << nl;
+                                if(idList[molId] == "water")
+                                {
+                                    file << "HETATM";
+                                    file.width(5);
+                                    file << nSites-minLimit_[j];
+                                    file << "  ";
+                                    file.width(3);
+                                    file << std::left << molCloud_.cP().siteNames(molId)[0];
+                                    file << " ";
+                                    file.width(3);
+                                    file << std::right << "HOH";
+                                    file << " ";
+                                    file.width(5);
+                                    file << nMols;
+                                    file << "    ";
+                                    file.width(8);
+                                    file.precision(3);
+                                    file.setf(std::ios::fixed,std::ios::floatfield);  
+                                    file << rS.x();
+                                    file.width(8);
+                                    file.precision(3);
+                                    file.setf(std::ios::fixed,std::ios::floatfield);  
+                                    file << rS.y();
+                                    file.width(8);
+                                    file.precision(3);
+                                    file.setf(std::ios::fixed,std::ios::floatfield);  
+                                    file << rS.z();
+                                    file << "  1.00  0.00 ";
+                                    file << nl;
+                                }                                
+                                else
+                                {
+                                    file << "HETATM";
+                                    file.width(5);
+                                    file << nSites-minLimit_[j];
+                                    file << "  ";
+                                    file.width(3);
+                                    file << std::left << molCloud_.cP().siteNames(molId)[0];
+                                    file << " ";
+                                    file.width(3);
+                                    file << std::right << "XXX";
+                                    file << " ";
+                                    file.width(5);
+                                    file << nMols;
+                                    file << "    ";
+                                    file.width(8);
+                                    file.precision(3);
+                                    file.setf(std::ios::fixed,std::ios::floatfield);  
+                                    file << rS.x();
+                                    file.width(8);
+                                    file.precision(3);
+                                    file.setf(std::ios::fixed,std::ios::floatfield);  
+                                    file << rS.y();
+                                    file.width(8);
+                                    file.precision(3);
+                                    file.setf(std::ios::fixed,std::ios::floatfield);  
+                                    file << rS.z();
+                                    file << "  1.00  0.00 ";
+                                    file << nl;
+                                }
 
                             }
                             

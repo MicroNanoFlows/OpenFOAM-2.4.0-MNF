@@ -212,6 +212,19 @@ void polyDensityFadeBounded::initialConfiguration()
     insertionScheme_.velocity() = velocity_; 
     
     insertionScheme_.output(time_);
+    
+    if (propsDict_.found("controlFromStart"))
+    {
+        bool controlFromStart = false;
+        
+        controlFromStart = Switch(propsDict_.lookup("controlFromStart"));
+        
+        if(controlFromStart)
+        {
+            controlTimeIndex_ = nControlSteps_ + 1;
+        }
+    }
+        
 }
 
 void polyDensityFadeBounded::controlBeforeVelocityI()
