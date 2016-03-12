@@ -148,6 +148,7 @@ measurements/derived/otherFields/polyZoneRdf/polyZoneRdf.C
 measurements/derived/otherFields/poly2DBins/poly2DBins.C
 measurements/derived/otherFields/poly2DBinsSites/poly2DBinsSites.C
 measurements/derived/otherFields/polyDensityRadialNew/polyDensityRadialNew.C
+measurements/derived/otherFields/polyBindingEnergyRadial/polyBindingEnergyRadial.C
 
 /*  - GREEN KUBO  */
 /*measurements/derived/greenKubo/axialSelfDiffusion/axialSelfDiffusion.C*/

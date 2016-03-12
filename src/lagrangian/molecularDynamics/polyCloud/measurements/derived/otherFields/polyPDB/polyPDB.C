@@ -130,6 +130,10 @@ polyPDB::polyPDB
         
         nSiteEstimate_ = readLabel(propsDict_.lookup("nSiteEstimate"));
         rDummy_ = propsDict_.lookup("outsidePosition");
+        
+        const word molOption = propsDict_.lookup("molOption");
+        
+        molOption_ = molOption;
     }
 
 
@@ -175,6 +179,7 @@ void polyPDB::createField()
     Info   << "sites to exclude: " << excludeSites_ << endl;
     
     // set many files
+//     label nMols = 0;
     label nSites = 0;
     
     {    
@@ -184,6 +189,8 @@ void polyPDB::createField()
         {
             if(findIndex(molIds_, mol().id()) != -1)
             {
+//                 nMols++;
+                
                 forAll(mol().sitePositions(), i)
                 {
                     if(findIndex(excludeSites_, molCloud_.cP().siteNames(mol().id())[i]) == -1)
@@ -232,6 +239,34 @@ void polyPDB::createField()
         minLimit_[i] = 100000*(i);
         maxLimit_[i] = (100000*(i+1)) - 1;
     }
+    
+    //adjust nSiteEstimate_
+    if(variableMols_)
+    {
+        label molId = molIds_[0];
+                        
+        if(!molCloud_.cP().pointMolecule(molId))     
+        {
+            label n = molCloud_.cP().nSites(molId);
+
+            label nSitesMol = 0;
+            
+            for (int i = 0; i < n; i++)
+            {
+                if(findIndex(excludeSites_,  molCloud_.cP().siteNames(molId)[i]) == -1)
+                {        
+                    nSitesMol++;
+                }
+            }
+            
+            nSiteEstimate_ = (label(nSiteEstimate_/nSitesMol))*nSitesMol;
+            
+            nSitesMol_ = nSitesMol;
+            
+            Info << "Modifying nSiteEstimate to = " << nSiteEstimate_ << endl;
+        }
+    }
+    
     
     if(writeFirstTimeStep_)
     {
@@ -555,7 +590,7 @@ void polyPDB::write()
                                     }
                                     else
                                     {
-                                        if(idList[molId] == "water")
+                                        if(molOption_ == "water")
                                         {
                                             file << "HETATM";
                                             file.width(5);
@@ -630,9 +665,9 @@ void polyPDB::write()
                 
                 if(variableMols_)
                 {
-                    label nBufferMols = nSiteEstimate_ - nSites;
+                    label nBufferSites = nSiteEstimate_ - nSites;
                     
-                    if(nBufferMols < 0)
+                    if(nBufferSites < 0)
                     {
                         FatalErrorIn("void combinedPDB::writeField()")
                             << "Exceeded limits of estimated nMol. Increase -> " << nSiteEstimate_
@@ -641,20 +676,20 @@ void polyPDB::write()
                     }               
                     
                     label molId = molIds_[0];
-//                     const polyMolecule::constantProperties cP(molCloud_.constProps(molId));
-                    word siteName = molCloud_.cP().siteNames(molId)[0];
+                    
+                    vector rS = rDummy_*rU.refLength()*1.0e10;
+                    
+                    label nBufferMols = nBufferSites/nSitesMol_;
                     
                     for (int i = 0; i < nBufferMols; i++)
                     {
-                        nSites++;
+                        if(molCloud_.cP().pointMolecule(molId))
+                        {                    
+                            nSites++;
 
-                        if((nSites >= minLimit_[j] ) && (nSites <= maxLimit_[j]))
-                        {
-                            vector rS = rDummy_*rU.refLength()*1.0e10;
-
-                            if(molCloud_.cP().pointMolecule(molId))
+                            if((nSites >= minLimit_[j] ) && (nSites <= maxLimit_[j]))
                             {
-                                // site H1
+                                // site 1
                                 file.width(6);
                                 file << std::left << "ATOM";
                                 file.width(5);
@@ -684,73 +719,84 @@ void polyPDB::write()
                                 file << "  1.00  0.00 ";
                                 file << nl;
                             }
-                            else
-                            {
-                                if(idList[molId] == "water")
-                                {
-                                    file << "HETATM";
-                                    file.width(5);
-                                    file << nSites-minLimit_[j];
-                                    file << "  ";
-                                    file.width(3);
-                                    file << std::left << molCloud_.cP().siteNames(molId)[0];
-                                    file << " ";
-                                    file.width(3);
-                                    file << std::right << "HOH";
-                                    file << " ";
-                                    file.width(5);
-                                    file << nMols;
-                                    file << "    ";
-                                    file.width(8);
-                                    file.precision(3);
-                                    file.setf(std::ios::fixed,std::ios::floatfield);  
-                                    file << rS.x();
-                                    file.width(8);
-                                    file.precision(3);
-                                    file.setf(std::ios::fixed,std::ios::floatfield);  
-                                    file << rS.y();
-                                    file.width(8);
-                                    file.precision(3);
-                                    file.setf(std::ios::fixed,std::ios::floatfield);  
-                                    file << rS.z();
-                                    file << "  1.00  0.00 ";
-                                    file << nl;
-                                }                                
-                                else
-                                {
-                                    file << "HETATM";
-                                    file.width(5);
-                                    file << nSites-minLimit_[j];
-                                    file << "  ";
-                                    file.width(3);
-                                    file << std::left << molCloud_.cP().siteNames(molId)[0];
-                                    file << " ";
-                                    file.width(3);
-                                    file << std::right << "XXX";
-                                    file << " ";
-                                    file.width(5);
-                                    file << nMols;
-                                    file << "    ";
-                                    file.width(8);
-                                    file.precision(3);
-                                    file.setf(std::ios::fixed,std::ios::floatfield);  
-                                    file << rS.x();
-                                    file.width(8);
-                                    file.precision(3);
-                                    file.setf(std::ios::fixed,std::ios::floatfield);  
-                                    file << rS.y();
-                                    file.width(8);
-                                    file.precision(3);
-                                    file.setf(std::ios::fixed,std::ios::floatfield);  
-                                    file << rS.z();
-                                    file << "  1.00  0.00 ";
-                                    file << nl;
-                                }
-
-                            }
-                            
-                            nMols++;
                         }
+
+                        else
+                        {
+                            label n = molCloud_.cP().nSites(molId);
+
+                            for (int i = 0; i < n; i++)
+                            {
+                                if(findIndex(excludeSites_,  molCloud_.cP().siteNames(molId)[i]) == -1)
+                                {
+                                    nSites++;
+                                    
+                                    if(molOption_ == "water")
+                                    {
+                                        file << "HETATM";
+                                        file.width(5);
+                                        file << nSites-minLimit_[j];
+                                        file << "  ";
+                                        file.width(3);
+                                        file << std::left << molCloud_.cP().siteNames(molId)[i];
+                                        file << " ";
+                                        file.width(3);
+                                        file << std::right << "HOH";
+                                        file << " ";
+                                        file.width(5);
+                                        file << nMols;
+                                        file << "    ";
+                                        file.width(8);
+                                        file.precision(3);
+                                        file.setf(std::ios::fixed,std::ios::floatfield);  
+                                        file << rS.x();
+                                        file.width(8);
+                                        file.precision(3);
+                                        file.setf(std::ios::fixed,std::ios::floatfield);  
+                                        file << rS.y();
+                                        file.width(8);
+                                        file.precision(3);
+                                        file.setf(std::ios::fixed,std::ios::floatfield);  
+                                        file << rS.z();
+                                        file << "  1.00  0.00 ";
+                                        file << nl;
+
+                                    }                                
+                                    else
+                                    {
+                                        file << "HETATM";
+                                        file.width(5);
+                                        file << nSites-minLimit_[j];
+                                        file << "  ";
+                                        file.width(3);
+                                        file << std::left << molCloud_.cP().siteNames(molId)[i];
+                                        file << " ";
+                                        file.width(3);
+                                        file << std::right << "XXX";
+                                        file << " ";
+                                        file.width(5);
+                                        file << nMols;
+                                        file << "    ";
+                                        file.width(8);
+                                        file.precision(3);
+                                        file.setf(std::ios::fixed,std::ios::floatfield);  
+                                        file << rS.x();
+                                        file.width(8);
+                                        file.precision(3);
+                                        file.setf(std::ios::fixed,std::ios::floatfield);  
+                                        file << rS.y();
+                                        file.width(8);
+                                        file.precision(3);
+                                        file.setf(std::ios::fixed,std::ios::floatfield);  
+                                        file << rS.z();
+                                        file << "  1.00  0.00 ";
+                                        file << nl;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        nMols++;
                     }
                 }
                 

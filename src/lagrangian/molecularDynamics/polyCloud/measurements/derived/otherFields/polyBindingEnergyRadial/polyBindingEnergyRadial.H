@@ -23,21 +23,24 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    polyPDB
+    polyBindingEnergyRadial
 
 
 Description
-    to write out a pdb file for creating movies
+    a rectangular measurement box divided into nBinsX and nBinsY
+    but rotated about an axis to measure rotationally symmetric averages
+
+
 
 SourceFiles
-    polyPDBI.H
-    polyPDB.C
-    polyPDBIO.C
+    polyBindingEnergyRadialI.H
+    polyBindingEnergyRadial.C
+    polyBindingEnergyRadialIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef polyPDB_H
-#define polyPDB_H
+#ifndef polyBindingEnergyRadial_H
+#define polyBindingEnergyRadial_H
 
 #include "polyField.H"
 #include "vector.H"
@@ -53,10 +56,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class polyPDB Declaration
+                           Class polyBindingEnergyRadial Declaration
 \*---------------------------------------------------------------------------*/
 
-class polyPDB
+class polyBindingEnergyRadial
 :
 	public polyField
 {
@@ -69,68 +72,81 @@ private:
         dictionary propsDict_;
 
         propertyField fields_;
-
-        List<label> molIds_;
-
-        List<word> excludeSites_;
-
+        
+        fileName pathName_;
+        fileName nameFile_;
+        
         word fieldName_;
 
-        label n_;
+        vector startPoint_; // only y component is important here
+//         vector endPoint_;
+        
+        vector unitVectorX_;
+        vector unitVectorY_; // height
+        vector unitVectorZ_;        
+        
+        label nBinsX_;
+        label nBinsY_; // height 
 
-        List<label> minLimit_;
-        List<label> maxLimit_;
+        scalar lengthX_; // radius
+        scalar lengthY_; 
+        
+        scalar binWidthX_; // radius
+        scalar binWidthY_; // height
 
-        label iteration_;
+        
+        List<label> molIdsWall_;
+        List<label> molIdsFluid_;
 
-        
-        word option_;
-        
-        // zone        
-        
-        word regionName_;
-        label regionId_;
+        vector centreOfMass_;
 
-        // bound boxes
+        scalarField binsX_;
+        scalarField binsY_;
+
+        List<scalarField> volumes_;
         
-        List<boundedBox> boxes_;
+        List<scalarField> pairs_;
+        List<scalarField> mols_;
+        List<scalarField> energy_;        
+
+        // fields
+        List<scalarField> bindingEnergy_;
+        List<scalarField> avNoOfPairs_;
+
+        List<vector> molPositions_;
+        List<bool> fluidMols_;
+        List<scalar> nPairs_;
+        List<scalar> DeltaE_;
         
-        label timeIndex_;
-        label nSteps_;
         
-        bool variableMols_;
-        label nSiteEstimate_;
-        vector rDummy_;
-        word molOption_;
-        label nSitesMol_;
+//         scalar nAvTimeSteps_;
         
-        scalar startTime_;
-        scalar endTime_;
-        scalar accumulatedTime_;
-        scalar deltaT_;
-    
-        bool writeFirstTimeStep_;
+        bool resetAtOutput_;        
+        
+        
         
     // Private Member Functions
 
-            void write();
-
-            void writeInZone(List<labelField>& molIds, List<vectorField>& sites);
-
-            void writeInMesh(List<labelField>& molIds, List<vectorField>& sites);
-            
-            void writeInBoundBox(List<labelField>& molIds, List<vectorField>& sites);            
-
-            
+        bool readFromStorage();
+        
+        void writeToStorage();
+        
+        List<label> isPointWithinBin
+        (
+            const vector& rI
+        );
+        
+        void centreOfMass();
+        
 public:
 
     //- Runtime type information
-    TypeName("polyPDB");
+    TypeName("polyBindingEnergyRadial");
 
     // Constructors
 
         //- Construct from components
-        polyPDB
+        polyBindingEnergyRadial
 		(
             Time& t,
             const polyMesh& mesh,
@@ -140,7 +156,8 @@ public:
 
     // Destructor
 
- 		~polyPDB();
+ 		~polyBindingEnergyRadial();
+
 
     // Member Functions
 
