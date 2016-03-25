@@ -54,6 +54,8 @@ SourceFiles
 #include "clockTimer.H"
 #include "potentials.H" 
 #include "constantMoleculeProperties.H"
+#include "polyIntegrators.H"
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -81,6 +83,8 @@ private:
         
         cachedRandomMD& rndGen_;
 
+        polyIntegrators int_;
+        
         potentials p_;
         
         List<DynamicList<polyMolecule*> > cellOccupancy_;

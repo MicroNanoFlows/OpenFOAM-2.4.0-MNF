@@ -23,30 +23,25 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    polyIntegrator
+    polyIntegrators
 
 Description
-    Basic/abstract class of a state controller
 
+	Stores all the information for the polyIntegrators models defined within 
+    the polyIntegratorsDict, and selects & builds the models automatically.
 
-SourceFiles
-    polyIntegratorI.H
-    polyIntegrator.C
-    polyIntegratorIO.C
+    
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef polyIntegrator_H
-#define polyIntegrator_H
+#ifndef polyIntegrators_H
+#define polyIntegrators_H
 
+#include "List.H"
 #include "IOdictionary.H"
 #include "autoPtr.H"
-#include "runTimeSelectionTables.H"
-#include "vector.H"
-#include "volFields.H"
-#include "polyMolecule.H"
-#include "writeTimeData.H"
-#include "selectIds.H"
+#include "polyMesh.H"
+#include "polyIntegrator.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -54,81 +49,57 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class polyIntegrator Declaration
+                           Class polyIntegrators Declaration
 \*---------------------------------------------------------------------------*/
 
-class polyIntegrator
+class polyIntegrators
 {
 
-protected:
+    // Private data
 
-    // Protected data
+        Time& time_;
 
-        const fvMesh& mesh_;
+        const polyMesh& mesh_;
 
-        polyMoleculeCloud& molCloud_;
+        //- The entire dictionary (containing multiple subDictionaries)
+        IOdictionary controlDict_;
 
-        Time& time_; 
-
-    // Private Member Functions
-
+        autoPtr<polyIntegrator> int_;
+        
 public:
 
-    //- Runtime type information
-    TypeName("polyIntegrator");
-
-    // Declare runtime constructor selection table
-        declareRunTimeSelectionTable
-        (
-            autoPtr,
-            polyIntegrator,
-            dictionary,
-            (
-                Time& t,
-                polyMoleculeCloud& molCloud,
-                const dictionary& dict
-            ),
-            (t, molCloud, dict)
-        );
-   
     // Constructors
 
-        //- Construct from components
-        polyIntegrator
+        //- Null Constructor 
+        polyIntegrators
         (
             Time& t,
-            polyMoleculeCloud& molCloud,
-            const dictionary& dict
+            const polyMesh& mesh
+        );
+
+        //- Constructor for mdFOAM
+        polyIntegrators
+        (
+            Time& t,
+            const polyMesh& mesh,
+            polyMoleculeCloud& molCloud
         );
 
 
-    // Selectors
-
-        static autoPtr<polyIntegrator> New
-        (
-            Time& t,
-            polyMoleculeCloud& molCloud,
-            const dictionary& dict
-        );
-
-
-    // Destructor
-
-        virtual ~polyIntegrator();
-
+        ~polyIntegrators();
 
     // Member Functions
-
-
-        //- create an initial configuration
-        virtual void evolve() = 0;
-
+        
+        autoPtr<polyIntegrator>& integrator();    
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

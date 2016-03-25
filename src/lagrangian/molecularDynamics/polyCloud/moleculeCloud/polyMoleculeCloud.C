@@ -677,6 +677,7 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     redUnits_(rU),
     cP_(cP),
     rndGen_(rndGen),
+    int_(t, mesh_, *this),    
     p_(mesh, *this, rU, cP), 
     cellOccupancy_(mesh_.nCells()),
 //     constPropList_(),
@@ -695,7 +696,7 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     rndGen.initialise(this->size() != 0 ? this->size() : 10000); //Initialise the random number cache (initialise to 10000 if size is zero)
 
 //     buildConstProps();
-
+    
     setSiteSizesAndPositions();
 
     checkMoleculesInMesh();
@@ -745,6 +746,7 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     redUnits_(rU),
     cP_(cP),
     rndGen_(rndGen),    
+    int_(t, mesh_, *this),    
     p_(mesh, *this, rU, cP), 
     cellOccupancy_(mesh_.nCells()),
 //     constPropList_(),
@@ -921,9 +923,11 @@ void  Foam::polyMoleculeCloud::createMolecule
 
 void Foam::polyMoleculeCloud::evolve()
 {
-    evolveBeforeForces();
-    calculateForce();
-    evolveAfterForces();
+    int_.integrator()->evolve();
+
+//     evolveBeforeForces();
+//     calculateForce();
+//     evolveAfterForces();
 }
 
 void Foam::polyMoleculeCloud::evolveBeforeForces()

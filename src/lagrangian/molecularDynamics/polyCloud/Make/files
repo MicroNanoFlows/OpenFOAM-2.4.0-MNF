@@ -8,6 +8,12 @@ moleculeCloud/polyMoleculeCloudFunctions.C
 
 faceTracker/polyFaceTracker.C
 
+/* INTEGRATOR */
+
+integrator/basic/polyIntegrators/polyIntegrators.C
+integrator/basic/polyIntegrator/polyIntegrator.C
+integrator/derived/velocityVerlet/velocityVerlet.C
+
 
 /* POTENTIALS */
 

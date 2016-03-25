@@ -22,88 +22,83 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    velocityVerlet
-
 Description
-    simple velocity controller in a zone 
-
-    parallelised
-
-    recommendation: control and measure properties every time step, ensure  
-                    size of zone.
-
-SourceFiles
-    velocityVerletI.H
-    velocityVerlet.C
-    velocityVerletIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef velocityVerlet_H
-#define velocityVerlet_H
-
-#include "polyIntegrator.H"
-#include "vector.H"
-#include "polyMesh.H"
-#include "volFields.H"
-#include "polyMoleculeCloud.H"
-// #include "boundedBox.H"
+#include "polyIntegrators.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-
-/*---------------------------------------------------------------------------*\
-                           Class velocityVerlet Declaration
-\*---------------------------------------------------------------------------*/
-
-class velocityVerlet
+//- Null Constructor (for all other md constructors)
+polyIntegrators::polyIntegrators
+(
+    Time& t,
+    const polyMesh& mesh
+)
 :
-    public polyIntegrator
-{
-
-private:
-
-    // Private data
-
-       void updateVelocity(const scalar& trackTime);
-       
-public:
-
-    //- Runtime type information
-    TypeName("velocityVerlet");
-
-    // Constructors
-
-        //- Construct from components
-        velocityVerlet
+    time_(t),
+    mesh_(mesh),
+    controlDict_
+    (
+        IOobject
         (
-            Time& t,
-            polyMoleculeCloud& molCloud,
-            const dictionary& dict
-        );
+            "controlDict",
+            time_.system(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::NO_WRITE
+        )
+    )
+{}
 
-    // Destructor
+//- Constructor for mdFOAM
+polyIntegrators::polyIntegrators
+(
+    Time& t,
+    const polyMesh& mesh,
+    polyMoleculeCloud& molCloud
+)
+:
+    time_(t),
+    mesh_(mesh),
+    controlDict_
+    (
+        IOobject
+        (
+            "controlDict",
+            time_.system(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::NO_WRITE
+        )
+    )
+{
+    
+    int_ = autoPtr<polyIntegrator>
+    (
+        polyIntegrator::New(time_, molCloud, controlDict_)
+    );
+}
 
-        ~velocityVerlet();
+polyIntegrators::~polyIntegrators()
+{}
+
+autoPtr<polyIntegrator>& polyIntegrators::integrator()
+{
+    return int_;
+}
 
 
-    // Member Functions
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-        
-        void evolve();
-
-};
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#endif
 
 // ************************************************************************* //

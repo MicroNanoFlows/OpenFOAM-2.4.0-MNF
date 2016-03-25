@@ -28,9 +28,7 @@ Description
 
 #include "velocityVerlet.H"
 #include "addToRunTimeSelectionTable.H"
-#include "graph.H"
-#include "OFstream.H"
-#include "IFstream.H"
+
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -39,7 +37,7 @@ namespace Foam
 
 defineTypeNameAndDebug(velocityVerlet, 0);
 
-addToRunTimeSelectionTable(polyField, velocityVerlet, dictionary);
+addToRunTimeSelectionTable(polyIntegrator, velocityVerlet, dictionary);
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -51,12 +49,11 @@ addToRunTimeSelectionTable(polyField, velocityVerlet, dictionary);
 velocityVerlet::velocityVerlet
 (
     Time& t,
-    const polyMesh& mesh,
     polyMoleculeCloud& molCloud,
     const dictionary& dict
 )
 :
-    polyIntegrator(t, mesh, molCloud, dict)
+    polyIntegrator(t, molCloud, dict)
 /*    propsDict_(dict.subDict(typeName + "Properties")),*/    
   
 {}
@@ -71,20 +68,33 @@ velocityVerlet::~velocityVerlet()
 
 void velocityVerlet::evolve()
 {
-    controlBeforeVelocity();
-    updateVelocity();
-    controlBeforeMove();
-    move();
-    controlAfterMove();
-    buildCellOccupancy();
-    controlBeforeForces();
-    clearLagrangianFields();
-    calculateForce();
-    updateAcceleration();
-    controlAfterForces();
-    updateVelocity();
-    controlAfterVelocity();
-    postTimeStep();    
+    molCloud_.controlBeforeVelocity();
+    updateVelocity(mesh_.time().deltaT().value());
+    molCloud_.controlBeforeMove();
+    molCloud_.move();
+    molCloud_.controlAfterMove();
+    molCloud_.buildCellOccupancy();
+    molCloud_.controlBeforeForces();
+    molCloud_.clearLagrangianFields();
+    molCloud_.calculateForce();
+    molCloud_.updateAcceleration();
+    molCloud_.controlAfterForces();
+    updateVelocity(mesh_.time().deltaT().value());
+    molCloud_.controlAfterVelocity();
+    molCloud_.postTimeStep();
+}
+
+void velocityVerlet::updateVelocity(const scalar& trackTime)
+{
+    IDLList<polyMolecule>::iterator mol(molCloud_.begin());
+
+    for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
+    {
+        if(!mol().frozen())
+        {
+            mol().updateHalfVelocity(molCloud_.cP(), trackTime);
+        }
+    }
 }
 
 

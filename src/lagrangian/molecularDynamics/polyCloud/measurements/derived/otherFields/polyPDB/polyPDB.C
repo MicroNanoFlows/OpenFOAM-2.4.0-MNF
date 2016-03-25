@@ -122,18 +122,21 @@ polyPDB::polyPDB
             vector endPoint = dict.lookup("endPoint");
             boxes_[b].resetBoundedBox(startPoint, endPoint);
         }
-    }    
-   
+    }   
+    
+    if (propsDict_.found("molOption"))
+    {
+        const word molOption = propsDict_.lookup("molOption");
+        
+        molOption_ = molOption;
+    }
+    
     if (propsDict_.found("variableMols"))
     {
         variableMols_ = Switch(propsDict_.lookup("variableMols"));
         
         nSiteEstimate_ = readLabel(propsDict_.lookup("nSiteEstimate"));
         rDummy_ = propsDict_.lookup("outsidePosition");
-        
-        const word molOption = propsDict_.lookup("molOption");
-        
-        molOption_ = molOption;
     }
 
 
