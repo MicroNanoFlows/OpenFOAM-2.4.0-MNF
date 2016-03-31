@@ -17,7 +17,7 @@ fi
 
 clean
 
-cases="mdPolyFoam"
+cases="mdFOAM"
 
 for case in $cases
 do
