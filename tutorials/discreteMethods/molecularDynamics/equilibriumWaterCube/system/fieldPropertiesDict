@@ -69,6 +69,19 @@ polyFields
 
     // poly PDB (videos)
     
+    field
+    {
+        fieldModel              polyPDB;
+
+        polyPDBProperties
+        {
+            fieldName               water;
+            molIds                  (water);
+            sitesToExclude          (M);
+            numberOfOutputSteps     50;
+            molOption               water;
+        }
+    }
     
 );
 

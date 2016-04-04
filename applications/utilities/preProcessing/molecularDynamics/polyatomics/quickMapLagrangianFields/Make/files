@@ -1,3 +1,3 @@
 quickMapLagrangianFields.C
 
-EXE = $(FOAM_APPBIN)/quickMapLagrangianPolyFields
+EXE = $(FOAM_APPBIN)/quickMapLagrangianFields

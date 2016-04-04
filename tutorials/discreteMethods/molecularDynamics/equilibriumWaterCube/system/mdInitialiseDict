@@ -24,7 +24,7 @@ FoamFile
 
 polyConfigurations
 (
-    // fill inlet reservoir region 
+ 
     configuration
     {
         type                    polyBCC;
