@@ -88,12 +88,21 @@ private:
         label nBinsX_;
         label nBinsY_; // height 
 
+        
         scalar lengthX_; // radius
         scalar lengthY_; 
         
-        scalar binWidthX_; // radius
+        
+//         scalar binWidthX_; // radius
         scalar binWidthY_; // height
-
+        
+        
+        List<scalar> radii_;
+        List<scalar> binWidthsX_;
+        
+        scalar minBinWidth_;
+        
+        labelField n_;
         
         List<label> molIds_;
 

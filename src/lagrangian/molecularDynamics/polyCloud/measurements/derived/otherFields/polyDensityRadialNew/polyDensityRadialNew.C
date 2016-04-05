@@ -84,7 +84,7 @@ polyDensityRadialNew::polyDensityRadialNew
     nBinsY_(readLabel(propsDict_.lookup("nBinsY"))),
     lengthX_(readLabel(propsDict_.lookup("lengthX"))),    
     lengthY_(readLabel(propsDict_.lookup("lengthY"))),
-    binWidthX_(lengthX_/scalar(nBinsX_)),
+//     binWidthX_(lengthX_/scalar(nBinsX_)),
     binWidthY_(lengthY_/scalar(nBinsY_)),
     molIds_(),
     nAvTimeSteps_(0.0),
@@ -104,9 +104,71 @@ polyDensityRadialNew::polyDensityRadialNew
 
     molIds_ = ids.molIds();
 
-    Info << "binWidthX = " << binWidthX_ 
-    << ", binWidthY_ = " << binWidthY_
-    << endl;
+    
+    // Variable radius
+    
+    scalar& r=lengthX_;
+    scalar Aav = r*r*constant::mathematical::pi/nBinsX_;    
+    
+    
+    DynamicList<scalar> radii;
+    DynamicList<scalar> binWidthsX;
+    
+//     scalar r0=sqrt(Aav/constant::mathematical::pi);
+//     radii.append(r0);
+//     binWidthsX.append(r0);    
+
+    
+    for(label i = 0; i < nBinsX_; i++)
+    {
+        scalar r1 = 0;
+        scalar r2 = 0;
+        
+        if( i == 0)
+        {
+            r1=0.0;
+            r2=sqrt(Aav/constant::mathematical::pi);
+        }
+        else
+        {
+            r1 = radii[i-1];            
+            r2 = sqrt((Aav/constant::mathematical::pi) + r1*r1);
+        }
+        
+//         if(r2 <= r)
+        {
+            radii.append(r2);
+            binWidthsX.append(r2-r1);
+        }
+/*        else
+        {
+            break;
+        }     */   
+    }
+    
+    nBinsX_ = radii.size();
+    
+    
+    
+    Info << "Modifying nBinsX to = " << nBinsX_ << endl;
+    
+    radii_.setSize(nBinsX_);
+    binWidthsX_.setSize(nBinsX_);
+    
+    radii_.transfer(radii);
+    binWidthsX_.transfer(binWidthsX);
+    
+    Info << "radii = " << radii_ << endl;    
+
+    Info << "binWidthsX_ = " << binWidthsX_ << endl;
+
+    r = radii_[nBinsX_-1];
+    
+    Info << "Modifying radius or lengthX to = " << r << endl;
+    
+//     Info << "binWidthX = " << binWidthX_ 
+//     << ", binWidthY_ = " << binWidthY_
+//     << endl;
     
     volumes_.setSize(nBinsX_);
     mass_.setSize(nBinsX_);
@@ -134,10 +196,21 @@ polyDensityRadialNew::polyDensityRadialNew
     
     forAll(volumes_, i)
     {
-        scalar rIn = binWidthX_*i;
-        scalar rOut = binWidthX_*(i+1);
+        scalar rIn = 0.0;
+        scalar rOut = 0.0;
         
-        binsX_[i] = binWidthX_*0.5 + binWidthX_*i;
+        if(i == 0)
+        {
+            rIn = 0;
+            rOut = radii_[i];
+        }   
+        else
+        {
+            rIn = radii_[i-1];
+            rOut = radii_[i];
+        }
+        
+        binsX_[i] = (rOut+rIn)*0.5; // midpoint of bin
         
         forAll(volumes_[i], j)
         {
@@ -145,6 +218,43 @@ polyDensityRadialNew::polyDensityRadialNew
             volumes_[i][j] = constant::mathematical::pi*( (rOut*rOut) - (rIn*rIn) )*binWidthY_;
         }
     }
+    
+//     Info << "binsX = " << binsX_ << endl;
+    
+    // framework to make table searching easier
+    
+    minBinWidth_ = binWidthsX_[nBinsX_-1]/3.0;
+
+    n_.setSize(label(r/minBinWidth_), -1);
+    
+    forAll(n_, n)
+    {
+        scalar rI = 0.5*minBinWidth_ + scalar(n)*minBinWidth_;
+
+        for(label i = 0; i < nBinsX_; i++)
+        {
+            scalar r1 = 0;
+            scalar r2 = 0;
+            
+            if(i == 0)
+            {    
+                r1 = 0;
+                r2 = radii_[i];
+            }
+            else
+            {
+                r1 = radii_[i-1];
+                r2 = radii_[i];
+            }
+            
+            if((rI >= r1) && (rI < r2))
+            {
+                n_[n] = i;
+            }
+        }
+    }    
+    
+//     Info << "n = " << n_ << endl;
 
     // read in stored data from dictionary
 
@@ -243,17 +353,41 @@ List<label> polyDensityRadialNew::isPointWithinBin
     scalar rDR = rSI & unitVectorR;
     
     scalar rDy = rSI & unitVectorY_;
-    label nX = label(rDR/binWidthX_);
+    
     label nY = label(rDy/binWidthY_);
     
     if
     (
-        ( (nX >= 0) && (nY >= 0) ) &&
-        ( (nX < nBinsX_) && (nY < nBinsY_) )
+        (nY >= 0) && (nY < nBinsY_) 
     )
     {
-        binNumbers[0] = nX;
         binNumbers[1] = nY;            
+    }    
+    
+    // radius 
+    
+    label nX = label(rDR/minBinWidth_);
+
+    if(nX < 0)
+    {
+        nX = 0;
+    }
+
+    if(nX < n_.size())
+    {
+        scalar i = n_[nX];
+
+        binNumbers[0] = i;
+    }
+    
+    if(binNumbers[0] == -1)
+    {
+       binNumbers[1] = -1;
+    }
+
+    if(binNumbers[1] == -1)
+    {
+       binNumbers[0] = -1;
     }    
     
     return binNumbers;
