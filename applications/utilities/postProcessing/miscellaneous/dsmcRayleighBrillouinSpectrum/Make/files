@@ -1,0 +1,4 @@
+
+dsmcRayleighBrillouinSpectrum.C
+
+EXE = $(FOAM_APPBIN)/dsmcRayleighBrillouinSpectrum

@@ -38,6 +38,7 @@ Description
 #define writeTimeData_H
 
 #include "vector.H"
+#include "complex.H"
 #include "List.H"
 #include "IOdictionary.H"
 #include "dictionary.H"
@@ -125,6 +126,15 @@ public:
             const word& nameFile,
             const scalarField& xData,
             const vectorField& yData
+        );
+        
+        //- scalar field, complex field
+        writeTimeData
+        (
+            const fileName& pathName,
+            const word& nameFile,
+            const scalarField& xData,
+            const List<complex>& yData
         );
 
         //- vector field, vector field
@@ -230,6 +240,26 @@ public:
             const word& nameFile,
             const scalarField& xData,
             const tensorField& yData,
+            const bool& dummy
+        );
+
+        // one scalar field and one List<scalarField> (with append possible)
+        writeTimeData
+        (
+            const fileName& pathName,
+            const word& nameFile,
+            const scalarField& xData,
+            const List<scalarField>& yData,
+            const bool& dummy
+        );
+        
+        // one scalar field and one complex field (with append possible)
+        writeTimeData
+        (
+            const fileName& pathName,
+            const word& nameFile,
+            const scalarField& xData,
+            const List<complex>& yData,
             const bool& dummy
         );
 

@@ -185,14 +185,14 @@ void Foam::particle::writeFields(const CloudType& c)
 
 
 template<class TrackData>
-Foam::label Foam::particle::track(const vector& endPosition, TrackData& td)
+Foam::label Foam::particle::track(const vector& endPosition, TrackData& td, bool DSMC)
 {
     faceI_ = -1;
 
     // Tracks to endPosition or stop on boundary
     while (!onBoundary() && stepFraction_ < 1.0 - SMALL)
     {
-        stepFraction_ += trackToFace(endPosition, td)*(1.0 - stepFraction_);
+        stepFraction_ += trackToFace(endPosition, td, DSMC)*(1.0 - stepFraction_);
     }
 
     return faceI_;
@@ -203,7 +203,8 @@ template<class TrackData>
 Foam::scalar Foam::particle::trackToFace
 (
     const vector& endPosition,
-    TrackData& td
+    TrackData& td,
+	bool DSMC
 )
 {
     typedef typename TrackData::cloudType cloudType;
@@ -370,6 +371,16 @@ Foam::scalar Foam::particle::trackToFace
         tetAreas[1] = tet.Sb();
         tetAreas[2] = tet.Sc();
         tetAreas[3] = tet.Sd();
+
+		if(DSMC)
+        {
+            //******
+            for (label i = 0; i < 4; i++)
+            {
+                tetAreas[i] /= (mag(tetAreas[i]) + VSMALL);
+            }
+            //******
+        }
 
         FixedList<label, 4> tetPlaneBasePtIs;
 
