@@ -704,6 +704,8 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     // read in tracking numbers
     updateTrackingNumbersAfterRead();
     p_.pairPots().initialiseExclusionModels();
+
+    int_.integrator()->init();
     
     //check and remove high energy overalps
     checkForOverlaps();
@@ -986,13 +988,19 @@ void Foam::polyMoleculeCloud::move()
     updateAfterMove(mesh_.time().deltaT().value());
 }
 
+void Foam::polyMoleculeCloud::move(const scalar& trackTime)
+{
+    polyMolecule::trackingData td1(*this, 1);
+    Cloud<polyMolecule>::move(td1, trackTime);
+}
+
+
 void Foam::polyMoleculeCloud::updateAfterMove(const scalar& trackTime)
 {
     forAllIter(polyMoleculeCloud, *this, mol)
     {
         if(!mol().frozen())
         {
-//             const polyMolecule::constantProperties& cP = constProps(mol().id());
             mol().updateAfterMove(cP_, trackTime);
         }
     }

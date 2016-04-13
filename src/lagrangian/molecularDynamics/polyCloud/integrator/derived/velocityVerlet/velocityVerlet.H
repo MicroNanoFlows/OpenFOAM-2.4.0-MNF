@@ -92,6 +92,7 @@ public:
 
     // Member Functions
 
+        void init();
         
         void evolve();
 

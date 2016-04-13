@@ -123,7 +123,7 @@ private:
         void computePairForces();
         void accelerationUpdate();
         void velocityUpdate(const scalar& trackTime);
-        void updateAfterMove(const scalar& trackTime);
+
 
         //- Disallow default bitwise copy construct
         polyMoleculeCloud(const polyMoleculeCloud&);
@@ -215,6 +215,8 @@ public:
         void updateVelocity();
         void controlBeforeMove();
         void move();
+        void move(const scalar& trackTime);        
+        void updateAfterMove(const scalar& trackTime);        
         void controlAfterMove();
         void controlBeforeForces();
         void clearLagrangianFields();

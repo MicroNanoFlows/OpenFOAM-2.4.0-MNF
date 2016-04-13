@@ -12,7 +12,10 @@ faceTracker/polyFaceTracker.C
 
 integrator/basic/polyIntegrators/polyIntegrators.C
 integrator/basic/polyIntegrator/polyIntegrator.C
+
+
 integrator/derived/velocityVerlet/velocityVerlet.C
+integrator/derived/adaptiveLangevin/adaptiveLangevin.C
 
 
 /* POTENTIALS */
@@ -155,6 +158,7 @@ measurements/derived/otherFields/poly2DBins/poly2DBins.C
 measurements/derived/otherFields/poly2DBinsSites/poly2DBinsSites.C
 measurements/derived/otherFields/polyDensityRadialNew/polyDensityRadialNew.C
 measurements/derived/otherFields/polyBindingEnergyRadial/polyBindingEnergyRadial.C
+measurements/derived/otherFields/centreOfMass/centreOfMass.C
 
 /*  - GREEN KUBO  */
 /*measurements/derived/greenKubo/axialSelfDiffusion/axialSelfDiffusion.C*/

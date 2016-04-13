@@ -66,6 +66,11 @@ velocityVerlet::~velocityVerlet()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+void velocityVerlet::init()
+{
+    
+}
+
 void velocityVerlet::evolve()
 {
     molCloud_.controlBeforeVelocity();

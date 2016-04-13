@@ -23,30 +23,31 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    polyIntegrator
+    centreOfMass
 
 Description
-    Basic/abstract class of a state controller
-
-
+    Instantaneous measurements of mass flow rate (here instantaneous is defined 
+    at every MD timestep)
+    
+    Apply to an existing surface 
+    
+    
+    
 SourceFiles
-    polyIntegratorI.H
-    polyIntegrator.C
-    polyIntegratorIO.C
+    centreOfMass.C
+
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef polyIntegrator_H
-#define polyIntegrator_H
+#ifndef centreOfMass_H
+#define centreOfMass_H
 
-#include "IOdictionary.H"
-#include "autoPtr.H"
-#include "runTimeSelectionTables.H"
+#include "polyField.H"
 #include "vector.H"
+#include "polyMesh.H"
 #include "volFields.H"
-#include "polyMolecule.H"
-#include "writeTimeData.H"
-#include "selectIds.H"
+#include "polyMoleculeCloud.H"
+// #include "distribution.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -54,80 +55,86 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class polyIntegrator Declaration
+                           Class centreOfMass Declaration
 \*---------------------------------------------------------------------------*/
 
-class polyIntegrator
+class centreOfMass
+:
+    public polyField
 {
 
-protected:
+private:
 
-    // Protected data
+    // Private data
 
-        const fvMesh& mesh_;
+        //- subDictionary containing the properties
+        dictionary propsDict_;
+    
+        word fieldName_;
 
-        polyMoleculeCloud& molCloud_;
+        fileName pathName_;
+        fileName nameFile_;
 
-        Time& time_; 
+        propertyField fields_;
+
+        //- ids of molecules
+        List<label> molIds_;
+
+
+        DynamicList<vector> centreOfMass_;
+
 
     // Private Member Functions
 
-public:
+
+ public:
 
     //- Runtime type information
-    TypeName("polyIntegrator");
+    TypeName("centreOfMass");
 
-    // Declare runtime constructor selection table
-        declareRunTimeSelectionTable
-        (
-            autoPtr,
-            polyIntegrator,
-            dictionary,
-            (
-                Time& t,
-                polyMoleculeCloud& molCloud,
-                const dictionary& dict
-            ),
-            (t, molCloud, dict)
-        );
-   
     // Constructors
 
         //- Construct from components
-        polyIntegrator
+        centreOfMass
         (
             Time& t,
+            const polyMesh& mesh,
             polyMoleculeCloud& molCloud,
             const dictionary& dict
         );
-
-
-    // Selectors
-
-        static autoPtr<polyIntegrator> New
-        (
-            Time& t,
-            polyMoleculeCloud& molCloud,
-            const dictionary& dict
-        );
-
 
     // Destructor
 
-        virtual ~polyIntegrator();
+        ~centreOfMass();
 
 
     // Member Functions
 
+        //- create initial field
+        void createField();
 
-        //- create an initial configuration
-        virtual void init() = 0;                
-        
-        //- evolve MD simulation
-        virtual void evolve() = 0;
+        //- calculate field
+        void calculateField();
+        void measureDuringForceComputation
+        (
+            polyMolecule* molI,
+            polyMolecule* molJ
+        );
 
-        
+        void measureDuringForceComputationSite
+        (
+            polyMolecule* molI,
+            polyMolecule* molJ,
+            label sI,
+            label sJ
+        );
 
+        //- write field
+        void writeField();
+
+        const propertyField& fields() const;
+
+        void updateProperties(const dictionary&);
 };
 
 

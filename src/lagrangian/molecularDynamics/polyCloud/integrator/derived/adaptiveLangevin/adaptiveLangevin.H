@@ -23,30 +23,28 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    polyIntegrator
+    adaptiveLangevin
 
 Description
-    Basic/abstract class of a state controller
+    Written by Matthew Borg and Xiaocheng Shang
 
 
 SourceFiles
-    polyIntegratorI.H
-    polyIntegrator.C
-    polyIntegratorIO.C
+    adaptiveLangevinI.H
+    adaptiveLangevin.C
+    adaptiveLangevinIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef polyIntegrator_H
-#define polyIntegrator_H
+#ifndef adaptiveLangevin_H
+#define adaptiveLangevin_H
 
-#include "IOdictionary.H"
-#include "autoPtr.H"
-#include "runTimeSelectionTables.H"
+#include "polyIntegrator.H"
 #include "vector.H"
+#include "polyMesh.H"
 #include "volFields.H"
-#include "polyMolecule.H"
-#include "writeTimeData.H"
-#include "selectIds.H"
+#include "polyMoleculeCloud.H"
+// #include "boundedBox.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -54,79 +52,78 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class polyIntegrator Declaration
+                           Class adaptiveLangevin Declaration
 \*---------------------------------------------------------------------------*/
 
-class polyIntegrator
+class adaptiveLangevin
+:
+    public polyIntegrator
 {
 
-protected:
-
-    // Protected data
-
-        const fvMesh& mesh_;
-
-        polyMoleculeCloud& molCloud_;
-
-        Time& time_; 
-
-    // Private Member Functions
-
+private:
+    
+        //- subDictionary containing the properties
+        dictionary propsDict_;
+    
+        scalar deltaT_;
+        
+        scalar KE1_;
+        
+        scalar xi_;
+        
+        scalar invMu_;
+        
+        scalar gamma_;
+        
+        scalar T_;
+        
+        scalar Nd_;
+        
+        scalar kB_;
+        
+        scalar N_;
+        
+        scalar sigma_;
+        
+        DynamicList<scalar> kE_;
+        DynamicList<scalar> angularKE_;
+        
+        
+    // Private data
+        
+        void calculateKE(scalar& kE, scalar& angularKeSum);
+        
+        void calculateXi();
+       
+        void updateHalfVelocity();
+       
 public:
 
     //- Runtime type information
-    TypeName("polyIntegrator");
+    TypeName("adaptiveLangevin");
 
-    // Declare runtime constructor selection table
-        declareRunTimeSelectionTable
-        (
-            autoPtr,
-            polyIntegrator,
-            dictionary,
-            (
-                Time& t,
-                polyMoleculeCloud& molCloud,
-                const dictionary& dict
-            ),
-            (t, molCloud, dict)
-        );
-   
     // Constructors
 
         //- Construct from components
-        polyIntegrator
+        adaptiveLangevin
         (
             Time& t,
             polyMoleculeCloud& molCloud,
             const dictionary& dict
         );
-
-
-    // Selectors
-
-        static autoPtr<polyIntegrator> New
-        (
-            Time& t,
-            polyMoleculeCloud& molCloud,
-            const dictionary& dict
-        );
-
 
     // Destructor
 
-        virtual ~polyIntegrator();
+        ~adaptiveLangevin();
 
 
     // Member Functions
 
-
-        //- create an initial configuration
-        virtual void init() = 0;                
+        void init();
         
-        //- evolve MD simulation
-        virtual void evolve() = 0;
-
+        void evolve();
         
+//         void write();
 
 };
 
