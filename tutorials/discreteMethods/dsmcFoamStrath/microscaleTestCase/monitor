@@ -1,0 +1,21 @@
+set ytics nomirror
+set y2tics nomirror
+
+#set xrange[0:5000]      #set the X axes values
+#set yrange[0:990000]    #set the Y axes values
+#set y2range[6.2e-21:6.38e-21]    #set the Y2 axes values
+
+
+#set xtics 1000          #set the sampling value for X axes
+#set ytics 1000          #set the sampling value for Y axes
+
+
+set xlabel "Timestep"
+set ylabel "Number of dsmc particles"
+set y2label "Average linear kinetic energy/[J]"
+
+plot \
+"< cat log.dsmcFoamStrath | grep 'Number of dsmc particles' | cut -d '=' -f 2"  w l axis x1y1 t "Number of dsmc particles", \
+"< cat log.dsmcFoamStrath | grep 'Average linear kinetic energy' | cut -d '=' -f 2"  w l axis x1y2 t "Average linear kinetic energy"
+pause 10
+reread 

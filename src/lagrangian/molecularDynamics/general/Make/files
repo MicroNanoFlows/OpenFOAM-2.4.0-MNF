@@ -79,6 +79,12 @@ wallMotion/derived/rampVelocity/rampVelocity.C
 /* TIME*/
 
 time/clockTimer/clockTimer.C
+time/couplingTimeData/couplingTimeData.C
+time/decoupledTimeData/decoupledTimeData.C
+time/timeData/timeData.C
+time/timeDataMeas/timeDataMeas.C
+time/timeFluxData/timeFluxData.C
+time/timeInterval/timeInterval.C
 
 /*  GRAVITY FORCE  */
 
@@ -116,6 +122,8 @@ fitting/leastSquaresFit/leastSquaresFit.C
 davesInterpolant/davesInterpolant.C
 
 trackingNumber/trackingNumber.C
+
+randomPointsInSquareZone/randomPointsInSquareZone.C
 
 
 multiscale/boundaryConditions/mixedFixedValueSlipFvPatchFields.C

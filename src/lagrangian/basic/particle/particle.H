@@ -502,7 +502,7 @@ public:
             //  Returns the boundary face index if the track stops at the
             //  boundary, -1 otherwise.
             template<class TrackData>
-            label track(const vector& endPosition, TrackData& td);
+            label track(const vector& endPosition, TrackData& td, bool DSMC);
 
             //- Track particle to a given position and returns 1.0 if the
             //  trajectory is completed without hitting a face otherwise
@@ -511,7 +511,7 @@ public:
             //  on entry 'stepFraction()' should be set to the fraction of the
             //  time-step at which the tracking starts.
             template<class TrackData>
-            scalar trackToFace(const vector& endPosition, TrackData& td);
+            scalar trackToFace(const vector& endPosition, TrackData& td, bool DSMC);
 
             //- Return the index of the face to be used in the interpolation
             //  routine
