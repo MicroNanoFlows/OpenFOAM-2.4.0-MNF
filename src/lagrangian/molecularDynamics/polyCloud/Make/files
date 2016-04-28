@@ -90,7 +90,7 @@ initialiseMolecules/derived/polyCrystal/polyCrystal.C
 initialiseMolecules/derived/cilium/cilium.C
 initialiseMolecules/derived/ciliumIC/ciliumIC.C
 initialiseMolecules/derived/grapheneHydrogenFunctionalisation/grapheneHydrogenFunctionalisation.C
-
+initialiseMolecules/derived/freezeMolecules/freezeMolecules.C
 
 /* Deletion */
 
@@ -207,6 +207,7 @@ controllers/derived/others/ciliumMotion/ciliumMotion.C
 controllers/derived/others/pressureFlux/pressureFlux.C
 controllers/derived/others/fadeInitialise/fadeInitialise.C
 controllers/derived/others/polyBoundedSwitchIds/polyBoundedSwitchIds.C
+controllers/derived/others/newPressureFlux/newPressureFlux.C
 
 
 /*  BOUNDARIES  */
