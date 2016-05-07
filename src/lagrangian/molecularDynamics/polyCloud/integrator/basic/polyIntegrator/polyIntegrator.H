@@ -127,7 +127,6 @@ public:
         virtual void evolve() = 0;
 
         
-
 };
 
 

@@ -117,8 +117,8 @@ void adaptiveLangevin::evolve()
         scalar kE = 0.0;
         scalar angularKeSum = 0.0;
         calculateKE(kE, angularKeSum);
-        kE_.append(kE);
-        angularKE_.append(angularKeSum);        
+        kE1_.append(kE);
+        angularKE1_.append(angularKeSum);        
     }    
     
     // move 1
@@ -178,8 +178,8 @@ void adaptiveLangevin::evolve()
         scalar kE = 0.0;
         scalar angularKeSum = 0.0;
         calculateKE(kE, angularKeSum);
-        kE_.append(kE);
-        angularKE_.append(angularKeSum);        
+        kE2_.append(kE);
+        angularKE2_.append(angularKeSum);        
     }
         
     calculateXi();
@@ -195,6 +195,11 @@ void adaptiveLangevin::evolve()
     molCloud_.updateAcceleration();
         
     updateHalfVelocity();
+    
+    
+    molCloud_.postTimeStep();
+    
+    write(); 
 }
 
 void adaptiveLangevin::updateHalfVelocity()
@@ -264,6 +269,81 @@ void adaptiveLangevin::calculateKE(scalar& kE, scalar& angularKeSum)
     {
         reduce(kE, sumOp<scalar>());        
         reduce(angularKeSum, sumOp<scalar>());
+    }
+}
+
+void adaptiveLangevin::write()
+{
+    const Time& runTime = time_.time();
+    
+    
+    if(runTime.outputTime())
+    {
+        if(Pstream::master())
+        {
+            Info << "adaptiveLangevin: writing" << endl;
+            
+            fileName casePath = time_.path();
+            
+            scalarField kEField1 (kE1_.size(), 0.0);
+            scalarField angularKEField1 (angularKE1_.size(), 0.0);
+            scalarField kEField2 (kE2_.size(), 0.0);
+            scalarField angularKEField2 (angularKE2_.size(), 0.0);            
+            scalarField timeField (kE1_.size(), 0.0);
+
+            kEField1.transfer(kE1_);
+            angularKEField1.transfer(angularKE1_);
+            kEField2.transfer(kE2_);
+            angularKEField2.transfer(angularKE2_);
+            
+            const scalar& deltaT = time_.time().deltaT().value();
+            
+            forAll(timeField, i)
+            {
+                timeField[timeField.size()-i-1]=runTime.timeOutputValue()-(deltaT*i);
+            }
+            
+            writeTimeData
+            (
+                casePath,
+                "adaptiveLangevin_KE1.xy",
+                timeField,
+                kEField1,
+                true
+            );     
+            
+            writeTimeData
+            (
+                casePath,
+                "adaptiveLangevin_KE2.xy",
+                timeField,
+                kEField2,
+                true
+            );             
+            
+            writeTimeData
+            (
+                casePath,
+                "adaptiveLangevin_angularKE1.xy",
+                timeField,
+                angularKEField1,
+                true
+            );      
+            
+            writeTimeData
+            (
+                casePath,
+                "adaptiveLangevin_angularKE2.xy",
+                timeField,
+                angularKEField2,
+                true
+            );                
+        }
+        
+        kE1_.clear();
+        angularKE1_.clear();
+        kE2_.clear();
+        angularKE2_.clear();        
     }
 }
 

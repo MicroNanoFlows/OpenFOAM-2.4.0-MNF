@@ -85,8 +85,10 @@ private:
         
         scalar sigma_;
         
-        DynamicList<scalar> kE_;
-        DynamicList<scalar> angularKE_;
+        DynamicList<scalar> kE1_;
+        DynamicList<scalar> kE2_;
+        DynamicList<scalar> angularKE1_;
+        DynamicList<scalar> angularKE2_;
         
         
     // Private data
@@ -96,7 +98,10 @@ private:
         void calculateXi();
        
         void updateHalfVelocity();
-       
+        
+        void write();       
+        
+        
 public:
 
     //- Runtime type information
@@ -123,7 +128,7 @@ public:
         
         void evolve();
         
-//         void write();
+
 
 };
 
