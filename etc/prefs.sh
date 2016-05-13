@@ -42,7 +42,7 @@
 
 ## Specify compiler type
 ## ~~~~~~~~~~~~~~~~~~~~~
-export WM_COMPILER=GccMNF
+export WM_COMPILER=GccMNFMUI
 
 ## Specify system openmpi
 ## ~~~~~~~~~~~~~~~~~~~~~~
