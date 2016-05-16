@@ -1020,9 +1020,9 @@ Foam::label Foam::dsmcCloud::postCollisionVibrationalEnergyLevel
         //energy-based procedure, the inelastic fraction should be set to about 1/(5Zv)
         //Bird 2008 RGD "A Comparison of Collison Energy-Based and Temperature-Based..."
         
-        //scalar inverseVibrationalCollisionNumber = 1.0/(5.0*Zv);
+        scalar inverseVibrationalCollisionNumber = 1.0/(5.0*Zv);
         
-         scalar inverseVibrationalCollisionNumber = 1.0/50.0;
+         //scalar inverseVibrationalCollisionNumber = 1.0/50.0;
 
         if(inverseVibrationalCollisionNumber > rndGen_.scalar01())
         {

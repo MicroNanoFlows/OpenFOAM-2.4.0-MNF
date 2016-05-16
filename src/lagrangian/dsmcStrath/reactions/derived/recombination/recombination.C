@@ -155,14 +155,6 @@ void recombination::setProperties()
             << reactantMolecules.size() << nl 
             << exit(FatalError);
     }
-    
-    if(reactantMolecules[0] != reactantMolecules[1])
-    {
-        FatalErrorIn("recombination::setProperties()")
-            << "Both reactant species must be the same, they are currently " 
-	    << reactantMolecules[0] << " and " << reactantMolecules[1] << nl 
-            << exit(FatalError);
-    }
 
     reactantIds_.setSize(reactantMolecules.size(), -1);
 
@@ -209,44 +201,31 @@ void recombination::setProperties()
             << exit(FatalError);
     }
 
-    // check that products are 'MOLECULES' (not 'ATOMS') 
+    // check that the product is a 'MOLECULE' (not an 'ATOM') 
 
-    const scalar& rDofThirdBody = cloud_.constProps(productId_).rotationalDegreesOfFreedom();
+    const scalar& rDofProduct = cloud_.constProps(productId_).rotationalDegreesOfFreedom();
 
-    if(rDofThirdBody < 1)
+    if(rDofProduct < 1)
     {
         FatalErrorIn("recombination::setProperties()")
-            << "Reactant must be a molecule (not an atom): " << productMolecule 
+            << "Third body must be a molecule (not an atom): " << productMolecule 
             << nl 
             << exit(FatalError);
     }
     
     //reading in third body molecule
     
-    const word thirdBodyMolecule (propsDict_.lookup("thirdBodyMolecule"));
+    const word thirdBody (propsDict_.lookup("thirdBody"));
     
-    thirdBodyId_ = findIndex(cloud_.typeIdList(), thirdBodyMolecule);
+    thirdBodyId_ = findIndex(cloud_.typeIdList(), thirdBody);
 
     // check that reactants belong to the typeIdList (constant/dsmcProperties)
     if(thirdBodyId_ == -1)
     {
         FatalErrorIn("recombination::setProperties()")
-            << "Cannot find type id: " << thirdBodyMolecule << nl 
+            << "Cannot find type id: " << thirdBody << nl 
             << exit(FatalError);
     }
-
-    // check that products are 'MOLECULES' (not 'ATOMS') 
-
-    const scalar& rDof = cloud_.constProps(thirdBodyId_).rotationalDegreesOfFreedom();
-
-    if(rDof < 1)
-    {
-        FatalErrorIn("recombination::setProperties()")
-            << "Third body must be a molecule (not an atom): " << thirdBodyMolecule 
-            << nl 
-            << exit(FatalError);
-    }
-
 }
 
 bool recombination::tryReactMolecules(const label& typeIdP, const label& typeIdQ)
@@ -303,6 +282,8 @@ void recombination::reaction
     label typeIdP = p.typeId();
     label typeIdQ = q.typeId();
     
+    relax_ = true;
+    
     if(typeIdP == typeIdQ && typeIdP == reactantIds_[0]) // same species and desired species to recombine
     {
         vector UP = p.U();
@@ -315,6 +296,9 @@ void recombination::reaction
         scalar dP = cloud_.constProps(typeIdP).d();
         scalar dQ = cloud_.constProps(typeIdQ).d();
         scalar dThirdBody = cloud_.constProps(thirdBodyId_).d();
+        
+        scalar EEleP = cloud_.constProps(typeIdP).electronicEnergyList()[p.ELevel()];
+        scalar EEleQ = cloud_.constProps(typeIdQ).electronicEnergyList()[q.ELevel()];
         
         scalar VRef = (pi/6.0)*(pow((dP+dQ+dThirdBody),3.0));
         
@@ -331,8 +315,8 @@ void recombination::reaction
         scalar aPrime = aCoeff_*(pow((2.5 - omegaPQ),bCoeff_)*exp(Foam::lgamma(2.5 - omegaPQ))/exp(Foam::lgamma((2.5 - omegaPQ + bCoeff_))));
         
         scalar VColl = aPrime*pow((TColl/cloud_.constProps(thirdBodyId_).thetaV()),bCoeff_)*VRef;
-		
-// 		scalar VColl = aCoeff_*pow((4000.00/cloud_.constProps(thirdBodyId_).thetaV()),bCoeff_)*VRef;
+        
+//         scalar VColl = aCoeff_*pow((5000.00/cloud_.constProps(thirdBodyId_).thetaV()),bCoeff_)*VRef;
         
         scalar pRec = rhoC_*VColl;
         
@@ -347,27 +331,18 @@ void recombination::reaction
             {
                 // RECOMBINATION REACTION //
 
-                //center of mass velocity (pre-recombination)
-                vector Ucm = (mP*UP + mQ*UQ)/(mP + mQ);
-
                 const label& typeIdRecombinedMol = productId_;
-
-                // change species properties
-
-                scalar mP = cloud_.constProps(typeIdP).mass();
-
-                scalar mQ = cloud_.constProps(typeIdQ).mass();
-
-                scalar thetaVP = cloud_.constProps(typeIdRecombinedMol).thetaV();
-
-                scalar mR = mP*mQ/(mP + mQ);
-
+                
                 scalar omegaPQ =
                 0.5
                 *(
-                    cloud_.constProps(typeIdP).omega()
-                    + cloud_.constProps(typeIdQ).omega()
+                    cloud_.constProps(typeIdRecombinedMol).omega()
+                    + cloud_.constProps(typeIdRecombinedMol).omega()
                 );
+                
+                label jMaxProduct = cloud_.constProps(typeIdRecombinedMol).numberOfElectronicLevels();
+                List<label> gListProduct = cloud_.constProps(typeIdRecombinedMol).degeneracyList();
+                List<scalar> EElistProduct = cloud_.constProps(typeIdRecombinedMol).electronicEnergyList();
 
                 ///////////////////////////////////////////////////////////////////////////////////
                 // Determine the pre-collision total energy. Note that for this exothermic       //
@@ -377,67 +352,67 @@ void recombination::reaction
 
                 scalar heatOfReactionJoules = heatOfReactionRecombination_*physicoChemical::k.value();
 
-                scalar EcTot = translationalEnergy + heatOfReactionJoules;
-
-                scalar func = 0.0;
-                scalar rel = 0.0;
-                scalar psiV = 0.0;
-
-                ///////////////////////////////////////
-                // acceptance-rejection method (ARM) //
-                ///////////////////////////////////////
-
-                scalar DOFrot = cloud_.constProps(typeIdRecombinedMol).rotationalDegreesOfFreedom();
-
-                scalar DOFm = 5.0 - (2.0*omegaPQ);
-                scalar DOFsum = DOFm + DOFrot;
-
-                scalar expo = 0.5*DOFsum -1.0;
-
-                rel = EcTot / (physicoChemical::k.value()*thetaVP);
+                scalar EcTot = translationalEnergy + heatOfReactionJoules + EEleP + EEleQ;
                 
-                do
+//                 scalar EcTot1 = EcTot;
+                
+//                 Info << "EcTot1 = " << EcTot << endl;
+                
+                label ELevelProduct = 0;
+                
+                if(jMaxProduct > 1)
                 {
-                    psiV = label(((label(rel)) +1)*cloud_.rndGen().scalar01())/rel;
-                    func = pow((1.0-psiV),expo);
-                } while (func < cloud_.rndGen().scalar01());
+                    
+                    ELevelProduct = cloud_.postCollisionElectronicEnergyLevel
+                                    (
+                                        EcTot,
+                                        jMaxProduct,
+                                        omegaPQ,
+                                        EElistProduct,
+                                        gListProduct
+                                    );
+                                    
+                    EcTot -= EElistProduct[ELevelProduct];
+                }
+                
+//                 scalar EcTot2 = EcTot + EElistProduct[ELevelProduct];
+                
+//                 Info << "EcTot2 = " << EcTot + EElistProduct[ELevelProduct] << endl;
+                
+                label iMaxProduct = (EcTot /(physicoChemical::k.value()*cloud_.constProps(typeIdRecombinedMol).thetaV()));
+                
+                label vibLevelProduct = cloud_.postCollisionVibrationalEnergyLevel
+                            (
+                                true,
+                                0,
+                                iMaxProduct,
+                                cloud_.constProps(typeIdRecombinedMol).thetaV(),
+                                cloud_.constProps(typeIdRecombinedMol).thetaD(),
+                                cloud_.constProps(typeIdRecombinedMol).TrefZv(),
+                                omegaPQ,
+                                cloud_.constProps(typeIdRecombinedMol).Zref(),
+                                EcTot
+                            );
+                           
+                EcTot -= (vibLevelProduct*cloud_.constProps(typeIdRecombinedMol).thetaV()*physicoChemical::k.value());
+                
+//                 scalar EcTot3 = EcTot + EElistProduct[ELevelProduct] + (vibLevelProduct*cloud_.constProps(typeIdRecombinedMol).thetaV()*physicoChemical::k.value());
+                
+//                 Info << "EcTot3 = " << EcTot + EElistProduct[ELevelProduct] + (vibLevelProduct*cloud_.constProps(typeIdRecombinedMol).thetaV()*physicoChemical::k.value()) << endl;
+                
+                scalar rotationalDofProduct = cloud_.constProps(typeIdRecombinedMol).rotationalDegreesOfFreedom();
+                
+                scalar energyRatio = cloud_.postCollisionRotationalEnergy(rotationalDofProduct,(2.5 - omegaPQ));
 
-                scalar Evib = psiV* EcTot;
+                scalar ERotProduct = energyRatio*EcTot;
+        
+                EcTot -= ERotProduct;
+                
+//                 scalar EcTot4 = EcTot + EElistProduct[ELevelProduct] + (vibLevelProduct*cloud_.constProps(typeIdRecombinedMol).thetaV()*physicoChemical::k.value()) + ERotProduct;
+                
+//                 Info << "EcTot4 = " << EcTot + EElistProduct[ELevelProduct] + (vibLevelProduct*cloud_.constProps(typeIdRecombinedMol).thetaV()*physicoChemical::k.value()) + ERotProduct << endl;
 
-                EcTot -= Evib;
-
-
-                // Distribute EcTot over translational and all rotational modes of recombined molecule based on MONACO code //
-
-                DOFm = 1.0*(5.0 - (2.0 * omegaPQ)); // part of MONACO code
-
-                scalar DOFtot = DOFm + DOFrot;
-
-                scalar rPSIm = 0.0;
-
-                scalar h1 = 0.5*DOFtot - 2.0;
-                scalar h2 = 0.5*DOFm - 1.0 + SMALL;
-                scalar h3 = 0.5*(DOFtot-DOFm)-1.0 + SMALL;
-
-                scalar prob = 0.0;
-
-                do
-                {
-                    rPSIm = cloud_.rndGen().scalar01();
-                    prob = pow(h1,h1)/(pow(h2,h2)*pow(h3,h3))*pow(rPSIm,h2)*pow(1.0-rPSIm,h3);
-
-                } while (prob < cloud_.rndGen().scalar01());
-
-                if (DOFm == DOFtot) rPSIm = 1.0;
-
-                if (DOFm == 2.0 && DOFtot == 4.0) rPSIm = cloud_.rndGen().scalar01();
-
-                if (DOFtot < 4.0 ) rPSIm = (DOFm/DOFtot);
-
-                scalar Erel = EcTot*rPSIm;
-                scalar Erot = EcTot - Erel;
-
-                scalar relVelRecombMol = pow(2*Erel/mR,0.5);
+                scalar recombMolVel = pow(2.0*EcTot/cloud_.constProps(typeIdRecombinedMol).mass(),0.5);
 
                 // Variable Hard Sphere collision part for collision of molecules
         
@@ -447,24 +422,43 @@ void recombination::reaction
             
                 scalar phi = twoPi*cloud_.rndGen().scalar01();
             
-                vector postCollisionRelU =
-                    relVelRecombMol
+                vector postCollisionU =
+                    recombMolVel
                     *vector
                         (
                             cosTheta,
                             sinTheta*cos(phi),
                             sinTheta*sin(phi)
                         );
-        
-                UP = Ucm + (postCollisionRelU*mQ/(mP + mQ));
-                UQ = Ucm - (postCollisionRelU*mP/(mP + mQ));
+                        
+                EcTot = 0.5*magSqr(postCollisionU)*cloud_.constProps(typeIdRecombinedMol).mass();
                 
-                vector URecombined = 0.5*(UP + UQ);
+//                 scalar EcTot5 = EcTot + EElistProduct[ELevelProduct] + (vibLevelProduct*cloud_.constProps(typeIdRecombinedMol).thetaV()*physicoChemical::k.value()) + ERotProduct;
                 
-                label cellI = p.cell();
+                
+//                 if(EcTot1 != EcTot5)
+//                 {
+//                     Info << "EcTot1 = " << EcTot1 << endl;
+//                     Info << "EcTot2 = " << EcTot2 << endl;
+//                     Info << "EcTot3 = " << EcTot3 << endl;
+//                     Info << "EcTot4 = " << EcTot4 << endl;
+//                     Info << "EcTot5 = " << EcTot5 << endl;
+//                 }
+//                 Info << "EcTot5 = " << EcTot + EElistProduct[ELevelProduct] + (vibLevelProduct*cloud_.constProps(typeIdRecombinedMol).thetaV()*physicoChemical::k.value()) + ERotProduct << endl;
+                
                 vector position = p.position();
-                label tetFaceI = p.tetFace();
-                label tetPtI = p.tetPt();
+                
+                label cell = -1;
+                label tetFace = -1;
+                label tetPt = -1;
+
+                mesh_.findCellFacePt
+                (
+                    position,
+                    cell,
+                    tetFace,
+                    tetPt
+                );
                 
                 label classification = 0;
                 
@@ -477,27 +471,45 @@ void recombination::reaction
                     classification = q.classification();
                 }
                 
+                const List<DynamicList<dsmcParcel*> > cellOccupancy = cloud_.cellOccupancy();
+                const DynamicList<dsmcParcel*>& cellParcels(cellOccupancy[cell]);
+                label idP = -1;
+                label idQ = -1;
+                
+                forAll(cellParcels, i)
+                {
+                    const dsmcParcel& parcel = *cellParcels[i];
+                
+                    if(parcel.position() == p.position())
+                    {
+                        idP = i;
+                    }
+                    
+                    if(parcel.position() == q.position())
+                    {
+                        idQ = i;
+                    }
+                }
+                
                 cloud_.deleteParticle(p);
+                cloud_.removeParcelFromCellOccupancy(idP, cell);
                 cloud_.deleteParticle(q);
+                cloud_.removeParcelFromCellOccupancy(idQ, cell);
                 
                 cloud_.addNewParcel
                 (
                     position,
-                    URecombined,
-                    Erot,
-                    Evib,
-                    0.0,
-                    cellI,
-                    tetFaceI,
-                    tetPtI,
+                    postCollisionU,
+                    ERotProduct,
+                    vibLevelProduct,
+                    ELevelProduct,
+                    cell,
+                    tetFace,
+                    tetPt,
                     productId_,
                     0,
                     classification
                 );
-            }
-            else
-            {
-                relax_ = true; // no reaction - use LB
             }
         }
     }
@@ -505,14 +517,14 @@ void recombination::reaction
 
 void  recombination::outputResults(const label& counterIndex)
 {
+    // measure density 
+    computeDensity();
+    
      if(writeRatesToTerminal_ == true)
      {
-        // measure density 
-        computeDensity();
-
-        Info << "species A number density: " << rhoA_ << endl;
-        Info << "species B number density: " << rhoB_ << endl;
-        Info << "species C number density: " << rhoC_ << endl;
+//         Info << "species A number density: " << rhoA_ << endl;
+//         Info << "species B number density: " << rhoB_ << endl;
+//         Info << "species C number density: " << rhoC_ << endl;
 
         const scalar& deltaT = mesh_.time().deltaT().value();
 

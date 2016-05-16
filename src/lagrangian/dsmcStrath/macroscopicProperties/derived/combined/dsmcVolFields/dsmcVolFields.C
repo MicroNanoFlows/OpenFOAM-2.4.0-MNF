@@ -1746,19 +1746,6 @@ void dsmcVolFields::calculateField()
                         q_.boundaryField()[j][k] = qBF_[j][k]/nAvTimeSteps;
                         
                         fD_.boundaryField()[j][k] = fDBF_[j][k]/nAvTimeSteps;
-                        
-//                         const fvMesh& mesh = fD_.mesh();
-
-//                         forAll(mesh.boundaryMesh(), i)
-//                         {
-//                             const polyPatch& patch = mesh_.boundaryMesh()[i];
-//                             const vectorField& fC = patch.faceCentres();
-//                             
-//                             if (isA<wallPolyPatch>(patch))
-//                             {
-
-//                             }
-//                         }
                     }
                     
                     p_.boundaryField()[j] =
@@ -1810,17 +1797,7 @@ void dsmcVolFields::calculateField()
             UMean_.write();
             fD_.write();
         }
-        
-//         UMean_.correctBoundaryConditions();
-//         translationalT_.correctBoundaryConditions();
-//         rotationalT_.correctBoundaryConditions();
-//         vibrationalT_.correctBoundaryConditions();
-//         overallT_.correctBoundaryConditions();
-//         Ma_.correctBoundaryConditions();
-//         p_.correctBoundaryConditions();
-//         q_.correctBoundaryConditions();
-//         fD_.correctBoundaryConditions();
-//         tau_.correctBoundaryConditions();
+       
         
         //- reset
         if(time_.resetFieldsAtOutput())
