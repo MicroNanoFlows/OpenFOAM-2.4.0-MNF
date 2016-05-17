@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2009-2010 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,11 +22,11 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Application
-    dsmcInitialise
+    dsmcFoam
 
 Description
     Initialise a case for dsmcFoam by reading the initialisation dictionary
-    system/dsmcInitialise.
+    system/dsmcInitialise
 
 \*---------------------------------------------------------------------------*/
 
@@ -57,17 +57,17 @@ int main(int argc, char *argv[])
 
     Info<< "Initialising dsmc for Time = " << runTime.timeName() << nl << endl;
 
-    dsmcCloud dsmc("dsmc", mesh, dsmcInitialiseDict);
+    dsmcCloud dsmc(runTime, "dsmc", mesh, dsmcInitialiseDict, true);
 
-    label totalMolecules = dsmc.size();
-
-    if (Pstream::parRun())
-    {
-        reduce(totalMolecules, sumOp<label>());
-    }
-
-    Info<< nl << "Total number of molecules added: " << totalMolecules
-        << nl << endl;
+//     label totalMolecules = dsmc.size();
+// 
+//     if (Pstream::parRun())
+//     {
+//         reduce(totalMolecules, sumOp<label>());
+//     }
+// 
+//     Info<< nl << "Total number of molecules added: " << totalMolecules
+//         << nl << endl;
 
     IOstream::defaultPrecision(15);
 

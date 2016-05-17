@@ -17,7 +17,7 @@ fi
 
 clean
 
-cases="dsmcInitialise  dsmcInitialiseStrath"
+cases="dsmcInitialise"
 
 for case in $cases
 do
