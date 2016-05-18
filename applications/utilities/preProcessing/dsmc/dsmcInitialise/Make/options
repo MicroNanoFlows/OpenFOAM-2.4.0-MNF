@@ -1,7 +1,7 @@
 EXE_INC = \
     -I$(LIB_SRC)/finiteVolume/lnInclude \
     -I$(LIB_SRC)/lagrangian/basic/lnInclude \
-    -I$(LIB_SRC)/lagrangian/dsmcFOAM/lnInclude \
+    -I$(LIB_SRC)/lagrangian/dsmc/lnInclude \
     -I$(LIB_SRC)/meshTools/lnInclude \
     -I$(LIB_SRC)/lagrangian/molecularDynamics/general/lnInclude
 
@@ -11,4 +11,3 @@ EXE_LIBS = \
     -llagrangian \
     -ldsmcFOAM \
     -lgeneralMolecule
-

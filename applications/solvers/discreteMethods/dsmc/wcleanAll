@@ -15,14 +15,13 @@ fi
 
 #----------------------------------------------------------------------
 
-clean
-
 cases="dsmcFOAM"
 
 for case in $cases
 do
   echo ""
   cd $case
+  echo "wclean $case"
     wclean
   cd ../
 done
