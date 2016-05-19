@@ -13,5 +13,5 @@ EXE_LIBS = \
     -ldynamicMesh \
     -ldynamicFvMesh \
     -llagrangian \
-    -ldsmc \
+    -ldsmcFOAM \
     -lgeneralMolecule
