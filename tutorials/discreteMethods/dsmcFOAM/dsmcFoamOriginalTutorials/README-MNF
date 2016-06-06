@@ -1,3 +1,0 @@
-Please note that these cases were designed for the original dsmcFoam application, which is replaced by the dsmcFOAM application in this distribution.
-
-There is no guarantee that these tutorial cases will work with this updated solver but are left in the repository for historical reasons.
