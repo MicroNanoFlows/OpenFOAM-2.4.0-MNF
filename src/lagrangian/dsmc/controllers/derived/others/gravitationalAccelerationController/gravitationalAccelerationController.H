@@ -41,57 +41,58 @@ namespace Foam
 Class gravitationalAccelerationController Declaration
 \*---------------------------------------------------------------------------*/
 
-    class gravitationalAccelerationController
-    :
-    public dsmcStateController
-    {
-        private:
-        //- subDictionary containing the properties
-        dictionary propsDict_;
+	class gravitationalAccelerationController
+		:
+			public dsmcStateController
+	{
 
-        vector acceleration_;
+		private:
+			//- subDictionary containing the properties
+			dictionary propsDict_;
 
-        // Private Member Functions
-        void setProperties();
+			vector acceleration_;
 
-        public:
+			// Private Member Functions
+			void setProperties();
 
-        //- Runtime type information
-        TypeName("gravitationalAccelerationController");
+		public:
 
-        // Constructors
-        //- Construct from components
-        gravitationalAccelerationController
-        (
-            Time& t,
-            dsmcCloud& cloud,
-            const dictionary& dict
-        );
+			//- Runtime type information
+			TypeName("gravitationalAccelerationController");
 
-        // Destructor
-        ~gravitationalAccelerationController();
+			// Constructors
+			//- Construct from components
+			gravitationalAccelerationController
+			(
+				 Time& t,
+				 dsmcCloud& cloud,
+				 const dictionary& dict
+			);
 
-        // Member Functions
-        void initialConfiguration();
-        void controlParcelsBeforeMove();
-        void controlParcelsBeforeCollisions();
-        void controlParcelsAfterCollisions();
+			// Destructor
+			~gravitationalAccelerationController();
 
-        //- calculate any required properties
-        void calculateProperties();
+			// Member Functions
+			void initialConfiguration();
+			void controlParcelsBeforeMove();
+			void controlParcelsBeforeCollisions();
+			void controlParcelsAfterCollisions();
 
-        //- output data
-        void output
-        (
-            const fileName& fixedPathName,
-            const fileName& timePath
-        );
+			//- calculate any required properties
+			void calculateProperties();
 
-        //- update properties from a modified dictionary
-        void updateProperties(const dictionary&);
-    };
+			//- output data
+			void output
+			(
+				 const fileName& fixedPathName,
+				 const fileName& timePath
+			);
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+			//- update properties from a modified dictionary
+			void updateProperties(const dictionary&);
+	};
+
+	// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
 

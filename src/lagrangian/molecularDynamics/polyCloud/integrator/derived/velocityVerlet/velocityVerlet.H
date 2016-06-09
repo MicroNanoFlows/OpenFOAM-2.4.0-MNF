@@ -23,10 +23,15 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
+    velocityVerlet
 
 Description
-    The model which outputs standard properties to the terminal screen 
-    in an MD simulation run.
+    simple velocity controller in a zone 
+
+    parallelised
+
+    recommendation: control and measure properties every time step, ensure  
+                    size of zone.
 
 SourceFiles
     velocityVerletI.H
@@ -43,7 +48,7 @@ SourceFiles
 #include "polyMesh.H"
 #include "volFields.H"
 #include "polyMoleculeCloud.H"
-
+// #include "boundedBox.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -56,19 +61,15 @@ namespace Foam
 
 class velocityVerlet
 :
-	public polyIntegrator
+    public polyIntegrator
 {
 
 private:
 
     // Private data
 
-        //- subDictionary containing the properties
-//         dictionary propsDict_;
-        
-    // Private Member Functions
-    
-
+       void updateVelocity(const scalar& trackTime);
+       
 public:
 
     //- Runtime type information
@@ -80,7 +81,6 @@ public:
         velocityVerlet
         (
             Time& t,
-            const polyMesh& mesh,
             polyMoleculeCloud& molCloud,
             const dictionary& dict
         );
@@ -89,11 +89,12 @@ public:
 
         ~velocityVerlet();
 
+
     // Member Functions
 
-       
+        void init();
+        
         void evolve();
-
 
 };
 

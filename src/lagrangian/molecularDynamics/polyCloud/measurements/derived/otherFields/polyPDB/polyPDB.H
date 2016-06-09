@@ -101,7 +101,9 @@ private:
         bool variableMols_;
         label nSiteEstimate_;
         vector rDummy_;
-    
+        word molOption_;
+        label nSitesMol_;
+        
         scalar startTime_;
         scalar endTime_;
         scalar accumulatedTime_;

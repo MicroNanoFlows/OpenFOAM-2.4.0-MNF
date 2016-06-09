@@ -27,7 +27,9 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "polyIntegrator.H"
-
+#include "IFstream.H"
+#include "graph.H"
+#include "polyMoleculeCloud.H"
 
 
 namespace Foam
@@ -45,15 +47,16 @@ defineRunTimeSelectionTable(polyIntegrator, dictionary);
 polyIntegrator::polyIntegrator
 (
     Time& t,
-    const polyMesh& mesh,
     polyMoleculeCloud& molCloud,
     const dictionary& dict
 )
 :
-    mesh_(refCast<const fvMesh>(mesh)),
+    mesh_(refCast<const fvMesh>(molCloud.mesh())),
     molCloud_(molCloud),
     time_(t)
-{}
+
+{
+}
 
 
 // * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * * //
@@ -61,7 +64,6 @@ polyIntegrator::polyIntegrator
 autoPtr<polyIntegrator> polyIntegrator::New
 (
     Time& t,
-    const polyMesh& mesh,
     polyMoleculeCloud& molCloud,
     const dictionary& dict
 )
@@ -78,7 +80,7 @@ autoPtr<polyIntegrator> polyIntegrator::New
         polyIntegratorName = polyIntegratorNameTemp;
     }
 
-    Info<< "Selecting field: "
+    Info<< "Selecting polyIntegrator "
          << polyIntegratorName << endl;
 
     dictionaryConstructorTable::iterator cstrIter =
@@ -97,7 +99,7 @@ autoPtr<polyIntegrator> polyIntegrator::New
 
     return autoPtr<polyIntegrator>
     (
-        cstrIter()(t, mesh, molCloud, dict)
+        cstrIter()(t, molCloud, dict)
     );
 }
 
@@ -106,6 +108,10 @@ autoPtr<polyIntegrator> polyIntegrator::New
 
 polyIntegrator::~polyIntegrator()
 {}
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+
 
 
 

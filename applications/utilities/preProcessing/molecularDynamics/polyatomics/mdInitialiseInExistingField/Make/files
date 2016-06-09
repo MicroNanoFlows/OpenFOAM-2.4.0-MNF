@@ -1,3 +1,3 @@
 mdInitialiseInExistingField.C
 
-EXE = $(FOAM_APPBIN)/mdInitialisePolyFieldInExistingField
+EXE = $(FOAM_APPBIN)/mdInitialiseInExistingField

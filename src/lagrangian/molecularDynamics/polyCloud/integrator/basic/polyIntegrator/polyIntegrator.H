@@ -26,6 +26,8 @@ Class
     polyIntegrator
 
 Description
+    Basic/abstract class of a state controller
+
 
 SourceFiles
     polyIntegratorI.H
@@ -43,9 +45,8 @@ SourceFiles
 #include "vector.H"
 #include "volFields.H"
 #include "polyMolecule.H"
-#include "propertyField.H"
 #include "writeTimeData.H"
-#include "selectSiteIds.H"
+#include "selectIds.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -67,14 +68,10 @@ protected:
 
         polyMoleculeCloud& molCloud_;
 
-        Time& time_;
+        Time& time_; 
 
-        
-        
     // Private Member Functions
 
-        void move();
-        
 public:
 
     //- Runtime type information
@@ -88,11 +85,10 @@ public:
             dictionary,
             (
                 Time& t,
-                const polyMesh& mesh,
                 polyMoleculeCloud& molCloud,
                 const dictionary& dict
             ),
-            (t, mesh, molCloud, dict)
+            (t, molCloud, dict)
         );
    
     // Constructors
@@ -101,7 +97,6 @@ public:
         polyIntegrator
         (
             Time& t,
-            const polyMesh& mesh,
             polyMoleculeCloud& molCloud,
             const dictionary& dict
         );
@@ -112,11 +107,9 @@ public:
         static autoPtr<polyIntegrator> New
         (
             Time& t,
-            const polyMesh& mesh,
             polyMoleculeCloud& molCloud,
             const dictionary& dict
         );
-
 
 
     // Destructor
@@ -127,8 +120,13 @@ public:
     // Member Functions
 
 
+        //- create an initial configuration
+        virtual void init() = 0;                
+        
+        //- evolve MD simulation
         virtual void evolve() = 0;
 
+        
 };
 
 

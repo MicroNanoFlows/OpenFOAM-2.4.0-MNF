@@ -54,10 +54,18 @@ collisionPartnerSelection/derived/noTimeCounter/noTimeCounter.C
 collisionPartnerSelection/derived/noTimeCounterSubCycled/noTimeCounterSubCycled.C
 collisionPartnerSelection/derived/noTimeCounterAdaptiveSubcelling/noTimeCounterAdaptiveSubcelling.C
 collisionPartnerSelection/derived/simplifiedBernoulliTrials/simplifiedBernoulliTrials.C
+<<<<<<< HEAD
 /*collisionPartnerSelection/derived/noRepeatCollisions/noRepeatCollisions.C
 collisionPartnerSelection/derived/simplifiedBernoulliTrialsTAS/simplifiedBernoulliTrialsTAS.C*/
 
 /* FIELD MEASUREMENTS */
+=======
+collisionPartnerSelection/derived/noRepeatCollisions/noRepeatCollisions.C
+collisionPartnerSelection/derived/simplifiedBernoulliTrialsTAS/simplifiedBernoulliTrialsTAS.C
+
+/* FIELD MEASUREMENTS */
+/*macroscopicProperties/basic/dsmcStandardFields/dsmcStandardFields.C*/
+>>>>>>> master
 macroscopicProperties/basic/dsmcFieldProperties/dsmcFieldProperties.C
 macroscopicProperties/basic/dsmcField/dsmcField.C
 faceTracker/dsmcFaceTracker.C
@@ -73,6 +81,7 @@ boundaries/basic/dsmcPatchBoundary/dsmcPatchBoundary.C
 
 /* PATCH BOUNDARY MODELS */
 boundaries/derived/patchBoundaries/dsmcDeletionPatch/dsmcDeletionPatch.C
+<<<<<<< HEAD
 boundaries/derived/patchBoundaries/dsmcAdiabaticWallPatch/dsmcAdiabaticWallPatch.C
 boundaries/derived/patchBoundaries/dsmcSpecularWallPatch/dsmcSpecularWallPatch.C
 boundaries/derived/patchBoundaries/dsmcDiffuseWallPatch/dsmcDiffuseWallPatch.C
@@ -93,6 +102,28 @@ boundaries/derived/patchBoundaries/dsmcDiffuseCatalyticWallPatch/dsmcDiffuseCata
 boundaries/derived/patchBoundaries/dsmcFixedHeatFluxFieldPatch/dsmcFixedHeatFluxFieldPatch.C
 boundaries/derived/patchBoundaries/dsmcFixedHeatFluxWallPatch/dsmcFixedHeatFluxWallPatch.C
 boundaries/derived/patchBoundaries/dsmcMixedDiffuseSpecularSphericalPatch/dsmcMixedDiffuseSpecularSphericalPatch.C
+=======
+/*boundaries/derived/patchBoundaries/dsmcAdiabaticWallPatch/dsmcAdiabaticWallPatch.C*/
+boundaries/derived/patchBoundaries/dsmcSpecularWallPatch/dsmcSpecularWallPatch.C
+boundaries/derived/patchBoundaries/dsmcDiffuseWallPatch/dsmcDiffuseWallPatch.C
+boundaries/derived/patchBoundaries/dsmcDiffuseWallClassificationPatch/dsmcDiffuseWallClassificationPatch.C
+/*boundaries/derived/patchBoundaries/dsmcDiffuseWallHeatFluxPatch/dsmcDiffuseWallHeatFluxPatch.C*/
+boundaries/derived/patchBoundaries/dsmcDiffuseWallFieldPatch/dsmcDiffuseWallFieldPatch.C
+boundaries/derived/patchBoundaries/dsmcMixedDiffuseSpecularWallPatch/dsmcMixedDiffuseSpecularWallPatch.C
+boundaries/derived/patchBoundaries/dsmcMixedDiffuseSpecularWallFieldPatch/dsmcMixedDiffuseSpecularWallFieldPatch.C
+/*boundaries/derived/patchBoundaries/dsmcMixedDiffuseSpecularWallRotationPatch/dsmcMixedDiffuseSpecularWallRotationPatch.C
+boundaries/derived/patchBoundaries/dsmcAdiabaticWallRotationPatch/dsmcAdiabaticWallRotationPatch.C*/
+boundaries/derived/patchBoundaries/dsmcMixedDiffuseSpecularWallRotationFieldPatch/dsmcMixedDiffuseSpecularWallRotationFieldPatch.C
+/*boundaries/derived/patchBoundaries/dsmcRadiationWallFieldPatch/dsmcRadiationWallFieldPatch.C*/
+/*boundaries/derived/patchBoundaries/radiationWallPatch/radiationWallPatch.C*/
+/*boundaries/derived/patchBoundaries/dsmcCLLWallPatch/dsmcCLLWallPatch.C
+boundaries/derived/patchBoundaries/dsmcCLLWallFieldPatch/dsmcCLLWallFieldPatch.C
+boundaries/derived/patchBoundaries/dsmcCLLWallBirdFieldPatch/dsmcCLLWallBirdFieldPatch.C*/
+boundaries/derived/patchBoundaries/dsmcDiffuseCatalyticWallPatch/dsmcDiffuseCatalyticWallPatch.C
+/*boundaries/derived/patchBoundaries/dsmcFixedHeatFluxFieldPatch/dsmcFixedHeatFluxFieldPatch.C
+boundaries/derived/patchBoundaries/dsmcFixedHeatFluxWallPatch/dsmcFixedHeatFluxWallPatch.C
+boundaries/derived/patchBoundaries/dsmcMixedDiffuseSpecularSphericalPatch/dsmcMixedDiffuseSpecularSphericalPatch.C*/
+>>>>>>> master
 
 
 /* GENERAL BOUNDARY MODELS */

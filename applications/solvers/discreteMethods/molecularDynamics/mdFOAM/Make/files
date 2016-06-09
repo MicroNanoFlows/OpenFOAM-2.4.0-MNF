@@ -1,0 +1,3 @@
+mdFOAM.C
+
+EXE = $(FOAM_APPBIN)/mdFOAM

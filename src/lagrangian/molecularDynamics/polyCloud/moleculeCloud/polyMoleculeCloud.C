@@ -677,6 +677,7 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     redUnits_(rU),
     cP_(cP),
     rndGen_(rndGen),
+    int_(t, mesh_, *this),    
     p_(mesh, *this, rU, cP), 
     cellOccupancy_(mesh_.nCells()),
 //     constPropList_(),
@@ -695,7 +696,7 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     rndGen.initialise(this->size() != 0 ? this->size() : 10000); //Initialise the random number cache (initialise to 10000 if size is zero)
 
 //     buildConstProps();
-
+    
     setSiteSizesAndPositions();
 
     checkMoleculesInMesh();
@@ -703,6 +704,8 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     // read in tracking numbers
     updateTrackingNumbersAfterRead();
     p_.pairPots().initialiseExclusionModels();
+
+    int_.integrator()->init();
     
     //check and remove high energy overalps
     checkForOverlaps();
@@ -745,6 +748,7 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     redUnits_(rU),
     cP_(cP),
     rndGen_(rndGen),    
+    int_(t, mesh_, *this),    
     p_(mesh, *this, rU, cP), 
     cellOccupancy_(mesh_.nCells()),
 //     constPropList_(),
@@ -921,9 +925,11 @@ void  Foam::polyMoleculeCloud::createMolecule
 
 void Foam::polyMoleculeCloud::evolve()
 {
-    evolveBeforeForces();
-    calculateForce();
-    evolveAfterForces();
+    int_.integrator()->evolve();
+
+//     evolveBeforeForces();
+//     calculateForce();
+//     evolveAfterForces();
 }
 
 void Foam::polyMoleculeCloud::evolveBeforeForces()
@@ -982,13 +988,19 @@ void Foam::polyMoleculeCloud::move()
     updateAfterMove(mesh_.time().deltaT().value());
 }
 
+void Foam::polyMoleculeCloud::move(const scalar& trackTime)
+{
+    polyMolecule::trackingData td1(*this, 1);
+    Cloud<polyMolecule>::move(td1, trackTime);
+}
+
+
 void Foam::polyMoleculeCloud::updateAfterMove(const scalar& trackTime)
 {
     forAllIter(polyMoleculeCloud, *this, mol)
     {
         if(!mol().frozen())
         {
-//             const polyMolecule::constantProperties& cP = constProps(mol().id());
             mol().updateAfterMove(cP_, trackTime);
         }
     }

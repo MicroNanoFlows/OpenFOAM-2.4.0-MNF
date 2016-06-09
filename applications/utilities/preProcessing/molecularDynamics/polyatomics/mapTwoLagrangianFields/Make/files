@@ -1,3 +1,3 @@
 mapTwoLagrangianFields.C
 
-EXE = $(FOAM_APPBIN)/mapTwoLagrangianPolyFields
+EXE = $(FOAM_APPBIN)/mapTwoLagrangianFields
