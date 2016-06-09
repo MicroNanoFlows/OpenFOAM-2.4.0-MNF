@@ -680,13 +680,13 @@ void Foam::dsmcCloud::evolve()
     boundaries_.controlBeforeMove();//****
     
     //Remove electrons after adding their velocities to a DynamicList
-//     removeElectrons();
+    removeElectrons();
     
     // Move the particles ballistically with their current velocities
     Cloud<dsmcParcel>::move(td, mesh_.time().deltaTValue());
 
     //Add electrons back after the move function
-//     addElectrons();
+    addElectrons();
     
     if(axisymmetric_)
     {
