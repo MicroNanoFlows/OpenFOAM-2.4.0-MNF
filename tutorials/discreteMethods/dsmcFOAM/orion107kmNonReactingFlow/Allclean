@@ -5,6 +5,7 @@ cd ${0%/*} || exit 1    # run from this directory
 . $WM_PROJECT_DIR/bin/tools/CleanFunctions
 
 cleanCase
-rm -rf 0 boundaries fieldMeasurements constant/polyMesh/boundary constant/polyMesh/cellLevel constant/polyMesh/cellZones constant/polyMesh/faces constant/polyMesh/faceZones constant/polyMesh/level0Edge constant/polyMesh/neighbour constant/polyMesh/owner constant/polyMesh/pointLevel constant/polyMesh/points constant/polyMesh/pointZones constant/polyMesh/refinementHistory constant/polyMesh/surfaceIndex log*  ./{[1-9]*,-[1-9]*,*.xml,ParaView*,paraFoam*,*.foam} > /dev/null 2>&1
+rm~all
+rm -rf 0 boundaries fieldMeasurements constant/polyMesh/boundary constant/polyMesh/cellZones constant/polyMesh/faces constant/polyMesh/neighbour constant/polyMesh/owner constant/polyMesh/points log* ./{[1-9]*,-[1-9]*,*.xml,ParaView*,paraFoam*,*.foam} > /dev/null 2>&1
 
 # ----------------------------------------------------------------- end-of-file

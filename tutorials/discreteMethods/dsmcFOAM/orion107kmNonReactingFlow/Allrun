@@ -7,8 +7,8 @@ cd ${0%/*} || exit 1    # run from this directory
 runApplication blockMesh
 runApplication snappyHexMesh -overwrite
 runApplication dsmcInitialise
-runApplication `getApplication`> log &
+runApplication `getApplication` &
 
-echo "The simulation is now running, its progress can be viewed by typing 'tail -f log.dsmcFOAM' and 'gnuplot monitor'. Once steady state is achieved, the resetAtOutput options in system/fieldPropertiesDict should be changed to 'off' to begin the averaging process."
+echo "The simulation is now running, its progress can be viewed by typing 'tail -f log.dsmcFOAM' and 'gnuplot monitor'. Once steady state is achieved, the resetAtOutput option(s) in system/fieldPropertiesDict should be changed to 'off' to begin the averaging process." &
 
 # ----------------------------------------------------------------- end-of-file
