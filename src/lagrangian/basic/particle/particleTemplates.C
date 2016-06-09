@@ -959,15 +959,15 @@ void Foam::particle::hitWedgePatch
     TrackData&
 )
 {
-    FatalErrorIn
-    (
-        "void Foam::particle::hitWedgePatch"
-        "("
-            "const wedgePolyPatch& wpp, "
-            "TrackData&"
-        ")"
-    )   << "Hitting a wedge patch should not be possible."
-        << abort(FatalError);
+//     FatalErrorIn
+//     (
+//         "void Foam::particle::hitWedgePatch"
+//         "("
+//             "const wedgePolyPatch& wpp, "
+//             "TrackData&"
+//         ")"
+//     )   << "Hitting a wedge patch should not be possible."
+//         << abort(FatalError);
 
     vector nf = normal();
     nf /= mag(nf);
