@@ -249,13 +249,6 @@ void dsmcPatchBoundary::measurePropertiesAfterControl(dsmcParcel& p, scalar heat
         vector Ut = p.U() - U_dot_nw*nw;
     
         scalar invMagUnfA = 1/max(mag(U_dot_nw)*fA, VSMALL);
-    
-//         cloud_.stdFields().rhoNBF()[wppIndex][wppLocalFace] += invMagUnfA;
-//         cloud_.stdFields().rhoMBF()[wppIndex][wppLocalFace] += m*invMagUnfA;
-//         cloud_.stdFields().linearKEBF()[wppIndex][wppLocalFace] += 0.5*m*(p.U() & p.U())*invMagUnfA;
-//         cloud_.stdFields().rotationalEBF()[wppIndex][wppLocalFace] += p.ERot()*invMagUnfA;
-//         cloud_.stdFields().rotationalDofBF()[wppIndex][wppLocalFace] += constProps.rotationalDegreesOfFreedom()*invMagUnfA;
-//         cloud_.stdFields().momentumBF()[wppIndex][wppLocalFace] += m*Ut*invMagUnfA;
 
         cloud_.boundaryFluxMeasurements().rhoNBF()[p.typeId()][wppIndex][wppLocalFace] += invMagUnfA;
         if(constProps.rotationalDegreesOfFreedom() > 0)
@@ -286,9 +279,9 @@ void dsmcPatchBoundary::measurePropertiesAfterControl(dsmcParcel& p, scalar heat
         
         if(cloud_.axisymmetric())
         {
-            const vector fC = wpp.faceCentres()[wppLocalFace];
+//             const vector fC = wpp.faceCentres()[wppLocalFace];
             
-            scalar radius = fC.y();
+            scalar radius = sqrt(sqr(p.position().y()) + sqr(p.position().z()));
             
             scalar RWF = cloud_.maxRWF()*(radius/cloud_.radialExtent());
             
@@ -309,7 +302,6 @@ void dsmcPatchBoundary::writeTimeData
     const fileName& pathName,
     const word& nameFile,
     const scalarField& xData
-//     const scalarField& yData
 )
 {
     fileName writeFile(pathName/nameFile);

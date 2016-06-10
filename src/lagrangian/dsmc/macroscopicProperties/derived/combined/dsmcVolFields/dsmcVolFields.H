@@ -99,10 +99,13 @@ private:
         scalar nTimeSteps_;
         labelList typeIds_;
         scalarField rhoNMean_;
+        scalarField rhoNMeanXnParticle_;
         scalarField rhoNMeanInt_;
         scalarField molsElec_;
         scalarField rhoMMean_;
+        scalarField rhoMMeanXnParticle_;
         scalarField linearKEMean_;
+        scalarField linearKEMeanXnParticle_;
         scalarField rotationalEMean_;
         scalarField rotationalDofMean_;
         scalarField muu_;
@@ -124,10 +127,12 @@ private:
         scalarField nClassII_;
         scalarField nClassIII_;
         vectorField momentumMean_;
+        vectorField momentumMeanXnParticle_;
         List<labelList> boundaryCells_;
         List<scalarField> vibrationalETotal_;
         List<scalarField> electronicETotal_;
         List<scalarField> nParcels_;
+        List<scalarField> nParcelsXnParticle_;
         List<scalarField> mccSpecies_;
         List<scalarField> vibT_;
         List<scalarField> nGroundElectronicLevel_;

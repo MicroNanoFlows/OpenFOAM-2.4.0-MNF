@@ -1222,13 +1222,15 @@ void Foam::dsmcCloud::axisymmetricWeighting()
     forAll(cellOccupancy_, c)
     {
         const DynamicList<dsmcParcel*>& molsInCell = cellOccupancy_[c];
-        
-        const point& cC = mesh().cellCentres()[c];
-        scalar radius = cC.y();
-        
+
         forAll(molsInCell, mIC)
         {
             dsmcParcel* p = molsInCell[mIC];
+            
+//             scalar radius = sqrt(sqr(p->position().y()) + sqr(p->position().z()));
+            
+            const point& cC = mesh_.cellCentres()[c];
+            scalar radius = cC.y();
             
             scalar oldRadialWeight = p->RWF();
             

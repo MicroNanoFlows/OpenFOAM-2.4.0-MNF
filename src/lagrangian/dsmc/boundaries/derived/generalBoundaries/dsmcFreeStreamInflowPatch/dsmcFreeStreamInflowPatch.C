@@ -139,7 +139,7 @@ void dsmcFreeStreamInflowPatch::controlParcelsBeforeMove()
                     fA*numberDensities_[i]*deltaT*mostProbableSpeed
                     *
                     (
-                    exp(-sqr(sCosTheta)) + sqrtPi*sCosTheta*(1 + erf(sCosTheta))
+                        exp(-sqr(sCosTheta)) + sqrtPi*sCosTheta*(1 + erf(sCosTheta))
                     )
                 )
                 /(2.0*sqrtPi*cloud_.nParticle()*RWF);
@@ -151,7 +151,7 @@ void dsmcFreeStreamInflowPatch::controlParcelsBeforeMove()
                     fA*numberDensities_[i]*deltaT*mostProbableSpeed
                     *
                     (
-                    exp(-sqr(sCosTheta)) + sqrtPi*sCosTheta*(1 + erf(sCosTheta))
+                        exp(-sqr(sCosTheta)) + sqrtPi*sCosTheta*(1 + erf(sCosTheta))
                     )
                 )
                 /(2.0*sqrtPi*cloud_.nParticle());
@@ -371,7 +371,7 @@ void dsmcFreeStreamInflowPatch::controlParcelsBeforeMove()
                     const point& cC = cloud_.mesh().cellCentres()[cellI];
                     scalar radius = cC.y();
                     
-                    RWF = cloud_.maxRWF()*(radius/cloud_.radialExtent());
+                    RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
                 }
               
                 cloud_.addNewParcel
