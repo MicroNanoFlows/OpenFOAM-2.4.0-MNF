@@ -155,7 +155,9 @@ void dsmcMeshFill::setInitialConfiguration()
                     const point& cC = cloud_.mesh().cellCentres()[cellI];
                     scalar radius = cC.y();
                     
-                    scalar RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
+                    scalar RWF = 1.0;
+                    
+                    RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
                     
                     particlesRequired /= RWF;
                 }

@@ -897,9 +897,12 @@ void dsmcVolFields::calculateField()
                 
                 if(cloud_.axisymmetric())
                 {
-                    scalar radius = sqrt(sqr(p.position().y()) + sqr(p.position().y()));
+                    const point& cC = cloud_.mesh().cellCentres()[cell];
+                    scalar radius = cC.y();
                     
-                    scalar RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
+                    scalar RWF = 1.0;
+                    
+                    RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
                     
                     nParcelsXnParticle_[iD][cell] += (RWF*cloud_.nParticle());
                     rhoNMeanXnParticle_[cell] += (RWF*cloud_.nParticle());
@@ -1020,15 +1023,17 @@ void dsmcVolFields::calculateField()
                     
                     scalar nParticle = cloud_.nParticle();
                     
-//                     if(cloud_.axisymmetric())
-//                     {
-//                         const point& cC = cloud_.mesh().cellCentres()[cell];
-//                         scalar radius = cC.y();
-//                         
-//                         scalar RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
-//                         
-//                         nParticle *= RWF;
-//                     }
+                    if(cloud_.axisymmetric())
+                    {
+                        const point& cC = cloud_.mesh().cellCentres()[cell];
+                        scalar radius = cC.y();
+                        
+                        scalar RWF = 1.0;
+                    
+                        RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
+                        
+                        nParticle *= RWF;
+                    }
                     
                     
                     scalar V = mesh_.cellVolumes()[cell];
@@ -1066,7 +1071,9 @@ void dsmcVolFields::calculateField()
                     const point& cC = cloud_.mesh().cellCentres()[cell];
                     scalar radius = cC.y();
                     
-                    scalar RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
+                    scalar RWF = 1.0;
+                    
+                    RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
                     
                     nParticle *= RWF;
                 }
