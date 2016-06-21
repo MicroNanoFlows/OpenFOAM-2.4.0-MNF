@@ -131,7 +131,7 @@ void dsmcFreeStreamInflowPatch::controlParcelsBeforeMove()
                 scalar radius = fC.y();
                 
                 scalar RWF = 1.0;
-
+                    
                 RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
                 
                 accumulatedParcelsToInsert_[i][f] += 
@@ -370,7 +370,7 @@ void dsmcFreeStreamInflowPatch::controlParcelsBeforeMove()
                 {                      
                     const point& cC = cloud_.mesh().cellCentres()[cellI];
                     scalar radius = cC.y();
-                    
+
                     RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
                 }
               

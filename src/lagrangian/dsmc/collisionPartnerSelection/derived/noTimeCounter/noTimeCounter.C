@@ -151,8 +151,9 @@ void noTimeCounter::collide()
                     const dsmcParcel& p = *cellParcels[i];
                     
                     scalar radius = sqrt(sqr(p.position().y()) + sqr(p.position().z()));
-                    
+
                     RWF += 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
+                    
                     nMols += 1.0;
                 }
                 

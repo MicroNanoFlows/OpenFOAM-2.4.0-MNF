@@ -1226,15 +1226,15 @@ void Foam::dsmcCloud::axisymmetricWeighting()
         forAll(molsInCell, mIC)
         {
             dsmcParcel* p = molsInCell[mIC];
-            
-//             scalar radius = sqrt(sqr(p->position().y()) + sqr(p->position().z()));
-            
+                        
             const point& cC = mesh_.cellCentres()[c];
             scalar radius = cC.y();
             
             scalar oldRadialWeight = p->RWF();
             
-            scalar newRadialWeight = 1.0 + maxRWF_*(radius/radialExtent_);
+            scalar newRadialWeight = 1.0;
+
+            newRadialWeight = 1.0 + maxRWF_*(radius/radialExtent_);
             
             p->RWF() = newRadialWeight;
             
@@ -1312,7 +1312,7 @@ void Foam::dsmcCloud::axisymmetricWeighting()
                 {
                     deleteParticle(*p);
                 }
-                   
+                
             } 
         }
     }
