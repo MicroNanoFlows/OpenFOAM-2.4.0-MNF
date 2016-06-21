@@ -61,14 +61,19 @@ bool Foam::dsmcParcel::move
         
     while (td.keepParticle && !td.switchProcessor && tEnd > ROOTVSMALL)
     {
+        Utracking = U_;
 
         if(!td.cloud().axisymmetric())
         {
-            // Apply correction to position for reduced-D cases
+            // Apply correction to position for reduced-D cases, 
+            // but not axisymmetric cases
             meshTools::constrainToMeshCentre(mesh, position());
+            
+            // Apply correction to velocity to constrain tracking for
+            // reduced-D cases,  but not axisymmetric cases
+            meshTools::constrainDirection(mesh, mesh.solutionD(), Utracking);
         }
-        
-        Utracking = U_;
+
 
         // Set the Lagrangian time-step
         scalar dt = min(dtMax, tEnd);
