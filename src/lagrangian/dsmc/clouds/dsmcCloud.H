@@ -56,6 +56,7 @@ SourceFiles
 #include "dsmcReactions.H"
 #include "collisionPartnerSelection.H"
 #include "boundaryMeasurements.H"
+#include "cellMeasurements.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -153,6 +154,9 @@ private:
         dsmcReactions reactions_;
 
         boundaryMeasurements boundaryMeas_;
+        
+        //used to calculate mean collision separation
+        cellMeasurements cellMeas_;
         
     // Private Member Functions
 
@@ -451,6 +455,9 @@ public:
         
         inline const boundaryMeasurements& boundaryFluxMeasurements() const;
         inline boundaryMeasurements& boundaryFluxMeasurements();
+        
+        inline const cellMeasurements& cellPropMeasurements() const;
+        inline cellMeasurements& cellPropMeasurements();
         
         // Check
 

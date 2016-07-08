@@ -74,7 +74,6 @@ bool Foam::dsmcParcel::move
             meshTools::constrainDirection(mesh, mesh.solutionD(), Utracking);
         }
 
-
         // Set the Lagrangian time-step
         scalar dt = min(dtMax, tEnd);
 

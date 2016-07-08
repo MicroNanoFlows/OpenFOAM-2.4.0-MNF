@@ -83,6 +83,8 @@ private:
         volScalarField meanCollisionRate_;
         volScalarField meanCollisionTime_;
         volScalarField meanCollisionTimeTimeStepRatio_;
+        volScalarField meanCollisionSeparation_;
+        volScalarField SOF_;
         volScalarField Ma_;
         volScalarField classIDistribution_;
         volScalarField classIIDistribution_;
@@ -126,6 +128,8 @@ private:
         scalarField nClassI_;
         scalarField nClassII_;
         scalarField nClassIII_;
+        scalarField collisionSeparation_;
+        scalarField nColls_;
         vectorField momentumMean_;
         vectorField momentumMeanXnParticle_;
         List<labelList> boundaryCells_;

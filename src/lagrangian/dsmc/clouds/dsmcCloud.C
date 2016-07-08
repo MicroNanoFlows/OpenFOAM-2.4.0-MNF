@@ -505,7 +505,8 @@ Foam::dsmcCloud::dsmcCloud
     ),
     collisionPartnerSelectionModel_(),
     reactions_(t, mesh, *this),
-    boundaryMeas_(mesh, *this, true)
+    boundaryMeas_(mesh, *this, true),
+    cellMeas_(mesh, *this, true)
 {
     if (readFields)
     {
@@ -602,7 +603,8 @@ Foam::dsmcCloud::dsmcCloud
     binaryCollisionModel_(),
     collisionPartnerSelectionModel_(),
     reactions_(t, mesh),
-    boundaryMeas_(mesh, *this)
+    boundaryMeas_(mesh, *this),
+    cellMeas_(mesh, *this)
 {
     if(!clearFields)
     {
@@ -722,6 +724,7 @@ void Foam::dsmcCloud::evolve()
 
     trackingInfo_.clean(); //****
     boundaryMeas_.clean(); //****
+    cellMeas_.clean();
 }
 
 

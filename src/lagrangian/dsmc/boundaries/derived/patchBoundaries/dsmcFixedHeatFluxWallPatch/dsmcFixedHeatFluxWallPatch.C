@@ -79,7 +79,10 @@ dsmcFixedHeatFluxWallPatch::dsmcFixedHeatFluxWallPatch
     desiredHeatFlux_(),
     relaxationFactor_(),
     stepCounter_(0),
-    nSamples_(0)
+    nSamples_(0),
+    referenceCp_(),
+    referenceRho_(),
+    referenceU_()
 {
     writeInTimeDir_ = false;
     writeInCase_ = false;
@@ -120,32 +123,16 @@ void dsmcFixedHeatFluxWallPatch::calculateProperties()
         scalar heatFlux = EcTotSum_/(deltaT*stepCounter_*fA);
                    
         if(fabs(heatFlux) > VSMALL) // zero face temperature not allowed!
-        {
-            Pout << "heatFlux = " << heatFlux << endl;
-            
+        {            
             scalar oldWallTemperature = newWallTemperature_;
             
-            newWallTemperature_ = oldWallTemperature
-                *(1.0 + (relaxationFactor_/1000.0)*((heatFlux - desiredHeatFlux_)/(fabs(desiredHeatFlux_) + 100.0)));
+            scalar normalisedDesiredHeatFlux = desiredHeatFlux_ / (referenceCp_*referenceRho_*referenceU_*referenceTemperature_);
                 
-            scalar newTemp = newWallTemperature_;
-                
-            if(newTemp - oldWallTemperature > 100.0)
-            {
-                newWallTemperature_ = oldWallTemperature + 50.0;
-            }
+            scalar normalisedHeatFlux = heatFlux / (referenceCp_*referenceRho_*referenceU_*referenceTemperature_);
             
-            if(newTemp - oldWallTemperature < -100.0)
-            {
-                newWallTemperature_ = oldWallTemperature - 50.0;
-            }
+            scalar deltaWallTemperature = relaxationFactor_*(normalisedHeatFlux - normalisedDesiredHeatFlux)*oldWallTemperature;
                 
-            if(newWallTemperature_ < VSMALL)
-            {
-                newWallTemperature_ = temperature_;
-            }
-            
-            Pout << "newWallTemperature_ = " << newWallTemperature_ << endl;
+            newWallTemperature_ = oldWallTemperature + deltaWallTemperature;
         }                                    
         
         label wppIndex = patchId_;
@@ -155,11 +142,8 @@ void dsmcFixedHeatFluxWallPatch::calculateProperties()
             wallTemperature_.boundaryField()[wppIndex] = newWallTemperature_;
         }
         
-        if( mag(heatFlux - desiredHeatFlux_) > 1.00e5 )
-        {
-            stepCounter_ = 0.0;
-            EcTotSum_ = 0.0;
-        }
+        stepCounter_ = 0.0;
+        EcTotSum_ = 0.0;
     }
 }
 
@@ -172,12 +156,16 @@ void dsmcFixedHeatFluxWallPatch::controlParticle(dsmcParcel& p, dsmcParcel::trac
     scalar& ERot = p.ERot();
     
     label& vibLevel = p.vibLevel();
+    
+//     label& ELevel = p.ELevel();
 
     label typeId = p.typeId();
 
     scalar m = cloud_.constProps(typeId).mass();
 
-    scalar preIE = 0.5*m*(U & U) + ERot + vibLevel*physicoChemical::k.value()*cloud_.constProps(typeId).thetaV();
+    scalar preIE = 0.5*m*(U & U) + ERot 
+        + vibLevel*physicoChemical::k.value()*cloud_.constProps(typeId).thetaV();
+//         + cloud_.constProps(typeId).electronicEnergyList()[ELevel];
 
     vector nw = p.normal();
     nw /= mag(nw);
@@ -233,16 +221,24 @@ void dsmcFixedHeatFluxWallPatch::controlParticle(dsmcParcel& p, dsmcParcel::trac
     ERot = cloud_.equipartitionRotationalEnergy(T, rotationalDof);
     
     vibLevel = cloud_.equipartitionVibrationalEnergyLevel(T, vibrationalDof, typeId);
+    
+//     ELevel = cloud_.equipartitionElectronicLevel
+//                     (
+//                         T,
+//                         cloud_.constProps(typeId).degeneracyList(),
+//                         cloud_.constProps(typeId).electronicEnergyList(),
+//                         typeId
+//                     );
 
     measurePropertiesAfterControl(p, 0.0);
     
-    scalar postIE = 0.5*m*(U & U) + ERot + vibLevel*physicoChemical::k.value()*cloud_.constProps(typeId).thetaV();
+    scalar postIE = 0.5*m*(U & U) + ERot 
+        + vibLevel*physicoChemical::k.value()*cloud_.constProps(typeId).thetaV();
+//         + cloud_.constProps(typeId).electronicEnergyList()[p.ELevel()] ;
     
     U += velocity_;
     
     EcTot_ += cloud_.nParticle()*(preIE - postIE);
-    
-    nSamples_++;
 }
 
 void dsmcFixedHeatFluxWallPatch::output
@@ -270,6 +266,11 @@ void dsmcFixedHeatFluxWallPatch::setProperties()
     temperature_ = readScalar(propsDict_.lookup("initialTemperature"));
     desiredHeatFlux_ = readScalar(propsDict_.lookup("desiredHeatFlux"));
     relaxationFactor_ = readScalar(propsDict_.lookup("relaxationFactor"));
+    nSamples_ = readScalar(propsDict_.lookup("nSamples"));
+    referenceCp_ = readScalar(propsDict_.lookup("referenceSpecificHeat"));
+    referenceRho_ = readScalar(propsDict_.lookup("referenceDensity"));
+    referenceU_ = readScalar(propsDict_.lookup("referenceVelocity"));
+    referenceTemperature_ = readScalar(propsDict_.lookup("referenceTemperature"));
 }
 
 } // End namespace Foam

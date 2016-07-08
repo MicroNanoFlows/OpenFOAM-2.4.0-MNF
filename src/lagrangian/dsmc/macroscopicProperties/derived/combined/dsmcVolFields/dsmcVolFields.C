@@ -270,6 +270,32 @@ dsmcVolFields::dsmcVolFields
         mesh_,
         dimensionedScalar("zero",  dimless, 0.0)
     ),
+    meanCollisionSeparation_
+    (
+        IOobject
+        (
+            "meanCollisionSeparation_"+ fieldName_,
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("zero", dimLength, 0.0)
+    ),
+    SOF_
+    (
+        IOobject
+        (
+            "SOF_"+ fieldName_,
+            mesh_.time().timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("zero", dimless, 0.0)
+    ),
     Ma_
     (
         IOobject
@@ -489,6 +515,8 @@ dsmcVolFields::dsmcVolFields
     nClassI_(mesh_.nCells(), 0.0),
     nClassII_(mesh_.nCells(), 0.0),
     nClassIII_(mesh_.nCells(), 0.0),
+    collisionSeparation_(mesh_.nCells(), 0.0),
+    nColls_(mesh_.nCells(), 0.0),
     momentumMean_(mesh.nCells(), vector::zero),
     momentumMeanXnParticle_(mesh.nCells(), vector::zero),
     boundaryCells_(),
@@ -977,6 +1005,14 @@ void dsmcVolFields::calculateField()
             }
         }
         
+        // obtain collision quality measurements
+        
+        forAll(cloud_.cellPropMeasurements().collisionSeparation(), cell)
+        {
+            collisionSeparation_[cell] += cloud_.cellPropMeasurements().collisionSeparation()[cell];
+            nColls_[cell] += cloud_.cellPropMeasurements().nColls()[cell];
+        }
+        
         // obtain boundary measurements
         
         forAll(cloud_.boundaryFluxMeasurements().rhoNBF(), i)
@@ -1352,6 +1388,7 @@ void dsmcVolFields::calculateField()
                 
                 if(measureMeanFreePath_)
                 {
+                    
                     forAll(mfp_, iD)
                     {
                         label qspec = 0;
@@ -1387,6 +1424,16 @@ void dsmcVolFields::calculateField()
                     meanCollisionRate_[cell] = 0.0;
                     meanCollisionTime_[cell] = 0.0;
                     meanCollisionTimeTimeStepRatio_[cell] = 0.0;
+                    meanCollisionSeparation_[cell] = 0.0;
+                    
+                    if(nColls_[cell] > VSMALL)
+                    {
+                        meanCollisionSeparation_[cell] = collisionSeparation_[cell]/nColls_[cell];
+                    }
+                    else
+                    {
+                       meanCollisionSeparation_[cell] = GREAT; 
+                    }
                     
                     forAll(mfp_, iD)
                     {
@@ -1458,10 +1505,16 @@ void dsmcVolFields::calculateField()
                         }
                         
                         mfpCellRatio_[cell] = meanFreePath_[cell]/largestCellDimension;
+                        
+                        if(meanFreePath_[cell] > VSMALL)
+                        {
+                            SOF_[cell] = meanCollisionSeparation_[cell]/meanFreePath_[cell];
+                        }
                     }
                     else
                     {
                         mfpCellRatio_[cell] = GREAT;
+                        SOF_[cell] = GREAT;
                     }
                 }
                 
@@ -1577,6 +1630,8 @@ void dsmcVolFields::calculateField()
                 meanCollisionRate_.write();
                 meanCollisionTime_.write();
                 meanCollisionTimeTimeStepRatio_.write();
+                meanCollisionSeparation_.write();
+                SOF_.write();
             }
             
             if(measureClassifications_)
@@ -1951,6 +2006,8 @@ void dsmcVolFields::calculateField()
                 nClassI_[c] = scalar(0.0);
                 nClassII_[c] = scalar(0.0);
                 nClassIII_[c] = scalar(0.0);
+                collisionSeparation_[c] = scalar(0.0);
+                nColls_[c] = scalar(0.0);
                 muu_[c] = scalar(0.0);
                 muv_[c] = scalar(0.0);
                 muw_[c] = scalar(0.0);

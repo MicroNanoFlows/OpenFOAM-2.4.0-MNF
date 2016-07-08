@@ -85,6 +85,14 @@ private:
         label stepCounter_;
         
         label nSamples_;
+        
+        scalar referenceCp_;
+        
+        scalar referenceRho_;
+        
+        scalar referenceU_;
+        
+        scalar referenceTemperature_;
 
         void setProperties();
         

@@ -62,6 +62,7 @@ macroscopicProperties/basic/dsmcFieldProperties/dsmcFieldProperties.C
 macroscopicProperties/basic/dsmcField/dsmcField.C
 faceTracker/dsmcFaceTracker.C
 boundaryMeasurements/boundaryMeasurements.C
+cellMeasurements/cellMeasurements.C
 
 /* BOUNDARIES */
 boundaries/basic/dsmcBoundaries/dsmcBoundaries.C

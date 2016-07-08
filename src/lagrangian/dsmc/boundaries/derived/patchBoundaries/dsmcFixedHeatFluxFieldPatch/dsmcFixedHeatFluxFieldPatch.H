@@ -73,35 +73,30 @@ private:
         volScalarField wallTemperature_;
 
         scalarField EcTot_;
-        
-        scalarField EcTotInc_;
 
         scalarField EcTotSum_;
         
-        scalarField EcTotIncSum_;
-
-//         scalarField heatFlux_;
-        
         scalarField newWallTemperature_;
         
-        // emissivity * stefan boltzmann constant
+        // user-defined wall heat flux
         scalar desiredHeatFlux_;
 
-        // thermal capacity of wall
+        // alpha parameter
         scalar relaxationFactor_;
-
-        // energy accommodation coefficient
-//         scalar alpha_;
 
         label stepCounter_;
         
         label nSamples_;
         
-        bool resetFieldsAtOutput_;
-
+        scalar referenceCp_;
+        
+        scalar referenceRho_;
+        
+        scalar referenceU_;
+        
+        scalar referenceTemperature_;
 
         void setProperties();
-
         
         void initialTemperatureEstimate();
 

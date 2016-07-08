@@ -408,5 +408,15 @@ inline const Foam::boundaryMeasurements& Foam::dsmcCloud::boundaryFluxMeasuremen
     return boundaryMeas_;
 }
 
+inline Foam::cellMeasurements& Foam::dsmcCloud::cellPropMeasurements()
+{
+    return cellMeas_;
+}
+
+inline const Foam::cellMeasurements& Foam::dsmcCloud::cellPropMeasurements() const
+{
+    return cellMeas_;
+}
+
 
 // ************************************************************************* //

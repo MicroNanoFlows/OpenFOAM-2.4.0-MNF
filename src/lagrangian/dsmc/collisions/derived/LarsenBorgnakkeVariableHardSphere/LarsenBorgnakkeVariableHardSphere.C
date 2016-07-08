@@ -141,6 +141,23 @@ void Foam::LarsenBorgnakkeVariableHardSphere::collide
     label& vibLevelQ = pQ.vibLevel();
     label& ELevelP = pP.ELevel();
     label& ELevelQ = pQ.ELevel();
+    
+    scalar collisionSeparation = mag(pP.position() - pQ.position());
+    
+    label cellI = -1;
+    label tetFace = -1;
+    label tetPt = -1;
+
+    cloud_.mesh().findCellFacePt
+    (
+        pP.position(),
+        cellI,
+        tetFace,
+        tetPt
+    );
+    
+    cloud_.cellPropMeasurements().collisionSeparation()[cellI] += collisionSeparation;
+    cloud_.cellPropMeasurements().nColls()[cellI]++;
 
     Random& rndGen(cloud_.rndGen());
     
