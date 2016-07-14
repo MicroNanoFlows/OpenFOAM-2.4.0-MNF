@@ -1,0 +1,22 @@
+/*  CLOUD RELATED  */
+
+agent/agent.C
+agent/agentIO.C
+
+agentCloud/agentCloud.C
+
+constant/agentProperties/agentProperties.C
+
+
+
+/* initialise */
+
+initialise/basic/agentConfigurations/agentConfigurations.C
+initialise/basic/agentConfiguration/agentConfiguration.C
+
+initialise/derived/testInitialise/testInitialise.C
+
+
+
+
+LIB = $(FOAM_LIBBIN)/libagentCloud
