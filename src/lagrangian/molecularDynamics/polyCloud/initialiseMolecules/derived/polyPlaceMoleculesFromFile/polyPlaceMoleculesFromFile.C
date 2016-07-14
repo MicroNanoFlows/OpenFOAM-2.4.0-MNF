@@ -472,6 +472,13 @@ void polyPlaceMoleculesFromFile::multiIdFixedProperties()
     {
         frozen = Switch(mdInitialiseDict_.lookup("frozen"));
     }
+    
+    vector shift = vector::zero;
+    
+    if (mdInitialiseDict_.found("shift"))
+    {
+        shift = mdInitialiseDict_.lookup("shift");
+    }    
 
     bool tethered = false;
 
@@ -538,7 +545,7 @@ void polyPlaceMoleculesFromFile::multiIdFixedProperties()
 
         mesh_.findCellFacePt
         (
-            globalPosition,
+            globalPosition + shift,
             cell,
             tetFace,
             tetPt
@@ -549,7 +556,7 @@ void polyPlaceMoleculesFromFile::multiIdFixedProperties()
         {
             insertMolecule
             (
-                globalPosition,
+                globalPosition + shift,
                 cell,
                 tetFace,
                 tetPt,
@@ -563,13 +570,13 @@ void polyPlaceMoleculesFromFile::multiIdFixedProperties()
                 velocityMols[i]
             );
         }
-        else
-        {
-            FatalErrorIn("Foam::polyPlaceMoleculesFromFile::setInitialConfiguration()")
-                << "Molecule position: " << globalPosition 
-                << " is not located in the mesh." << nl
-                << abort(FatalError);
-        }
+//         else
+//         {
+//             FatalErrorIn("Foam::polyPlaceMoleculesFromFile::setInitialConfiguration()")
+//                 << "Molecule position: " << globalPosition 
+//                 << " is not located in the mesh." << nl
+//                 << abort(FatalError);
+//         }
     }
 }
 
