@@ -15,15 +15,13 @@ fi
 
 #----------------------------------------------------------------------
 
-clean
-
-cases="dsmcInitialise  dsmcInitialiseStrath"
+cases="dsmcInitialise"
 
 for case in $cases
 do
   echo ""
   cd $case
   echo "wmake $case"
-  ./wmakeAll
+  wmake
   cd ../
 done

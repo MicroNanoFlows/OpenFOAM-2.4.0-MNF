@@ -1,0 +1,3 @@
+dsmcFOAM.C
+
+EXE = $(FOAM_APPBIN)/dsmcFOAM

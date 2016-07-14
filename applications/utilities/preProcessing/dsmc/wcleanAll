@@ -15,14 +15,13 @@ fi
 
 #----------------------------------------------------------------------
 
-clean
-
-cases="dsmcInitialise  dsmcInitialiseStrath"
+cases="dsmcInitialise"
 
 for case in $cases
 do
   echo ""
   cd $case
-  ./wcleanAll
+  echo "wclean $case"
+  wclean
   cd ../
 done

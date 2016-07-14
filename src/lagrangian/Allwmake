@@ -10,10 +10,8 @@ wmake $makeType intermediate
 wmake $makeType turbulence
 wmake $makeType Turbulence
 wmake $makeType spray
-wmake $makeType dsmc
-wmake $makeType dsmcStrath
 wmake $makeType coalCombustion
-
 molecularDynamics/Allwmake $*
+wmake $makeType dsmc
 
 # ----------------------------------------------------------------- end-of-file
