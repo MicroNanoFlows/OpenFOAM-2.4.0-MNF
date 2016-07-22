@@ -147,7 +147,7 @@ void dsmcFieldProperties::updateTimeInfo()
 
 void dsmcFieldProperties::calculateFields()
 {
-	Info << "Calculate fields" << endl;
+//  Info << "Calculate fields" << endl;
  
     forAll(fields_, f)
     {

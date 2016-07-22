@@ -96,7 +96,8 @@ Foam::scalar Foam::NoBinaryCollision::sigmaTcR
 void Foam::NoBinaryCollision::collide
 (
     dsmcParcel& pP,
-    dsmcParcel& pQ
+    dsmcParcel& pQ,
+    label& cellI
 )
 {}
 

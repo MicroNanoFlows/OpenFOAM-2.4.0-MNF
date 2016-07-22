@@ -46,35 +46,38 @@ int main(int argc, char *argv[])
 
     Info<< nl << "Constructing dsmcCloud " << endl;
 
-    dsmcCloud dsmc(runTime, "dsmc", mesh);
-    
-/*    forAll(mesh.boundaryMesh(), i)
-    {        
-        if (isA<polyPatch>(mesh.boundaryMesh()[i]))
-        {
-            if(mesh.boundaryMesh()[i].type() == "patch")
-            {  
-                Info << endl << "Remember to change the type entries in q, rhoN, etc to 'zeroGradient' for the '" <<
-                mesh.boundaryMesh()[i].name() << "' patch!" << endl << endl;
-            }
-        }
-    }*/    
+    dsmcCloud dsmc(runTime, "dsmc", mesh); 
 
     Info<< "\nStarting time loop\n" << endl;
+    
+    label infoCounter = 0;
 
     while (runTime.loop())
-    {
-        Info<< "Time = " << runTime.timeName() << nl << endl;
+    {          
+        infoCounter++;
+        
+        if(infoCounter >= dsmc.nTerminalOutputs())
+        {
+            Info<< "Time = " << runTime.timeName() << nl << endl;
+        }
 
         dsmc.evolve();
 
-        dsmc.info();
+        if(infoCounter >= dsmc.nTerminalOutputs())
+        {
+            dsmc.info();   
+        }
 
         runTime.write();
 
-        Info<< nl << "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
-            << "  ClockTime = " << runTime.elapsedClockTime() << " s"
-            << nl << endl;
+        if(infoCounter >= dsmc.nTerminalOutputs())
+        {
+            Info<< nl << "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
+                << "  ClockTime = " << runTime.elapsedClockTime() << " s"
+                << nl << endl;
+                
+            infoCounter = 0;
+        }
             
 //         scalar timeBeforeMeshUpdate = runTime.elapsedCpuTime();
 // 

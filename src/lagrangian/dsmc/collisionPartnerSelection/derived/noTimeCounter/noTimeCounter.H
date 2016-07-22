@@ -62,6 +62,7 @@ private:
     // Private data
 
 //         dictionary propsDict_;
+    label infoCounter_;
 
 
 

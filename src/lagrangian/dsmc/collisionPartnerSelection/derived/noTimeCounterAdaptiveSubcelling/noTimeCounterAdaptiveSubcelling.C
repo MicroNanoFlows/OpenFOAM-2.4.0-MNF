@@ -398,7 +398,8 @@ void noTimeCounterAdaptiveSubcelling::collide()
                             cloud_.binaryCollision().collide
                             (
                                 parcelP,
-                                parcelQ
+                                parcelQ,
+                                cellI
                             );
                         }
 
@@ -408,7 +409,8 @@ void noTimeCounterAdaptiveSubcelling::collide()
                         cloud_.binaryCollision().collide
                         (
                             parcelP,
-                            parcelQ
+                            parcelQ,
+                            cellI
                         );
                     }
                     

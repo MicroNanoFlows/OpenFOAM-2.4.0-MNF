@@ -86,6 +86,9 @@ private:
 
         //- Dictionary of particle properties
         IOdictionary particleProperties_;
+        
+        //- Dictionary of particle properties
+        IOdictionary controlDict_;
 
         //- A list of unique instances of molecule types in the
         //  simulation.  The position of an entry in the list maps to
@@ -107,12 +110,27 @@ private:
         //- Maximum radial scaling factor, needed for axisymmetric
         //- simulations
         scalar maxRWF_;
+        
+        //- Write out the information to terminal every nTerminalOutputs
+        label nTerminalOutputs_;
 
         //- A data structure holding which particles are in which cell
         List<DynamicList<dsmcParcel*> > cellOccupancy_;
         
-        //- A data structure holding electron velocities during the move function
-        DynamicList<vector> electronVelocities_;
+        //- A data structure holding electron number density
+        scalarList rhoNMeanElectron_;
+        
+        //- A data structure holding electron mass density
+        scalarList rhoMMeanElectron_;
+        
+        //- A data structure holding electron momentum
+        List<vector> momentumMeanElectron_;
+        
+        //- A data structure holding electron linearKE
+        scalarList linearKEMeanElectron_;
+        
+        //- A data structure holding electron temperature
+        scalarList electronTemperature_;
 
         //- A field holding the value of (sigmaT * cR)max for each
         //  cell (see Bird p220). Initialised with the parcels,
@@ -273,6 +291,9 @@ public:
 
         //- Return particle properties dictionary
         inline const IOdictionary& particleProperties() const;
+        
+        //- Return particle properties dictionary
+        inline const IOdictionary& controlDict() const;
 
         //- Return the idList
         inline const List<word>& typeIdList() const;
@@ -288,16 +309,15 @@ public:
         inline scalar maxRWF() const;
         
          //- Return the bool to identify if this is an axisymmetric simulation
-        //- Movements dealt with differently if true
+        //- Measurements, etc dealt with differently if true
         inline bool axisymmetric() const;
+        
+        //- Return the number of timesteps to write out to terminal at
+        inline label nTerminalOutputs() const;
 
         //- Return the cell occupancy addressing
         inline const List<DynamicList<dsmcParcel*> >&
         cellOccupancy() const;
-        
-        //- Return the electron velocities
-        inline const DynamicList<vector> &
-        electronVelocities() const;
 
         //- Return the sigmaTcRMax field.  non-const access to allow
         // updating.
@@ -318,7 +338,7 @@ public:
         //- Return refernce to the random object
         inline Random& rndGen();
 
-    // Kinetic theory helper functions
+        // Kinetic theory helper functions
 
         //- Generate a random velocity sampled from the Maxwellian speed
         // distribution
@@ -440,9 +460,6 @@ public:
         inline const dsmcFieldProperties& fields() const;  //****
         inline dsmcFieldProperties& fields();//****
 
-//         inline const dsmcStandardFields& stdFields() const;  //****
-//         inline dsmcStandardFields& stdFields();//****
-
         inline const dsmcControllers& controllers() const;  //****
         inline dsmcControllers& controllers();//****
 
@@ -461,26 +478,8 @@ public:
         
         // Check
 
-            //- Total mass injected
-            inline scalar massInjected() const;
-
             //- Total mass in system
-            inline scalar massInSystem() const;
-
-            //- Total linear momentum of the system
-            inline vector linearMomentumOfSystem() const;
-
-            //- Total linear kinetic energy in the system
-            inline scalar linearKineticEnergyOfSystem() const;
-
-            //- Total rotational energy in the system
-            inline scalar rotationalEnergyOfSystem() const;
-        
-            //- Total vibratational energy in the system
-            inline scalar vibrationalEnergyOfSystem() const;
-            
-            //- Total electronic energy in the system
-           inline scalar electronicEnergyOfSystem() const;
+            inline scalarList infoMeasurements() const;
 
             //- Print cloud information
             void info() const;
@@ -536,6 +535,10 @@ public:
 
             //- Evolve the cloud (move, collide)
             void evolve();
+            
+            // Retrun how often to write to terminal
+            // (used for the solver to access this)
+            label nTerminalOutputs();
 
             //- Clear the Cloud
             inline void clear();

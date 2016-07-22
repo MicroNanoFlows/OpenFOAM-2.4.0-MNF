@@ -422,7 +422,8 @@ void noRepeatCollisions::collide()
                                     cloud_.reactions().reactions()[rMId]->reaction
                                     (
                                         parcelP,
-                                        parcelQ
+                                        parcelQ,
+                                        cellI
                                     );                                    
                                 }
                                 // if reaction unsuccessful use conventional collision model
@@ -442,7 +443,8 @@ void noRepeatCollisions::collide()
                                 cloud_.binaryCollision().collide
                                 (
                                     parcelP,
-                                    parcelQ
+                                    parcelQ,
+                                    cellI
                                 );
                             }
                             

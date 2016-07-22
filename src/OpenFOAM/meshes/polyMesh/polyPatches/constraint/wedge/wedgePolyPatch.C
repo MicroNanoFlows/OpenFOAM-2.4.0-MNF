@@ -62,7 +62,7 @@ void Foam::wedgePolyPatch::calcGeometry(PstreamBuffers&)
         // Check the wedge is planar
         forAll(nf, faceI)
         {
-            if (magSqr(n_ - nf[faceI]) > SMALL)
+            if (magSqr(n_ - nf[faceI]) > 1e-3)
             {
                 // only issue warning instead of error so that the case can
                 // still be read for post-processing

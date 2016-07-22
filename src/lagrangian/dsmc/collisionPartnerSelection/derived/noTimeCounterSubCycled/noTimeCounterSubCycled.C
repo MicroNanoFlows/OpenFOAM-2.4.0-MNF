@@ -299,7 +299,8 @@ void noTimeCounterSubCycled::collide()
                                     cloud_.binaryCollision().collide
                                     (
                                         parcelP,
-                                        parcelQ
+                                        parcelQ,
+                                        cellI
                                     );
                                 }
                             }
@@ -308,7 +309,8 @@ void noTimeCounterSubCycled::collide()
                                 cloud_.binaryCollision().collide
                                 (
                                     parcelP,
-                                    parcelQ
+                                    parcelQ,
+                                    cellI
                                 );
                             }
 

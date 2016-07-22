@@ -98,13 +98,13 @@ void dsmcFreeStreamInflowPatch::controlParcelsBeforeMove()
     // compute parcels to insert
     forAll(accumulatedParcelsToInsert_, i)
     {
-        const label& typeId = typeIds_[i];
+        const label typeId = typeIds_[i];
         scalar mass = cloud_.constProps(typeId).mass();
 
         forAll(accumulatedParcelsToInsert_[i], f)
         {
-            const label& faceI = faces_[f];
-            const vector& sF = mesh_.faceAreas()[faceI];
+            const label faceI = faces_[f];
+            const vector sF = mesh_.faceAreas()[faceI];
             const scalar fA = mag(sF);
 
             scalar mostProbableSpeed
@@ -127,7 +127,7 @@ void dsmcFreeStreamInflowPatch::controlParcelsBeforeMove()
             
             if(cloud_.axisymmetric())
             {
-                const point& fC = cloud_.mesh().faceCentres()[faceI];
+                const point fC = cloud_.mesh().faceCentres()[faceI];
                 scalar radius = fC.y();
                 
                 scalar RWF = 1.0;
@@ -163,19 +163,19 @@ void dsmcFreeStreamInflowPatch::controlParcelsBeforeMove()
     labelField parcelsInserted(typeIds_.size(), 0);
     labelField parcelsToAdd(typeIds_.size(), 0);
 
-    const vector& faceVelocity = velocity_;
-    const scalar& faceTranslationalTemperature = translationalTemperature_;
-    const scalar& faceRotationalTemperature = rotationalTemperature_;
-    const scalar& faceVibrationalTemperature = vibrationalTemperature_;
-    const scalar& faceElectronicTemperature = electronicTemperature_;
+    const vector faceVelocity = velocity_;
+    const scalar faceTranslationalTemperature = translationalTemperature_;
+    const scalar faceRotationalTemperature = rotationalTemperature_;
+    const scalar faceVibrationalTemperature = vibrationalTemperature_;
+    const scalar faceElectronicTemperature = electronicTemperature_;
 
     // insert pacels
     forAll(faces_, f)
     {
-        const label& faceI = faces_[f];
-        const label& cellI = cells_[f];
-        const vector& fC = mesh_.faceCentres()[faceI];
-        const vector& sF = mesh_.faceAreas()[faces_[f]];
+        const label faceI = faces_[f];
+        const label cellI = cells_[f];
+        const vector fC = mesh_.faceCentres()[faceI];
+        const vector sF = mesh_.faceAreas()[faces_[f]];
         scalar fA = mag(sF);
 
         List<tetIndices> faceTets = polyMeshTetDecomposition::faceTetIndices
@@ -192,7 +192,7 @@ void dsmcFreeStreamInflowPatch::controlParcelsBeforeMove()
 
         forAll(faceTets, triI)
         {
-            const tetIndices& faceTetIs = faceTets[triI];
+            const tetIndices faceTetIs = faceTets[triI];
 
             cTriAFracs[triI] =
                 faceTetIs.faceTri(mesh_).mag()/fA
@@ -222,7 +222,7 @@ void dsmcFreeStreamInflowPatch::controlParcelsBeforeMove()
 
         forAll(typeIds_, m)
         {
-            const label& typeId = typeIds_[m];
+            const label typeId = typeIds_[m];
 
             scalar& faceAccumulator = accumulatedParcelsToInsert_[m][f];
             
@@ -368,7 +368,7 @@ void dsmcFreeStreamInflowPatch::controlParcelsBeforeMove()
                     
                 if(cloud_.axisymmetric())
                 {                      
-                    const point& cC = cloud_.mesh().cellCentres()[cellI];
+                    const point cC = cloud_.mesh().cellCentres()[cellI];
                     scalar radius = cC.y();
 
                     RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
@@ -396,19 +396,19 @@ void dsmcFreeStreamInflowPatch::controlParcelsBeforeMove()
     }
 
 
-    if (Pstream::parRun())
-    {
-        forAll(parcelsInserted, m)
-        {
-            reduce(parcelsToAdd[m], sumOp<scalar>());
-            reduce(parcelsInserted[m], sumOp<scalar>());
-
-            Info<< "Specie: " << typeIds_[m] 
-                << ", target parcels to insert: " << parcelsToAdd[m]
-                <<", inserted parcels: " << parcelsInserted[m]
-                << endl;
-        }
-    }
+//     if (Pstream::parRun())
+//     {
+//         forAll(parcelsInserted, m)
+//         {
+//             reduce(parcelsToAdd[m], sumOp<scalar>());
+//             reduce(parcelsInserted[m], sumOp<scalar>());
+// 
+//             Info<< "Specie: " << typeIds_[m] 
+//                 << ", target parcels to insert: " << parcelsToAdd[m]
+//                 <<", inserted parcels: " << parcelsInserted[m]
+//                 << endl;
+//         }
+//     }
 }
 
 void dsmcFreeStreamInflowPatch::controlParcelsBeforeCollisions()
@@ -462,7 +462,7 @@ void dsmcFreeStreamInflowPatch::setProperties()
 
     forAll(molecules, i)
     {
-        const word& moleculeName(molecules[i]);
+        const word moleculeName(molecules[i]);
 
         if(findIndex(moleculesReduced, moleculeName) == -1)
         {
@@ -478,7 +478,7 @@ void dsmcFreeStreamInflowPatch::setProperties()
 
     forAll(moleculesReduced, i)
     {
-        const word& moleculeName(moleculesReduced[i]);
+        const word moleculeName(moleculesReduced[i]);
 
         label typeId(findIndex(cloud_.typeIdList(), moleculeName));
 

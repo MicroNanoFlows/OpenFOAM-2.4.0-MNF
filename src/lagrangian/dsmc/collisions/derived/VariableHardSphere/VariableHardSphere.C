@@ -121,7 +121,8 @@ Foam::scalar Foam::VariableHardSphere::sigmaTcR
 void Foam::VariableHardSphere::collide
 (
     dsmcParcel& pP,
-    dsmcParcel& pQ
+    dsmcParcel& pQ,
+    label& cellI
 )
 {
 //     dsmcCloud& cloud_(this->owner());

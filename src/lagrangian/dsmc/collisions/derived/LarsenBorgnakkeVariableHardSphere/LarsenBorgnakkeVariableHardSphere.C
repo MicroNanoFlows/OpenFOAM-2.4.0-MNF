@@ -126,7 +126,8 @@ Foam::scalar Foam::LarsenBorgnakkeVariableHardSphere::sigmaTcR
 void Foam::LarsenBorgnakkeVariableHardSphere::collide
 (
     dsmcParcel& pP,
-    dsmcParcel& pQ
+    dsmcParcel& pQ,
+    label& cellI
 )
 {   
     label typeIdP = pP.typeId();
@@ -142,18 +143,9 @@ void Foam::LarsenBorgnakkeVariableHardSphere::collide
     label& ELevelP = pP.ELevel();
     label& ELevelQ = pQ.ELevel();
     
-    scalar collisionSeparation = mag(pP.position() - pQ.position());
-    
-    label cellI = -1;
-    label tetFace = -1;
-    label tetPt = -1;
-
-    cloud_.mesh().findCellFacePt
-    (
-        pP.position(),
-        cellI,
-        tetFace,
-        tetPt
+    scalar collisionSeparation = sqrt(
+            sqr(pP.position().x() - pQ.position().x()) +
+            sqr(pP.position().y() - pQ.position().y())
     );
     
     cloud_.cellPropMeasurements().collisionSeparation()[cellI] += collisionSeparation;

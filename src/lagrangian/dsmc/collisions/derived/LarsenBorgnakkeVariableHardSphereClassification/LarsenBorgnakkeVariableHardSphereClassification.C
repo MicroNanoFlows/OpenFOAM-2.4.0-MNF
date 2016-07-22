@@ -122,7 +122,8 @@ Foam::scalar Foam::LarsenBorgnakkeVariableHardSphereClassification::sigmaTcR
 void Foam::LarsenBorgnakkeVariableHardSphereClassification::collide
 (
     dsmcParcel& pP,
-    dsmcParcel& pQ
+    dsmcParcel& pQ,
+    label& cellI
 )
 {   
     label typeIdP = pP.typeId();

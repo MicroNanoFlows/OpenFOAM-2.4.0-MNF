@@ -93,7 +93,8 @@ public:
         void collide
         (
             dsmcParcel& pP,
-            dsmcParcel& pQ
+            dsmcParcel& pQ,
+            label& cellI
         );
 
         const dictionary& coeffDict() const;

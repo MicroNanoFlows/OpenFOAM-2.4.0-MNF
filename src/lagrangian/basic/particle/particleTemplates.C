@@ -896,15 +896,12 @@ Foam::scalar Foam::particle::trackToFace
         tetAreas[2] = tet.Sc();
         tetAreas[3] = tet.Sd();
 
-		if(DSMC)
+        //******
+        for (label i = 0; i < 4; i++)
         {
-            //******
-            for (label i = 0; i < 4; i++)
-            {
-                tetAreas[i] /= (mag(tetAreas[i]) + VSMALL);
-            }
-            //******
+            tetAreas[i] /= (mag(tetAreas[i]) + VSMALL);
         }
+        //******
 
         FixedList<label, 4> tetPlaneBasePtIs;
 

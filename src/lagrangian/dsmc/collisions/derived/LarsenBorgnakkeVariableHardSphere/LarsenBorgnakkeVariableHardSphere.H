@@ -104,7 +104,8 @@ public:
         void collide
         (
             dsmcParcel& pP,
-            dsmcParcel& pQ
+            dsmcParcel& pQ,
+            label& cellI
         );
 };
 

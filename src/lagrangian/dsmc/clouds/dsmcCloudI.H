@@ -51,6 +51,12 @@ inline const Foam::IOdictionary& Foam::dsmcCloud::particleProperties() const
     return particleProperties_;
 }
 
+//template <class dsmcParcel>
+inline const Foam::IOdictionary& Foam::dsmcCloud::controlDict() const
+{
+    return controlDict_;
+}
+
 
 //template <class dsmcParcel>
 inline const Foam::List<Foam::word>& Foam::dsmcCloud::typeIdList() const
@@ -80,18 +86,17 @@ inline bool Foam::dsmcCloud::axisymmetric() const
     return axisymmetric_;
 }
 
+inline Foam::label Foam::dsmcCloud::nTerminalOutputs() const
+{
+    return nTerminalOutputs_;
+}
+
 
 //template <class dsmcParcel>
 inline const Foam::List<Foam::DynamicList<Foam::dsmcParcel*> >& Foam::dsmcCloud::cellOccupancy() const
 {
     return cellOccupancy_;
 }
-
-inline const Foam::DynamicList<Foam::vector> & Foam::dsmcCloud::electronVelocities() const
-{
-    return electronVelocities_;
-}
-
 
 //template <class dsmcParcel>
 inline Foam::volScalarField& Foam::dsmcCloud::sigmaTcRMax()
@@ -171,16 +176,6 @@ inline Foam::dsmcFieldProperties& Foam::dsmcCloud::fields()//****
     return fields_;
 }
 
-// inline const Foam::dsmcStandardFields& Foam::dsmcCloud::stdFields() const  //****
-// {
-//     return standardFields_;
-// }
-
-// inline Foam::dsmcStandardFields& Foam::dsmcCloud::stdFields()//****
-// {
-//     return standardFields_;
-// }
-
 inline const Foam::dsmcControllers& Foam::dsmcCloud::controllers() const  //****
 {
     return controllers_;
@@ -213,9 +208,11 @@ inline Foam::dsmcReactions& Foam::dsmcCloud::reactions()//****
 
 
 //template <class dsmcParcel>
-inline Foam::scalar Foam::dsmcCloud::massInSystem() const
+inline Foam::scalarList Foam::dsmcCloud::infoMeasurements() const
 {
-    scalar sysMass = 0.0;
+//     scalar sysMass = 0.0;
+    
+    scalarList infoMeasurements(5 ,0.0);
 
     forAllConstIter(dsmcCloud, *this, iter)
     {
@@ -226,107 +223,117 @@ inline Foam::scalar Foam::dsmcCloud::massInSystem() const
             p.typeId()
         );
 
-        sysMass += cP.mass();
+        infoMeasurements[0] += cP.mass(); //massInSystem
+        infoMeasurements[1] += 0.5*cP.mass()*(p.U() & p.U()); //linearKineticEnergy
+        infoMeasurements[2] += p.ERot(); //rotationalEnergy
+        infoMeasurements[3] += physicoChemical::k.value()*p.vibLevel()*cP.thetaV(); //vibrationalEnergy
+        infoMeasurements[4] += cP.electronicEnergyList()[p.ELevel()]; //electronicEnergy
     }
+    
+    infoMeasurements[0] *= nParticle_;
+    infoMeasurements[1] *= nParticle_;
+    infoMeasurements[2] *= nParticle_;
+    infoMeasurements[3] *= nParticle_;
+    infoMeasurements[4] *= nParticle_;
 
-    return nParticle_*sysMass;
+    return infoMeasurements;
 }
 
 
-//template <class dsmcParcel>
-inline Foam::vector Foam::dsmcCloud::linearMomentumOfSystem() const
-{
-    vector linearMomentum(vector::zero);
-
-    forAllConstIter(dsmcCloud, *this, iter)
-    {
-        const dsmcParcel& p = iter();
-
-        const dsmcParcel::constantProperties& cP = constProps
-        (
-            p.typeId()
-        );
-
-        linearMomentum += cP.mass()*p.U();
-    }
-
-    return nParticle_*linearMomentum;
-}
-
-
-//template <class dsmcParcel>
-inline Foam::scalar Foam::dsmcCloud::linearKineticEnergyOfSystem() const
-{
-    scalar linearKineticEnergy = 0.0;
-
-    forAllConstIter(dsmcCloud, *this, iter)
-    {
-        const dsmcParcel& p = iter();
-
-        const dsmcParcel::constantProperties& cP = constProps
-        (
-            p.typeId()
-        );
-
-        linearKineticEnergy += 0.5*cP.mass()*(p.U() & p.U());
-    }
-
-    return nParticle_*linearKineticEnergy;
-}
+// //template <class dsmcParcel>
+// inline Foam::vector Foam::dsmcCloud::linearMomentumOfSystem() const
+// {
+//     vector linearMomentum(vector::zero);
+// 
+//     forAllConstIter(dsmcCloud, *this, iter)
+//     {
+//         const dsmcParcel& p = iter();
+// 
+//         const dsmcParcel::constantProperties& cP = constProps
+//         (
+//             p.typeId()
+//         );
+// 
+//         linearMomentum += cP.mass()*p.U();
+//     }
+// 
+//     return nParticle_*linearMomentum;
+// }
 
 
-//template <class dsmcParcel>
-inline Foam::scalar Foam::dsmcCloud::rotationalEnergyOfSystem() const
-{
-    scalar rotationalEnergy = 0.0;
-
-    forAllConstIter(dsmcCloud, *this, iter)
-    {
-        const dsmcParcel& p = iter();
-
-        rotationalEnergy += nParticle_*p.ERot();
-    }
-
-    return rotationalEnergy;
-}
-
-inline Foam::scalar Foam::dsmcCloud::vibrationalEnergyOfSystem() const
-{
-    scalar vibrationalEnergy = 0.0;
-
-    forAllConstIter(dsmcCloud, *this, iter)
-    {
-        const dsmcParcel& p = iter();
-        
-        const dsmcParcel::constantProperties& cP = constProps
-        (
-            p.typeId()
-        ); 
-
-        vibrationalEnergy += nParticle_*physicoChemical::k.value()*p.vibLevel()*cP.thetaV();
-    }
-
-    return vibrationalEnergy;
-}
-
-inline Foam::scalar Foam::dsmcCloud::electronicEnergyOfSystem() const
-{
-    scalar electronicEnergy = 0.0;
-
-    forAllConstIter(dsmcCloud, *this, iter)
-    {
-        const dsmcParcel& p = iter();
-        
-        const dsmcParcel::constantProperties& cP = constProps
-        (
-            p.typeId()
-        );
-
-        electronicEnergy += nParticle_*cP.electronicEnergyList()[p.ELevel()];
-    }
-
-    return electronicEnergy;
-}
+// //template <class dsmcParcel>
+// inline Foam::scalar Foam::dsmcCloud::linearKineticEnergyOfSystem() const
+// {
+//     scalar linearKineticEnergy = 0.0;
+// 
+//     forAllConstIter(dsmcCloud, *this, iter)
+//     {
+//         const dsmcParcel& p = iter();
+// 
+//         const dsmcParcel::constantProperties& cP = constProps
+//         (
+//             p.typeId()
+//         );
+// 
+//         linearKineticEnergy += 0.5*cP.mass()*(p.U() & p.U());
+//     }
+// 
+//     return nParticle_*linearKineticEnergy;
+// }
+// 
+// 
+// //template <class dsmcParcel>
+// inline Foam::scalar Foam::dsmcCloud::rotationalEnergyOfSystem() const
+// {
+//     scalar rotationalEnergy = 0.0;
+// 
+//     forAllConstIter(dsmcCloud, *this, iter)
+//     {
+//         const dsmcParcel& p = iter();
+// 
+//         rotationalEnergy += nParticle_*p.ERot();
+//     }
+// 
+//     return rotationalEnergy;
+// }
+// 
+// inline Foam::scalar Foam::dsmcCloud::vibrationalEnergyOfSystem() const
+// {
+//     scalar vibrationalEnergy = 0.0;
+// 
+//     forAllConstIter(dsmcCloud, *this, iter)
+//     {
+//         const dsmcParcel& p = iter();
+//         
+//         const dsmcParcel::constantProperties& cP = constProps
+//         (
+//             p.typeId()
+//         ); 
+// 
+//         vibrationalEnergy += nParticle_*physicoChemical::k.value()*p.vibLevel()*cP.thetaV();
+//     }
+// 
+//     return vibrationalEnergy;
+// }
+// 
+// inline Foam::scalar Foam::dsmcCloud::electronicEnergyOfSystem() const
+// {
+//     scalar electronicEnergy = 0.0;
+// 
+//     forAllConstIter(dsmcCloud, *this, iter)
+//     {
+//         const dsmcParcel& p = iter();
+//         
+//         const dsmcParcel::constantProperties& cP = constProps
+//         (
+//             p.typeId()
+//         );
+// 
+//         electronicEnergy += nParticle_*cP.electronicEnergyList()[p.ELevel()];
+//     }
+// 
+//     return electronicEnergy;
+// }
 
 //template <class dsmcParcel>
 inline Foam::scalar Foam::dsmcCloud::maxwellianAverageSpeed

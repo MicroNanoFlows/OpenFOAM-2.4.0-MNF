@@ -142,7 +142,8 @@ public:
         virtual void collide
         (
             dsmcParcel& pP,
-            dsmcParcel& pQ
+            dsmcParcel& pQ,
+            label& cellI
         ) = 0;
 };
 

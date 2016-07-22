@@ -124,7 +124,8 @@ Foam::scalar Foam::LarsenBorgnakkeVariableSoftSphere::sigmaTcR
 void Foam::LarsenBorgnakkeVariableSoftSphere::collide
 (
     dsmcParcel& pP,
-    dsmcParcel& pQ
+    dsmcParcel& pQ,
+    label& cellI
 )
 {
 //     CloudType& cloud_(this->owner());

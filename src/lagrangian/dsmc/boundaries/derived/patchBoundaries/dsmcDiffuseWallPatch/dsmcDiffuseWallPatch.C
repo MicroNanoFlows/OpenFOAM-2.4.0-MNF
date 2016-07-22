@@ -85,7 +85,7 @@ void dsmcDiffuseWallPatch::controlParticle(dsmcParcel& p, dsmcParcel::trackingDa
 {
     measurePropertiesBeforeControl(p);
     
-    scalar currentTime = cloud_.mesh().time().value();
+//     scalar currentTime = cloud_.mesh().time().value();
     
 //     Info << "currentTime = " << currentTime << endl;
 

@@ -335,7 +335,8 @@ void simplifiedBernoulliTrialsTAS::collide()
                                 cloud_.binaryCollision().collide
                                 (
                                     parcelP,
-                                    parcelQ
+                                    parcelQ,
+                                    cellI
                                 );
                             }
 
@@ -346,7 +347,8 @@ void simplifiedBernoulliTrialsTAS::collide()
                             cloud_.binaryCollision().collide
                             (
                                 parcelP,
-                                parcelQ
+                                parcelQ,
+                                cellI
                             );
                         }
                         

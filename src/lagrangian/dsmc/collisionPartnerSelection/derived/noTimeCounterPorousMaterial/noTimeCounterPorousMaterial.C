@@ -316,7 +316,8 @@ void noTimeCounterPorousMaterial::collide()
                             cloud_.binaryCollision().collide
                             (
                                 parcelP,
-                                parcelQ
+                                parcelQ,
+                                cellI
                             );
                         }
                     }
@@ -325,7 +326,8 @@ void noTimeCounterPorousMaterial::collide()
                         cloud_.binaryCollision().collide
                         (
                             parcelP,
-                            parcelQ
+                            parcelQ,
+                            cellI
                         );
                     }
 

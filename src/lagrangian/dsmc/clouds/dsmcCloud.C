@@ -31,7 +31,6 @@ using namespace Foam::constant;
 
 namespace Foam
 {
-//     defineParticleTypeNameAndDebug(dsmcParcel, 0);
     defineTemplateTypeNameAndDebug(Cloud<dsmcParcel>, 0);
 };
 
@@ -77,6 +76,12 @@ void Foam::dsmcCloud::buildCellOccupancy()
 
 void Foam::dsmcCloud::removeElectrons()
 {       
+    rhoNMeanElectron_ = 0.0;
+    rhoMMeanElectron_ = 0.0;
+    momentumMeanElectron_ = vector::zero;
+    linearKEMeanElectron_ = 0.0;
+//     electronTemperature_ = 0.0;
+    
     forAll(cellOccupancy_, c)
     {
         const DynamicList<dsmcParcel*>& molsInCell = cellOccupancy_[c];
@@ -92,28 +97,32 @@ void Foam::dsmcCloud::removeElectrons()
             
             if(charge == -1)
             {
+                scalar mass = constProps(p->typeId()).mass();
+                
+                scalar RWF = 1.0;
+            
+                if(axisymmetric_)
+                {
+                    const point& cC = mesh_.cellCentres()[c];
+                    scalar radius = cC.y();
+                    
+                    RWF = 1.0 + maxRWF_*(radius/radialExtent_);
+                }
+                
+                rhoNMeanElectron_[c] += 1.0*RWF;
+                rhoMMeanElectron_[c] += mass*RWF;
+                momentumMeanElectron_[c] += mass*RWF*p->U();
+                linearKEMeanElectron_[c] += mass*RWF*(p->U() & p->U());
+                
                 //found an electron
-                electronVelocities_.append(p->U());
                 deleteParticle(*p);
             }
         }
     }
-
-    electronVelocities_.shrink();
-    reBuildCellOccupancy();
 }
 
 void Foam::dsmcCloud::addElectrons()
 {    
-    //particles may have left during the move, so...
-    reBuildCellOccupancy();
-    
-//     List<label> electronVelocities = electronVelocities_;
-//     
-//     if (Pstream::parRun())
-//     {
-//         reduce(electronVelocities, sumOp<label>());
-//     }
     
     label electronIndex = 0;
     
@@ -122,7 +131,7 @@ void Foam::dsmcCloud::addElectrons()
     //find electron typeId
     forAll(constProps_, cP)
     {
-        label electronCharge = constProps_[cP].charge();
+        label& electronCharge = constProps_[cP].charge();
         
         if(electronCharge == -1)
         {
@@ -132,62 +141,78 @@ void Foam::dsmcCloud::addElectrons()
     }
     
     forAll(cellOccupancy_, c)
-    {
-        const DynamicList<dsmcParcel*>& molsInCell = cellOccupancy_[c];
-        
-        forAll(molsInCell, mIC)
+    {                
+        if(rhoMMeanElectron_[c] > VSMALL)
         {
-            dsmcParcel* p = molsInCell[mIC];
             
-            const dsmcParcel::constantProperties& constProp 
-                                = constProps(p->typeId());
-                                
-            label charge = constProp.charge();
+            scalar V = mesh_.cellVolumes()[c];
+                
+            scalar rhoMMeanElectron = rhoMMeanElectron_[c]*nParticle_/V;
+            scalar rhoNMeanElectron = rhoNMeanElectron_[c]*nParticle_/V;
+            vector UElectron = momentumMeanElectron_[c] /(rhoMMeanElectron*V);
+            scalar linearKEMeanElectron = (0.5*linearKEMeanElectron_[c]*nParticle_)/V;
             
-            if(/*electronIndex <= electronVelocities_.size() && */charge  == 1)
-            {
-                //found an ion, add an electron here                
-//                 vector uElectron = electronVelocities_[electronIndex];
-
-                vector uElectron = equipartitionLinearVelocity
-                    (
-                        10000,
-                        constProps_[electronTypeId].mass()
-                    );
-
-                label cellI = p->cell();
-                vector position = p->position();
-                label tetFaceI = p->tetFace();
-                label tetPtI = p->tetPt();
-                
-                scalar RWF = 1.0;
-
-                addNewParcel
-                (
-                    position,
-                    uElectron,
-                    RWF,
-                    0.0,
-                    0,
-                    0,
-                    cellI,
-                    tetFaceI,
-                    tetPtI,
-                    electronTypeId,
-                    0,
-                    0
-                );
-                
-                electronIndex++;
-            }
+            electronTemperature_[c] = 2.0/(3.0*physicoChemical::k.value()*rhoNMeanElectron)
+                                    *(linearKEMeanElectron - 0.5*rhoMMeanElectron*(UElectron & UElectron));
         }
     }
-    
-    //if an ion has left the domain, all electrons might not be used,
-    //so clear the list
-    electronVelocities_.clear();
-    electronVelocities_.shrink();
+        
+    forAllConstIter(dsmcCloud, *this, iter)
+    {
+        const dsmcParcel& p = iter();
+        
+        const dsmcParcel::constantProperties& constProp 
+                            = constProps(p.typeId());
+                            
+        label charge = constProp.charge();
+        
+        if(charge  == 1)
+        {
+            //found an ion, add an electron here
+            
+            //electron temperature will be zero if there have been no
+            //electrons in the cell during the simulation
+            
+            
+            label cellI = p.cell();
+            vector position = p.position();
+            label tetFaceI = p.tetFace();
+            label tetPtI = p.tetPt();
+            
+            if(electronTemperature_[cellI] < VSMALL)
+            {
+                electronTemperature_[cellI] = 1000.0;
+            }
+
+            vector electronVelocity = equipartitionLinearVelocity
+                (
+                    electronTemperature_[cellI],
+                    constProps_[electronTypeId].mass()
+                );
+
+            scalar RWF = p.RWF();
+
+            addNewParcel
+            (
+                position,
+                electronVelocity,
+                RWF,
+                0.0,
+                0,
+                0,
+                cellI,
+                tetFaceI,
+                tetPtI,
+                electronTypeId,
+                0,
+                0
+            );
+            
+            electronIndex++;
+        }            
+    }
 }
+
 
 Foam::label Foam::dsmcCloud::pickFromCandidateList
 (
@@ -467,13 +492,29 @@ Foam::dsmcCloud::dsmcCloud
             IOobject::NO_WRITE
         )
     ),
+    controlDict_
+    (
+        IOobject
+        (
+            "controlDict",
+            mesh_.time().system(),
+            mesh_,
+            IOobject::MUST_READ_IF_MODIFIED,
+            IOobject::NO_WRITE
+        )
+    ),
     typeIdList_(particleProperties_.lookup("typeIdList")),
     nParticle_(readScalar(particleProperties_.lookup("nEquivalentParticles"))),
     axisymmetric_(Switch(particleProperties_.lookup("axisymmetricSimulation"))),
     radialExtent_(0.0),
     maxRWF_(1.0),
+    nTerminalOutputs_(readLabel(controlDict_.lookup("nTerminalOutputs"))),
     cellOccupancy_(mesh_.nCells()),
-    electronVelocities_(),
+    rhoNMeanElectron_(mesh_.nCells()),
+    rhoMMeanElectron_(mesh_.nCells()),
+    momentumMeanElectron_(mesh_.nCells()),
+    linearKEMeanElectron_(mesh_.nCells()),
+    electronTemperature_(mesh_.nCells()),
     sigmaTcRMax_
     (
         IOobject
@@ -488,10 +529,8 @@ Foam::dsmcCloud::dsmcCloud
     ),
     collisionSelectionRemainder_(mesh_.nCells(), 0),
     constProps_(),
-//     rndGen_(label(149382906) + 7183*Pstream::myProcNo()),
     rndGen_(label(clock::getTime()) + 7183*Pstream::myProcNo()), // different seed every time simulation is started - needed for ensemble averaging!
     controllers_(t, mesh, *this),
-    //standardFields_(mesh, *this),
     fields_(t, mesh, *this),
     boundaries_(t, mesh, *this),
     trackingInfo_(mesh, *this, true),
@@ -570,13 +609,29 @@ Foam::dsmcCloud::dsmcCloud
             IOobject::NO_WRITE
         )
     ),
+    controlDict_
+    (
+        IOobject
+        (
+            "controlDict",
+            mesh_.time().system(),
+            mesh_,
+            IOobject::MUST_READ_IF_MODIFIED,
+            IOobject::NO_WRITE
+        )
+    ),
     typeIdList_(particleProperties_.lookup("typeIdList")),
     nParticle_(readScalar(particleProperties_.lookup("nEquivalentParticles"))),
     axisymmetric_(Switch(particleProperties_.lookup("axisymmetricSimulation"))),
     radialExtent_(0.0),
     maxRWF_(1.0),
+    nTerminalOutputs_(readLabel(controlDict_.lookup("nTerminalOutputs"))),
     cellOccupancy_(),
-    electronVelocities_(),
+    rhoNMeanElectron_(),
+    rhoMMeanElectron_(),
+    momentumMeanElectron_(),
+    linearKEMeanElectron_(),
+    electronTemperature_(),
     sigmaTcRMax_
     (
         IOobject
@@ -596,7 +651,6 @@ Foam::dsmcCloud::dsmcCloud
 //     rndGen_(label(971501) + 1526*Pstream::myProcNo()),
     rndGen_(label(clock::getTime()) + 1526*Pstream::myProcNo()), // different seed every time simulation is started - needed for ensemble averaging!
     controllers_(t, mesh),
-    //standardFields_(mesh, *this, true),
     fields_(t, mesh),
     boundaries_(t, mesh),
     trackingInfo_(mesh, *this),
@@ -669,10 +723,6 @@ void Foam::dsmcCloud::evolve()
 
     dsmcParcel::trackingData td(*this);
 
-    // Reset the data collection fields
-    //standardFields_.resetFields();
-//     resetFields();
-
     if (debug)
     {
         this->dumpParticlePositions();
@@ -690,26 +740,25 @@ void Foam::dsmcCloud::evolve()
     //Add electrons back after the move function
     addElectrons();
     
+    // Update cell occupancy
+    buildCellOccupancy();
+    
     if(axisymmetric_)
     {
         axisymmetricWeighting();
     }
 
-    // Update cell occupancy
-    buildCellOccupancy();
-
     controllers_.controlBeforeCollisions();//****
     boundaries_.controlBeforeCollisions();//****
-    Info << "collisions" << endl;
+//     Info << "collisions" << endl;
 
     // Calculate new velocities via stochastic collisions
     collisions();
 
-    buildCellOccupancy(); //*** (for reactions)
+//     buildCellOccupancy(); //*** (for reactions)
 
     controllers_.controlAfterCollisions();//****
     boundaries_.controlAfterCollisions();//****
-
 
     reactions_.outputData();
 
@@ -727,7 +776,10 @@ void Foam::dsmcCloud::evolve()
     cellMeas_.clean();
 }
 
-
+Foam::label Foam::dsmcCloud::nTerminalOutputs()
+{
+    return nTerminalOutputs_;
+}
 
 void Foam::dsmcCloud::info() const
 {
@@ -735,21 +787,33 @@ void Foam::dsmcCloud::info() const
     reduce(nDsmcParticles, sumOp<label>());
 
     scalar nMol = nDsmcParticles*nParticle_;
+    
+    scalar linearKineticEnergy = infoMeasurements()[1];
+    reduce(linearKineticEnergy, sumOp<scalar>());
+    
+    scalar rotationalEnergy = infoMeasurements()[2];
+    reduce(rotationalEnergy, sumOp<scalar>());
+    
+    scalar vibrationalEnergy = infoMeasurements()[3];
+    reduce(vibrationalEnergy, sumOp<scalar>());
+    
+    scalar electronicEnergy = infoMeasurements()[4];
+    reduce(electronicEnergy, sumOp<scalar>());
 
 //     vector linearMomentum = linearMomentumOfSystem();
 //     reduce(linearMomentum, sumOp<vector>());
 
-    scalar linearKineticEnergy = linearKineticEnergyOfSystem();
-    reduce(linearKineticEnergy, sumOp<scalar>());
-
-    scalar rotationalEnergy = rotationalEnergyOfSystem();
-    reduce(rotationalEnergy, sumOp<scalar>());
-    
-    scalar vibrationalEnergy = vibrationalEnergyOfSystem();
-    reduce(vibrationalEnergy, sumOp<scalar>());
-    
-    scalar electronicEnergy = electronicEnergyOfSystem();
-    reduce(electronicEnergy, sumOp<scalar>());
+//     scalar linearKineticEnergy = linearKineticEnergyOfSystem();
+//     reduce(linearKineticEnergy, sumOp<scalar>());
+// 
+//     scalar rotationalEnergy = rotationalEnergyOfSystem();
+//     reduce(rotationalEnergy, sumOp<scalar>());
+//     
+//     scalar vibrationalEnergy = vibrationalEnergyOfSystem();
+//     reduce(vibrationalEnergy, sumOp<scalar>());
+//     
+//     scalar electronicEnergy = electronicEnergyOfSystem();
+//     reduce(electronicEnergy, sumOp<scalar>());
 
     Info << "    Number of dsmc particles        = "
     << nDsmcParticles
@@ -757,15 +821,15 @@ void Foam::dsmcCloud::info() const
 
     if (nDsmcParticles)
     {
-        Info<< "    Number of molecules             = "
-            << nMol << nl
+//         Info<< "    Number of molecules             = "
+//             << nMol << nl
 //             << "    Mass in system                  = "
 //             << returnReduce(massInSystem(), sumOp<scalar>()) << nl
 //             << "    Average linear momentum         = "
 //             << linearMomentum/nMol << nl
 //             << "    |Total linear momentum|         = "
 //             << mag(linearMomentum) << nl
-            << "    Average linear kinetic energy   = "
+       Info << "    Average linear kinetic energy   = "
             << linearKineticEnergy/nMol << nl
             << "    Average rotational energy       = "
             << rotationalEnergy/nMol << nl
@@ -773,9 +837,9 @@ void Foam::dsmcCloud::info() const
             << vibrationalEnergy/nMol << nl
             << "    Average electronic energy       = "
             << electronicEnergy/nMol << nl
-            << "    Total energy                    = "
-            << (rotationalEnergy + linearKineticEnergy
-                + vibrationalEnergy + electronicEnergy)
+//             << "    Total energy                    = "
+//             << (rotationalEnergy + linearKineticEnergy
+//                 + vibrationalEnergy + electronicEnergy)
             << endl;
     }
 }
@@ -1220,7 +1284,7 @@ void Foam::dsmcCloud::reBuildCellOccupancy()
 
 void Foam::dsmcCloud::axisymmetricWeighting()
 {
-    reBuildCellOccupancy();
+//     reBuildCellOccupancy();
     
     forAll(cellOccupancy_, c)
     {
@@ -1230,7 +1294,7 @@ void Foam::dsmcCloud::axisymmetricWeighting()
         {
             dsmcParcel* p = molsInCell[mIC];
                         
-            const point& cC = mesh_.cellCentres()[c];
+            point cC = mesh_.cellCentres()[c];
             scalar radius = cC.y();
             
             scalar oldRadialWeight = p->RWF();

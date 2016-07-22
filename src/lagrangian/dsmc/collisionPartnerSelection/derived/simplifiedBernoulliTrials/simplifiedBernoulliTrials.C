@@ -179,7 +179,8 @@ void simplifiedBernoulliTrials::collide()
                             cloud_.binaryCollision().collide
                             (
                                 parcelP,
-                                parcelQ
+                                parcelQ,
+                                cellI
                             );
                         }
                     }
@@ -188,7 +189,8 @@ void simplifiedBernoulliTrials::collide()
                         cloud_.binaryCollision().collide
                         (
                             parcelP,
-                            parcelQ
+                            parcelQ,
+                            cellI
                         );
                     }
                     
