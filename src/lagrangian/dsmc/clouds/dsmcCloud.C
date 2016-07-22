@@ -131,7 +131,7 @@ void Foam::dsmcCloud::addElectrons()
     //find electron typeId
     forAll(constProps_, cP)
     {
-        label& electronCharge = constProps_[cP].charge();
+        label electronCharge = constProps_[cP].charge();
         
         if(electronCharge == -1)
         {
@@ -760,7 +760,7 @@ void Foam::dsmcCloud::evolve()
     controllers_.controlAfterCollisions();//****
     boundaries_.controlAfterCollisions();//****
 
-    reactions_.outputData();
+//     reactions_.outputData();
 
     fields_.calculateFields();//****
     fields_.writeFields();//****
