@@ -280,9 +280,9 @@ void moleculeAtomDissociationIonisation::setProperties()
 
         // check that product two is a 'ELECTRON'
 
-        const scalar& mass = cloud_.constProps(productIdsDiss_[1]).mass();
+        const label& charge = cloud_.constProps(productIdsIon_[1]).charge();
 
-        if(mass < 1e-30)
+        if(charge != -1)
         {
             FatalErrorIn("moleculeAtomDissociationIonisation::setProperties()")
                 << "Second ionisation product must be an electron: " << productMoleculesIon[1] 
@@ -332,12 +332,12 @@ void moleculeAtomDissociationIonisation::setProperties()
 
         // check that product two is a 'ELECTRON'
 
-        const scalar& mass = cloud_.constProps(productIdsDiss_[1]).mass();
+        const label& charge = cloud_.constProps(productIdsIon2_[1]).charge();
 
-        if(mass < 1e-30)
+        if(charge != -1)
         {
             FatalErrorIn("moleculeAtomDissociationIonisation::setProperties()")
-                << "Second ionisation product must be an electron: " << productMoleculesIon2[1] 
+                << "Second ionisation product must be an electron: " << productMoleculesIon[1] 
                 << nl 
                 << exit(FatalError);
         }

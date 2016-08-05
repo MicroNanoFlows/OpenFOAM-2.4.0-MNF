@@ -223,12 +223,12 @@ void moleculeIonDissociationIonisation::setProperties()
     {
         if(p == 1)
         {
-            const scalar& mass = cloud_.constProps(ionisationProducts_[p]).mass();
+            const label& charge = cloud_.constProps(ionisationProducts_[p]).charge();
             
-            if(mass > 1e-29)
+            if(charge != -1)
             {
                 FatalErrorIn("moleculeIonDissociationIonisation::setProperties()")
-                    << "Second ionisation products should be an electron: " << productsForIon[p] << nl 
+                    << "Second ionisation product must be an electron: " << productsForIon[p] << nl 
                     << exit(FatalError);
             }
         }

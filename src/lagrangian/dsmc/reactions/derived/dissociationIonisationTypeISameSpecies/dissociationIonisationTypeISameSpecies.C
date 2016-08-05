@@ -175,9 +175,9 @@ void dissociationIonisationTypeISameSpecies::setProperties()
             << exit(FatalError);
     }
     
-    const scalar& mass = cloud_.constProps(productIdsIonisation_[1]).mass();
+    const label& charge = cloud_.constProps(productIdsIonisation_[1]).charge();
 
-    if(mass > 1e-23)
+    if(charge != -1)
     {
         FatalErrorIn("dissociationIonisationTypeISameSpecies::setProperties()")
             << "Second ionisation product must be an electron: " << productMoleculesIonisation[1] 

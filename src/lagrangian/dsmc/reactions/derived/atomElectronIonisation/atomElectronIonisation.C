@@ -134,9 +134,9 @@ void atomElectronIonisation::setProperties()
     
     // check that reactant two is an 'ELECTRON'
 
-    const scalar& mass2 = cloud_.constProps(reactantIds_[1]).mass();
+    const label& charge = cloud_.constProps(reactantIds_[1]).charge();
 
-    if(mass2 > 1e-30)
+    if(charge != -1)
     {
         FatalErrorIn("atomElectronIonisation::setProperties()")
             << "Second reactant must be an electron, not " << reactantMolecules[1] 
@@ -197,9 +197,9 @@ void atomElectronIonisation::setProperties()
 
         // check that product two is an 'ELECTRON'
 
-        const scalar& mass = cloud_.constProps(productIdsIon_[1]).mass();
+        const label& charge = cloud_.constProps(productIdsIon_[1]).charge();
 
-        if(mass > 1e-30)
+        if(charge != -1)
         {
             FatalErrorIn("atomElectronIonisation::setProperties()")
                 << "Second product must be an electron: " << productMoleculesIonisation[1] 

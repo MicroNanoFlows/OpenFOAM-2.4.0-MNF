@@ -895,8 +895,26 @@ void dsmcVolFields::calculateField()
                 const label& cell = p.cell();
                 const scalar& mass = cloud_.constProps(p.typeId()).mass();
 
-                rhoNMean_[cell] += 1.0;
-                rhoMMean_[cell] += mass;
+//                 rhoNMean_[cell] += 1.0;
+//                 rhoMMean_[cell] += mass;
+                
+                if(cloud_.axisymmetric())
+                {
+//                     const point& cC = cloud_.mesh().cellCentres()[cell];
+                    scalar radius = sqrt((p.position().y()*p.position().y()) + (p.position().z()*p.position().z()));
+                    
+                    scalar RWF = 1.0;
+                    
+                    RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
+                    
+                    rhoNMeanXnParticle_[cell] += (RWF*nParticle);
+                    rhoMMeanXnParticle_[cell] += (mass*RWF*nParticle);
+                }
+                else
+                {
+                    rhoNMeanXnParticle_[cell] += nParticle;
+                    rhoMMeanXnParticle_[cell] += (mass*nParticle);
+                }
             }
         }
     }
@@ -928,12 +946,14 @@ void dsmcVolFields::calculateField()
                 
                 if(cloud_.axisymmetric())
                 {
-                    const point& cC = cloud_.mesh().cellCentres()[cell];
-                    scalar radius = cC.y();
+//                     const point& cC = cloud_.mesh().cellCentres()[cell];
+                    scalar radius = sqrt((p.position().y()*p.position().y()) + (p.position().z()*p.position().z()));
                     
                     scalar RWF = 1.0;
                     
                     RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
+                    
+//                     Info << "RWF = " << RWF << endl;
                     
                     nParcelsXnParticle_[iD][cell] += (RWF*nParticle);
                     rhoNMeanXnParticle_[cell] += (RWF*nParticle);
@@ -1059,23 +1079,17 @@ void dsmcVolFields::calculateField()
             {
                 if(rhoNMean_[cell] > VSMALL)
                 {
-                    scalar RWF = 1.0;
-                    
-                    if(cloud_.axisymmetric())
-                    {
-                        const point& cC = cloud_.mesh().cellCentres()[cell];
-                        scalar radius = cC.y();
-                    
-                        RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
-                    }
-
-                    const scalar& V = mesh_.cellVolumes()[cell];
+                    const scalar& cellVolume = mesh_.cellVolumes()[cell];
                     
                     dsmcRhoN_[cell] = rhoNMean_[cell]/(nAvTimeSteps);
             
-                    rhoN_[cell] = (rhoNMean_[cell]*nParticle*RWF)/(nAvTimeSteps*V);
-            
-                    rhoM_[cell] = (rhoMMean_[cell]*nParticle*RWF)/(nAvTimeSteps*V);
+//                     rhoN_[cell] = (rhoNMean_[cell]*nParticle*RWF)/(nAvTimeSteps*V);
+//             
+//                     rhoM_[cell] = (rhoMMean_[cell]*nParticle*RWF)/(nAvTimeSteps*V);
+                    
+                    rhoN_[cell] = (rhoNMeanXnParticle_[cell])/(nAvTimeSteps*cellVolume);
+                    
+                    rhoM_[cell] = (rhoMMeanXnParticle_[cell])/(nAvTimeSteps*cellVolume);
 
                 }
                 else
@@ -1096,20 +1110,7 @@ void dsmcVolFields::calculateField()
             scalarField particleConstantVolumeSpecificHeat(mesh_.nCells(), scalar(0.0));
             
             forAll(rhoNMean_, cell)
-            {
-//                 scalar RWF = 1.0;
-//                 
-//                 if(cloud_.axisymmetric())
-//                 {
-//                     const point& cC = cloud_.mesh().cellCentres()[cell];
-//                     scalar radius = cC.y();
-//                     
-//                     scalar RWF = 1.0;
-//                     
-//                     RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
-//                    
-//                 }
-                
+            {                
                 if(rhoNMean_[cell] > VSMALL)
                 {                  
                     const scalar& cellVolume = mesh_.cellVolumes()[cell];
@@ -1642,20 +1643,6 @@ void dsmcVolFields::calculateField()
             
             dsmcRhoN_.boundaryField() = dsmcRhoN_.boundaryField().boundaryInternalField();
             
-            // computing boundary measurements
-//             forAll(rhoNBF_, j)
-//             {
-//                 const polyPatch& patch = mesh_.boundaryMesh()[j];
-//                 
-//                 if(isA<wallPolyPatch>(patch))
-//                 {
-//                     forAll(rhoN_.boundaryField()[j], k)
-//                     {
-//                         rhoN_.boundaryField()[j][k] = rhoNBF_[j][k]*cloud_.nParticle()/nAvTimeSteps;
-//                         rhoM_.boundaryField()[j][k] = rhoMBF_[j][k]*cloud_.nParticle()/nAvTimeSteps;
-//                     }
-//                 }
-//             }
             
             rhoN_.correctBoundaryConditions();
             rhoM_.correctBoundaryConditions();
@@ -1666,18 +1653,6 @@ void dsmcVolFields::calculateField()
             List<scalarField> molarconstantVolumeSpecificHeatBoundary(mesh_.boundaryMesh().size());
             List<scalarField> particleConstantVolumeSpecificHeatBoundary(mesh_.boundaryMesh().size());
 
-            
-//             forAll(vibTBF, j)
-//             {
-//                 const polyPatch& patch = mesh_.boundaryMesh()[j];
-//                 
-//                 vibTBF[j].setSize(patch.size(), 0.0);
-//                 molecularMass[j].setSize(patch.size(), 0.0);
-//                 molarconstantPressureSpecificHeat[j].setSize(patch.size(), 0.0);
-//                 molarconstantVolumeSpecificHeat[j].setSize(patch.size(), 0.0);
-//                 particleConstantVolumeSpecificHeat[j].setSize(patch.size(), 0.0);
-//             }
-            
             // computing boundary measurements
             forAll(rhoNBF_, j)
             {
@@ -1844,7 +1819,7 @@ void dsmcVolFields::calculateField()
                                             ) /
                                             (3.0 + nRotDof + totalvDofBF_[j][k] + totalEDof);
                                             
-                        totalvDofBF_[j] = scalar(0.0);
+                        totalvDofBF_[j][k] = 0.0;
                         
                         /**************************************************************************************************************/
                         

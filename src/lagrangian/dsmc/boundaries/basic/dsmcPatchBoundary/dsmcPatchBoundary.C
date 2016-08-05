@@ -279,9 +279,11 @@ void dsmcPatchBoundary::measurePropertiesAfterControl(dsmcParcel& p, scalar heat
         
         if(cloud_.axisymmetric())
         {
-            const vector fC = wpp.faceCentres()[wppLocalFace];
+//             const vector fC = wpp.faceCentres()[wppLocalFace];
             
-            scalar radius = fC.y();
+//             scalar radius = fC.y();
+            
+            scalar radius = sqrt((p.position().y()*p.position().y()) + (p.position().z()*p.position().z()));
             
             scalar RWF = 1.0;
 

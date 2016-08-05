@@ -173,9 +173,9 @@ void forwardAssociativeIonisation::setProperties()
             << exit(FatalError);
     }
     
-    scalar massProd2 = cloud_.constProps(associativeIonisationProductIds_[1]).mass();
+    const label& charge = cloud_.constProps(associativeIonisationProductIds_[1]).charge();
 
-    if(massProd2 > 1e-30)
+    if(charge != -1)
     {
         FatalErrorIn("forwardAssociativeIonisation::setProperties()")
             << "Second product must be an electron: " << associativeIonisationProductMolecules 
@@ -215,9 +215,9 @@ void forwardAssociativeIonisation::setProperties()
             << exit(FatalError);
     }
     
-    massProd2 = cloud_.constProps(ionisationProductIds_[1]).mass();
+    const label& charge2 = cloud_.constProps(ionisationProductIds_[1]).charge();
 
-    if(massProd2 > 1e-30)
+    if(charge2 != -1)
     {
         FatalErrorIn("forwardAssociativeIonisation::setProperties()")
             << "Second product must be an electron: " << ionisationProductMolecules 

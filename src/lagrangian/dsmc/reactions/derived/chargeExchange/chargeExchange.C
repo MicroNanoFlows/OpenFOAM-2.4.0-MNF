@@ -127,9 +127,9 @@ void chargeExchange::setProperties()
 
         // check that reactants are 'ATOMS' or 'MOLECULES', not 'ELECTRONS'
 
-        const scalar& mass = cloud_.constProps(reactantIds_[r]).mass();
+        const label& charge = cloud_.constProps(reactantIds_[r]).charge();
     
-        if(mass < 1e-30)
+        if(charge == -1)
         {
             FatalErrorIn("chargeExchange::setProperties()")
                 << "Reactant must not be an electron: " << reactantMolecules[r] 
@@ -158,9 +158,9 @@ void chargeExchange::setProperties()
         
         // check that products are a 'MOLECULE' or an 'ATOM'
         
-        const scalar& mass = cloud_.constProps(chargeExchangeProductIds_[i]).mass();
+        const label& charge = cloud_.constProps(chargeExchangeProductIds_[i]).charge();
 
-        if(mass < 1e-30)
+        if(charge == -1)
         {
             FatalErrorIn("chargeExchange::setProperties()")
                 << "Products cannot be an electron: " << chargeExchangeProductMolecules 
@@ -224,12 +224,12 @@ void chargeExchange::setProperties()
     
     // check that second product is an electron
         
-    const scalar& mass = cloud_.constProps(ionisationProductIds_[1]).mass();
+    const label& charge = cloud_.constProps(ionisationProductIds_[1]).charge();
 
-    if(mass > 1e-29)
+    if(charge != -1)
     {
         FatalErrorIn("chargeExchange::setProperties()")
-            << "Second ionisation product must be the electron: " << ionisationProductMolecules 
+            << "Second ionisation product must be an electron: " << ionisationProductMolecules 
             << nl 
             << exit(FatalError);
     }

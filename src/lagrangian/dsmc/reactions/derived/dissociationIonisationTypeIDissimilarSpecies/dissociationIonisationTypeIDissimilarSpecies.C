@@ -233,12 +233,12 @@ void dissociationIonisationTypeIDissimilarSpecies::setProperties()
         {
             if(p == 1)
             {
-                const scalar& mass = cloud_.constProps(ionisationProducts_[r][p]).mass();
+                const label& charge = cloud_.constProps(ionisationProducts_[r][p]).charge();
                 
-                if(mass > 1e-29)
+                if(charge != -1)
                 {
                     FatalErrorIn("dissociationIonisationTypeIDissimilarSpecies::setProperties()")
-                        << "Second ionisation products should be an electron: " << productsForIon[p] << nl 
+                        << "Second ionisation product must be an electron: " << productsForIon[p] << nl 
                         << exit(FatalError);
                 }
             }
@@ -1054,7 +1054,7 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                 vector uQ1 = UQ + postCollisionRelU2*mP2/(mP1 + mP2);
                 vector uQ2 = UQ - postCollisionRelU2*mP1/(mP1 + mP2);
 
-                // Q remains NON-DISSOCIATED.
+                // P remains NON-IONISED.
                 p.U() = UP;
                 p.ERot() = ERotP;
                 p.vibLevel() = vibLevelP;

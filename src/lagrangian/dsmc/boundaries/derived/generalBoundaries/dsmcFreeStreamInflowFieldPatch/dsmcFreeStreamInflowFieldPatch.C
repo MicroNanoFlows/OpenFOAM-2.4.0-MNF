@@ -404,7 +404,7 @@ void dsmcFreeStreamInflowFieldPatch::controlParcelsBeforeMove()
                     const point& cC = cloud_.mesh().cellCentres()[cellI];
                     scalar radius = cC.y();
                     
-                    RWF = cloud_.maxRWF()*(radius/cloud_.radialExtent());
+                    RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
                 }
 
                 cloud_.addNewParcel

@@ -129,9 +129,9 @@ void reverseAssociativeIonisation::setProperties()
     
     // check that second reactant is an electron
 
-    const scalar& mass2 = cloud_.constProps(reactantIds_[1]).mass();
+    const label& charge = cloud_.constProps(reactantIds_[1]).charge();
 
-    if(mass2 > 1e-30)
+    if(charge != -1)
     {
         FatalErrorIn("reverseAssociativeIonisation::setProperties()")
             << "Second reactant must be an electron: " << reactantMolecules[0] 

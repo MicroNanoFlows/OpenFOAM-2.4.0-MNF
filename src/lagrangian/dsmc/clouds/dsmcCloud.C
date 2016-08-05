@@ -131,7 +131,7 @@ void Foam::dsmcCloud::addElectrons()
     //find electron typeId
     forAll(constProps_, cP)
     {
-        label& electronCharge = constProps_[cP].charge();
+        const label& electronCharge = constProps_[cP].charge();
         
         if(electronCharge == -1)
         {
@@ -760,7 +760,7 @@ void Foam::dsmcCloud::evolve()
     controllers_.controlAfterCollisions();//****
     boundaries_.controlAfterCollisions();//****
 
-    reactions_.outputData();
+//     reactions_.outputData();
 
     fields_.calculateFields();//****
     fields_.writeFields();//****
@@ -1296,6 +1296,7 @@ void Foam::dsmcCloud::axisymmetricWeighting()
                         
             point cC = mesh_.cellCentres()[c];
             scalar radius = cC.y();
+//             scalar radius = sqrt(sqr(p->position().y()) + sqr(p->position().z()));
             
             scalar oldRadialWeight = p->RWF();
             
@@ -1378,8 +1379,7 @@ void Foam::dsmcCloud::axisymmetricWeighting()
                 if( (oldRadialWeight/newRadialWeight) < rndGen_.scalar01() )
                 {
                     deleteParticle(*p);
-                }
-                
+                } 
             } 
         }
     }

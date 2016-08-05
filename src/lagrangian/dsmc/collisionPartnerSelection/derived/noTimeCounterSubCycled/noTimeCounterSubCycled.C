@@ -104,6 +104,7 @@ void noTimeCounterSubCycled::collide()
         forAll(cellOccupancy, cellI)
         {
             const DynamicList<dsmcParcel*>& cellParcels(cellOccupancy[cellI]);
+            const scalar& cellVolume = mesh.cellVolumes()[cellI];
 
             label nC(cellParcels.size());
 
@@ -149,24 +150,34 @@ void noTimeCounterSubCycled::collide()
                 scalar selectedPairs = 0.0;
                 
                 if(cloud_.axisymmetric())
-                {
-                    const point& cC = mesh.cellCentres()[cellI];
+                {               
+                    scalar RWF = 0.0;
+                    scalar nMols = 0.0;
                     
-                    scalar radius = cC.y();
+                    forAll(cellParcels, i)
+                    {
+                        const dsmcParcel& p = *cellParcels[i];
+                        
+                        scalar radius = sqrt(sqr(p.position().y()) + sqr(p.position().z()));
+
+                        RWF += 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
+                        
+                        nMols += 1.0;
+                    }
                     
-                    scalar RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
+                    RWF /= nMols;
                     
                     selectedPairs =
                     cloud_.collisionSelectionRemainder()[cellI]
-                    + 0.5*nC*(nC - 1)*cloud_.nParticle()*RWF*sigmaTcRMax*(deltaT/nSubCycles_)
-                    /mesh.cellVolumes()[cellI];
+                    + 0.5*nC*(nC - 1)*cloud_.nParticle()*RWF*sigmaTcRMax*deltaT
+                    /cellVolume;
                 }
                 else
                 {
                     selectedPairs =
                     cloud_.collisionSelectionRemainder()[cellI]
-                    + 0.5*nC*(nC - 1)*cloud_.nParticle()*sigmaTcRMax*(deltaT/nSubCycles_)
-                    /mesh.cellVolumes()[cellI];
+                    + 0.5*nC*(nC - 1)*cloud_.nParticle()*sigmaTcRMax*deltaT
+                    /cellVolume;
                 }
 
                 label nCandidates(selectedPairs);
