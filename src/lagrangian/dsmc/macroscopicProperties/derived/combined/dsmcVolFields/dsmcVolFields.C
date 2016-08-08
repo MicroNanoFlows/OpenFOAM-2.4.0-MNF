@@ -895,7 +895,7 @@ void dsmcVolFields::calculateField()
                 const label& cell = p.cell();
                 const scalar& mass = cloud_.constProps(p.typeId()).mass();
 
-//                 rhoNMean_[cell] += 1.0;
+                rhoNMean_[cell] += 1.0;
 //                 rhoMMean_[cell] += mass;
                 
                 if(cloud_.axisymmetric())
