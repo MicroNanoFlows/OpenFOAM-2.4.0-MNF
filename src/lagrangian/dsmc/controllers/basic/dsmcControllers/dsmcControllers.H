@@ -100,7 +100,7 @@ public:
             const polyMesh& mesh
         );
 
-        //- Constructor for mdFOAM
+        //- Constructor for dsmcFOAM
         dsmcControllers
         (
             Time& t,

@@ -531,6 +531,7 @@ Foam::dsmcCloud::dsmcCloud
     constProps_(),
     rndGen_(label(clock::getTime()) + 7183*Pstream::myProcNo()), // different seed every time simulation is started - needed for ensemble averaging!
     controllers_(t, mesh, *this),
+    dynamicLoadBalancing_(t, mesh, *this),
     fields_(t, mesh, *this),
     boundaries_(t, mesh, *this),
     trackingInfo_(mesh, *this, true),
@@ -651,6 +652,7 @@ Foam::dsmcCloud::dsmcCloud
 //     rndGen_(label(971501) + 1526*Pstream::myProcNo()),
     rndGen_(label(clock::getTime()) + 1526*Pstream::myProcNo()), // different seed every time simulation is started - needed for ensemble averaging!
     controllers_(t, mesh),
+    dynamicLoadBalancing_(t, mesh, *this),
     fields_(t, mesh),
     boundaries_(t, mesh),
     trackingInfo_(mesh, *this),
@@ -773,7 +775,7 @@ void Foam::dsmcCloud::evolve()
 
     trackingInfo_.clean(); //****
     boundaryMeas_.clean(); //****
-    cellMeas_.clean();
+    cellMeas_.clean();     
 }
 
 Foam::label Foam::dsmcCloud::nTerminalOutputs()
@@ -842,6 +844,16 @@ void Foam::dsmcCloud::info() const
 //                 + vibrationalEnergy + electronicEnergy)
             << endl;
     }
+}
+
+void Foam::dsmcCloud::loadBalanceCheck()
+{
+    dynamicLoadBalancing_.update();
+}
+
+void Foam::dsmcCloud::loadBalance()
+{
+    dynamicLoadBalancing_.perform();
 }
 
 Foam::vector Foam::dsmcCloud::equipartitionLinearVelocity

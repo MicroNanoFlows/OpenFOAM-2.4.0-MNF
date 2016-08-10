@@ -134,7 +134,7 @@ void timeData::setInitialData()
         samplingTime_.deltaT() = deltaTMD * samplingTime_.nSteps();
     }
 
-    const scalar& endTime = time_.endTime().value();
+    scalar endTime = time_.endTime().value();
     const scalar& startTime = time_.startTime().value();
 
     totalNAvSteps_ = label(((endTime - startTime) / averagingTime_.deltaT())+0.5);

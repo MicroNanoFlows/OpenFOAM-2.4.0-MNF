@@ -5,6 +5,9 @@ parcels/dsmcParcel.C
 /* CLOUD */
 clouds/dsmcCloud.C
 
+/* LOAD BALANCING */
+dynamicLoadBalancing/dsmcDynamicLoadBalancing.C
+
 /* INITIALISE DSMC */
 initaliseDsmcParcels/basic/dsmcConfiguration/dsmcConfiguration.C
 initaliseDsmcParcels/basic/dsmcAllConfigurations/dsmcAllConfigurations.C

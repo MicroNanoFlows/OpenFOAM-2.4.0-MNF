@@ -186,6 +186,16 @@ inline Foam::dsmcControllers& Foam::dsmcCloud::controllers()//****
     return controllers_;
 }
 
+inline const Foam::dsmcDynamicLoadBalancing& Foam::dsmcCloud::dynamicLoadBalancing() const  //****
+{
+    return dynamicLoadBalancing_;
+}
+
+inline Foam::dsmcDynamicLoadBalancing& Foam::dsmcCloud::dynamicLoadBalancing()//****
+{
+    return dynamicLoadBalancing_;
+}
+
 inline const Foam::dsmcFaceTracker& Foam::dsmcCloud::tracker() const//****
 {
     return trackingInfo_;

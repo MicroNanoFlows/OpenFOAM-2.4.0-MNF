@@ -78,6 +78,8 @@ int main(int argc, char *argv[])
                 
             infoCounter = 0;
         }
+        
+        dsmc.loadBalanceCheck();
             
 //         scalar timeBeforeMeshUpdate = runTime.elapsedCpuTime();
 // 
@@ -92,6 +94,8 @@ int main(int argc, char *argv[])
     }
 
     Info<< "End\n" << endl;
+    
+    dsmc.loadBalance();
 
     return(0);
 }

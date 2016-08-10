@@ -1094,7 +1094,7 @@ void dsmcVolFields::calculateField()
                 }
                 else
                 {
-                    dsmcRhoN_[cell] = 0.0;
+                    dsmcRhoN_[cell] = 0.000001; // not zero so that weighted decomposition still works
                     rhoN_[cell] = 0.0;
                     rhoM_[cell] = 0.0;
                 }
@@ -1117,6 +1117,8 @@ void dsmcVolFields::calculateField()
                     
                     dsmcRhoN_[cell] = rhoNMean_[cell]/(nAvTimeSteps);
                     
+//                     Info << "dsmcRhoN_[cell] = " << dsmcRhoN_[cell] << endl;
+                    
                     rhoN_[cell] = (rhoNMeanXnParticle_[cell])/(nAvTimeSteps*cellVolume);
                     
                     rhoM_[cell] = (rhoMMeanXnParticle_[cell])/(nAvTimeSteps*cellVolume);
@@ -1134,7 +1136,7 @@ void dsmcVolFields::calculateField()
                 }
                 else
                 {
-                    dsmcRhoN_[cell] = 0.0;
+                    dsmcRhoN_[cell] = 0.000001; // not zero so that weighted decomposition still works
                     rhoN_[cell] = 0.0;
                     rhoM_[cell] = 0.0;
                     UMean_[cell] = vector::zero;
@@ -1641,11 +1643,11 @@ void dsmcVolFields::calculateField()
                 shearStressTensor_.write();
             }
             
-            dsmcRhoN_.boundaryField() = dsmcRhoN_.boundaryField().boundaryInternalField();
+//             dsmcRhoN_.boundaryField() = dsmcRhoN_.boundaryField().boundaryInternalField();
             
             
-            rhoN_.correctBoundaryConditions();
-            rhoM_.correctBoundaryConditions();
+//             rhoN_.correctBoundaryConditions();
+//             rhoM_.correctBoundaryConditions();
             
             List<scalarField> vibTBF(mesh_.boundaryMesh().size());
             List<scalarField> molecularMassBoundary(mesh_.boundaryMesh().size());

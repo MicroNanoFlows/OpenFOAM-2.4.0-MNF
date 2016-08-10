@@ -52,6 +52,7 @@ SourceFiles
 #include "dsmcFieldProperties.H"
 #include "dsmcFaceTracker.H"
 #include "dsmcControllers.H"
+#include "dsmcDynamicLoadBalancing.H"
 
 #include "dsmcReactions.H"
 #include "collisionPartnerSelection.H"
@@ -148,6 +149,9 @@ private:
 
         //- controllers
         dsmcControllers controllers_;
+        
+        //- load balancing
+        dsmcDynamicLoadBalancing dynamicLoadBalancing_;
 
         //- measurement fields
         //dsmcStandardFields standardFields_;
@@ -462,6 +466,9 @@ public:
 
         inline const dsmcControllers& controllers() const;  //****
         inline dsmcControllers& controllers();//****
+        
+        inline const dsmcDynamicLoadBalancing& dynamicLoadBalancing() const;  //****
+        inline dsmcDynamicLoadBalancing& dynamicLoadBalancing();//****
 
         inline const dsmcFaceTracker& tracker() const;  //****
         inline dsmcFaceTracker& tracker();//****
@@ -483,6 +490,12 @@ public:
 
             //- Print cloud information
             void info() const;
+            
+             //- Check if load balance is required
+            void loadBalanceCheck();
+            
+            //- Perform load balance
+            void loadBalance();
 
             //- Dump particle positions to .obj file
             void dumpParticlePositions() const;
