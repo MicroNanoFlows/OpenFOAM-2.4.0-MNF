@@ -173,6 +173,8 @@ void dsmcDynamicLoadBalancing::perform
 //             system("/home/cwhite/OpenFOAM/OpenFOAM-2.4.0-MNF/platforms/linux64GccMNFDPOpt/bin/decomposeDSMCLoadBalancePar -force");
             performBalance_ = false;
             
+            system("rmTimeDirs"); 
+            
             controlDict_.set("endTime",originalEndTime_);
             controlDict_.Foam::regIOobject::write();
                     
