@@ -111,7 +111,7 @@ public:
         //- Construct from components
         dsmcField
         (
-			Time& t,
+            Time& t,
             const polyMesh& mesh,
             dsmcCloud& cloud,
             const dictionary& dict
@@ -122,7 +122,7 @@ public:
 
         static autoPtr<dsmcField> New
         (
-			Time& t,
+            Time& t,
             const polyMesh& mesh,
             dsmcCloud& cloud,
             const dictionary& dict
@@ -187,10 +187,10 @@ public:
         fileName& timePath();
 
         //- create initial field
- 		virtual void createField() = 0;
+        virtual void createField() = 0;
 
         //- calculate field
- 		virtual void calculateField() = 0;
+        virtual void calculateField() = 0;
 
         //- write field
         virtual void writeField() = 0;

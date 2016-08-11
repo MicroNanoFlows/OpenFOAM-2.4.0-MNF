@@ -710,8 +710,8 @@ Foam::dsmcCloud::dsmcCloud
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 
-// Foam::dsmcCloud::~dsmcCloud()
-// {}
+Foam::dsmcCloud::~dsmcCloud()
+{}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //

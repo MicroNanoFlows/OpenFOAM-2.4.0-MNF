@@ -92,7 +92,7 @@ public:
             dsmcCloud& cloud
         );
 
-        ~dsmcFieldProperties();
+        virtual ~dsmcFieldProperties();
 
     // Member Functions
 

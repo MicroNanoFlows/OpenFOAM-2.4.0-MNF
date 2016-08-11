@@ -104,7 +104,7 @@ public:
         //- Construct from components
         dsmcReaction
         (
-			Time& t,
+            Time& t,
             dsmcCloud& cloud,
             const dictionary& dict
         );
@@ -114,7 +114,7 @@ public:
 
         static autoPtr<dsmcReaction> New
         (
-			Time& t,
+            Time& t,
             dsmcCloud& cloud,
             const dictionary& dict
         );
