@@ -68,6 +68,7 @@ private:
         scalar mfpReferenceTemperature_;
         word fieldName_;
         volScalarField dsmcRhoN_;
+        volScalarField dsmcRhoNMean_;
         volScalarField rhoN_;
         volScalarField rhoM_;
         volScalarField p_;
@@ -101,6 +102,7 @@ private:
         scalar nTimeSteps_;
         labelList typeIds_;
         scalarField rhoNMean_;
+        scalarField rhoNInstantaneous_;
         scalarField rhoNMeanXnParticle_;
         scalarField rhoNMeanInt_;
         scalarField molsElec_;
