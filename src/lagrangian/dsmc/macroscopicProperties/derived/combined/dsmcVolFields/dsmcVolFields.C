@@ -1182,7 +1182,7 @@ void dsmcVolFields::calculateField()
                 }
                 else
                 {
-                    dsmcRhoN_[cell] = 1.0;
+                    dsmcRhoN_[cell] = 0.001;
                 }
 
                 if(rotationalDofMean_[cell] > VSMALL && nAvTimeSteps > VSMALL)
