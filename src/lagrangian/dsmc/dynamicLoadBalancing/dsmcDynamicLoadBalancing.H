@@ -64,13 +64,15 @@ class dsmcDynamicLoadBalancing
 
         dsmcCloud& cloud_;
         
-        bool performBalance_;
-        
-        scalar originalEndTime_;
-
         IOdictionary dsmcLoadBalanceDict_;
         
         IOdictionary controlDict_;
+        
+        bool performBalance_;
+        
+        bool enableBalancing_;
+        
+        scalar originalEndTime_;
         
         scalar maxImbalance_;
 
@@ -84,14 +86,7 @@ public:
 
     // Constructors
 
-        //- Null Constructor 
-//         dsmcDynamicLoadBalancing
-//         (
-//             Time& t,
-//             const polyMesh& mesh
-//         );
-
-         //- Constructor for dsmcFOAM
+         //- Constructor
         dsmcDynamicLoadBalancing
         (
             Time& t,
@@ -107,14 +102,14 @@ public:
 
         void update
         (
-//             dsmcParcel& p
         );
         
         void perform
         (
         );
 
-        void clean();
+        
+        void updateProperties(const IOdictionary&);
 
         // Access
 

@@ -34,7 +34,6 @@ Description
 #include "cyclicPolyPatch.H"
 #include "wallPolyPatch.H"
 #include "dsmcCloud.H"
-#include <unistd.h>
 
 namespace Foam
 {
@@ -46,15 +45,8 @@ namespace Foam
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 
-// Construct for dsmcInitialise
-// dsmcDynamicLoadBalancing::dsmcDynamicLoadBalancing
-// (
-// )
-// :
-// {}
 
-
-//- Construct from mesh, cloud and boolean (dsmcFoam)
+//- Constructor
 dsmcDynamicLoadBalancing::dsmcDynamicLoadBalancing
 (
     Time& t,
@@ -65,8 +57,6 @@ dsmcDynamicLoadBalancing::dsmcDynamicLoadBalancing
     time_(t),
     mesh_(refCast<const fvMesh>(mesh)),
     cloud_(cloud),
-    performBalance_(false),
-    originalEndTime_(time_.time().endTime().value()),
     dsmcLoadBalanceDict_
     (
         IOobject
@@ -89,6 +79,9 @@ dsmcDynamicLoadBalancing::dsmcDynamicLoadBalancing
             IOobject::AUTO_WRITE
         )
     ),
+    performBalance_(false),
+    enableBalancing_(Switch(dsmcLoadBalanceDict_.lookup("enableBalancing"))),
+    originalEndTime_(time_.time().endTime().value()),
     maxImbalance_(readScalar(dsmcLoadBalanceDict_.lookup("maximumAllowableImbalance")))
 {}
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -98,21 +91,30 @@ dsmcDynamicLoadBalancing::~dsmcDynamicLoadBalancing()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void dsmcDynamicLoadBalancing::clean()
-{
-
-}
-
-
 void dsmcDynamicLoadBalancing::update
 (
 )
 {
     if(time_.time().outputTime())
     {
-        // Load Balancing
         
-        Switch enableBalancing = dsmcLoadBalanceDict_.lookup("enableBalancing");
+        //- Checking for modifications in the IOdictionary
+        //  this allows for run-time tuning of any parameters.  
+        
+        IOdictionary newDict(
+            IOobject
+            (
+                "loadBalanceDict",
+                time_.system(),
+                mesh_,
+                IOobject::MUST_READ,
+                IOobject::NO_WRITE
+            )
+        );
+    
+        updateProperties(newDict);
+        
+        //- Load Balancing
         
         if ( Pstream::parRun() )
         {
@@ -132,7 +134,7 @@ void dsmcDynamicLoadBalancing::update
             
             Info << "    Maximum imbalance = " << 100*maxImbalance << "%" << endl;
             
-            if( maxImbalance > allowableImbalance && enableBalancing)
+            if( maxImbalance > allowableImbalance && enableBalancing_)
             {   
                 performBalance_ = true;
                 
@@ -153,34 +155,35 @@ void dsmcDynamicLoadBalancing::update
 void dsmcDynamicLoadBalancing::perform
 (
 )
-{
+{    
     if(performBalance_)
     {
         if (Pstream::master())
-        {   
-//             string userDir = system("echo $WM_PROJECT_USER_DIR");
-//             string compileOptions1 = system("echo $WM_ARCH");
-//             string compileOptions2 = system("echo $WM_COMPILER");
-//             string compileOptions3 = system("echo $WM_COMPILE_OPTION");
-//             
-//             string reconstructPar = userDir+"/platforms/"+compileOptions1+compileOptions2+compileOptions3+"/bin/reconstructPar -latestTime";
-            
-//             Info << "reconstructPar = " << reconstructPar << endl;
-            
+        {              
             system("reconstructPar -latestTime");
                      
             system("decomposeDSMCLoadBalancePar -force");
-//             system("/home/cwhite/OpenFOAM/OpenFOAM-2.4.0-MNF/platforms/linux64GccMNFDPOpt/bin/decomposeDSMCLoadBalancePar -force");
+            
             performBalance_ = false;
             
             system("rmTimeDirs"); 
             
             controlDict_.set("endTime",originalEndTime_);
+            
             controlDict_.Foam::regIOobject::write();
                     
             system("cp processor0/system/controlDict system/controlDict");
         }
     }
+}
+
+void dsmcDynamicLoadBalancing::updateProperties
+(
+    const IOdictionary& newDict
+)
+{
+    enableBalancing_ = Switch(newDict.lookup("enableBalancing"));
+    maxImbalance_ = readScalar(newDict.lookup("maximumAllowableImbalance"));
 }
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
