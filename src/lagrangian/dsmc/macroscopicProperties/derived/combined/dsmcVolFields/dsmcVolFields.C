@@ -1167,7 +1167,7 @@ void dsmcVolFields::calculateField()
                 }
                 else
                 {
-                    dsmcRhoNMean_[cell] = 1.0; // not zero so that weighted decomposition still works
+                    dsmcRhoNMean_[cell] = 0.001; // not zero so that weighted decomposition still works
                     //dsmcRhoN_[cell] = 0.001;
                     rhoN_[cell] = 0.0;
                     rhoM_[cell] = 0.0;
