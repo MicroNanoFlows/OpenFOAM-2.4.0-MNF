@@ -75,6 +75,19 @@ dsmcVolFields::dsmcVolFields
         mesh_,
         dimensionedScalar("0.0", dimless/dimVolume, 0.0)
     ),
+    dsmcRhoNMean_
+    (
+        IOobject
+        (
+            "dsmcRhoNMean_"+ fieldName_,
+            time_.time().timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("0.0", dimless/dimVolume, 0.0)
+    ),
     rhoN_
     (
         IOobject
@@ -488,6 +501,7 @@ dsmcVolFields::dsmcVolFields
     nTimeSteps_(0.0),
     typeIds_(),
     rhoNMean_(mesh_.nCells(), 0.0),
+    rhoNInstantaneous_(mesh_.nCells(), 0.0),
     rhoNMeanXnParticle_(mesh_.nCells(), 0.0),
     rhoNMeanInt_(mesh_.nCells(), 0.0),
     molsElec_(mesh_.nCells(), 0.0),
@@ -882,6 +896,7 @@ void dsmcVolFields::calculateField()
     nTimeSteps_ += 1.0;
     
     const scalar& nParticle = cloud_.nParticle();
+    rhoNInstantaneous_ = 0.0;
     
     if(densityOnly_)
     {
@@ -896,6 +911,7 @@ void dsmcVolFields::calculateField()
                 const scalar& mass = cloud_.constProps(p.typeId()).mass();
 
                 rhoNMean_[cell] += 1.0;
+                rhoNInstantaneous_[cell] += 1.0;
 //                 rhoMMean_[cell] += mass;
                 
                 if(cloud_.axisymmetric())
@@ -934,6 +950,7 @@ void dsmcVolFields::calculateField()
                 const scalar& EVib = p.vibLevel()*physicoChemical::k.value()*cloud_.constProps(p.typeId()).thetaV();
 
                 rhoNMean_[cell] += 1.0;
+                rhoNInstantaneous_[cell] += 1.0;
                 rhoMMean_[cell] += mass;
                 linearKEMean_[cell] += mass*(p.U() & p.U());
                 momentumMean_[cell] += mass*p.U();
@@ -1081,7 +1098,9 @@ void dsmcVolFields::calculateField()
                 {
                     const scalar& cellVolume = mesh_.cellVolumes()[cell];
                     
-                    dsmcRhoN_[cell] = rhoNMean_[cell]/(nAvTimeSteps);
+                    dsmcRhoNMean_[cell] = rhoNMean_[cell]/(nAvTimeSteps);
+                    
+                    //dsmcRhoN_[cell] = rhoNInstantaneous_[cell];
             
 //                     rhoN_[cell] = (rhoNMean_[cell]*nParticle*RWF)/(nAvTimeSteps*V);
 //             
@@ -1094,9 +1113,19 @@ void dsmcVolFields::calculateField()
                 }
                 else
                 {
-                    dsmcRhoN_[cell] = 0.000001; // not zero so that weighted decomposition still works
+                    dsmcRhoNMean_[cell] = 0.001; // not zero so that weighted decomposition still works
+                    //dsmcRhoN_[cell] = 0.001;
                     rhoN_[cell] = 0.0;
                     rhoM_[cell] = 0.0;
+                }
+                
+                if(rhoNInstantaneous_[cell] > VSMALL)
+                {
+                    dsmcRhoN_[cell] = rhoNInstantaneous_[cell];
+                }
+                else
+                {
+                    dsmcRhoN_[cell] = 0.001;
                 }
             }
         }
@@ -1115,7 +1144,9 @@ void dsmcVolFields::calculateField()
                 {                  
                     const scalar& cellVolume = mesh_.cellVolumes()[cell];
                     
-                    dsmcRhoN_[cell] = rhoNMean_[cell]/(nAvTimeSteps);
+                    dsmcRhoNMean_[cell] = rhoNMean_[cell]/(nAvTimeSteps);
+                    
+                    //dsmcRhoN_[cell] = rhoNInstantaneous_[cell];
                     
 //                     Info << "dsmcRhoN_[cell] = " << dsmcRhoN_[cell] << endl;
                     
@@ -1136,12 +1167,22 @@ void dsmcVolFields::calculateField()
                 }
                 else
                 {
-                    dsmcRhoN_[cell] = 0.000001; // not zero so that weighted decomposition still works
+                    dsmcRhoNMean_[cell] = 1.0; // not zero so that weighted decomposition still works
+                    //dsmcRhoN_[cell] = 0.001;
                     rhoN_[cell] = 0.0;
                     rhoM_[cell] = 0.0;
                     UMean_[cell] = vector::zero;
                     translationalT_[cell] = 0.0;           
                     p_[cell] = 0.0;
+                }
+                
+                if(rhoNInstantaneous_[cell] > VSMALL)
+                {
+                    dsmcRhoN_[cell] = rhoNInstantaneous_[cell];
+                }
+                else
+                {
+                    dsmcRhoN_[cell] = 1.0;
                 }
 
                 if(rotationalDofMean_[cell] > VSMALL && nAvTimeSteps > VSMALL)
@@ -1516,13 +1557,13 @@ void dsmcVolFields::calculateField()
                 
                 if(measureErrors_)
                 {
-                    if(dsmcRhoN_[cell] > VSMALL && Ma_[cell] > VSMALL && gamma > VSMALL && particleConstantVolumeSpecificHeat[cell] > VSMALL)
+                    if(dsmcRhoNMean_[cell] > VSMALL && Ma_[cell] > VSMALL && gamma > VSMALL && particleConstantVolumeSpecificHeat[cell] > VSMALL)
                     {
-                        densityError_[cell] = 1.0/sqrt(dsmcRhoN_[cell]*nTimeSteps_);
-                        velocityError_[cell] = (1.0/sqrt(dsmcRhoN_[cell]*nTimeSteps_))*(1.0/(Ma_[cell]*sqrt(gamma)));
-                        temperatureError_[cell] = (1.0/sqrt(dsmcRhoN_[cell]*nTimeSteps_))
+                        densityError_[cell] = 1.0/sqrt(dsmcRhoNMean_[cell]*nTimeSteps_);
+                        velocityError_[cell] = (1.0/sqrt(dsmcRhoNMean_[cell]*nTimeSteps_))*(1.0/(Ma_[cell]*sqrt(gamma)));
+                        temperatureError_[cell] = (1.0/sqrt(dsmcRhoNMean_[cell]*nTimeSteps_))
                             *sqrt(physicoChemical::k.value()/particleConstantVolumeSpecificHeat[cell]);
-                        pressureError_[cell] = sqrt(gamma)/sqrt(dsmcRhoN_[cell]*nTimeSteps_);
+                        pressureError_[cell] = sqrt(gamma)/sqrt(dsmcRhoNMean_[cell]*nTimeSteps_);
                     }
                     
                 }
@@ -1544,7 +1585,7 @@ void dsmcVolFields::calculateField()
                                 rotationalT_.boundaryField()[j][k] = rotationalT_[boundaryCells_[j][k]];
                                 vibrationalT_.boundaryField()[j][k] = vibrationalT_[boundaryCells_[j][k]];
                                 overallT_.boundaryField()[j][k] = overallT_[boundaryCells_[j][k]];
-                                dsmcRhoN_.boundaryField()[j][k] = dsmcRhoN_[boundaryCells_[j][k]];
+                                dsmcRhoNMean_.boundaryField()[j][k] = dsmcRhoNMean_[boundaryCells_[j][k]];
                                 rhoN_.boundaryField()[j][k] = rhoN_[boundaryCells_[j][k]];
                                 rhoM_.boundaryField()[j][k] = rhoM_[boundaryCells_[j][k]];
                                 p_.boundaryField()[j][k] = p_[boundaryCells_[j][k]];
