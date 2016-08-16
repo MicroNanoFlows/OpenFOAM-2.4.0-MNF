@@ -58,7 +58,8 @@ noTimeCounterSubCycled::noTimeCounterSubCycled
 :
     collisionPartnerSelection(mesh, cloud, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
-    nSubCycles_(readLabel(propsDict_.lookup("nSubCycles")))
+    nSubCycles_(readLabel(propsDict_.lookup("nSubCycles"))),
+    infoCounter_(0)
 {}
 
 
@@ -340,18 +341,27 @@ void noTimeCounterSubCycled::collide()
     reduce(collisionCandidates, sumOp<label>());
 
     cloud_.sigmaTcRMax().correctBoundaryConditions();
-
-    if (collisionCandidates)
+    
+    infoCounter_++;
+    
+    if(infoCounter_ >= cloud_.nTerminalOutputs())
     {
-        Info<< "    Collisions                      = "
-            << collisions << nl
-            << "    Acceptance rate                 = "
-            << scalar(collisions)/scalar(collisionCandidates) << nl
-            << endl;
-    }
-    else
-    {
-        Info<< "    No collisions" << endl;
+        if (collisionCandidates)
+        {
+            Info<< "    Collisions                      = "
+                << collisions << nl
+//                 << "    Acceptance rate                 = "
+//                 << scalar(collisions)/scalar(collisionCandidates) << nl
+                << endl;
+                
+            infoCounter_ = 0;
+        }
+        else
+        {
+            Info<< "    No collisions" << endl;
+            
+            infoCounter_ = 0;
+        }
     }
 }
 

@@ -64,6 +64,8 @@ private:
         dictionary propsDict_;
 
         label nSubCycles_;
+        
+        label infoCounter_;
 
 
 
