@@ -240,60 +240,82 @@ void noTimeCounter::collide()
                 dsmcParcel& parcelP = *cellParcels[candidateP];
                 dsmcParcel& parcelQ = *cellParcels[candidateQ];
 
-                scalar sigmaTcR = cloud_.binaryCollision().sigmaTcR
-                (
-                    parcelP,
-                    parcelQ
-                );
+                label chargeP = -2;
+                label chargeQ = -2;
 
-                // Update the maximum value of sigmaTcR stored, but use the
-                // initial value in the acceptance-rejection criteria because
-                // the number of collision candidates selected was based on this
-
-
-                if (sigmaTcR > cloud_.sigmaTcRMax()[cellI])
+                chargeP = cloud_.constProps(parcelP.typeId()).charge();
+                chargeQ = cloud_.constProps(parcelQ.typeId()).charge();
+                
+                //do not allow electron-electron collisions
+                
+                if(!(chargeP == -1 && chargeQ == -1))
                 {
-                    cloud_.sigmaTcRMax()[cellI] = sigmaTcR;
-                }
 
-                if ((sigmaTcR/sigmaTcRMax) > rndGen_.scalar01())
-                {
-                    // chemical reactions
+                    scalar sigmaTcR = cloud_.binaryCollision().sigmaTcR
+                    (
+                        parcelP,
+                        parcelQ
+                    );
+                    
 
-                    // find which reaction model parcel p and q should use
-                    label rMId = cloud_.reactions().returnModelId(parcelP, parcelQ);
+                    // Update the maximum value of sigmaTcR stored, but use the
+                    // initial value in the acceptance-rejection criteria because
+                    // the number of collision candidates selected was based on this
 
-//                             Info << " parcelP id: " <<  parcelP.typeId() 
-//                                 << " parcelQ id: " << parcelQ.typeId()
-//                                 << " reaction model: " << rMId
-//                                 << endl;
 
-                    if(rMId != -1)
+                    if (sigmaTcR > cloud_.sigmaTcRMax()[cellI])
                     {
-                        // try to react molecules
-//                         if(cloud_.reactions().reactions()[rMId]->reactWithLists())
-//                         {
-                            // so far for recombination only
-//                                     reactions_.reactions()[rMId]->reaction
-//                                     (
-//                                         parcelP,
-//                                         parcelQ,
-//                                         candidateList,
-//                                         candidateSubList,
-//                                         candidateP,
-//                                         whichSubCell
-//                                     );
-//                         }
-//                         else
-//                         {
-                            cloud_.reactions().reactions()[rMId]->reaction
-                            (
-                                parcelP,
-                                parcelQ
-                            );                                    
-//                         }
-                        // if reaction unsuccessful use conventional collision model
-                        if(cloud_.reactions().reactions()[rMId]->relax())
+                        cloud_.sigmaTcRMax()[cellI] = sigmaTcR;
+                    }
+
+                    if ((sigmaTcR/sigmaTcRMax) > rndGen_.scalar01())
+                    {
+                        // chemical reactions
+
+                        // find which reaction model parcel p and q should use
+                        label rMId = cloud_.reactions().returnModelId(parcelP, parcelQ);
+
+    //                             Info << " parcelP id: " <<  parcelP.typeId() 
+    //                                 << " parcelQ id: " << parcelQ.typeId()
+    //                                 << " reaction model: " << rMId
+    //                                 << endl;
+
+                        if(rMId != -1)
+                        {
+                            // try to react molecules
+    //                         if(cloud_.reactions().reactions()[rMId]->reactWithLists())
+    //                         {
+                                // so far for recombination only
+    //                                     reactions_.reactions()[rMId]->reaction
+    //                                     (
+    //                                         parcelP,
+    //                                         parcelQ,
+    //                                         candidateList,
+    //                                         candidateSubList,
+    //                                         candidateP,
+    //                                         whichSubCell
+    //                                     );
+    //                         }
+    //                         else
+    //                         {
+                                cloud_.reactions().reactions()[rMId]->reaction
+                                (
+                                    parcelP,
+                                    parcelQ
+                                );                                    
+    //                         }
+                            // if reaction unsuccessful use conventional collision model
+                            if(cloud_.reactions().reactions()[rMId]->relax())
+                            {
+                                cloud_.binaryCollision().collide
+                                (
+                                    parcelP,
+                                    parcelQ,
+                                    cellI
+                                );
+                            }
+                        }
+                        else // if reaction model not found, use conventional collision model
                         {
                             cloud_.binaryCollision().collide
                             (
@@ -302,18 +324,9 @@ void noTimeCounter::collide()
                                 cellI
                             );
                         }
-                    }
-                    else // if reaction model not found, use conventional collision model
-                    {
-                        cloud_.binaryCollision().collide
-                        (
-                            parcelP,
-                            parcelQ,
-                            cellI
-                        );
-                    }
 
-                    collisions++;
+                        collisions++;
+                    }
                 }
             }
         }

@@ -170,14 +170,14 @@ void noTimeCounterSubCycled::collide()
                     
                     selectedPairs =
                     cloud_.collisionSelectionRemainder()[cellI]
-                    + 0.5*nC*(nC - 1)*cloud_.nParticle()*RWF*sigmaTcRMax*deltaT
+                    + 0.5*nC*(nC - 1)*cloud_.nParticle()*RWF*sigmaTcRMax*(deltaT/nSubCycles_)
                     /cellVolume;
                 }
                 else
                 {
                     selectedPairs =
                     cloud_.collisionSelectionRemainder()[cellI]
-                    + 0.5*nC*(nC - 1)*cloud_.nParticle()*sigmaTcRMax*deltaT
+                    + 0.5*nC*(nC - 1)*cloud_.nParticle()*sigmaTcRMax*(deltaT/nSubCycles_)
                     /cellVolume;
                 }
 
@@ -248,21 +248,23 @@ void noTimeCounterSubCycled::collide()
                     dsmcParcel& parcelP = *cellParcels[candidateP];
                     dsmcParcel& parcelQ = *cellParcels[candidateQ];
 
-//                     label chargeP = -2;
-//                     label chargeQ = -2;
-// 
-//                     chargeP = cloud_.constProps(parcelP.typeId()).charge();
-//                     chargeQ = cloud_.constProps(parcelQ.typeId()).charge();
+                    label chargeP = -2;
+                    label chargeQ = -2;
+
+                    chargeP = cloud_.constProps(parcelP.typeId()).charge();
+                    chargeQ = cloud_.constProps(parcelQ.typeId()).charge();
                     
                     //do not allow electron-electron collisions
                     
-//                     if(!(chargeP == -1 && chargeQ == -1))
-//                     {
+                    if(!(chargeP == -1 && chargeQ == -1))
+                    {
                         scalar sigmaTcR = cloud_.binaryCollision().sigmaTcR
                         (
                             parcelP,
                             parcelQ
                         );
+                        
+//                         Pout << "sigmaTcR = " << sigmaTcR << endl;
 
                         // Update the maximum value of sigmaTcR stored, but use the
                         // initial value in the acceptance-rejection criteria because
@@ -328,7 +330,7 @@ void noTimeCounterSubCycled::collide()
 
                             collisions++;
                         }
-//                     }
+                    }
                 }
             }
         }
