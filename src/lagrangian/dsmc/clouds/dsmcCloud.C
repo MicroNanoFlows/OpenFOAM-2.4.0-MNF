@@ -166,7 +166,7 @@ void Foam::dsmcCloud::addElectrons()
                             
         label charge = constProp.charge();
         
-        if(charge  == 1)
+        if(charge == 1)
         {
             //found an ion, add an electron here
             
@@ -757,7 +757,7 @@ void Foam::dsmcCloud::evolve()
     // Calculate new velocities via stochastic collisions
     collisions();
 
-//     buildCellOccupancy(); //*** (for reactions)
+    buildCellOccupancy(); //*** (for reactions)
 
     controllers_.controlAfterCollisions();//****
     boundaries_.controlAfterCollisions();//****
