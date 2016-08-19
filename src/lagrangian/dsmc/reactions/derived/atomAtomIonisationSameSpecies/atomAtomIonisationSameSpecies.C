@@ -193,7 +193,7 @@ void atomAtomIonisationSameSpecies::setProperties()
 
             // check that product two is an 'ELECTRON'
 
-            const label& charge = cloud_.constProps(productIdsIon_[1]).charge();
+            const label& charge = cloud_.constProps(productIdsIon_[1]).chargeConstProps();
 
             if(charge != -1)
             {
@@ -429,6 +429,7 @@ void atomAtomIonisationSameSpecies::reaction
                 p.vibLevel() = 0;
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
+                p.charge() = 1;
                 
                 label classificationP = p.classification();
                 
@@ -446,7 +447,8 @@ void atomAtomIonisationSameSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP
+                    classificationP,
+                    -1
                 );
             }
         } 

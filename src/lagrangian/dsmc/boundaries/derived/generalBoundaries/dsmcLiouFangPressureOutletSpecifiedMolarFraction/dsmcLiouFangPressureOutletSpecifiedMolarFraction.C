@@ -336,6 +336,7 @@ void dsmcLiouFangPressureOutletSpecifiedMolarFraction::controlParcelsBeforeMove(
                     faceTetIs.tetPt(),
                     typeId,
                     newParcel,
+                    0,
                     0
                 );
 

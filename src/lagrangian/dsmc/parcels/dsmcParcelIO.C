@@ -46,7 +46,8 @@ Foam::dsmcParcel::dsmcParcel
     ELevel_(0),
     typeId_(-1),
     newParcel_(0),
-    classification_(0)
+    classification_(0),
+    charge_(0)
 {
     if (readFields)
     {
@@ -60,6 +61,7 @@ Foam::dsmcParcel::dsmcParcel
             typeId_ = readLabel(is);
             newParcel_ = readLabel(is);
             classification_ = readLabel(is);
+            charge_ = readLabel(is);
         }
         else
         {
@@ -74,6 +76,7 @@ Foam::dsmcParcel::dsmcParcel
                 + sizeof(typeId_)
                 + sizeof(newParcel_)
                 + sizeof(classification_)
+                + sizeof(charge_)
             );
         }
     }
@@ -120,6 +123,9 @@ void Foam::dsmcParcel::readFields(Cloud<dsmcParcel>& c)
     
     IOField<label> classification(c.fieldIOobject("classification", IOobject::MUST_READ));
     c.checkFieldIOobject(c, classification);
+    
+    IOField<label> charge(c.fieldIOobject("charge", IOobject::MUST_READ));
+    c.checkFieldIOobject(c, classification);
 
     label i = 0;
     forAllIter(dsmcCloud, c, iter)
@@ -134,6 +140,7 @@ void Foam::dsmcParcel::readFields(Cloud<dsmcParcel>& c)
         p.typeId_ = typeId[i];
         p.newParcel_ = newParcel[i];
         p.classification_ = classification[i];
+        p.charge_ = charge[i];
         i++;
     }
 }
@@ -154,6 +161,7 @@ void Foam::dsmcParcel::writeFields(const Cloud<dsmcParcel>& c)
     IOField<label> typeId(c.fieldIOobject("typeId", IOobject::NO_READ), np);
     IOField<label> newParcel(c.fieldIOobject("newParcel", IOobject::NO_READ), np);
     IOField<label> classification(c.fieldIOobject("classification", IOobject::NO_READ), np);
+    IOField<label> charge(c.fieldIOobject("charge", IOobject::NO_READ), np);
 
     label i = 0;
     forAllConstIter(dsmcCloud, c, iter)
@@ -168,6 +176,7 @@ void Foam::dsmcParcel::writeFields(const Cloud<dsmcParcel>& c)
         typeId[i] = p.typeId();
         newParcel[i] = p.newParcel();
         classification[i] = p.classification();
+        charge[i] = p.charge();
         i++;
     }
 
@@ -179,6 +188,7 @@ void Foam::dsmcParcel::writeFields(const Cloud<dsmcParcel>& c)
     typeId.write();
     newParcel.write();
     classification.write();
+    charge.write();
 }
 
 
@@ -201,7 +211,8 @@ Foam::Ostream& Foam::operator<<
             << token::SPACE << p.ELevel()
             << token::SPACE << p.typeId()
             << token::SPACE << p.newParcel()
-            << token::SPACE << p.classification();
+            << token::SPACE << p.classification()
+            << token::SPACE << p.charge();
     }
     else
     {
@@ -217,6 +228,7 @@ Foam::Ostream& Foam::operator<<
             + sizeof(p.typeId())
             + sizeof(p.newParcel())
             + sizeof(p.classification())
+            + sizeof(p.charge())
         );
     }
 

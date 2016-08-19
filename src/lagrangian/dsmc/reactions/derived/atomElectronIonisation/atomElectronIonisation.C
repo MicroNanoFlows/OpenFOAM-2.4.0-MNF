@@ -134,7 +134,7 @@ void atomElectronIonisation::setProperties()
     
     // check that reactant two is an 'ELECTRON'
 
-    const label& charge = cloud_.constProps(reactantIds_[1]).charge();
+    const label& charge = cloud_.constProps(reactantIds_[1]).chargeConstProps();
 
     if(charge != -1)
     {
@@ -197,7 +197,7 @@ void atomElectronIonisation::setProperties()
 
         // check that product two is an 'ELECTRON'
 
-        const label& charge = cloud_.constProps(productIdsIon_[1]).charge();
+        const label& charge = cloud_.constProps(productIdsIon_[1]).chargeConstProps();
 
         if(charge != -1)
         {
@@ -391,6 +391,7 @@ void atomElectronIonisation::reaction
                 p.vibLevel() = 0;
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
+                p.charge() = 1;
                 
                 label classificationP = p.classification();
                 
@@ -408,7 +409,8 @@ void atomElectronIonisation::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP
+                    classificationP,
+                    -1
                 );
             }
         } 
@@ -542,6 +544,7 @@ void atomElectronIonisation::reaction
                 q.vibLevel() = 0;
                 q.ERot() = 0.0;
                 q.ELevel() = 0;
+                q.charge() = 1;
                 
                 label classificationP = q.classification();
                 
@@ -559,7 +562,8 @@ void atomElectronIonisation::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP
+                    classificationP,
+                    -1
                 );
             }
         }

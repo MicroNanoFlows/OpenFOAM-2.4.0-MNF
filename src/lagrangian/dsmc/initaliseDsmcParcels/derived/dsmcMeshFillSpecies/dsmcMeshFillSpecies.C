@@ -212,6 +212,8 @@ void dsmcMeshFillSpecies::setInitialConfiguration()
                     label newParcel = 0;
                     
                     label classification = 0;
+                    
+                    label charge = cP.chargeConstProps();
 
                     cloud_.addNewParcel
                     (
@@ -225,7 +227,8 @@ void dsmcMeshFillSpecies::setInitialConfiguration()
                         cellTetIs.tetPt(),
                         typeId,
                         newParcel,
-                        classification
+                        classification,
+                        charge
                     );
                 }
             }

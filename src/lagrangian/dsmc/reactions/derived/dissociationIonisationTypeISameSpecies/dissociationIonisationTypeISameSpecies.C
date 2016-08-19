@@ -175,7 +175,7 @@ void dissociationIonisationTypeISameSpecies::setProperties()
             << exit(FatalError);
     }
     
-    const label& charge = cloud_.constProps(productIdsIonisation_[1]).charge();
+    const label& charge = cloud_.constProps(productIdsIonisation_[1]).chargeConstProps();
 
     if(charge != -1)
     {
@@ -555,7 +555,8 @@ void dissociationIonisationTypeISameSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP
+                    classificationP,
+                    0
                 );
             }
         }
@@ -571,6 +572,7 @@ void dissociationIonisationTypeISameSpecies::reaction
                 relax_ = false;
                 
                 translationalEnergy = translationalEnergy + heatOfReactionIonisationJoules + EEleP;
+                
                 translationalEnergy += EEleQ;
                     
                 label ELevelQ = cloud_.postCollisionElectronicEnergyLevel
@@ -692,6 +694,7 @@ void dissociationIonisationTypeISameSpecies::reaction
                 p.vibLevel() = 0;
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
+                p.charge() = 1;
                 
                 label classificationP = p.classification();
                 
@@ -709,7 +712,8 @@ void dissociationIonisationTypeISameSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP
+                    classificationP,
+                    -1
                 );
             }
         }

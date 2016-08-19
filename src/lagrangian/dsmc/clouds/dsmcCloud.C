@@ -90,10 +90,10 @@ void Foam::dsmcCloud::removeElectrons()
         {
             dsmcParcel* p = molsInCell[mIC];
             
-            const dsmcParcel::constantProperties& constProp 
-                                = constProps(p->typeId());
+//             const dsmcParcel::constantProperties& constProp 
+//                                 = constProps(p->typeId());
                                 
-            const label& charge = constProp.charge();
+            label charge = p->charge();
             
             if(charge == -1)
             {
@@ -131,7 +131,7 @@ void Foam::dsmcCloud::addElectrons()
     //find electron typeId
     forAll(constProps_, cP)
     {
-        const label& electronCharge = constProps_[cP].charge();
+        label electronCharge = constProps_[cP].chargeConstProps();
         
         if(electronCharge == -1)
         {
@@ -164,7 +164,7 @@ void Foam::dsmcCloud::addElectrons()
         const dsmcParcel::constantProperties& constProp 
                             = constProps(p.typeId());
                             
-        label charge = constProp.charge();
+        label charge = p.charge();
         
         if(charge == 1)
         {
@@ -205,7 +205,8 @@ void Foam::dsmcCloud::addElectrons()
                 tetPtI,
                 electronTypeId,
                 0,
-                0
+                0,
+                -1
             );
             
             electronIndex++;
@@ -353,7 +354,8 @@ void Foam::dsmcCloud::addNewParcel
     const label tetPtI,
     const label typeId,
     const label newParcel,
-    const label classification
+    const label classification,
+    const label charge
 )
 {
     dsmcParcel* pPtr = new dsmcParcel
@@ -370,7 +372,8 @@ void Foam::dsmcCloud::addNewParcel
         tetPtI,
         typeId,
         newParcel,
-        classification
+        classification,
+        charge
     );
 
     addParticle(pPtr);
@@ -733,7 +736,7 @@ void Foam::dsmcCloud::evolve()
     controllers_.controlBeforeMove();//****
     boundaries_.controlBeforeMove();//****
     
-    //Remove electrons after adding their velocities to a DynamicList
+    //Remove electrons
     removeElectrons();
     
     // Move the particles ballistically with their current velocities
@@ -757,7 +760,7 @@ void Foam::dsmcCloud::evolve()
     // Calculate new velocities via stochastic collisions
     collisions();
 
-    buildCellOccupancy(); //*** (for reactions)
+//     buildCellOccupancy(); //*** (for reactions)
 
     controllers_.controlAfterCollisions();//****
     boundaries_.controlAfterCollisions();//****
@@ -1350,7 +1353,8 @@ void Foam::dsmcCloud::axisymmetricWeighting()
                         tetPtI,
                         p->typeId(),
                         p->newParcel(),
-                        p->classification()
+                        p->classification(),
+                        p->charge()
                     );
                     
                     prob -= 1.0;
@@ -1380,7 +1384,8 @@ void Foam::dsmcCloud::axisymmetricWeighting()
                         tetPtI,
                         p->typeId(),
                         p->newParcel(),
-                        p->classification()
+                        p->classification(),
+                        p->charge()
                     );
                 }
             }

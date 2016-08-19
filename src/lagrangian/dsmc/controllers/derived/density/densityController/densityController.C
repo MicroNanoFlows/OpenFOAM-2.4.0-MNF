@@ -329,6 +329,7 @@ void densityController::insertParcelWithinDSMC(const label& c)
         tetPt,
         typeId_,
         0,
+        0,
         0
     );
 } 

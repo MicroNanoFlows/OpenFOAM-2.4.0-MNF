@@ -173,7 +173,7 @@ void forwardAssociativeIonisation::setProperties()
             << exit(FatalError);
     }
     
-    const label& charge = cloud_.constProps(associativeIonisationProductIds_[1]).charge();
+    const label& charge = cloud_.constProps(associativeIonisationProductIds_[1]).chargeConstProps();
 
     if(charge != -1)
     {
@@ -215,7 +215,7 @@ void forwardAssociativeIonisation::setProperties()
             << exit(FatalError);
     }
     
-    const label& charge2 = cloud_.constProps(ionisationProductIds_[1]).charge();
+    const label& charge2 = cloud_.constProps(ionisationProductIds_[1]).chargeConstProps();
 
     if(charge2 != -1)
     {
@@ -606,6 +606,7 @@ void forwardAssociativeIonisation::reaction
                 p.vibLevel() = 0;
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
+                p.charge() = 1;
                 
                 label classificationP = p.classification();
                 
@@ -623,7 +624,8 @@ void forwardAssociativeIonisation::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP
+                    classificationP,
+                    -1
                 );
             }
         }
@@ -677,12 +679,14 @@ void forwardAssociativeIonisation::reaction
                 p.ERot() = 0.0;
                 p.vibLevel() = 0;
                 p.ELevel() = 0;
+                p.charge() = 1;
                 
                 q.typeId() = associativeIonisationProductIds_[1];
                 q.U() = UQ;
                 q.ERot() = 0.0;
                 q.vibLevel() = 0;
                 q.ELevel() = 0;
+                q.charge() = -1;
             }
         }
     }

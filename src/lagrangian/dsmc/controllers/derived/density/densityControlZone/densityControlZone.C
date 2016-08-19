@@ -388,6 +388,7 @@ void densityControlZone::controlParcelsAfterCollisions()
                     tetPt,
                     typeId,
                     0,
+                    0,
                     0
                 );
                 

@@ -644,7 +644,8 @@ void dissociationTypeISameSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP
+                    classificationP,
+                    0
                 );
             }
         }

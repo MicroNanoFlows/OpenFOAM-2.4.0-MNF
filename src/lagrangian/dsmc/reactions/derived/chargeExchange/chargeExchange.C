@@ -127,7 +127,7 @@ void chargeExchange::setProperties()
 
         // check that reactants are 'ATOMS' or 'MOLECULES', not 'ELECTRONS'
 
-        const label& charge = cloud_.constProps(reactantIds_[r]).charge();
+        const label& charge = cloud_.constProps(reactantIds_[r]).chargeConstProps();
     
         if(charge == -1)
         {
@@ -158,7 +158,7 @@ void chargeExchange::setProperties()
         
         // check that products are a 'MOLECULE' or an 'ATOM'
         
-        const label& charge = cloud_.constProps(chargeExchangeProductIds_[i]).charge();
+        const label& charge = cloud_.constProps(chargeExchangeProductIds_[i]).chargeConstProps();
 
         if(charge == -1)
         {
@@ -224,7 +224,7 @@ void chargeExchange::setProperties()
     
     // check that second product is an electron
         
-    const label& charge = cloud_.constProps(ionisationProductIds_[1]).charge();
+    const label& charge = cloud_.constProps(ionisationProductIds_[1]).chargeConstProps();
 
     if(charge != -1)
     {
@@ -368,8 +368,8 @@ void chargeExchange::reaction
                 if(imaxP-idP > 0)
                 {
                     //Dissociation can occur
-//                     totalReactionProbability += 1.0;
-//                     reactionProbabilities[0] = 1.0;
+                    totalReactionProbability += 1.0;
+                    reactionProbabilities[0] = 1.0;
                 }
             }
         }
@@ -382,8 +382,8 @@ void chargeExchange::reaction
         if((EcP - ionisationEnergy) > VSMALL)
         {
             //Ionisation can occur
-//             totalReactionProbability += 1.0;
-//             reactionProbabilities[1] = 1.0;
+            totalReactionProbability += 1.0;
+            reactionProbabilities[1] = 1.0;
         }
         
         scalar heatOfReactionExchJoules = heatOfReactionExch_*physicoChemical::k.value();
@@ -520,7 +520,7 @@ void chargeExchange::reaction
                         }
                         if(i == 2)
                         {
-                            //Dissociation is to occur
+                            //Charge exchange is to occur
                             chargeExchange = true;
                             break;
                         }
@@ -692,7 +692,8 @@ void chargeExchange::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP
+                    classificationP,
+                    0
                 );
             }
         }
@@ -843,6 +844,7 @@ void chargeExchange::reaction
                 p.vibLevel() = 0;
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
+                p.charge() = 1;
                 
                 label classificationP = p.classification();
                 
@@ -860,7 +862,8 @@ void chargeExchange::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP
+                    classificationP,
+                    -1
                 );
             }
         }
@@ -910,12 +913,14 @@ void chargeExchange::reaction
                 p.ERot() = 0.0;
                 p.vibLevel() = 0;
                 p.ELevel() = 0;
+//                 p.charge() = 0;
                 
                 q.typeId() = chargeExchangeProductIds_[1];
                 q.U() = UQ;
                 q.ERot() = 0.0;
                 q.vibLevel() = 0;
                 q.ELevel() = 0;
+//                 q.charge() = 1;
             }              
         }
     }
@@ -991,8 +996,8 @@ void chargeExchange::reaction
                 if(imaxQ-idQ > 0)
                 {
                     //Dissociation can occur
-//                     totalReactionProbability += 1.0;
-//                     reactionProbabilities[0] = 1.0;
+                    totalReactionProbability += 1.0;
+                    reactionProbabilities[0] = 1.0;
                 }
             }
         }
@@ -1005,8 +1010,8 @@ void chargeExchange::reaction
         if((EcQ - ionisationEnergy) > VSMALL)
         {
             //Ionisation can occur
-//             totalReactionProbability += 1.0;
-//             reactionProbabilities[1] = 1.0;
+            totalReactionProbability += 1.0;
+            reactionProbabilities[1] = 1.0;
         }
         
         scalar heatOfReactionExchJoules = heatOfReactionExch_*physicoChemical::k.value();
@@ -1316,7 +1321,8 @@ void chargeExchange::reaction
                     tetPt,
                     typeId1,
                     0,
-                    classificationQ
+                    classificationQ,
+                    0
                 );
             }
         }
@@ -1467,6 +1473,7 @@ void chargeExchange::reaction
                 q.vibLevel() = 0;
                 q.ERot() = 0.0;
                 q.ELevel() = 0;
+                q.charge() = 1;
                 
                 label classificationQ = q.classification();
                 
@@ -1484,7 +1491,8 @@ void chargeExchange::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationQ
+                    classificationQ,
+                    -1
                 );
             }
         }
@@ -1523,23 +1531,25 @@ void chargeExchange::reaction
                             sinTheta*sin(phi)
                         );
                         
-                mP = cloud_.constProps(chargeExchangeProductIds_[0]).mass();
-                mQ = cloud_.constProps(chargeExchangeProductIds_[1]).mass();
+                mP = cloud_.constProps(chargeExchangeProductIds_[1]).mass();
+                mQ = cloud_.constProps(chargeExchangeProductIds_[0]).mass();
         
                 UP = Ucm + (postCollisionRelU*mQ/(mP + mQ));
                 UQ = Ucm - (postCollisionRelU*mP/(mP + mQ));
                 
-                p.typeId() = chargeExchangeProductIds_[0];
+                p.typeId() = chargeExchangeProductIds_[1];
                 p.U() = UP;
                 p.ERot() = 0.0;
                 p.vibLevel() = 0;
                 p.ELevel() = 0;
+//                 p.charge() = 1;
                 
-                q.typeId() = chargeExchangeProductIds_[1];
+                q.typeId() = chargeExchangeProductIds_[0];
                 q.U() = UQ;
                 q.ERot() = 0.0;
                 q.vibLevel() = 0;
                 q.ELevel() = 0;
+//                 q.charge() = 0;
             }
         }
     }

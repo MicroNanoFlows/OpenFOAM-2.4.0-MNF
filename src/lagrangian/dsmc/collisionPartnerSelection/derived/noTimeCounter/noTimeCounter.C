@@ -246,8 +246,8 @@ void noTimeCounter::collide()
                 label chargeP = -2;
                 label chargeQ = -2;
 
-                chargeP = cloud_.constProps(parcelP.typeId()).charge();
-                chargeQ = cloud_.constProps(parcelQ.typeId()).charge();
+                chargeP = parcelP.charge();
+                chargeQ = parcelQ.charge();
                 
                 //do not allow electron-electron collisions
                 

@@ -361,7 +361,8 @@ void dsmcPlumeInflowPatch::controlParcelsBeforeMove()
                     faceTetIs.tetPt(),
                     typeId,
                     newParcel,
-                    0  
+                    0,
+                    0
                 );
 
                 parcelsInserted[m] += 1.0;

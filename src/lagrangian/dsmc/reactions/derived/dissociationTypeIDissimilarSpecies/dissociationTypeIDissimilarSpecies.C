@@ -514,7 +514,8 @@ void dissociationTypeIDissimilarSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP
+                    classificationP,
+                    0
                 );
             }
         }
@@ -721,7 +722,8 @@ void dissociationTypeIDissimilarSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationQ
+                    classificationQ,
+                    0
                 );
             }
         }
@@ -907,7 +909,8 @@ void dissociationTypeIDissimilarSpecies::reaction
                     tetPtP,
                     typeId2,
                     0,
-                    classificationP
+                    classificationP,
+                    0
                 );
 
                 // Molecule Q will dissociate into 2 atoms.
@@ -947,7 +950,8 @@ void dissociationTypeIDissimilarSpecies::reaction
                     tetPtQ,
                     typeId4,
                     0,
-                    classificationQ
+                    classificationQ,
+                    0
                 );
             }
         }
@@ -1236,7 +1240,8 @@ void dissociationTypeIDissimilarSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP
+                    classificationP,
+                    0
                 );
             }
         }
@@ -1418,7 +1423,8 @@ void dissociationTypeIDissimilarSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationQ
+                    classificationQ,
+                    0
                 );
             }
         } 
@@ -1558,7 +1564,8 @@ void dissociationTypeIDissimilarSpecies::reaction
                     tetPtP,
                     typeId2,
                     0,
-                    classificationP
+                    classificationP,
+                    0
                 );
 
                 // Molecule Q will dissociate into 2 atoms.
@@ -1597,7 +1604,8 @@ void dissociationTypeIDissimilarSpecies::reaction
                     tetPtQ,
                     typeId4,
                     0,
-                    classificationQ
+                    classificationQ,
+                    0
                 );
             }
         }
