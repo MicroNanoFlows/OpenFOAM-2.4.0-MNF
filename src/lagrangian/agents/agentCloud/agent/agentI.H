@@ -85,6 +85,17 @@ inline Foam::vector& Foam::agent::a()
 }
 
 
+inline const Foam::vector& Foam::agent::f() const
+{
+    return f_;
+}
+
+
+inline Foam::vector& Foam::agent::f()
+{
+    return f_;
+}
+
 inline const Foam::vector& Foam::agent::specialPosition() const
 {
     return specialPosition_;

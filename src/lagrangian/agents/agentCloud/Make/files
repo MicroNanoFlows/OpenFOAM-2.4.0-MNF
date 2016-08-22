@@ -6,8 +6,7 @@ agent/agentIO.C
 agentCloud/agentCloud.C
 
 constant/agentProperties/agentProperties.C
-
-
+constant/selectAgentIds/selectAgentIds.C
 
 /* initialise */
 
@@ -16,6 +15,28 @@ initialise/basic/agentConfiguration/agentConfiguration.C
 
 initialise/derived/testInitialise/testInitialise.C
 
+
+/* integrator */
+
+integrator/basic/agentIntegrators/agentIntegrators.C
+integrator/basic/agentIntegrator/agentIntegrator.C
+integrator/derived/velocityVerlet/velocityVerlet.C
+
+
+/* measurements */
+
+measurements/basic/agentMeasurements/agentMeasurements.C
+measurements/basic/agentMeasurement/agentMeasurement.C
+
+measurements/derived/videoPDB/videoPDB.C
+
+
+/* controllers */
+
+controllers/basic/agentControllers/agentControllers.C
+controllers/basic/agentController/agentController.C
+
+controllers/derived/agentForcing/agentForcing.C
 
 
 

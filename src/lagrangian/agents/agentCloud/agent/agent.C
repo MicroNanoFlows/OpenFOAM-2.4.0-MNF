@@ -65,22 +65,12 @@ bool Foam::agent::move
 
             // Apply correction to velocity to constrain tracking for
             // reduced-D cases
-            meshTools::constrainDirection(mesh, mesh.solutionD(), Utracking);            
+            meshTools::constrainDirection(mesh, mesh.solutionD(), Utracking);
         
             // set the lagrangian time-step
             scalar dt = min(dtMax, tEnd);
 
             dt *= trackToFace(position() + dt*Utracking, td, false);
-
-//             //- face tracking info
-//             if( this->face() != -1 )   
-//             {
-//                 //--  monitoring flux properties
-//                 td.cloud().tracker().updateFields
-//                 (
-//                     *this
-//                 );
-//             }
 
             tEnd -= dt;
             stepFraction() = 1.0 - tEnd/trackTime;
@@ -95,24 +85,24 @@ void Foam::agent::setAsReferred()
     special_ = 1;
 }
 
-void Foam::agent::updateHalfVelocity
-(
-    const agentProperties& cP,       
-    const scalar& trackTime
-)
-{
-    v_ += 0.5*trackTime*a_;
-}
+// void Foam::agent::updateHalfVelocity
+// (
+//     const agentProperties& cP,       
+//     const scalar& trackTime
+// )
+// {
+//     v_ += 0.5*trackTime*a_;
+// }
 
-void Foam::agent::updateAcceleration
-(
-    const agentProperties& cP    
-)
-{
-    scalar m = cP.mass(id_);
-    
-    a_ += f_/m;
-}
+// void Foam::agent::updateAcceleration
+// (
+//     const agentProperties& cP    
+// )
+// {
+//     scalar m = cP.mass(id_);
+//     
+//     a_ += f_/m;
+// }
 
 
 
@@ -130,8 +120,6 @@ void Foam::agent::transformProperties(const vector& separation)
     {
         specialPosition_ += separation;
     }
-
-//     sitePositions_ = sitePositions_ + separation;
 }
 
 

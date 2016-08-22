@@ -23,32 +23,23 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    velocityVerlet
+    agentMeasurements
 
 Description
-    simple velocity controller in a zone 
-
-    parallelised
-
-    recommendation: control and measure properties every time step, ensure  
-                    size of zone.
-
-SourceFiles
-    velocityVerletI.H
-    velocityVerlet.C
-    velocityVerletIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef velocityVerlet_H
-#define velocityVerlet_H
+#ifndef agentMeasurements_H
+#define agentMeasurements_H
 
-#include "agentIntegrator.H"
 #include "vector.H"
+#include "List.H"
+#include "IOdictionary.H"
+#include "dictionary.H"
+#include "autoPtr.H"
 #include "polyMesh.H"
-#include "volFields.H"
-#include "agentCloud.H"
-// #include "boundedBox.H"
+#include "agentMeasurement.H"
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -56,64 +47,89 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class velocityVerlet Declaration
+                           Class agentMeasurements Declaration
 \*---------------------------------------------------------------------------*/
 
-class velocityVerlet
-:
-    public agentIntegrator
+class agentMeasurements
 {
-
-private:
 
     // Private data
 
-       
-//        void updateAcceleration();
-    
-    
-        void test();
-        void postTimeStep();
-        
-public:
+        Time& time_;
 
-    //- Runtime type information
-    TypeName("velocityVerlet");
+        IOdictionary measurementsDict_;
+
+        PtrList<entry> fieldList_;
+        List<word> fieldNames_;
+        List<label> fieldIds_;
+        List< autoPtr<agentMeasurement> > fields_;
+
+        labelList measurementsDuringForceComp_;
+        labelList measurementsDuringForceCompSite_;
+
+public:
 
     // Constructors
 
-        //- Construct from components
-        velocityVerlet
+        //- Null Constructor (mdInitialise)
+        agentMeasurements
         (
             Time& t,
-            agentCloud& cloud,
-            const dictionary& dict
+            const polyMesh& mesh
         );
 
-    // Destructor
+        //- Constructor for mdFoam
+        agentMeasurements
+        (
+            Time& t,
+            const polyMesh& mesh,
+            agentCloud& cloud
+        );
 
-        ~velocityVerlet();
-
+        ~agentMeasurements();
 
     // Member Functions
 
-        void init();
-        
-        void evolve();
-        
-        void clearLagrangianFields(); 
 
-        void calculateForce(); 
-        
-        void updateAcceleration();    
-        
-        void updateHalfVelocity();        
+        void createFields();
+
+        void calculateFields();
+
+        void writeFields();
+
+        void measurementsDuringForceComputation
+        (
+            agent* molI,
+            agent* molJ
+        );
+
+        void measurementsDuringForceComputationSite
+        (
+            agent* molI,
+            agent* molJ,
+            label sI,
+            label sJ
+        );
+
+
+        inline List< autoPtr<agentMeasurement> >& fields();
+        inline const List< autoPtr<agentMeasurement> >& fields() const;
+        inline const List<word>& fieldNames() const;
+        inline const List<label>& fieldIds() const;
+
+    // Ostream Operator
+
+//         friend Ostream& operator<<(Ostream&, const agentMeasurements&);
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "agentMeasurementsI.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

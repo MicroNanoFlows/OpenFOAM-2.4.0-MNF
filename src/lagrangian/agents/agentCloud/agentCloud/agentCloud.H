@@ -43,19 +43,21 @@ SourceFiles
 #include "trackingNumber.H"
 #include "cachedRandomMD.H"
 #include "clockTimer.H"
+#include "agentIntegrators.H"
+#include "cyclicBoundaries.H"
+#include "twoDimCellListAlgorithm.H"
+#include "agentProperties.H"
+#include "reducedUnits.H"
+#include "agentMeasurements.H"
+#include "agentControllers.H"
 
 //#include "labelVector.H"
 //#include "fileName.H"
-//#include "reducedUnits.H"
-//#include "polyFieldProperties.H"
 //#include "polyBoundaries.H"
-//#include "polyControllers.H"
+
 //#include "polyFaceTracker.H"
-//#include "cyclicBoundaries.H"
-//#include "cellInteractions.H"
 //#include "potentials.H" 
-//#include "agentProperties.H"
-//#include "polyIntegrators.H"
+
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -82,39 +84,42 @@ private:
         
         cachedRandomMD& rndGen_;
 
-//         polyIntegrators int_;
+        agentIntegrators int_;
+        
+        reducedUnits rU_;
         
 //         potentials p_;
         
         List<DynamicList<agent*> > cellOccupancy_;
        
         //- measurement fields
-//         polyFieldProperties fields_; 
+        agentMeasurements fields_; 
         
         //- controllers
-//         polyControllers controllers_;
+        agentControllers controllers_;
         
         
         trackingNumber agentTracking_;
         
-       
-//         cellInteractions<agent> iL_;
+        cyclicBoundaries cyclics_;
+        
+        twoDimCellListAlgorithm<agent> iL_;
         
         //- interaction particle list
-//         List<DynamicList<agent*> > ipl_;
+        List<DynamicList<agent*> > ipl_;
         
         clockTimer clock_;
 
 
     // Private Member Functions
 
-        void calculatePairForces();
+//         void calculatePairForces();
 //         void checkForOverlaps();
         void checkMoleculesInMesh();
         void setMoleculesForDirectInteraction();
-        void computePairForces();
-        void accelerationUpdate();
-        void velocityUpdate(const scalar& trackTime);
+//         void computePairForces();
+//         void accelerationUpdate();
+//         void velocityUpdate(const scalar& trackTime);
 
 
         //- Disallow default bitwise copy construct
@@ -191,6 +196,11 @@ public:
         //- Evolve the molecules (move, calculate forces, etc)
         
         void evolve();
+        
+        void move();
+        
+//         void calculateForce();
+        
         /*
         void evolveBeforeForces();
         void evolveAfterForces();
@@ -243,6 +253,15 @@ public:
             inline cachedRandomMD& rndGen();            
             inline trackingNumber& agentTracking();            
             inline clockTimer& clock();            
+            
+            inline const agentMeasurements& fields() const;  
+            inline agentMeasurements& fields();            
+            inline const reducedUnits& redUnits() const;
+            
+            inline const agentControllers& controllers() const; 
+            inline agentControllers& controllers();
+
+            
 /*
             label nSites() const;
             inline const potentials& pot() const;
@@ -252,14 +271,12 @@ public:
 //             inline const List<agent::constantProperties> constProps() const;
 //             inline const agent::constantProperties& constProps(label id) const;
 
-            inline const reducedUnits& redUnits() const;
-            inline const polyFieldProperties& fields() const;  
-            inline polyFieldProperties& fields();
+
+
             inline const cyclicBoundaries& cyclics() const;
             inline const polyBoundaries& boundaries() const;
             inline polyBoundaries& boundaries();
-            inline const polyControllers& controllersInfo() const; 
-            inline polyControllers& controllersInfo();
+
             inline const polyFaceTracker& tracker() const;
             inline polyFaceTracker& tracker();
 

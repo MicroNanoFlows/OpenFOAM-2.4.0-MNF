@@ -99,16 +99,18 @@ void testInitialise::setInitialConfiguration()
         frozen = Switch(initialiseDict_.lookup("frozen"));
     }
 
-    vector v = equipartitionLinearVelocity(300, massI);
+   
     
     // Bounding box 
 
     boundedBox bb;
     
     setBoundBox(initialiseDict_, bb, "boundBox");
-
-    label Nx = 10;
-    label Ny = 10;
+    
+    label Nx(readLabel(initialiseDict_.lookup("Nx")));
+    label Ny(readLabel(initialiseDict_.lookup("Ny")));
+//     label Nx = 10;
+//     label Ny = 10;
     
   
     scalar Lx = bb.span().x();
@@ -175,7 +177,11 @@ void testInitialise::setInitialConfiguration()
             tetFace,
             tetPt
         );
-
+        
+        vector v = equipartitionLinearVelocity(300, massI)/1e-11;
+        
+        v.z()=0.0;
+        
         if(cell != -1)
         {
             insertAgent

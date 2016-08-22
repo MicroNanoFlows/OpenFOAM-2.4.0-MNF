@@ -23,27 +23,28 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    newPressureFlux
+    videoPDB
+
 
 Description
-    Model that applies an adaptive force on molecules to ste a pressure
+    to write out a pdb file for creating movies
 
 SourceFiles
-    newPressureFluxI.H
-    newPressureFlux.C
-    newPressureFluxIO.C
+    videoPDBI.H
+    videoPDB.C
+    videoPDBIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef newPressureFlux_H
-#define newPressureFlux_H
+#ifndef videoPDB_H
+#define videoPDB_H
 
-#include "polyStateController.H"
+#include "agentMeasurement.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
-#include "polyMoleculeCloud.H"
-#include "gravityForce.H" 
+#include "agentCloud.H"
+#include "distribution.H"
 #include "boundedBox.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -52,12 +53,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class newPressureFlux Declaration
+                           Class videoPDB Declaration
 \*---------------------------------------------------------------------------*/
 
-class newPressureFlux
+class videoPDB
 :
-	public polyStateController
+	public agentMeasurement
 {
 
 private:
@@ -67,91 +68,105 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-        word fileName_;  
-        
-        //- ids of mols
-        List<label> molIds_;
+        List<label> agentIds_;
 
-        boundedBox box_;
+        word fieldName_;
+
+        label n_;
+
+        List<label> minLimit_;
+        List<label> maxLimit_;
+
+        label iteration_;
+
         
-        vector d_;
-        scalar area_;
-        scalar targetPressure_;
-        scalar min_;
+        word option_;
         
-        scalar deltaY_;
-//         scalar nTimeSteps_;
-//         vector force_;
-//         scalar nMols_;
+        // zone        
         
-        DynamicList<scalar> mols_;        
-        DynamicList<vector> force_;
-        DynamicList<vector> totalForce_;        
-        DynamicList<vector> centre_;
+        word regionName_;
+        label regionId_;
+
+        // bound boxes
+        
+        List<boundedBox> boxes_;
+        
+        label timeIndex_;
+        label nSteps_;
+        
+        scalar scalingFactor_;
+        
+        bool variableMols_;
+        label nSiteEstimate_;
+        vector rDummy_;
+//         word molOption_;
+        label nSitesMol_;
+        
+        scalar startTime_;
+        scalar endTime_;
+        scalar accumulatedTime_;
+        scalar deltaT_;
+    
+        bool writeFirstTimeStep_;
         
     // Private Member Functions
 
-        
-        void setBoundBox
-        (
-            const dictionary& propsDict,
-            boundedBox& bb,
-            const word& name 
-        );
+            void write();
 
+            void writeInZone(List<labelField>& molIds, List<vectorField>& sites);
+
+            void writeInMesh(List<labelField>& molIds, List<vectorField>& sites);
+            
+            void writeInBoundBox(List<labelField>& molIds, List<vectorField>& sites);            
+
+            
 public:
 
     //- Runtime type information
-    TypeName("newPressureFlux");
+    TypeName("videoPDB");
 
     // Constructors
 
         //- Construct from components
-        newPressureFlux
-        (
+        videoPDB
+		(
             Time& t,
-            polyMoleculeCloud& molCloud,
+            const polyMesh& mesh,
+            agentCloud& cloud,
             const dictionary& dict
-        );
+		);
 
     // Destructor
 
-        ~newPressureFlux();
-
+ 		~videoPDB();
 
     // Member Functions
-    // Member Functions
-        
-        //- create an initial configuration
-        void initialConfiguration();
 
-        //- control molecules at various stages of time-step
-        void controlBeforeVelocityI();
-        void controlBeforeMove();
-        void controlBeforeForces();
-        void controlDuringForces
+        //- create initial field
+        void createField();
+
+        //- calculate field
+        void calculateField();
+
+        void measureDuringForceComputation
         (
-            polyMolecule* molI,
-            polyMolecule* molJ
-        );        
-        void controlAfterForces();
-        void controlAfterVelocityII();
-        
-        //- calculate any required properties (end of time-step)
-        void calculateProperties(); 
-        
-        //- output data (optional)
-        void output
-        (
-            const fileName& fixedPathName, 
-            const fileName& timePath
+            agent* molI,
+            agent* molJ
         );
-        
-        //- update properties from a modified dictionary (optional)
-        void updateProperties(const dictionary&);
 
-        // Access
-};
+        void measureDuringForceComputationSite
+        (
+            agent* molI,
+            agent* molJ,
+            label sI,
+            label sJ
+        );
+
+//         const propertyField& fields() const;
+
+        //- write field
+        void writeField();
+}; 		
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

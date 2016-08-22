@@ -23,13 +23,13 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    Foam::cellInteractions<ParticleType>
+    Foam::twoDimCellListAlgorithm<ParticleType>
 
 Description
 
 \*----------------------------------------------------------------------------*/
 
-#include "cellInteractions.H"
+#include "twoDimCellListAlgorithm.H"
 #include "polyBoundaryMeshEntries.H"
 #include "processorCyclicPolyPatch.H"
 
@@ -42,7 +42,7 @@ Description
 // Construct from mesh
 
 template<class ParticleType>
-Foam::cellInteractions<ParticleType>::cellInteractions
+Foam::twoDimCellListAlgorithm<ParticleType>::twoDimCellListAlgorithm
 (
     const polyMesh& mesh,
     const reducedUnits& rU,    
@@ -118,7 +118,7 @@ Foam::cellInteractions<ParticleType>::cellInteractions
 
 
 template<class ParticleType>
-Foam::cellInteractions<ParticleType>::cellInteractions
+Foam::twoDimCellListAlgorithm<ParticleType>::twoDimCellListAlgorithm
 (
     const polyMesh& mesh,
     const reducedUnits& rU,   
@@ -137,14 +137,14 @@ Foam::cellInteractions<ParticleType>::cellInteractions
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 template<class ParticleType>
-Foam::cellInteractions<ParticleType>::~cellInteractions()
+Foam::twoDimCellListAlgorithm<ParticleType>::~twoDimCellListAlgorithm()
 {}
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 template<class ParticleType>
-void Foam::cellInteractions<ParticleType>::buildInteractionLists()
+void Foam::twoDimCellListAlgorithm<ParticleType>::buildInteractionLists()
 {
     // build direct interaction list
 
@@ -166,7 +166,7 @@ void Foam::cellInteractions<ParticleType>::buildInteractionLists()
 
 
 template<class ParticleType>
-void Foam::cellInteractions<ParticleType>::buildOptimisedDIL()
+void Foam::twoDimCellListAlgorithm<ParticleType>::buildOptimisedDIL()
 {
     Info << "Building direct interaction lists  - Your mesh is optimised for MD ..." << endl;
 
@@ -217,7 +217,7 @@ void Foam::cellInteractions<ParticleType>::buildOptimisedDIL()
 
 
 template<class ParticleType>
-void Foam::cellInteractions<ParticleType>::buildComplexDIL()
+void Foam::twoDimCellListAlgorithm<ParticleType>::buildComplexDIL()
 {
     // to make sure the user sees this
     for (int j = 0; j < 50; j++)
@@ -258,17 +258,17 @@ void Foam::cellInteractions<ParticleType>::buildComplexDIL()
 
 // build full interaction list 
 template<class ParticleType>
-void Foam::cellInteractions<ParticleType>::buildFullInteractionList()
+void Foam::twoDimCellListAlgorithm<ParticleType>::buildFullInteractionList()
 {
     List<DynamicList<label> > fil(mesh_.nCells());
 
     forAll(dil_, cellA)
     {
-        const labelList& cellList = dil_[cellA];
+        const labelList& twoDimCellListAlgorithm = dil_[cellA];
 
-        forAll(cellList, cell)
+        forAll(twoDimCellListAlgorithm, cell)
         {
-            const label& cellB = cellList[cell];
+            const label& cellB = twoDimCellListAlgorithm[cell];
 
             fil[cellA].append(cellB);
             fil[cellB].append(cellA);
@@ -285,7 +285,7 @@ void Foam::cellInteractions<ParticleType>::buildFullInteractionList()
 
 // build inverse direct interaction list
 template<class ParticleType>
-void Foam::cellInteractions<ParticleType>::buildInverseDirectInteractionList()
+void Foam::twoDimCellListAlgorithm<ParticleType>::buildInverseDirectInteractionList()
 {
     List<DynamicList<label> > inverseDIL(mesh_.nCells());
 
@@ -310,7 +310,7 @@ void Foam::cellInteractions<ParticleType>::buildInverseDirectInteractionList()
 
 
 template<class ParticleType>
-Foam::labelList Foam::cellInteractions<ParticleType>::returnNeighbouringCells(const label& cellI)
+Foam::labelList Foam::twoDimCellListAlgorithm<ParticleType>::returnNeighbouringCells(const label& cellI)
 {
 //     Info << "cellI: " << cellI 
 //         << ", cell-centre: "
@@ -358,7 +358,7 @@ Foam::labelList Foam::cellInteractions<ParticleType>::returnNeighbouringCells(co
 
 // include cell only if it has not already been included in the DIL
 template<class ParticleType>
-bool Foam::cellInteractions<ParticleType>::includeCell
+bool Foam::twoDimCellListAlgorithm<ParticleType>::includeCell
 (
     const List<DynamicList<label> >& cells,
     const label& cellI, 
@@ -383,7 +383,7 @@ bool Foam::cellInteractions<ParticleType>::includeCell
 }
 
 template<class ParticleType>
-bool Foam::cellInteractions<ParticleType>::interactingCells
+bool Foam::twoDimCellListAlgorithm<ParticleType>::interactingCells
 (
     const label& cellI, 
     const label& cellN,
@@ -407,7 +407,7 @@ bool Foam::cellInteractions<ParticleType>::interactingCells
 
 
 template<class ParticleType>
-Foam::boundedBox Foam::cellInteractions<ParticleType>::cellToBoundBox(const label& cellI)
+Foam::boundedBox Foam::twoDimCellListAlgorithm<ParticleType>::cellToBoundBox(const label& cellI)
 {
     pointField points = boundingCellPoints(cellI);
 
@@ -419,7 +419,7 @@ Foam::boundedBox Foam::cellInteractions<ParticleType>::cellToBoundBox(const labe
 }
 
 template<class ParticleType>
-Foam::pointField Foam::cellInteractions<ParticleType>::boundingCellPoints
+Foam::pointField Foam::twoDimCellListAlgorithm<ParticleType>::boundingCellPoints
 (
     const label& cellI
 )
@@ -459,7 +459,7 @@ Foam::pointField Foam::cellInteractions<ParticleType>::boundingCellPoints
 
 //- NEW 
 template<class ParticleType>
-void Foam::cellInteractions<ParticleType>::buildReferredCells()
+void Foam::twoDimCellListAlgorithm<ParticleType>::buildReferredCells()
 {
     Info << nl << "Building referred cells..." << endl;
 
@@ -947,7 +947,7 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
 }
 
 template<class ParticleType>
-Foam::labelList Foam::cellInteractions<ParticleType>::getProcessorSourceCells
+Foam::labelList Foam::twoDimCellListAlgorithm<ParticleType>::getProcessorSourceCells
 (
     const polyPatch& patch
 )
@@ -987,7 +987,7 @@ Foam::labelList Foam::cellInteractions<ParticleType>::getProcessorSourceCells
 
 
 template<class ParticleType>
-Foam::boundedBox Foam::cellInteractions<ParticleType>::faceToBoundBox
+Foam::boundedBox Foam::twoDimCellListAlgorithm<ParticleType>::faceToBoundBox
 (
     const label& faceI,
 //     const scalar& offset,
@@ -1032,7 +1032,7 @@ Foam::boundedBox Foam::cellInteractions<ParticleType>::faceToBoundBox
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class ParticleType>
-void Foam::cellInteractions<ParticleType>::setRIPL()
+void Foam::twoDimCellListAlgorithm<ParticleType>::setRIPL()
 {
     // clear interaction lists
     forAll(ripl_, c)
@@ -1066,7 +1066,7 @@ void Foam::cellInteractions<ParticleType>::setRIPL()
 
 // NEW VERSION
 template<class ParticleType>
-void Foam::cellInteractions<ParticleType>::setReferredParticles
+void Foam::twoDimCellListAlgorithm<ParticleType>::setReferredParticles
 (
     const List<DynamicList<ParticleType*> >& cellOccupancy
 )
@@ -1309,7 +1309,7 @@ void Foam::cellInteractions<ParticleType>::setReferredParticles
 }
 
 template<class ParticleType>
-void Foam::cellInteractions<ParticleType>::checkForOverlaps()
+void Foam::twoDimCellListAlgorithm<ParticleType>::checkForOverlaps()
 {
     DynamicList<ParticleType*> mols;
     
@@ -1337,7 +1337,7 @@ void Foam::cellInteractions<ParticleType>::checkForOverlaps()
                 
                 if(mag(rI - rJ) < 0.01)
                 {
-                    FatalErrorIn("cellInteractions::checkForOverlaps Test") << nl
+                    FatalErrorIn("twoDimCellListAlgorithm::checkForOverlaps Test") << nl
                         << "overlap found at position = " << rI
                         << nl << abort(FatalError);
                 }
@@ -1349,7 +1349,7 @@ void Foam::cellInteractions<ParticleType>::checkForOverlaps()
 
 //serial assumption
 template<class ParticleType>
-void Foam::cellInteractions<ParticleType>::addParticle
+void Foam::twoDimCellListAlgorithm<ParticleType>::addParticle
 (
     ParticleType* particle,
     DynamicList<ParticleType*>& newRefParticles,
@@ -1409,7 +1409,7 @@ void Foam::cellInteractions<ParticleType>::addParticle
 }
 
 template<class ParticleType>
-void Foam::cellInteractions<ParticleType>::deleteParticle
+void Foam::twoDimCellListAlgorithm<ParticleType>::deleteParticle
 (
     ParticleType* particle,
     DynamicList<ParticleType*>& newRefParticles,
@@ -1494,9 +1494,9 @@ void Foam::cellInteractions<ParticleType>::deleteParticle
 
 
 template<class ParticleType>
-void Foam::cellInteractions<ParticleType>::checkMesh(const scalar& rCut)
+void Foam::twoDimCellListAlgorithm<ParticleType>::checkMesh(const scalar& rCut)
 {
-    Info << "cellInteractions: checkMesh for rCut = " << rCut << endl;
+    Info << "twoDimCellListAlgorithm: checkMesh for rCut = " << rCut << endl;
 
     const polyMesh& mesh = mesh_;
 
@@ -1510,7 +1510,7 @@ void Foam::cellInteractions<ParticleType>::checkMesh(const scalar& rCut)
         
         if(bb.span().x() < (rCut - tolerance))
         {
-            FatalErrorIn("cellInteractions::checkMesh") << nl
+            FatalErrorIn("twoDimCellListAlgorithm::checkMesh") << nl
                 << "WARNING: Test for bound box failed! " << nl
                 << "Cell: " << c << " cell-centre: " << mesh.cellCentres()[c]
                 << " distance of x: " << bb.span().x()
@@ -1523,7 +1523,7 @@ void Foam::cellInteractions<ParticleType>::checkMesh(const scalar& rCut)
 
         if(bb.span().y() < (rCut - tolerance))
         {
-            FatalErrorIn("cellInteractions::checkMesh") << nl
+            FatalErrorIn("twoDimCellListAlgorithm::checkMesh") << nl
                 << "WARNING: Test for bound box failed! " << nl
                 << "Cell: " << c << " cell-centre: " << mesh.cellCentres()[c]
                 << " distance of y: " << bb.span().y()
@@ -1533,34 +1533,34 @@ void Foam::cellInteractions<ParticleType>::checkMesh(const scalar& rCut)
                 << nl << abort(FatalError);
         }
 
-        if(bb.span().z() < (rCut - tolerance))
-        {
-            FatalErrorIn("cellInteractions::checkMesh") << nl
-                << "WARNING: Test for bound box failed! " << nl
-                << "Cell: " << c << " cell-centre: " << mesh.cellCentres()[c]
-                << " distance of z: " << bb.span().z()
-                << nl << " Modify mesh to make cells greater or equal to rCut = " << rCut
-                << nl << " OR else use an unoptimised mesh configuration, by including:" 
-                << nl <<" optimisedMesh       no; " << nl << "in the system/potentialsDict."
-                << nl << abort(FatalError);
-        }
+//         if(bb.span().z() < (rCut - tolerance))
+//         {
+//             FatalErrorIn("twoDimCellListAlgorithm::checkMesh") << nl
+//                 << "WARNING: Test for bound box failed! " << nl
+//                 << "Cell: " << c << " cell-centre: " << mesh.cellCentres()[c]
+//                 << " distance of z: " << bb.span().z()
+//                 << nl << " Modify mesh to make cells greater or equal to rCut = " << rCut
+//                 << nl << " OR else use an unoptimised mesh configuration, by including:" 
+//                 << nl <<" optimisedMesh       no; " << nl << "in the system/potentialsDict."
+//                 << nl << abort(FatalError);
+//         }
 
         // by volume
-        scalar V = mesh.cellVolumes()[c];
-
-        scalar r = Foam::pow(V, (1.0/3.0) );
-
-        if(r < (rCut - tolerance))
-        {
-            FatalErrorIn("cellInteractions::checkMesh") << nl
-                << "WARNING: Test for volume failed! " << nl
-                << "Cell: " << c << " cell-centre: " << mesh.cellCentres()[c]
-                << " avarage r = " << r
-                << nl << " Modify mesh to make cells greater or equal to rCut = " << rCut
-                << nl << " OR else use an unoptimised mesh configuration, by including:" 
-                << nl <<" optimisedMesh       no; " << nl << "in the system/potentialsDict."
-                << nl << abort(FatalError);
-        }
+//         scalar V = mesh.cellVolumes()[c];
+// 
+//         scalar r = Foam::pow(V, (1.0/3.0) );
+// 
+//         if(r < (rCut - tolerance))
+//         {
+//             FatalErrorIn("twoDimCellListAlgorithm::checkMesh") << nl
+//                 << "WARNING: Test for volume failed! " << nl
+//                 << "Cell: " << c << " cell-centre: " << mesh.cellCentres()[c]
+//                 << " avarage r = " << r
+//                 << nl << " Modify mesh to make cells greater or equal to rCut = " << rCut
+//                 << nl << " OR else use an unoptimised mesh configuration, by including:" 
+//                 << nl <<" optimisedMesh       no; " << nl << "in the system/potentialsDict."
+//                 << nl << abort(FatalError);
+//         }
     }
 }
 
@@ -1576,14 +1576,14 @@ void Foam::cellInteractions<ParticleType>::checkMesh(const scalar& rCut)
 // * * * * * * * * * * * * * * * Friend Operators  * * * * * * * * * * * * * //
 
 template<class ParticleType>
-bool Foam::cellInteractions<ParticleType>::write()
+bool Foam::twoDimCellListAlgorithm<ParticleType>::write()
 {
     return write_;
 }
 
 //- visualisation of referred cells using VMD - only for future debugging 
 template<class ParticleType>
-void Foam::cellInteractions<ParticleType>::writeReferredCells()
+void Foam::twoDimCellListAlgorithm<ParticleType>::writeReferredCells()
 {
     if(writeReferredCells_)
     {
@@ -1702,7 +1702,7 @@ void Foam::cellInteractions<ParticleType>::writeReferredCells()
 
 /*
 template<class ParticleType>
-void Foam::cellInteractions<ParticleType>::writeReferredCloud()
+void Foam::twoDimCellListAlgorithm<ParticleType>::writeReferredCloud()
 {
     if(writeCloud_)
     {

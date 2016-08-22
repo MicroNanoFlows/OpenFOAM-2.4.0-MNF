@@ -341,7 +341,7 @@ void Foam::agentCloud::checkMoleculesInMesh()
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 
-//- Use for running MD (mdFoam)
+//- Use for running agentFOAM
 Foam::agentCloud::agentCloud
 (
     Time& t,
@@ -354,14 +354,16 @@ Foam::agentCloud::agentCloud
     mesh_(mesh),
     cP_(cP),
     rndGen_(rndGen),
-//     int_(t, mesh_, *this),    
+    int_(t, mesh_, *this),
+    rU_(1),
 //     p_(mesh, *this, rU, cP), 
     cellOccupancy_(mesh_.nCells()),
-//     fields_(t, mesh_, *this),
-//     controllers_(t, mesh, *this),
+    fields_(t, mesh_, *this),
+    controllers_(t, mesh, *this),
     agentTracking_(),
-//     iL_(mesh, rU, cyclics_, p_.rCutMax(), "poly"),
-//     ipl_(mesh.nCells()),
+    cyclics_(t, mesh_, -1),
+    iL_(mesh, rU_, cyclics_, 3.17, "agent"),
+    ipl_(mesh.nCells()),
 	clock_(t, "evolve", true)
 {
     agent::readFields(*this);
@@ -374,20 +376,20 @@ Foam::agentCloud::agentCloud
     updateTrackingNumbersAfterRead();
 //     p_.pairPots().initialiseExclusionModels();
 
-//     int_.integrator()->init();
+    int_.integrator()->init();
     
     //check and remove high energy overalps
 //     checkForOverlaps();
     
     buildCellOccupancy();
     
-//     fields_.createFields();
+    fields_.createFields();
 //     boundaries_.setInitialConfig();
-//     controllers_.initialConfig();
+    controllers_.initialConfig();
     
-//     clearLagrangianFields();
-//     calculateForce();
-//     updateAcceleration();
+    int_.integrator()->clearLagrangianFields();
+    int_.integrator()->calculateForce();
+    int_.integrator()->updateAcceleration();
     
 
     
@@ -412,15 +414,17 @@ Foam::agentCloud::agentCloud
     mesh_(mesh),
     cP_(cP),
     rndGen_(rndGen),    
-//     int_(t, mesh_, *this),    
+    int_(t, mesh_, *this), 
+    rU_(1),
 //     p_(mesh, *this, rU, cP), 
     cellOccupancy_(mesh_.nCells()),
-//     fields_(t, mesh_),
+    fields_(t, mesh_),
 //     boundaries_(t, mesh),
-//     controllers_(t, mesh),
+    controllers_(t, mesh),
     agentTracking_(),
-//     iL_(mesh, rU, cyclics_, p_.rCutMax(), "poly"),
-//     ipl_(mesh.nCells()),
+    cyclics_(t, mesh_, -1),
+    iL_(mesh, rU_, cyclics_, 3.17, "agent"),
+    ipl_(mesh.nCells()),
 	clock_(t, "evolve", true)
 {
     agent::readFields(*this);
@@ -460,23 +464,23 @@ Foam::agentCloud::agentCloud
         agentConfigurations conf(mesh, *this);
         conf.setInitialConfig();
     }
-    else if(option == "delete")
-    {
-        checkMoleculesInMesh();
-        buildCellOccupancy();
+//     else if(option == "delete")
+//     {
+//         checkMoleculesInMesh();
+//         buildCellOccupancy();
 //         prepareInteractions();
 //         polyMolsToDelete molsDel(mesh_, *this);
-    }
-    else if(option == "mapping")
-    {
+//     }
+//     else if(option == "mapping")
+//     {
 //         polyMappingModels molsToMap(mesh_, *this);
-        buildCellOccupancy();
-    }
-    else if(option == "quickMapping")
-    {
-        checkMoleculesInMesh();
-        buildCellOccupancy();
-    }
+//         buildCellOccupancy();
+//     }
+//     else if(option == "quickMapping")
+//     {
+//         checkMoleculesInMesh();
+//         buildCellOccupancy();
+//     }
     else if(option == "NULL")
     {
         buildCellOccupancy();
@@ -580,9 +584,21 @@ void  Foam::agentCloud::createAgent
 
 void Foam::agentCloud::evolve()
 {
-//     int_.integrator()->evolve();
-
+    int_.integrator()->evolve();
 }
+
+// move molecules (tracking)
+void Foam::agentCloud::move()
+{
+    agent::trackingData td1(*this, 1);
+    Cloud<agent>::move(td1, mesh_.time().deltaTValue());
+}
+
+// void Foam::agentCloud::calculateForce()
+// {
+//     calculatePairForces();
+// }
+
 /*
 void Foam::agentCloud::evolveBeforeForces()
 {
@@ -631,14 +647,7 @@ void Foam::agentCloud::controlBeforeMove()
     controllers_.controlBeforeMove();
 }
 
-// move molecules (tracking)
-void Foam::agentCloud::move()
-{
-    agent::trackingData td1(*this, 1);
-    Cloud<agent>::move(td1, mesh_.time().deltaTValue());
 
-    updateAfterMove(mesh_.time().deltaT().value());
-}
 
 void Foam::agentCloud::move(const scalar& trackTime)
 {
@@ -672,26 +681,6 @@ void Foam::agentCloud::controlBeforeForces()
     controllers_.controlBeforeForces();
 }
 
-void Foam::agentCloud::clearLagrangianFields()
-{
-    iterator mol(this->begin());
-
-    // Set accumulated quantities to zero
-    for (mol = this->begin(); mol != this->end(); ++mol)
-    {
-        mol().a() = vector::zero;
-
-        mol().tau() = vector::zero;
-
-        mol().siteForces() = vector::zero;
-
-        mol().potentialEnergy() = 0.0;
-
-        mol().rf() = tensor::zero;
-
-        mol().R() = GREAT;
-    }
-}
 
 void Foam::agentCloud::calculateForce()
 {

@@ -694,20 +694,12 @@ inline Foam::trackingNumber& Foam::agentCloud::agentTracking()
 
 
 /*
-inline const Foam::polyFieldProperties& Foam::agentCloud::fields() const
-{
-    return fields_;
-}
-
 inline const  Foam::cyclicBoundaries& Foam::agentCloud::cyclics() const
 {
     return cyclics_;
 }
 
-inline Foam::polyFieldProperties& Foam::agentCloud::fields()
-{
-    return fields_;
-}
+
 
 inline const Foam::polyBoundaries& Foam::agentCloud::boundaries() const
 {
@@ -717,16 +709,6 @@ inline const Foam::polyBoundaries& Foam::agentCloud::boundaries() const
 inline Foam::polyBoundaries& Foam::agentCloud::boundaries()
 {
     return boundaries_;
-}
-
-inline const Foam::polyControllers& Foam::agentCloud::controllersInfo() const
-{
-    return controllers_;
-}
-
-inline Foam::polyControllers& Foam::agentCloud::controllersInfo()
-{
-    return controllers_;
 }
 
 inline const Foam::polyFaceTracker& Foam::agentCloud::tracker() const
@@ -751,4 +733,30 @@ inline Foam::clockTimer& Foam::agentCloud::clock()
     return clock_;
 }
 
+inline Foam::agentMeasurements& Foam::agentCloud::fields()
+{
+    return fields_;
+}
+
+inline const Foam::agentMeasurements& Foam::agentCloud::fields() const
+{
+    return fields_;
+}
+
+inline const Foam::reducedUnits& Foam::agentCloud::redUnits() const
+{
+    return rU_;
+}
+
+inline const Foam::agentControllers& Foam::agentCloud::controllers() const
+{
+    return controllers_;
+}
+
+inline Foam::agentControllers& Foam::agentCloud::controllers()
+{
+    return controllers_;
+}
+
+            
 // ************************************************************************* //

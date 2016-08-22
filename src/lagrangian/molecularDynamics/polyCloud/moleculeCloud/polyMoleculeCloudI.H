@@ -178,7 +178,7 @@ inline void Foam::polyMoleculeCloud::evaluatePair
                      << ", siteJ = " << molJ->sitePositions()[sJ]
                      << ", mag = " << mag(rsIsJ)        
                      << endl;    */                   
-                
+                //if(rsIsJMagSq <= p_.pairPots().electrostaticPot()->rCutSqr())
                 if(rsIsJMagSq < p_.pairPots().electrostaticPot()->rCutSqr())
                 {
                     scalar rsIsJMag = mag(rsIsJ);

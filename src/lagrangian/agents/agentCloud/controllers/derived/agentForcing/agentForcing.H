@@ -23,26 +23,26 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    newPressureFlux
+    agentForcing
 
 Description
-    Model that applies an adaptive force on molecules to ste a pressure
+    Model that applies a gravitational force on all molecules.
 
 SourceFiles
-    newPressureFluxI.H
-    newPressureFlux.C
-    newPressureFluxIO.C
+    agentForcingI.H
+    agentForcing.C
+    agentForcingIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef newPressureFlux_H
-#define newPressureFlux_H
+#ifndef agentForcing_H
+#define agentForcing_H
 
-#include "polyStateController.H"
+#include "agentController.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
-#include "polyMoleculeCloud.H"
+#include "agentCloud.H"
 #include "gravityForce.H" 
 #include "boundedBox.H"
 
@@ -52,12 +52,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class newPressureFlux Declaration
+                           Class agentForcing Declaration
 \*---------------------------------------------------------------------------*/
 
-class newPressureFlux
+class agentForcing
 :
-	public polyStateController
+	public agentController
 {
 
 private:
@@ -67,56 +67,40 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-        word fileName_;  
-        
-        //- ids of mols
-        List<label> molIds_;
+        autoPtr<gravityForce> model_;
 
-        boundedBox box_;
+        //- ids of mols
+        List<label> agentIds_;
+
+        List<boundedBox> boxes_;
         
-        vector d_;
-        scalar area_;
-        scalar targetPressure_;
-        scalar min_;
-        
-        scalar deltaY_;
-//         scalar nTimeSteps_;
-//         vector force_;
-//         scalar nMols_;
-        
-        DynamicList<scalar> mols_;        
-        DynamicList<vector> force_;
-        DynamicList<vector> totalForce_;        
-        DynamicList<vector> centre_;
-        
+        scalar nTimeSteps_;
+        vector force_;
+
     // Private Member Functions
 
+//         void readProperties();
         
-        void setBoundBox
-        (
-            const dictionary& propsDict,
-            boundedBox& bb,
-            const word& name 
-        );
+        void setBoundBoxes();      
 
 public:
 
     //- Runtime type information
-    TypeName("newPressureFlux");
+    TypeName("agentForcing");
 
     // Constructors
 
         //- Construct from components
-        newPressureFlux
+        agentForcing
         (
             Time& t,
-            polyMoleculeCloud& molCloud,
+            agentCloud& cloud,
             const dictionary& dict
         );
 
     // Destructor
 
-        ~newPressureFlux();
+        ~agentForcing();
 
 
     // Member Functions
@@ -131,8 +115,8 @@ public:
         void controlBeforeForces();
         void controlDuringForces
         (
-            polyMolecule* molI,
-            polyMolecule* molJ
+            agent* molI,
+            agent* molJ
         );        
         void controlAfterForces();
         void controlAfterVelocityII();
@@ -148,7 +132,7 @@ public:
         );
         
         //- update properties from a modified dictionary (optional)
-        void updateProperties(const dictionary&);
+//         void updateProperties(const dictionary&);
 
         // Access
 };

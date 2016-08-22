@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,32 +23,23 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    velocityVerlet
+
 
 Description
-    simple velocity controller in a zone 
-
-    parallelised
-
-    recommendation: control and measure properties every time step, ensure  
-                    size of zone.
 
 SourceFiles
-    velocityVerletI.H
-    velocityVerlet.C
-    velocityVerletIO.C
+    selectAgentIdsI.H
+    selectAgentIds.C
+    selectAgentIdsIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef velocityVerlet_H
-#define velocityVerlet_H
+#ifndef selectAgentIds_H
+#define selectAgentIds_H
 
-#include "agentIntegrator.H"
-#include "vector.H"
 #include "polyMesh.H"
-#include "volFields.H"
-#include "agentCloud.H"
-// #include "boundedBox.H"
+#include "agentProperties.H"
+#include "dictionary.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -56,64 +47,84 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class velocityVerlet Declaration
+                           Class selectAgentIds Declaration
 \*---------------------------------------------------------------------------*/
 
-class velocityVerlet
-:
-    public agentIntegrator
+class selectAgentIds
 {
-
-private:
-
     // Private data
 
-       
-//        void updateAcceleration();
-    
-    
-        void test();
-        void postTimeStep();
-        
+        List<label> agentIds_;
+
+        List<word> agentIdNames_;
+
+    // Private Member Functions
+
 public:
 
-    //- Runtime type information
-    TypeName("velocityVerlet");
+    // Static data members
 
     // Constructors
 
-        //- Construct from components
-        velocityVerlet
+        //- Construct null
+        selectAgentIds();
+
+        selectAgentIds
         (
-            Time& t,
-            agentCloud& cloud,
+            const agentProperties& cP,
             const dictionary& dict
         );
 
+        selectAgentIds
+        (
+            const agentProperties& cP,
+            const dictionary& dict,
+            const word& molIdsHeader
+        );
+        
+    // Selectors
+
     // Destructor
 
-        ~velocityVerlet();
-
+        ~selectAgentIds();
 
     // Member Functions
 
-        void init();
-        
-        void evolve();
-        
-        void clearLagrangianFields(); 
+        // Access
 
-        void calculateForce(); 
-        
-        void updateAcceleration();    
-        
-        void updateHalfVelocity();        
+            inline List<label> agentIds();
+            inline List<word> agentIdNames();            
+//             inline labelList& molIds();
+
+
+        // Check
+
+        // Edit
+
+        // Write
+
+
+    // Member Operators
+
+//         void operator=(const selectAgentIds&);
+
+    // Friend Functions
+
+    // Friend Operators
+
+    // IOstream Operators
+
+//         friend Ostream& operator<<(Ostream&, const selectAgentIds&);
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "selectAgentIdsI.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

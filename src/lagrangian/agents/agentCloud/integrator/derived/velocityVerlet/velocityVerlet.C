@@ -37,7 +37,7 @@ namespace Foam
 
 defineTypeNameAndDebug(velocityVerlet, 0);
 
-addToRunTimeSelectionTable(polyIntegrator, velocityVerlet, dictionary);
+addToRunTimeSelectionTable(agentIntegrator, velocityVerlet, dictionary);
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -49,11 +49,11 @@ addToRunTimeSelectionTable(polyIntegrator, velocityVerlet, dictionary);
 velocityVerlet::velocityVerlet
 (
     Time& t,
-    polyMoleculeCloud& molCloud,
+    agentCloud& cloud,
     const dictionary& dict
 )
 :
-    polyIntegrator(t, molCloud, dict)
+    agentIntegrator(t, cloud, dict)
 /*    propsDict_(dict.subDict(typeName + "Properties")),*/    
   
 {}
@@ -73,31 +73,120 @@ void velocityVerlet::init()
 
 void velocityVerlet::evolve()
 {
-    molCloud_.controlBeforeVelocity();
-    updateVelocity(mesh_.time().deltaT().value());
-    molCloud_.controlBeforeMove();
-    molCloud_.move();
-    molCloud_.controlAfterMove();
-    molCloud_.buildCellOccupancy();
-    molCloud_.controlBeforeForces();
-    molCloud_.clearLagrangianFields();
-    molCloud_.calculateForce();
-    molCloud_.updateAcceleration();
-    molCloud_.controlAfterForces();
-    updateVelocity(mesh_.time().deltaT().value());
-    molCloud_.controlAfterVelocity();
-    molCloud_.postTimeStep();
+    cloud_.controllers().controlVelocitiesI();
+    
+    updateHalfVelocity();
+
+    cloud_.controllers().controlBeforeMove();
+    
+    cloud_.move();
+    
+    cloud_.buildCellOccupancy();
+
+    cloud_.controllers().controlBeforeForces();
+    
+    clearLagrangianFields();
+    
+    calculateForce();
+    
+    updateAcceleration();
+    
+    cloud_.controllers().controlAfterForces();
+        
+//     cloud_.controlAfterForces();
+    updateHalfVelocity();
+    
+    cloud_.controllers().controlVelocitiesII(); 
+    
+//     test();
+//     cloud_.controlAfterVelocity();
+    
+    postTimeStep();
 }
 
-void velocityVerlet::updateVelocity(const scalar& trackTime)
+void velocityVerlet::postTimeStep()
 {
-    IDLList<polyMolecule>::iterator mol(molCloud_.begin());
+    cloud_.fields().calculateFields();
+    cloud_.fields().writeFields();
+    
+    cloud_.controllers().calculateStateProps();
+    cloud_.controllers().outputStateResults();    
+}
 
-    for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
+void velocityVerlet::test()
+{
+       
+    IDLList<agent>::iterator mol(cloud_.begin());
+    
+    label i = 0;
+    
+    for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
+    {
+        if(i==10)
+        {
+            Info << "position = " << mol().position() 
+                 << ", velocity = " << mol().v()  
+                 << endl;
+        }
+        
+        i++;
+    }
+}
+
+void velocityVerlet::updateHalfVelocity()
+{
+    scalar trackTime = mesh_.time().deltaT().value();
+        
+    IDLList<agent>::iterator mol(cloud_.begin());
+
+    for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
     {
         if(!mol().frozen())
         {
-            mol().updateHalfVelocity(molCloud_.cP(), trackTime);
+            mol().v() += 0.5*trackTime*mol().a();
+        }
+    }
+}
+
+void velocityVerlet::calculateForce()
+{
+    IDLList<agent>::iterator mol(cloud_.begin());
+
+    for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
+    {
+        if(!mol().frozen())
+        {
+            // mol().f()
+            // nothing yet 
+        }
+    }
+}
+
+void velocityVerlet::clearLagrangianFields()
+{
+    IDLList<agent>::iterator mol(cloud_.begin());
+
+    for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
+    {
+        mol().a() = vector::zero;
+
+        mol().f() = vector::zero;
+
+        mol().R() = GREAT;
+    }
+}
+
+void velocityVerlet::updateAcceleration()
+{
+    IDLList<agent>::iterator mol(cloud_.begin());
+
+    for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
+    {
+        if(!mol().frozen())
+        {
+            scalar mass = cloud_.cP().mass(mol().id());
+                
+            mol().a() = mol().f()/mass ;
         }
     }
 }

@@ -23,32 +23,30 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    velocityVerlet
+    agentIntegrator
 
 Description
-    simple velocity controller in a zone 
+    Basic/abstract class of a state controller
 
-    parallelised
-
-    recommendation: control and measure properties every time step, ensure  
-                    size of zone.
 
 SourceFiles
-    velocityVerletI.H
-    velocityVerlet.C
-    velocityVerletIO.C
+    agentIntegratorI.H
+    agentIntegrator.C
+    agentIntegratorIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef velocityVerlet_H
-#define velocityVerlet_H
+#ifndef agentIntegrator_H
+#define agentIntegrator_H
 
-#include "agentIntegrator.H"
+#include "IOdictionary.H"
+#include "autoPtr.H"
+#include "runTimeSelectionTables.H"
 #include "vector.H"
-#include "polyMesh.H"
 #include "volFields.H"
-#include "agentCloud.H"
-// #include "boundedBox.H"
+#include "agent.H"
+#include "writeTimeData.H"
+#include "selectIds.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -56,58 +54,85 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class velocityVerlet Declaration
+                           Class agentIntegrator Declaration
 \*---------------------------------------------------------------------------*/
 
-class velocityVerlet
-:
-    public agentIntegrator
+class agentIntegrator
 {
 
-private:
+protected:
 
-    // Private data
+    // Protected data
 
-       
-//        void updateAcceleration();
-    
-    
-        void test();
-        void postTimeStep();
-        
+        const fvMesh& mesh_;
+
+        agentCloud& cloud_;
+
+        Time& time_; 
+
+    // Private Member Functions
+
 public:
 
     //- Runtime type information
-    TypeName("velocityVerlet");
+    TypeName("agentIntegrator");
 
+    // Declare runtime constructor selection table
+        declareRunTimeSelectionTable
+        (
+            autoPtr,
+            agentIntegrator,
+            dictionary,
+            (
+                Time& t,
+                agentCloud& cloud,
+                const dictionary& dict
+            ),
+            (t, cloud, dict)
+        );
+   
     // Constructors
 
         //- Construct from components
-        velocityVerlet
+        agentIntegrator
         (
             Time& t,
             agentCloud& cloud,
             const dictionary& dict
         );
 
+
+    // Selectors
+
+        static autoPtr<agentIntegrator> New
+        (
+            Time& t,
+            agentCloud& cloud,
+            const dictionary& dict
+        );
+
+
     // Destructor
 
-        ~velocityVerlet();
+        virtual ~agentIntegrator();
 
 
     // Member Functions
 
-        void init();
-        
-        void evolve();
-        
-        void clearLagrangianFields(); 
 
-        void calculateForce(); 
+        //- create an initial configuration
+        virtual void init() = 0;                
         
-        void updateAcceleration();    
+        //- evolve MD simulation
+        virtual void evolve() = 0;
         
-        void updateHalfVelocity();        
+        virtual void clearLagrangianFields() = 0; 
+
+        virtual void calculateForce() = 0; 
+        
+        virtual void updateAcceleration() = 0;         
+    
+        
 };
 
 

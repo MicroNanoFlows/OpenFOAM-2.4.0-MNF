@@ -213,26 +213,26 @@ public:
 
             void transformProperties(const vector& separation);
 
-            void setSitePositions(const agentProperties& cP);
+//             void setSitePositions(const agentProperties& cP);
 
-            void setSiteSizes(label size);
+//             void setSiteSizes(label size);
 
-            void updateHalfVelocity
-            (
-                const agentProperties& cP,
-                const scalar& trackTime
-            );
+//             void updateHalfVelocity
+//             (
+//                 const agentProperties& cP,
+//                 const scalar& trackTime
+//             );
 
-            void updateAcceleration
-            (
-                const agentProperties& cP
-            );
+//             void updateAcceleration
+//             (
+//                 const agentProperties& cP
+//             );
 
-            void updateAfterMove
-            (
-                const agentProperties& cP,
-                const scalar& trackTime
-            );
+//             void updateAfterMove
+//             (
+//                 const agentProperties& cP,
+//                 const scalar& trackTime
+//             );
 
             void setAsReferred();
             
@@ -243,6 +243,9 @@ public:
 
             inline const vector& a() const;
             inline vector& a();
+            
+            inline const vector& f() const;
+            inline vector& f();            
 
             inline const vector& specialPosition() const;
             inline vector& specialPosition();

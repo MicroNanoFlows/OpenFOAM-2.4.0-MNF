@@ -23,32 +23,25 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    velocityVerlet
+    agentIntegrators
 
 Description
-    simple velocity controller in a zone 
 
-    parallelised
+	Stores all the information for the agentIntegrators models defined within 
+    the agentIntegratorsDict, and selects & builds the models automatically.
 
-    recommendation: control and measure properties every time step, ensure  
-                    size of zone.
-
-SourceFiles
-    velocityVerletI.H
-    velocityVerlet.C
-    velocityVerletIO.C
+    
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef velocityVerlet_H
-#define velocityVerlet_H
+#ifndef agentIntegrators_H
+#define agentIntegrators_H
 
-#include "agentIntegrator.H"
-#include "vector.H"
+#include "List.H"
+#include "IOdictionary.H"
+#include "autoPtr.H"
 #include "polyMesh.H"
-#include "volFields.H"
-#include "agentCloud.H"
-// #include "boundedBox.H"
+#include "agentIntegrator.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -56,64 +49,57 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class velocityVerlet Declaration
+                           Class agentIntegrators Declaration
 \*---------------------------------------------------------------------------*/
 
-class velocityVerlet
-:
-    public agentIntegrator
+class agentIntegrators
 {
-
-private:
 
     // Private data
 
-       
-//        void updateAcceleration();
-    
-    
-        void test();
-        void postTimeStep();
+        Time& time_;
+
+        const polyMesh& mesh_;
+
+        //- The entire dictionary (containing multiple subDictionaries)
+        IOdictionary controlDict_;
+
+        autoPtr<agentIntegrator> int_;
         
 public:
 
-    //- Runtime type information
-    TypeName("velocityVerlet");
-
     // Constructors
 
-        //- Construct from components
-        velocityVerlet
+        //- Null Constructor 
+        agentIntegrators
         (
             Time& t,
-            agentCloud& cloud,
-            const dictionary& dict
+            const polyMesh& mesh
         );
 
-    // Destructor
+        //- Constructor for mdFOAM
+        agentIntegrators
+        (
+            Time& t,
+            const polyMesh& mesh,
+            agentCloud& cloud
+        );
 
-        ~velocityVerlet();
 
+        ~agentIntegrators();
 
     // Member Functions
-
-        void init();
         
-        void evolve();
-        
-        void clearLagrangianFields(); 
-
-        void calculateForce(); 
-        
-        void updateAcceleration();    
-        
-        void updateHalfVelocity();        
+        autoPtr<agentIntegrator>& integrator();    
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

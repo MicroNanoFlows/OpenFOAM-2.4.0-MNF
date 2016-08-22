@@ -107,6 +107,32 @@ Foam::reducedUnits::reducedUnits()
 
 Foam::reducedUnits::reducedUnits
 (
+    label unity
+)
+:
+    reducedUnits_(true),
+    outputSI_(false),
+    refLength_(1),
+    refTime_(1),
+    refMass_(1),
+    refCharge_(1),
+    refEnergy_(0.0),
+    refTemp_(0.0),
+    refForce_(0.0),
+    refVelocity_(0.0),
+    refVolume_(0.0),
+    refPressure_(0.0),
+    refMassDensity_(0.0),
+    refNumberDensity_(0.0),
+    refHeatFlux_(0.0),
+    refAmpere_(0.0)
+{
+    calcRefValues();
+}
+
+
+Foam::reducedUnits::reducedUnits
+(
     scalar refLength,
     scalar refTime,
     scalar refMass,
