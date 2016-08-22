@@ -222,27 +222,27 @@ void dissociationIonisationExchange::setProperties()
     
     //check that first exchange product is a 'MOLECULE' (not an 'ATOM')
 
-//     const scalar& rDof3 = cloud_.constProps(exchangeProductIds_[0]).rotationalDegreesOfFreedom();
-// 
-//     if(rDof3 < 0)
-//     {
-//         FatalErrorIn("dissociationIonisationExchange::setProperties()")
-//             << "First product of the exchange reaction must be a molecule (not an atom): " << exchangeProductMolecules[0] 
-//             << nl 
-//             << exit(FatalError);
-//     }
+    const scalar& rDof3 = cloud_.constProps(exchangeProductIds_[0]).rotationalDegreesOfFreedom();
+
+    if(rDof3 < 0)
+    {
+        FatalErrorIn("dissociationIonisationExchange::setProperties()")
+            << "First product of the exchange reaction must be a molecule (not an atom): " << exchangeProductMolecules[0] 
+            << nl 
+            << exit(FatalError);
+    }
 
     //check that second exchange product is an 'ATOM' (not a 'MOLECULE')
 
-//     const scalar& rDof4 = cloud_.constProps(exchangeProductIds_[1]).rotationalDegreesOfFreedom();
-// 
-//     if(rDof4 > 0)
-//     {
-//         FatalErrorIn("dissociationIonisationExchange::setProperties()")
-//             << "Second product of the exchange reaction must be an atom (not a molecule): " << exchangeProductMolecules[1] 
-//             << nl 
-//             << exit(FatalError);
-//     }
+    const scalar& rDof4 = cloud_.constProps(exchangeProductIds_[1]).rotationalDegreesOfFreedom();
+
+    if(rDof4 > 0)
+    {
+        FatalErrorIn("dissociationIonisationExchange::setProperties()")
+            << "Second product of the exchange reaction must be an atom (not a molecule): " << exchangeProductMolecules[1] 
+            << nl 
+            << exit(FatalError);
+    }
     
     if(chargeExchange_)
     {
@@ -280,29 +280,29 @@ void dissociationIonisationExchange::setProperties()
             }
         }
         
-        //check that first charge exchange product is a neutral)
+        //check that first exchange product is a 'MOLECULE' (not an 'ATOM')
 
-        /*const scalar& chargeChargeExchange = cloud_.constProps(chargeExchangeProductIds_[0]).chargeConstProps();
+        const scalar& rDof9 = cloud_.constProps(chargeExchangeProductIds_[0]).rotationalDegreesOfFreedom();
 
-        if(chargeChargeExchange != 0)
+        if(rDof9 < 0)
         {
             FatalErrorIn("dissociationIonisationExchange::setProperties()")
-                << "First product of the exchange reaction must be the neutral: " << chargeExchangeProductMolecules[0] 
+                << "First product of the exchange reaction must be a molecule (not an atom): " << chargeExchangeProductMolecules[0] 
                 << nl 
                 << exit(FatalError);
         }
 
-        //check that second charge exchange product is an ion
+        //check that second exchange product is an 'ATOM' (not a 'MOLECULE')
 
-        const scalar& chargeChargeExchange2 = cloud_.constProps(chargeExchangeProductIds_[1]).chargeConstProps();
+        const scalar& rDof10 = cloud_.constProps(chargeExchangeProductIds_[1]).rotationalDegreesOfFreedom();
 
-        if(chargeChargeExchange2 != 1)
+        if(rDof10 > 0)
         {
             FatalErrorIn("dissociationIonisationExchange::setProperties()")
-                << "Second product of the exchange reaction must be the ion: " << chargeExchangeProductMolecules[1] 
+                << "Second product of the exchange reaction must be an atom (not a molecule): " << chargeExchangeProductMolecules[1] 
                 << nl 
                 << exit(FatalError);
-        }*/        
+        }        
     }
     
     if(!chargedMolecule_)
@@ -395,7 +395,7 @@ void dissociationIonisationExchange::setProperties()
         
         //check that second ionisation product is a 'ELECTRON'
         
-        const label& charge = cloud_.constProps(ionisationProductsIdsP_[1]).chargeConstProps();
+        const label& charge = cloud_.constProps(ionisationProductsIdsP_[1]).charge();
 
         if(charge != -1)
         {
@@ -447,7 +447,7 @@ void dissociationIonisationExchange::setProperties()
         
         //check that second ionisation product is a 'ELECTRON'
         
-        const label& charge = cloud_.constProps(ionisationProductsIdsQ_[1]).chargeConstProps();
+        const label& charge = cloud_.constProps(ionisationProductsIdsQ_[1]).charge();
 
         if(charge != -1)
         {
@@ -959,8 +959,7 @@ void dissociationIonisationExchange::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    0
+                    classificationP
                 );
             }
         }
@@ -1072,7 +1071,6 @@ void dissociationIonisationExchange::reaction
                 p.vibLevel() = 0;
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
-                p.charge() = 1;
                 
                 label classificationP = p.classification();
                 
@@ -1090,8 +1088,7 @@ void dissociationIonisationExchange::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    -1
+                    classificationP
                 );
             }
         }
@@ -1230,7 +1227,6 @@ void dissociationIonisationExchange::reaction
                 q.vibLevel() = 0;
                 q.ERot() = 0.0;
                 q.ELevel() = 0;
-                q.charge() = 1;
                 
                 label classificationQ = q.classification();
                 
@@ -1248,8 +1244,7 @@ void dissociationIonisationExchange::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationQ,
-                    -1
+                    classificationQ
                 );
             }
         }
@@ -1267,13 +1262,13 @@ void dissociationIonisationExchange::reaction
                 //center of mass velocity (pre-exchange)
                 vector Ucm = (mP*UP + mQ*UQ)/(mP + mQ);
 
-                const label& typeId1 = exchangeProductIds_[0];
-                const label& typeId2 = exchangeProductIds_[1];
+                const label& typeIdMol = exchangeProductIds_[0];
+                const label& typeIdAtom = exchangeProductIds_[1];
 
                 // change species properties
 
-                scalar mPExch = cloud_.constProps(typeId1).mass();
-                scalar mQExch = cloud_.constProps(typeId2).mass();
+                scalar mPExch = cloud_.constProps(typeIdAtom).mass();
+                scalar mQExch = cloud_.constProps(typeIdMol).mass();
 
                 scalar mRExch = mPExch*mQExch/(mPExch + mQExch);
                 
@@ -1298,8 +1293,8 @@ void dissociationIonisationExchange::reaction
                             sinTheta*sin(phi)
                         );
                 
-                q.typeId() = typeId2; 
-                p.typeId() = typeId1;
+                q.typeId() = typeIdMol; // q is originally the atom, becomes the molecule
+                p.typeId() = typeIdAtom; // p is the originally the molecule, becomes the atom
         
                 UP = Ucm + (postCollisionRelU*mQExch/(mPExch + mQExch)); // P changes from mol to atom.
                 UQ = Ucm - (postCollisionRelU*mPExch/(mPExch + mQExch)); // Q changes from atom to mol.
@@ -1365,14 +1360,12 @@ void dissociationIonisationExchange::reaction
                 p.ERot() = 0.0;
                 p.vibLevel() = 0;
                 p.ELevel() = 0;
-//                 p.charge() = 0;
                 
                 q.typeId() = chargeExchangeProductIds_[1];
                 q.U() = UQ;
                 q.ERot() = 0.0;
                 q.vibLevel() = 0;
                 q.ELevel() = 0;
-//                 q.charge() = 1;
             }              
         }
     }
@@ -1816,14 +1809,14 @@ void dissociationIonisationExchange::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationQ,
-                    0
+                    classificationQ
                 );
             }
         }
         
         if(ionisationReactionP)
         {
+            //Molecule ionisation (Q is the molecule, P is used for measurement purposes)
             nTotIonisationReactionsP_++;
             nIonisationReactionsPPerTimeStep_++;
             
@@ -1929,7 +1922,6 @@ void dissociationIonisationExchange::reaction
                 q.vibLevel() = 0;
                 q.ERot() = 0.0;
                 q.ELevel() = 0;
-                q.charge() = 1;
                 
                 label classificationQ = q.classification();
                 
@@ -1947,14 +1939,14 @@ void dissociationIonisationExchange::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationQ,
-                    -1
+                    classificationQ
                 );
             }
         }
         
         if(ionisationReactionQ)
         {
+           //P is the atom (Q is used for measurement purposes) 
            nTotIonisationReactionsQ_++;
            nIonisationReactionsQPerTimeStep_++;
            
@@ -2087,7 +2079,6 @@ void dissociationIonisationExchange::reaction
                 p.vibLevel() = 0;
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
-                p.charge() = 1;
                 
                 label classificationP = p.classification();
                 
@@ -2105,8 +2096,7 @@ void dissociationIonisationExchange::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    -1
+                    classificationP
                 );
             }
         }
@@ -2124,20 +2114,20 @@ void dissociationIonisationExchange::reaction
                 //center of mass velocity (pre-exchange)
                 vector Ucm = (mP*UP + mQ*UQ)/(mP + mQ);
 
-                const label& typeId1 = exchangeProductIds_[0];
-                const label& typeId2 = exchangeProductIds_[1];
+                const label& typeIdMol = exchangeProductIds_[0];
+                const label& typeIdAtom = exchangeProductIds_[1];
 
                 // change species properties
 
-                scalar mQExch = cloud_.constProps(typeId2).mass();
-                scalar mPExch = cloud_.constProps(typeId1).mass();
+                scalar mQExch = cloud_.constProps(typeIdAtom).mass();
+                scalar mPExch = cloud_.constProps(typeIdMol).mass();
 
                 scalar mRExch = mPExch*mQExch/(mPExch + mQExch);
                 
                 translationalEnergy = translationalEnergy + ERotQ + EVibQ + EEleQ + EEleP + heatOfReactionExchJoules;
                 
-                p.typeId() = typeId2;
-                q.typeId() = typeId1;
+                p.typeId() = typeIdMol; // p is originally the atom, becomes the molecule
+                q.typeId() = typeIdAtom; // q is orinally the molecule, becomes the atom
 
                 scalar relVelExchMol = sqrt((2.0*translationalEnergy)/mRExch);
 
@@ -2209,25 +2199,23 @@ void dissociationIonisationExchange::reaction
                             sinTheta*sin(phi)
                         );
                         
-                mP = cloud_.constProps(chargeExchangeProductIds_[1]).mass();
-                mQ = cloud_.constProps(chargeExchangeProductIds_[0]).mass();
+                mP = cloud_.constProps(chargeExchangeProductIds_[0]).mass();
+                mQ = cloud_.constProps(chargeExchangeProductIds_[1]).mass();
         
                 UP = Ucm + (postCollisionRelU*mQ/(mP + mQ));
                 UQ = Ucm - (postCollisionRelU*mP/(mP + mQ));
                 
-                p.typeId() = chargeExchangeProductIds_[1];
+                p.typeId() = chargeExchangeProductIds_[0];
                 p.U() = UP;
                 p.ERot() = 0.0;
                 p.vibLevel() = 0;
                 p.ELevel() = 0;
-//                 p.charge() = 1;
                 
-                q.typeId() = chargeExchangeProductIds_[0];
+                q.typeId() = chargeExchangeProductIds_[1];
                 q.U() = UQ;
                 q.ERot() = 0.0;
                 q.vibLevel() = 0;
                 q.ELevel() = 0;
-//                 q.charge() = 0;
             }
         }
     }

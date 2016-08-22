@@ -223,7 +223,7 @@ void moleculeIonDissociationIonisation::setProperties()
     {
         if(p == 1)
         {
-            const label& charge = cloud_.constProps(ionisationProducts_[p]).chargeConstProps();
+            const label& charge = cloud_.constProps(ionisationProducts_[p]).charge();
             
             if(charge != -1)
             {
@@ -567,8 +567,7 @@ void moleculeIonDissociationIonisation::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    0
+                    classificationP
                 );
             }
         }
@@ -711,7 +710,6 @@ void moleculeIonDissociationIonisation::reaction
                 p.vibLevel() = 0;
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
-                p.charge() = 1;
                 
                 label classificationP = p.classification();
                 
@@ -729,8 +727,7 @@ void moleculeIonDissociationIonisation::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    -1
+                    classificationP
                 );
             }
         }
@@ -1014,8 +1011,7 @@ void moleculeIonDissociationIonisation::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    0
+                    classificationP
                 );
             }
         }
@@ -1159,7 +1155,6 @@ void moleculeIonDissociationIonisation::reaction
                 q.vibLevel() = 0;
                 q.ERot() = 0.0;
                 q.ELevel() = 0;
-                q.charge() = 1;
                 
                 label classificationP = p.classification();
                 
@@ -1177,8 +1172,7 @@ void moleculeIonDissociationIonisation::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    -1
+                    classificationP
                 );
             }
         }

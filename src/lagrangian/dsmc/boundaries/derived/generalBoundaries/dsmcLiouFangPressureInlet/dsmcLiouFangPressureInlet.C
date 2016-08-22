@@ -337,7 +337,6 @@ void dsmcLiouFangPressureInlet::controlParcelsBeforeMove()
                     faceTetIs.tetPt(),
                     typeId,
                     newParcel,
-                    0,
                     0
                 );
 

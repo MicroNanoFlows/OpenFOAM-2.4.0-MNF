@@ -343,7 +343,6 @@ void dsmcMassFlowRateInlet::controlParcelsBeforeMove()
                     faceTetIs.tetPt(),
                     typeId,
                     newParcel,
-                    0,
                     0
                 );
 

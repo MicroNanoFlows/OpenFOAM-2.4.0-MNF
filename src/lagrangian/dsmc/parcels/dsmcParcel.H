@@ -120,7 +120,7 @@ public:
             label numberOfElectronicLevels_;
             
             //Charge state (0 for neutrals, 1 for ions, -1 for electrons)
-            label chargeConstProps_;
+            label charge_;
 
             //- Scalar list of electronic energy levels [J]
             scalarList electronicEnergyList_;     
@@ -185,7 +185,7 @@ public:
             inline label numberOfElectronicLevels() const;
             
             //- Return the particle's charge state
-            inline label chargeConstProps() const;
+            inline label charge() const;
 
             //- Return the number of electronic energy/degeneracy levels
             inline scalarList electronicEnergyList() const;
@@ -250,9 +250,6 @@ private:
             // of shock waves over power-law leading edges",
             // Physics of Fluids, 20, 016101, 2008.
             label classification_;
-            
-            //Charge state (0 for neutrals, 1 for ions, -1 for electrons)
-            label charge_;
 
  
 public:
@@ -280,8 +277,7 @@ public:
             const label tetPtI,
             const label typeId,
             const label newParcel,
-            const label classification,
-            const label charge
+            const label classification
         );
 
         //- Construct from Istream
@@ -357,9 +353,6 @@ public:
             //- aspects of shock waves over power-law leading edges,
             //- Physics of Fluids, 20, 016101, 2008
             inline label classification() const;
-            
-            //Charge state (0 for neutrals, 1 for ions, -1 for electrons)
-            inline label charge() const;
 
 
         // Edit
@@ -390,9 +383,6 @@ public:
             //- aspects of shock waves over power-law leading edges,
             //- Physics of Fluids, 20, 016101, 2008
             inline label& classification();
-            
-            //Charge state (0 for neutrals, 1 for ions, -1 for electrons)
-            inline label& charge();
 
 
         // Main calculation loop

@@ -912,9 +912,11 @@ void dsmcVolFields::calculateField()
 
                 rhoNMean_[cell] += 1.0;
                 rhoNInstantaneous_[cell] += 1.0;
+//                 rhoMMean_[cell] += mass;
                 
                 if(cloud_.axisymmetric())
                 {
+//                     const point& cC = cloud_.mesh().cellCentres()[cell];
                     scalar radius = sqrt((p.position().y()*p.position().y()) + (p.position().z()*p.position().z()));
                     
                     scalar RWF = 1.0;
@@ -961,11 +963,14 @@ void dsmcVolFields::calculateField()
                 
                 if(cloud_.axisymmetric())
                 {
+//                     const point& cC = cloud_.mesh().cellCentres()[cell];
                     scalar radius = sqrt((p.position().y()*p.position().y()) + (p.position().z()*p.position().z()));
                     
                     scalar RWF = 1.0;
                     
                     RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
+                    
+//                     Info << "RWF = " << RWF << endl;
                     
                     nParcelsXnParticle_[iD][cell] += (RWF*nParticle);
                     rhoNMeanXnParticle_[cell] += (RWF*nParticle);

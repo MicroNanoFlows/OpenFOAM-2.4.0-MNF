@@ -90,10 +90,10 @@ void Foam::dsmcCloud::removeElectrons()
         {
             dsmcParcel* p = molsInCell[mIC];
             
-//             const dsmcParcel::constantProperties& constProp 
-//                                 = constProps(p->typeId());
+            const dsmcParcel::constantProperties& constProp 
+                                = constProps(p->typeId());
                                 
-            label charge = p->charge();
+            const label& charge = constProp.charge();
             
             if(charge == -1)
             {
@@ -131,7 +131,7 @@ void Foam::dsmcCloud::addElectrons()
     //find electron typeId
     forAll(constProps_, cP)
     {
-        label electronCharge = constProps_[cP].chargeConstProps();
+        const label& electronCharge = constProps_[cP].charge();
         
         if(electronCharge == -1)
         {
@@ -164,9 +164,9 @@ void Foam::dsmcCloud::addElectrons()
         const dsmcParcel::constantProperties& constProp 
                             = constProps(p.typeId());
                             
-        label charge = p.charge();
+        label charge = constProp.charge();
         
-        if(charge == 1)
+        if(charge  == 1)
         {
             //found an ion, add an electron here
             
@@ -205,8 +205,7 @@ void Foam::dsmcCloud::addElectrons()
                 tetPtI,
                 electronTypeId,
                 0,
-                0,
-                -1
+                0
             );
             
             electronIndex++;
@@ -354,8 +353,7 @@ void Foam::dsmcCloud::addNewParcel
     const label tetPtI,
     const label typeId,
     const label newParcel,
-    const label classification,
-    const label charge
+    const label classification
 )
 {
     dsmcParcel* pPtr = new dsmcParcel
@@ -372,8 +370,7 @@ void Foam::dsmcCloud::addNewParcel
         tetPtI,
         typeId,
         newParcel,
-        classification,
-        charge
+        classification
     );
 
     addParticle(pPtr);
@@ -1353,8 +1350,7 @@ void Foam::dsmcCloud::axisymmetricWeighting()
                         tetPtI,
                         p->typeId(),
                         p->newParcel(),
-                        p->classification(),
-                        p->charge()
+                        p->classification()
                     );
                     
                     prob -= 1.0;
@@ -1384,8 +1380,7 @@ void Foam::dsmcCloud::axisymmetricWeighting()
                         tetPtI,
                         p->typeId(),
                         p->newParcel(),
-                        p->classification(),
-                        p->charge()
+                        p->classification()
                     );
                 }
             }

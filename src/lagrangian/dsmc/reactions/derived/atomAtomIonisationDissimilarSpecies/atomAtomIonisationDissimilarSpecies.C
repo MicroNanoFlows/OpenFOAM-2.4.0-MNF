@@ -206,7 +206,7 @@ void atomAtomIonisationDissimilarSpecies::setProperties()
 
             // check that product two is an 'ELECTRON'
 
-            const label& charge = cloud_.constProps(productIdsIon_[1]).chargeConstProps();
+            const label& charge = cloud_.constProps(productIdsIon_[1]).charge();
 
             if(charge != -1)
             {
@@ -272,7 +272,7 @@ void atomAtomIonisationDissimilarSpecies::setProperties()
 
             // check that product two is an 'ELECTRON'
 
-            const label& charge = cloud_.constProps(productIdsIon_[1]).chargeConstProps();
+            const label& charge = cloud_.constProps(productIdsIon_[1]).charge();
 
             if(charge != -1)
             {
@@ -334,7 +334,7 @@ void atomAtomIonisationDissimilarSpecies::setProperties()
 
             // check that product two is an 'ELECTRON'
 
-            const label& charge = cloud_.constProps(productIdsIon2_[1]).chargeConstProps();
+            const label& charge = cloud_.constProps(productIdsIon2_[1]).charge();
 
             if(charge != -1)
             {
@@ -625,11 +625,8 @@ void atomAtomIonisationDissimilarSpecies::reaction
                 p.vibLevel() = 0;
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
-                p.charge() = 1;
                 
                 label classificationP = p.classification();
-                
-//                 label charge = cP.chargeConstProps();
                 
                 // insert new product 2
                 cloud_.addNewParcel
@@ -645,8 +642,7 @@ void atomAtomIonisationDissimilarSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    -1
+                    classificationP
                 );
             }
         }
@@ -760,7 +756,6 @@ void atomAtomIonisationDissimilarSpecies::reaction
                 q.vibLevel() = 0;
                 q.ERot() = 0.0;
                 q.ELevel() = 0;
-                q.charge() = 1;
                 
                 label classificationQ = q.classification();
                 
@@ -778,8 +773,7 @@ void atomAtomIonisationDissimilarSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationQ,
-                    -1
+                    classificationQ
                 );
             }
         }
@@ -999,7 +993,6 @@ void atomAtomIonisationDissimilarSpecies::reaction
                 p.vibLevel() = 0;
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
-                p.charge() = 1;
                 
                 label classificationP = p.classification();
                 
@@ -1017,8 +1010,7 @@ void atomAtomIonisationDissimilarSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    -1
+                    classificationP
                 );
             }
         }
@@ -1131,7 +1123,6 @@ void atomAtomIonisationDissimilarSpecies::reaction
                 q.vibLevel() = 0;
                 q.ERot() = 0.0;
                 q.ELevel() = 0;
-                q.charge() = 1;
                 
                 label classificationQ = q.classification();
                 
@@ -1149,8 +1140,7 @@ void atomAtomIonisationDissimilarSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationQ,
-                    -1
+                    classificationQ
                 );
             }
         }
@@ -1307,7 +1297,6 @@ void atomAtomIonisationDissimilarSpecies::reaction
                 p.vibLevel() = 0;
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
-                p.charge() = 1;
                 
                 label classificationP = p.classification();
                 
@@ -1325,8 +1314,7 @@ void atomAtomIonisationDissimilarSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    -1
+                    classificationP
                 );
             }
         }
@@ -1481,7 +1469,6 @@ void atomAtomIonisationDissimilarSpecies::reaction
                 q.vibLevel() = 0;
                 q.ERot() = 0.0;
                 q.ELevel() = 0;
-                q.charge() = 1;
                 
                 label classificationQ = q.classification();
                 
@@ -1499,8 +1486,7 @@ void atomAtomIonisationDissimilarSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationQ,
-                    -1
+                    classificationQ
                 );
             }
         } 

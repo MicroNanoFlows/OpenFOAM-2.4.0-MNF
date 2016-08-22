@@ -177,7 +177,7 @@ void forwardAssociativeIonisationDissimilarSpecies::setProperties()
             << exit(FatalError);
     }
     
-    const label& charge = cloud_.constProps(associativeIonisationProductIds_[1]).chargeConstProps();
+    const label& charge = cloud_.constProps(associativeIonisationProductIds_[1]).charge();
 
     if(charge != -1)
     {
@@ -219,7 +219,7 @@ void forwardAssociativeIonisationDissimilarSpecies::setProperties()
             << exit(FatalError);
     }
     
-    const label& charge2 = cloud_.constProps(ionisationPProductIds_[1]).chargeConstProps();
+    const label& charge2 = cloud_.constProps(ionisationPProductIds_[1]).charge();
 
     if(charge2 != -1)
     {
@@ -261,7 +261,7 @@ void forwardAssociativeIonisationDissimilarSpecies::setProperties()
             << exit(FatalError);
     }
     
-    const label& charge3 = cloud_.constProps(ionisationQProductIds_[1]).chargeConstProps();
+    const label& charge3 = cloud_.constProps(ionisationQProductIds_[1]).charge();
 
     if(charge3 != -1)
     {
@@ -678,7 +678,6 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
                 p.vibLevel() = 0;
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
-                p.charge() = 1;
                 
                 label classificationP = p.classification();
                 
@@ -696,8 +695,7 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    -1
+                    classificationP
                 );
             }
         }
@@ -809,7 +807,6 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
                 q.vibLevel() = 0;
                 q.ERot() = 0.0;
                 q.ELevel() = 0;
-                q.charge() = 1;
                 
                 label classificationQ = q.classification();
                 
@@ -827,8 +824,7 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationQ,
-                    -1
+                    classificationQ
                 );
             }
         }
@@ -882,14 +878,12 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
                 p.ERot() = 0.0;
                 p.vibLevel() = 0;
                 p.ELevel() = 0;
-                p.charge() = 1;
                 
                 q.typeId() = associativeIonisationProductIds_[1];
                 q.U() = UQ;
                 q.ERot() = 0.0;
                 q.vibLevel() = 0;
                 q.ELevel() = 0;
-                q.charge() = -1;
             }
         }
     }
@@ -1217,7 +1211,6 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
                 p.vibLevel() = 0;
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
-                p.charge() = 1;
                 
                 label classificationP = p.classification();
                 
@@ -1235,8 +1228,7 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    -1
+                    classificationP
                 );
             }
         }
@@ -1348,7 +1340,6 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
                 q.vibLevel() = 0;
                 q.ERot() = 0.0;
                 q.ELevel() = 0;
-                q.charge() = 1;
                 
                 label classificationQ = q.classification();
                 
@@ -1366,8 +1357,7 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationQ,
-                    -1
+                    classificationQ
                 );
             }
         }
@@ -1420,14 +1410,12 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
                 p.ERot() = 0.0;
                 p.vibLevel() = 0;
                 p.ELevel() = 0;
-                p.charge() = 1;
                 
                 q.typeId() = associativeIonisationProductIds_[1];
                 q.U() = UQ;
                 q.ERot() = 0.0;
                 q.vibLevel() = 0;
                 q.ELevel() = 0;
-                q.charge() = -1;
             }
         }
     }

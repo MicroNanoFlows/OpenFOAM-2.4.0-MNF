@@ -166,10 +166,7 @@ void noTimeCounterSubCycled::collide()
                         nMols += 1.0;
                     }
                     
-                    if(nMols > VSMALL)
-                    {
-                        RWF /= nMols;
-                    }
+                    RWF /= nMols;
                     
                     selectedPairs =
                     cloud_.collisionSelectionRemainder()[cellI]
@@ -254,8 +251,8 @@ void noTimeCounterSubCycled::collide()
                     label chargeP = -2;
                     label chargeQ = -2;
 
-                    chargeP = parcelP.charge();
-                    chargeQ = parcelQ.charge();
+                    chargeP = cloud_.constProps(parcelP.typeId()).charge();
+                    chargeQ = cloud_.constProps(parcelQ.typeId()).charge();
                     
                     //do not allow electron-electron collisions
                     
@@ -289,13 +286,27 @@ void noTimeCounterSubCycled::collide()
                             if(rMId != -1)
                             {
                                 // try to react molecules
-
-                                cloud_.reactions().reactions()[rMId]->reaction
-                                (
-                                    parcelP,
-                                    parcelQ
-                                );     
-                                    
+                                if(cloud_.reactions().reactions()[rMId]->reactWithLists())
+                                {
+                                    // so far for recombination only
+        //                                     reactions_.reactions()[rMId]->reaction
+        //                                     (
+        //                                         parcelP,
+        //                                         parcelQ,
+        //                                         candidateList,
+        //                                         candidateSubList,
+        //                                         candidateP,
+        //                                         whichSubCell
+        //                                     );
+                                }
+                                else
+                                {
+                                    cloud_.reactions().reactions()[rMId]->reaction
+                                    (
+                                        parcelP,
+                                        parcelQ
+                                    );                                    
+                                }
                                 // if reaction unsuccessful use conventional collision model
                                 if(cloud_.reactions().reactions()[rMId]->relax())
                                 {

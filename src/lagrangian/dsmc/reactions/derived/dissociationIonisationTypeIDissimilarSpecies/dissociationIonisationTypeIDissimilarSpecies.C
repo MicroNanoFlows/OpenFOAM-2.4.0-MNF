@@ -233,7 +233,7 @@ void dissociationIonisationTypeIDissimilarSpecies::setProperties()
         {
             if(p == 1)
             {
-                const label& charge = cloud_.constProps(ionisationProducts_[r][p]).chargeConstProps();
+                const label& charge = cloud_.constProps(ionisationProducts_[r][p]).charge();
                 
                 if(charge != -1)
                 {
@@ -627,8 +627,7 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    0
+                    classificationP
                 );
             }
         }
@@ -785,8 +784,7 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationQ,
-                    0
+                    classificationQ
                 );
             }
         }
@@ -925,10 +923,8 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                 p.vibLevel() = 0;
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
-                p.charge() = 1;
                 
                 label classificationP = p.classification();
-                
                 
                 // insert new product 2
                 cloud_.addNewParcel
@@ -944,8 +940,7 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    -1
+                    classificationP
                 );
             }
         }
@@ -1085,7 +1080,6 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                 q.vibLevel() = 0;
                 q.ERot() = 0.0;
                 q.ELevel() = 0;
-                q.charge() = 1;
                 
                 label classificationP = p.classification();
                 
@@ -1103,8 +1097,7 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    -1
+                    classificationP
                 );
             }
         }
@@ -1436,8 +1429,7 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    0
+                    classificationP
                 );
             }
         }
@@ -1594,8 +1586,7 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    0
+                    classificationP
                 );
             }
         }
@@ -1734,7 +1725,6 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                 p.vibLevel() = 0;
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
-                p.charge() = 1;
                 
                 label classificationP = p.classification();
                 
@@ -1752,8 +1742,7 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    -1
+                    classificationP
                 );
             }
         }
@@ -1893,7 +1882,6 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                 q.vibLevel() = 0;
                 q.ERot() = 0.0;
                 q.ELevel() = 0;
-                q.charge() = 1;
                 
                 label classificationP = p.classification();
                 
@@ -1911,8 +1899,7 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    -1
+                    classificationP
                 );
             }
         }

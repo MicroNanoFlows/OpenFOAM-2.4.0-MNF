@@ -241,8 +241,6 @@ void dsmcZoneFill::setInitialConfiguration()
                             RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
                         }
                         
-                        label charge = cP.chargeConstProps();
-                        
                         cloud_.addNewParcel
                         (
                             p,
@@ -256,8 +254,7 @@ void dsmcZoneFill::setInitialConfiguration()
                             cellTetIs.tetPt(),
                             typeId,
                             newParcel,
-                            classification,
-                            charge
+                            classification
                         );
                     }
                 }

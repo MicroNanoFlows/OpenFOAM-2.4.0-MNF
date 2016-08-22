@@ -53,7 +53,7 @@ inline Foam::dsmcParcel::constantProperties::constantProperties
     charDissQuantumLevel_(readLabel(dict.lookup("charDissQuantumLevel"))),
     ionisationTemperature_(readScalar(dict.lookup("ionisationTemperature"))),
     numberOfElectronicLevels_(readLabel(dict.lookup("numberOfElectronicLevels"))),
-    chargeConstProps_(readLabel(dict.lookup("charge"))),
+    charge_(readLabel(dict.lookup("charge"))),
     electronicEnergyList_(readList<scalar>(dict.lookup("electronicEnergyList"))),
     degeneracyList_(readList<label>(dict.lookup("degeneracyList")))
 {
@@ -77,15 +77,15 @@ inline Foam::dsmcParcel::constantProperties::constantProperties
             << exit(FatalError);
     }
     
-//     if(charge_ > 1 || charge_ < -1)
-//     {
-//         FatalErrorIn("dsmcParcel::constantProperties::constantProperties")
-//             << "Charge value should be 0 for neutrals, "
-//             << "1 for ions, or -1 for electrons"
-//             << ", instead of " 
-//             << charge_ << nl 
-//             << exit(FatalError);
-//     }
+    if(charge_ > 1 || charge_ < -1)
+    {
+        FatalErrorIn("dsmcParcel::constantProperties::constantProperties")
+            << "Charge value should be 0 for neutrals, "
+            << "1 for ions, or -1 for electrons"
+            << ", instead of " 
+            << charge_ << nl 
+            << exit(FatalError);
+    }
 }
 
 
@@ -105,8 +105,7 @@ inline Foam::dsmcParcel::dsmcParcel
     const label tetPtI,
     const label typeId,
     const label newParcel,
-    const label classification,
-    const label charge
+    const label classification
 )
 :
     particle(mesh, position, cellI, tetFaceI, tetPtI),
@@ -117,8 +116,7 @@ inline Foam::dsmcParcel::dsmcParcel
     ELevel_(ELevel),
     typeId_(typeId),
     newParcel_(newParcel),
-    classification_(classification),
-    charge_(charge)
+    classification_(classification)
 {}
 
 
@@ -206,9 +204,9 @@ inline Foam::label Foam::dsmcParcel::constantProperties::numberOfElectronicLevel
     return numberOfElectronicLevels_;
 }
 
-inline Foam::label Foam::dsmcParcel::constantProperties::chargeConstProps() const
+inline Foam::label Foam::dsmcParcel::constantProperties::charge() const
 {
-    return chargeConstProps_;
+    return charge_;
 }
 
 inline Foam::scalarList Foam::dsmcParcel::constantProperties::electronicEnergyList() const
@@ -277,11 +275,6 @@ inline Foam::label Foam::dsmcParcel::classification() const
     return classification_;
 }
 
-inline Foam::label Foam::dsmcParcel::charge() const
-{
-    return charge_;
-}
-
 inline Foam::label& Foam::dsmcParcel::typeId()
 {
     return typeId_;
@@ -323,11 +316,6 @@ inline Foam::label& Foam::dsmcParcel::newParcel()
 inline Foam::label& Foam::dsmcParcel::classification()
 {
     return classification_;
-}
-
-inline Foam::label& Foam::dsmcParcel::charge()
-{
-    return charge_;
 }
 
 // ************************************************************************* //

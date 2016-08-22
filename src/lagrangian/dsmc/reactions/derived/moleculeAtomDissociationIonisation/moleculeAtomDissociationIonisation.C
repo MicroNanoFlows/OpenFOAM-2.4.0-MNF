@@ -280,7 +280,7 @@ void moleculeAtomDissociationIonisation::setProperties()
 
         // check that product two is a 'ELECTRON'
 
-        const label& charge = cloud_.constProps(productIdsIon_[1]).chargeConstProps();
+        const label& charge = cloud_.constProps(productIdsIon_[1]).charge();
 
         if(charge != -1)
         {
@@ -332,7 +332,7 @@ void moleculeAtomDissociationIonisation::setProperties()
 
         // check that product two is a 'ELECTRON'
 
-        const label& charge = cloud_.constProps(productIdsIon2_[1]).chargeConstProps();
+        const label& charge = cloud_.constProps(productIdsIon2_[1]).charge();
 
         if(charge != -1)
         {
@@ -657,8 +657,7 @@ void moleculeAtomDissociationIonisation::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    0
+                    classificationP
                 );
             }
         }
@@ -773,7 +772,6 @@ void moleculeAtomDissociationIonisation::reaction
                 p.vibLevel() = 0;
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
-                p.charge() = 1;
                 
                 label classificationP = p.classification();
                 
@@ -791,8 +789,7 @@ void moleculeAtomDissociationIonisation::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    -1
+                    classificationP
                 );
             }
         }
@@ -907,7 +904,6 @@ void moleculeAtomDissociationIonisation::reaction
                 q.vibLevel() = 0;
                 q.ERot() = 0.0;
                 q.ELevel() = 0;
-                q.charge() = 1;
                 
                 label classificationQ = q.classification();
                 
@@ -925,8 +921,7 @@ void moleculeAtomDissociationIonisation::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationQ,
-                    -1
+                    classificationQ
                 );
             }
         }
@@ -1189,8 +1184,7 @@ void moleculeAtomDissociationIonisation::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationQ,
-                    0
+                    classificationQ
                 );
             }
         }
@@ -1309,7 +1303,6 @@ void moleculeAtomDissociationIonisation::reaction
                 q.vibLevel() = 0;
                 q.ERot() = 0.0;
                 q.ELevel() = 0;
-                q.charge() = 1;
                 
                 label classificationP = q.classification();
                 
@@ -1327,8 +1320,7 @@ void moleculeAtomDissociationIonisation::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    -1
+                    classificationP
                 );
             }
         }
@@ -1444,7 +1436,6 @@ void moleculeAtomDissociationIonisation::reaction
                 p.vibLevel() = 0;
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
-                p.charge() = 1;
                 
                 label classificationP = p.classification();
                 
@@ -1462,8 +1453,7 @@ void moleculeAtomDissociationIonisation::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    -1
+                    classificationP
                 );
             }
         }

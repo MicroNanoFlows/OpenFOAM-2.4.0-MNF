@@ -129,7 +129,7 @@ void reverseAssociativeIonisation::setProperties()
     
     // check that second reactant is an electron
 
-    const label& charge = cloud_.constProps(reactantIds_[1]).chargeConstProps();
+    const label& charge = cloud_.constProps(reactantIds_[1]).charge();
 
     if(charge != -1)
     {
@@ -413,14 +413,12 @@ void reverseAssociativeIonisation::reaction
                     p.ERot() = 0.0;
                     p.vibLevel() = 0;
                     p.ELevel() = 0;
-                    p.charge() = 0;
                     
                     q.typeId() = productIds_[0];
                     q.U() = UQ;
                     q.ERot() = 0.0;
                     q.vibLevel() = 0;
                     q.ELevel() = 0;
-                    q.charge() = 0;
                 }
             }  
         }
@@ -586,14 +584,12 @@ void reverseAssociativeIonisation::reaction
                     p.ERot() = 0.0;
                     p.vibLevel() = 0;
                     p.ELevel() = 0;
-                    p.charge() = 0;
                     
                     q.typeId() = productIds_[1];
                     q.U() = UQ;
                     q.ERot() = 0.0;
                     q.vibLevel() = 0;
                     q.ELevel() = 0;
-                    q.charge() = 0;
                 }
             }  
         }

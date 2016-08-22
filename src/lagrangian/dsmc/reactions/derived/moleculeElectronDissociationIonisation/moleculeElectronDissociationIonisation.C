@@ -139,7 +139,7 @@ void moleculeElectronDissociationIonisation::setProperties()
     
     // check that reactant two is an 'ELECTRON'
 
-    const label& charge = cloud_.constProps(reactantIds_[1]).chargeConstProps();
+    const label& charge = cloud_.constProps(reactantIds_[1]).charge();
 
     if(charge != -1)
     {
@@ -266,7 +266,7 @@ void moleculeElectronDissociationIonisation::setProperties()
 
         // check that product two is an 'ELECTRON'
 
-        const label& charge = cloud_.constProps(productIdsIon_[1]).chargeConstProps();
+        const label& charge = cloud_.constProps(productIdsIon_[1]).charge();
 
         if(charge != -1)
         {
@@ -548,8 +548,7 @@ void moleculeElectronDissociationIonisation::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    0
+                    classificationP
                 );
             }
         }
@@ -657,7 +656,6 @@ void moleculeElectronDissociationIonisation::reaction
                 p.vibLevel() = 0;
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
-                p.charge() = 1;
                 
                 label classificationP = p.classification();
                 
@@ -675,8 +673,7 @@ void moleculeElectronDissociationIonisation::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    -1
+                    classificationP
                 );
             }
         }
@@ -900,8 +897,7 @@ void moleculeElectronDissociationIonisation::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationQ,
-                    0
+                    classificationQ
                 );
             }
         }
@@ -1005,7 +1001,6 @@ void moleculeElectronDissociationIonisation::reaction
                 q.vibLevel() = 0;
                 q.ERot() = 0.0;
                 q.ELevel() = 0;
-                q.charge() = 1;
                 
                 label classificationP = q.classification();
                 
@@ -1023,8 +1018,7 @@ void moleculeElectronDissociationIonisation::reaction
                     tetPt,
                     typeId2,
                     0,
-                    classificationP,
-                    -1
+                    classificationP
                 );
             }
         }

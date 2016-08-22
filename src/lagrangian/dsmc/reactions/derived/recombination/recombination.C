@@ -513,8 +513,7 @@ void recombination::reaction
                     tetPt,
                     productId_,
                     0,
-                    classification,
-                    0
+                    classification
                 );
             }
         }

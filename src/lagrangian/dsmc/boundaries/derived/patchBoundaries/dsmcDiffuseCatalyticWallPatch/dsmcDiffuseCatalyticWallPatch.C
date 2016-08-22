@@ -288,7 +288,6 @@ void dsmcDiffuseCatalyticWallPatch::controlParticle(dsmcParcel& p, dsmcParcel::t
         
         p.typeId() = catalysedTypeIds_[iD];
         label newTypeId = catalysedTypeIds_[iD];
-        p.charge() = 0;
 
         scalar mass = cloud_.constProps(newTypeId).mass();
 

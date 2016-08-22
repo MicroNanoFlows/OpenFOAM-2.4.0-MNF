@@ -222,8 +222,6 @@ void dsmcMeshFill::setInitialConfiguration()
                         
                         RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
                     }
-                    
-                    label charge = cP.chargeConstProps();
 
                     cloud_.addNewParcel
                     (
@@ -238,8 +236,7 @@ void dsmcMeshFill::setInitialConfiguration()
                         cellTetIs.tetPt(),
                         typeId,
                         newParcel,
-                        classification,
-                        charge
+                        classification
                     );
                 }
             }

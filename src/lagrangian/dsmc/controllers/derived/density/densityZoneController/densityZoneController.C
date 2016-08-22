@@ -602,7 +602,6 @@ void densityZoneController::insertParcels(const label& nMols, const label& c)
             tetPt,
             typeId_,
             0,
-            0,
             0
         );
    // if parcel is inserted before the move function, the cell occupnacy need not be updated

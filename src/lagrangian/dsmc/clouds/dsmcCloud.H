@@ -529,8 +529,7 @@ public:
                 const label tetPtI,
                 const label typeId,
                 const label newParcel,
-                const label classification,
-                const label charge
+                const label classification
             );
             
             //- redistribute vibrational energy after a reaction
