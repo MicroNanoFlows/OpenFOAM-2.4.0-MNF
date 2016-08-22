@@ -183,6 +183,11 @@ void Foam::dsmcCloud::addElectrons()
             {
                 electronTemperature_[cellI] = 1000.0;
             }
+            if(electronTemperature_[cellI] > 8.0e4)
+            {
+                electronTemperature_[cellI] = 1000.0;
+            }
+                
 
             vector electronVelocity = equipartitionLinearVelocity
                 (
