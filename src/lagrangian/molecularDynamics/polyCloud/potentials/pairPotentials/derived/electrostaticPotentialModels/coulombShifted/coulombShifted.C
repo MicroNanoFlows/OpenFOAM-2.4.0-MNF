@@ -26,7 +26,7 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "shortRangeElectrostatic.H"
+#include "coulombShifted.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -34,15 +34,15 @@ Description
 namespace Foam
 {
 
-defineTypeNameAndDebug(shortRangeElectrostatic, 0);
-addToRunTimeSelectionTable(pairPotentialModel, shortRangeElectrostatic, dictionary);
+defineTypeNameAndDebug(coulombShifted, 0);
+addToRunTimeSelectionTable(pairPotentialModel, coulombShifted, dictionary);
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-shortRangeElectrostatic::shortRangeElectrostatic
+coulombShifted::coulombShifted
 (
     const polyMesh& mesh,
     polyMoleculeCloud& molCloud,
@@ -52,9 +52,7 @@ shortRangeElectrostatic::shortRangeElectrostatic
 )
 :
     pairPotentialModel(mesh, molCloud, redUnits, name, dict),
-    propsDict_(dict.subDict(typeName + "Coeffs")),    
-    constant_(1.0/(4.0 * constant::mathematical::pi * 8.854187817e-12)),
-    G_(readScalar(propsDict_.lookup("G")))    
+    constant_(1.0/(4.0 * constant::mathematical::pi * 8.854187817e-12))   
 {
  
     if(redUnits.runReducedUnits())
@@ -66,58 +64,54 @@ shortRangeElectrostatic::shortRangeElectrostatic
         constant_ = 1.0/(4.0*constant::mathematical::pi*8.854187817e-12);
     }
     
-    // we can override this in the future 
+    useTables_ = false; 
     
-    useTables_ = false;
-
-//     setLookupTables();   
+    EB_ =  2/rCut_;
+    EC_ = 1/(rCut_*rCut_);
+    
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-shortRangeElectrostatic::~shortRangeElectrostatic()
+coulombShifted::~coulombShifted()
 {}
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-scalar shortRangeElectrostatic::unscaledEnergy(const scalar r) const
+scalar coulombShifted::unscaledEnergy(const scalar r) const
 {
     return constant_/r;
 }
 
 
 
-scalar shortRangeElectrostatic::force(const scalar r) const
+scalar coulombShifted::force(const scalar r) const
 {
-    scalar force = 0.0;
-    
-    scalar term1 = erfc(G_*r/sqrt(2.0));
-    scalar term2 = 2.0*G_*r*exp(-r*r)/sqrt(2* constant::mathematical::pi);
-    force = constant_*(term1 + term2)/(r*r);
+    scalar force = constant_*( (1/(r*r)) - EC_);
     
     return force;
 }
     
-scalar shortRangeElectrostatic::energy(const scalar r) const
+scalar coulombShifted::energy(const scalar r) const
 {
-    scalar energy = constant_*erfc(G_*r/sqrt(2.0))/r;
+    scalar energy = constant_*( (1/r) - EB_ + EC_*r);
     
     return energy;
 }
 
-const dictionary& shortRangeElectrostatic::dict() const
+const dictionary& coulombShifted::dict() const
 {
     return pairPotentialProperties_;
 }
 
-void  shortRangeElectrostatic::write(const fileName& pathName)
+void coulombShifted::write(const fileName& pathName)
 {
     Info<< "Writing energy and force to file for potential "
             << name_ << endl;
             
-    label nBins = label((rCut_ - rMin_)/dr_) + 1;   
+//     label nBins = 100000;
+    label nBins = label((rCut_ - rMin_)/dr_) + 1;            
     
-//     scalar dr = (rCut_-rMin_)/nBins;
     scalarField U(nBins, 0.0);
     scalarField f(nBins, 0.0);
     
@@ -170,7 +164,7 @@ void  shortRangeElectrostatic::write(const fileName& pathName)
                 << "Cannot open file " << file.name()
                 << abort(FatalError);
         }  
-    }    
+    } 
 }
 
 } // End namespace Foam

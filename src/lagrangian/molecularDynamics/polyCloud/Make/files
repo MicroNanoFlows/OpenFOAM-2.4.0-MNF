@@ -36,6 +36,9 @@ potentials/pairPotentials/derived/pairPotentialModels/harmonicPotential/harmonic
 /* electrostatics */
 potentials/pairPotentials/derived/electrostaticPotentialModels/coulomb/coulomb.C
 potentials/pairPotentials/derived/electrostaticPotentialModels/shortRangeElectrostatic/shortRangeElectrostatic.C
+potentials/pairPotentials/derived/electrostaticPotentialModels/coulombShifted/coulombShifted.C
+potentials/pairPotentials/derived/electrostaticPotentialModels/coulombEqn/coulombEqn.C
+
 
 /* energy scaling functions */
 potentials/energyScalingFunction/basic/energyScalingFunction.C
