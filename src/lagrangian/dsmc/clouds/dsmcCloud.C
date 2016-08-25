@@ -743,17 +743,17 @@ void Foam::dsmcCloud::evolve()
     
     // Move the particles ballistically with their current velocities
     Cloud<dsmcParcel>::move(td, mesh_.time().deltaTValue());
+    
+    if(axisymmetric_)
+    {
+        axisymmetricWeighting();
+    }
 
     //Add electrons back after the move function
     addElectrons();
     
     // Update cell occupancy
     buildCellOccupancy();
-    
-    if(axisymmetric_)
-    {
-        axisymmetricWeighting();
-    }
 
     controllers_.controlBeforeCollisions();//****
     boundaries_.controlBeforeCollisions();//****
