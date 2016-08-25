@@ -26,7 +26,7 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "coulombEqn.H"
+#include "lennardJonesEqn.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -34,83 +34,134 @@ Description
 namespace Foam
 {
 
-defineTypeNameAndDebug(coulombEqn, 0);
-addToRunTimeSelectionTable(pairPotentialModel, coulombEqn, dictionary);
+defineTypeNameAndDebug(lennardJonesEqn, 0);
+addToRunTimeSelectionTable(pairPotentialModel, lennardJonesEqn, dictionary);
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-coulombEqn::coulombEqn
+lennardJonesEqn::lennardJonesEqn
 (
     const polyMesh& mesh,
-    polyMoleculeCloud& molCloud,
+    polyMoleculeCloud& molCloud, 
     const reducedUnits& redUnits,
     const word& name, 
     const dictionary& dict
 )
 :
     pairPotentialModel(mesh, molCloud, redUnits, name, dict),
-    constant_(1.0/(4.0 * constant::mathematical::pi * 8.854187817e-12))   
+    propsDict_(dict.subDict(typeName + "Coeffs")),
+    sigma_(readScalar(propsDict_.lookup("sigma"))),
+    epsilon_(readScalar(propsDict_.lookup("epsilon")))    
 {
- 
     if(redUnits.runReducedUnits())
     {
-        constant_ = (1.0/(4.0 * constant::mathematical::pi * redUnits.epsilonPermittivity()));
-    }
-    else
-    {
-        constant_ = 1.0/(4.0*constant::mathematical::pi*8.854187817e-12);
+        sigma_ /= redUnits.refLength();
+        epsilon_ /= redUnits.refEnergy();
     }
 
     useTables_ = false;
+    
+
+    F_at_Rmin_ = rawForce(rMin_);
+    E_at_Rmin_ = rawEnergy(rMin_);    
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-coulombEqn::~coulombEqn()
+lennardJonesEqn::~lennardJonesEqn()
 {}
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-scalar coulombEqn::unscaledEnergy(const scalar r) const
+scalar lennardJonesEqn::unscaledEnergy(const scalar r) const
 {
-    return constant_/r;
+    return 0.0;
 }
 
-scalar coulombEqn::force(const scalar r) const
+scalar lennardJonesEqn::rawEnergy(const scalar r) const
 {
-    scalar force = constant_*( 1/(r*r) );
-    
-    return force;
+    // (rIJ/sigma)^-2
+    scalar ir2 = (sigma_/r)*(sigma_/r);
+
+    // (rIJ/sigma)^-6
+    scalar ir6 = ir2*ir2*ir2;
+
+    return 4.0*epsilon_*(ir6*(ir6 - 1.0));
 }
-    
-scalar coulombEqn::energy(const scalar r) const
+
+scalar lennardJonesEqn::rawForce(const scalar r) const
 {
-    scalar energy = constant_*(1/r);
+    // (rIJ/sigma)^-2
+    scalar ir2 = (sigma_/r)*(sigma_/r);
+
+    // (rIJ/sigma)^-6
+    scalar ir6 = ir2*ir2*ir2;    
+        
+    return 24.0*epsilon_*ir6*(2.0*ir6 - 1.0)*sqrt(ir2);
+}
+
+   
+scalar lennardJonesEqn::energy(const scalar r) const
+{
+    scalar energy = E_at_Rmin_;
+    
+    if(r > rMin_)
+    {
+        energy = rawEnergy(r);
+    }    
     
     return energy;
 }
 
-// void coulombEqn::interaction (const scalar r, scalar& force, scalar& energy)
-// {
-//     scalar oneOnR = (1/r);
-//     
-//     force = constant_*(oneOnR*oneOnR);
-//     
-//     energy = constant_*oneOnR;
-// }
-
-const dictionary& coulombEqn::dict() const
+scalar lennardJonesEqn::force(const scalar r) const
 {
-    return pairPotentialProperties_;
+    scalar force = F_at_Rmin_;
+    
+    if(r > rMin_)
+    {
+        force = rawForce(r);
+    }    
+    
+    return force;
 }
 
-void  coulombEqn::write(const fileName& pathName)
+
+
+// bool lennardJonesEqn::read
+// (
+//     const dictionary& pairPotentialProperties,
+//     const reducedUnits& rU
+// )
+// {
+//     pairPotentialModel::read(pairPotentialProperties, rU);
+// 
+//     lennardJonesEqnCoeffs_ = pairPotentialProperties.subDict(typeName + "Coeffs");
+// 
+//     lennardJonesEqnCoeffs_.lookup("sigma") >> sigma_;
+//     lennardJonesEqnCoeffs_.lookup("epsilon") >> epsilon_;
+// 
+//     if(rU.runReducedUnits())
+//     {
+//         sigma_ /= rU.refLength();
+//         epsilon_ /= rU.refEnergy();
+//     }
+// 
+//     return true;
+// }
+
+void lennardJonesEqn::write(const fileName& pathName)
 {
     
 }
+
+const dictionary& lennardJonesEqn::dict() const
+{
+    return propsDict_;
+}
+
 
 } // End namespace Foam
 

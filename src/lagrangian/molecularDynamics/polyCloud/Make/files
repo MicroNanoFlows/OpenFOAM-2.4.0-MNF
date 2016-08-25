@@ -27,18 +27,22 @@ potentials/pairPotentials/basic/pairPotentials/pairPotentials.C
 potentials/pairPotentials/basic/pairPotentialModel/pairPotentialModel.C
 
 /* Derived Pair Potentials */
+potentials/pairPotentials/derived/pairPotentialModels/lennardJonesEqn/lennardJonesEqn.C
+
+
 potentials/pairPotentials/derived/pairPotentialModels/lennardJones/lennardJones.C
 potentials/pairPotentials/derived/pairPotentialModels/noInteraction/noInteraction.C
 potentials/pairPotentials/derived/pairPotentialModels/morse/morse.C
 potentials/pairPotentials/derived/pairPotentialModels/FENE/FENE.C
 potentials/pairPotentials/derived/pairPotentialModels/harmonicPotential/harmonicPotential.C
 
+
 /* electrostatics */
-potentials/pairPotentials/derived/electrostaticPotentialModels/coulomb/coulomb.C
-potentials/pairPotentials/derived/electrostaticPotentialModels/shortRangeElectrostatic/shortRangeElectrostatic.C
 potentials/pairPotentials/derived/electrostaticPotentialModels/coulombShifted/coulombShifted.C
+potentials/pairPotentials/derived/electrostaticPotentialModels/coulomb/coulomb.C
 potentials/pairPotentials/derived/electrostaticPotentialModels/coulombEqn/coulombEqn.C
 
+/*potentials/pairPotentials/derived/electrostaticPotentialModels/shortRangeElectrostatic/shortRangeElectrostatic.C*/
 
 /* energy scaling functions */
 potentials/energyScalingFunction/basic/energyScalingFunction.C

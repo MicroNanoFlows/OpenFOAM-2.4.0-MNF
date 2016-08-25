@@ -23,21 +23,21 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    coulombShifted
+    lennardJonesEqn
 
 
 Description
-    coulombShifted potential implemented in equation format
+    lennard jones potential implemented in equation format (not-shifted)
 
 SourceFiles
-    coulombShiftedI.H
-    coulombShifted.C
-    coulombShiftedIO.C
+    lennardJonesEqnI.H
+    lennardJonesEqn.C
+    lennardJonesEqnIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef coulombShifted_H
-#define coulombShifted_H
+#ifndef lennardJonesEqn_H
+#define lennardJonesEqn_H
 
 #include "pairPotentialModel.H"
 #include "polyMoleculeCloud.H"
@@ -48,10 +48,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class coulombShifted Declaration
+                           Class lennardJonesEqn Declaration
 \*---------------------------------------------------------------------------*/
 
-class coulombShifted
+class lennardJonesEqn
 :
     public pairPotentialModel
 {
@@ -61,34 +61,32 @@ private:
     // Private data
 
         //- subDictionary containing the properties
-//         dictionary propsDict_;
+        dictionary propsDict_;
 
-        scalar constant_;
+        scalar sigma_;
+        scalar epsilon_;
 
-
-        scalar EB_;
-        scalar EC_;
-        
-        // exclusion lists may go here
-
-        
+        // truncate
+        scalar F_at_Rmin_;
+        scalar E_at_Rmin_;        
         
     // Private Member Functions
 
-
-
+        scalar rawForce(const scalar r) const;
+        scalar rawEnergy(const scalar r) const;
+        
 public:
 
     //- Runtime type information
-    TypeName("coulombShifted");
+    TypeName("lennardJonesEqn");
 
     // Constructors
 
         //- Construct from components
-        coulombShifted
+        lennardJonesEqn
         (
             const polyMesh& mesh,
-            polyMoleculeCloud& molCloud,
+            polyMoleculeCloud& molCloud,         
             const reducedUnits& redUnits,
             const word& name,         
             const dictionary& dict
@@ -96,17 +94,15 @@ public:
 
     // Destructor
 
-        ~coulombShifted();
+        ~lennardJonesEqn();
 
     // Member Functions
 
         scalar unscaledEnergy(const scalar r) const;
 
-
         scalar force(const scalar r) const;
         
-        scalar energy(const scalar r) const;   
-        
+        scalar energy(const scalar r) const;
         
         
         //- Read dictionary
@@ -115,7 +111,6 @@ public:
 //             const dictionary& pairPotentialProperties,
 //         );
         
-
         void write(const fileName& pathName);
 
         const dictionary& dict() const;

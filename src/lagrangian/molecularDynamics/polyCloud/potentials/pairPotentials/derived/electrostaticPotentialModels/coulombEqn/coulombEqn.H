@@ -27,7 +27,7 @@ Class
 
 
 Description
-    coulombEqn potential implemented in table format
+    coulombEqn potential implemented in equation format
 
 SourceFiles
     coulombEqnI.H
@@ -103,6 +103,7 @@ public:
         
         scalar energy(const scalar r) const;        
         
+//         void interaction (const scalar r, scalar& force, scalar& energy);
         //- Read dictionary
 //         bool read
 //         (

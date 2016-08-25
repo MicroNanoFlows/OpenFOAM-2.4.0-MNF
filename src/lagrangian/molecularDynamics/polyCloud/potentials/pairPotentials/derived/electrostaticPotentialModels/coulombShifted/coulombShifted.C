@@ -99,6 +99,7 @@ scalar coulombShifted::energy(const scalar r) const
     return energy;
 }
 
+
 const dictionary& coulombShifted::dict() const
 {
     return pairPotentialProperties_;
@@ -106,65 +107,65 @@ const dictionary& coulombShifted::dict() const
 
 void coulombShifted::write(const fileName& pathName)
 {
-    Info<< "Writing energy and force to file for potential "
-            << name_ << endl;
-            
-//     label nBins = 100000;
-    label nBins = label((rCut_ - rMin_)/dr_) + 1;            
-    
-    scalarField U(nBins, 0.0);
-    scalarField f(nBins, 0.0);
-    
-    for (label i=0; i<nBins; ++i)
-    {
-        scalar r = rMin_+dr_*i;
-        
-        U[i] = energy(r);
-        f[i] = force(r);
-    }
-    {
-        OFstream file(pathName/name_+"-electrostatics-RU.xy");
-
-        if(file.good())
-        {
-            forAll(U, i)
-            {
-                file 
-                    << dr_*i << "\t"
-                    << U[i] << "\t"
-                    << f[i]
-                    << endl;
-            }
-        }
-        else
-        {
-            FatalErrorIn("void shortRangeElectrostatic::write()")
-                << "Cannot open file " << file.name()
-                << abort(FatalError);
-        }
-    }
-    
-    {
-        OFstream file(pathName/name_+"-electrostatics-SI.xy");
-
-        if(file.good())
-        {
-            forAll(U, i)
-            {
-                file 
-                    << dr_*i*rU_.refLength() << "\t"
-                    << U[i]*rU_.refEnergy() << "\t"
-                    << f[i]*rU_.refForce()
-                    << endl;
-            }
-        }
-        else
-        {
-            FatalErrorIn("void shortRangeElectrostatic::write()")
-                << "Cannot open file " << file.name()
-                << abort(FatalError);
-        }  
-    } 
+//     Info<< "Writing energy and force to file for potential "
+//             << name_ << endl;
+//             
+// //     label nBins = 100000;
+//     label nBins = label((rCut_ - rMin_)/dr_) + 1;            
+//     
+//     scalarField U(nBins, 0.0);
+//     scalarField f(nBins, 0.0);
+//     
+//     for (label i=0; i<nBins; ++i)
+//     {
+//         scalar r = rMin_+dr_*i;
+//         
+//         U[i] = energy(r);
+//         f[i] = force(r);
+//     }
+//     {
+//         OFstream file(pathName/name_+"-electrostatics-RU.xy");
+// 
+//         if(file.good())
+//         {
+//             forAll(U, i)
+//             {
+//                 file 
+//                     << dr_*i << "\t"
+//                     << U[i] << "\t"
+//                     << f[i]
+//                     << endl;
+//             }
+//         }
+//         else
+//         {
+//             FatalErrorIn("void shortRangeElectrostatic::write()")
+//                 << "Cannot open file " << file.name()
+//                 << abort(FatalError);
+//         }
+//     }
+//     
+//     {
+//         OFstream file(pathName/name_+"-electrostatics-SI.xy");
+// 
+//         if(file.good())
+//         {
+//             forAll(U, i)
+//             {
+//                 file 
+//                     << dr_*i*rU_.refLength() << "\t"
+//                     << U[i]*rU_.refEnergy() << "\t"
+//                     << f[i]*rU_.refForce()
+//                     << endl;
+//             }
+//         }
+//         else
+//         {
+//             FatalErrorIn("void shortRangeElectrostatic::write()")
+//                 << "Cannot open file " << file.name()
+//                 << abort(FatalError);
+//         }  
+//     } 
 }
 
 } // End namespace Foam
