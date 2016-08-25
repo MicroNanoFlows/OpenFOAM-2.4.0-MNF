@@ -68,6 +68,9 @@ private:
 
         scalar EB_;
         scalar EC_;
+
+        scalar F_at_Rmin_;
+        scalar E_at_Rmin_;
         
         // exclusion lists may go here
 
@@ -75,8 +78,12 @@ private:
         
     // Private Member Functions
 
+        scalar rawEnergy(const scalar r) const;
+        
+        scalar rawForce(const scalar r) const;
 
-
+        
+        
 public:
 
     //- Runtime type information

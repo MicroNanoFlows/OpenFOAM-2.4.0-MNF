@@ -68,6 +68,10 @@ coulombShifted::coulombShifted
     
     EB_ =  2/rCut_;
     EC_ = 1/(rCut_*rCut_);
+
+
+    F_at_Rmin_ = rawForce(rMin_);
+    E_at_Rmin_ = rawEnergy(rMin_);  
     
 }
 
@@ -83,21 +87,40 @@ scalar coulombShifted::unscaledEnergy(const scalar r) const
     return constant_/r;
 }
 
-
-
-scalar coulombShifted::force(const scalar r) const
+scalar coulombShifted::rawEnergy(const scalar r) const
 {
-    scalar force = constant_*( (1/(r*r)) - EC_);
-    
-    return force;
+    return constant_*( (1/r) - EB_ + EC_*r);
 }
-    
+
+scalar coulombShifted::rawForce(const scalar r) const
+{
+    return constant_*( (1/(r*r)) - EC_);
+}
+
 scalar coulombShifted::energy(const scalar r) const
 {
-    scalar energy = constant_*( (1/r) - EB_ + EC_*r);
+    scalar energy = E_at_Rmin_;
+    
+    if(r > rMin_)
+    {
+        energy = rawEnergy(r);
+    }    
     
     return energy;
 }
+
+scalar coulombShifted::force(const scalar r) const
+{
+    scalar force = F_at_Rmin_;
+    
+    if(r > rMin_)
+    {
+        force = rawForce(r);
+    }    
+    
+    return force;
+}
+
 
 
 const dictionary& coulombShifted::dict() const
@@ -107,65 +130,6 @@ const dictionary& coulombShifted::dict() const
 
 void coulombShifted::write(const fileName& pathName)
 {
-//     Info<< "Writing energy and force to file for potential "
-//             << name_ << endl;
-//             
-// //     label nBins = 100000;
-//     label nBins = label((rCut_ - rMin_)/dr_) + 1;            
-//     
-//     scalarField U(nBins, 0.0);
-//     scalarField f(nBins, 0.0);
-//     
-//     for (label i=0; i<nBins; ++i)
-//     {
-//         scalar r = rMin_+dr_*i;
-//         
-//         U[i] = energy(r);
-//         f[i] = force(r);
-//     }
-//     {
-//         OFstream file(pathName/name_+"-electrostatics-RU.xy");
-// 
-//         if(file.good())
-//         {
-//             forAll(U, i)
-//             {
-//                 file 
-//                     << dr_*i << "\t"
-//                     << U[i] << "\t"
-//                     << f[i]
-//                     << endl;
-//             }
-//         }
-//         else
-//         {
-//             FatalErrorIn("void shortRangeElectrostatic::write()")
-//                 << "Cannot open file " << file.name()
-//                 << abort(FatalError);
-//         }
-//     }
-//     
-//     {
-//         OFstream file(pathName/name_+"-electrostatics-SI.xy");
-// 
-//         if(file.good())
-//         {
-//             forAll(U, i)
-//             {
-//                 file 
-//                     << dr_*i*rU_.refLength() << "\t"
-//                     << U[i]*rU_.refEnergy() << "\t"
-//                     << f[i]*rU_.refForce()
-//                     << endl;
-//             }
-//         }
-//         else
-//         {
-//             FatalErrorIn("void shortRangeElectrostatic::write()")
-//                 << "Cannot open file " << file.name()
-//                 << abort(FatalError);
-//         }  
-//     } 
 }
 
 } // End namespace Foam
