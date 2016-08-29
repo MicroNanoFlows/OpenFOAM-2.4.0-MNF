@@ -757,7 +757,7 @@ void Foam::dsmcCloud::evolve()
     addElectrons();
     
     // Update cell occupancy
-    //buildCellOccupancy();
+    buildCellOccupancy();
 
     controllers_.controlBeforeCollisions();//****
     boundaries_.controlBeforeCollisions();//****
@@ -765,8 +765,6 @@ void Foam::dsmcCloud::evolve()
 
     // Calculate new velocities via stochastic collisions
     collisions();
-
-//     buildCellOccupancy(); //*** (for reactions)
 
     controllers_.controlAfterCollisions();//****
     boundaries_.controlAfterCollisions();//****

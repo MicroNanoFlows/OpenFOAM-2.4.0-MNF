@@ -495,6 +495,7 @@ void dsmcDiffuseCatalyticWallPatch::setProperties()
                 << "heatOfReaction list must be same size as moleculesToBeCatalysed." << nl 
                 << exit(FatalError);
     }
+    
 }
 
 } // End namespace Foam
