@@ -14,6 +14,7 @@ initaliseDsmcParcels/basic/dsmcAllConfigurations/dsmcAllConfigurations.C
 initaliseDsmcParcels/derived/dsmcMeshFill/dsmcMeshFill.C
 initaliseDsmcParcels/derived/dsmcZoneFill/dsmcZoneFill.C
 initaliseDsmcParcels/derived/dsmcInitialiseOnLine/dsmcInitialiseOnLine.C
+initaliseDsmcParcels/derived/dsmcLaserHeatingFill/dsmcLaserHeatingFill.C
 
 /* DELETE PARCELS*/
 

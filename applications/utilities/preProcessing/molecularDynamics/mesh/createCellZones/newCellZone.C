@@ -110,12 +110,12 @@ void newCellZone::setZone()
         {
             const vector& cellCentreI = mesh_.cellCentres()[i];        
             
-            bool acceptedCell = false;
+//             bool acceptedCell = false;
             
             if(bb.contains(cellCentreI))
             {
                 cells.append(i);
-                acceptedCell = true;
+//                 acceptedCell = true;
             }
             
             // further step of refinement can go here
@@ -124,6 +124,44 @@ void newCellZone::setZone()
     }
     
     // other options can go here
+    
+    if(option_ == "sphere")
+    {    
+        vector centrePoint = dict_.lookup("centrePoint");
+        scalar radius = readScalar(dict_.lookup("radius"));
+        
+        for (label i = 0; i < mesh_.nCells(); i++)
+        {
+            const vector& cellCentreI = mesh_.cellCentres()[i];        
+            
+//             bool acceptedCell = false;
+            
+            if(mag(cellCentreI - centrePoint) < radius)
+            {
+                cells.append(i);
+//                 acceptedCell = true;
+            }            
+        }
+    }
+    
+    if(option_ == "outsideSphere")
+    {    
+        vector centrePoint = dict_.lookup("centrePoint");
+        scalar radius = readScalar(dict_.lookup("radius"));
+        
+        for (label i = 0; i < mesh_.nCells(); i++)
+        {
+            const vector& cellCentreI = mesh_.cellCentres()[i];        
+            
+//             bool acceptedCell = false;
+            
+            if(mag(cellCentreI - centrePoint) > radius)
+            {
+                cells.append(i);
+//                 acceptedCell = true;
+            }            
+        }
+    }
     
     cells.shrink();
 
