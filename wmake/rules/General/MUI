@@ -1,0 +1,2 @@
+MUI_INC = \
+    -I$(MUI_ARCH_PATH)

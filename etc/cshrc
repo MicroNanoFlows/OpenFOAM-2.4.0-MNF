@@ -204,6 +204,7 @@ _foamSource $WM_PROJECT_DIR/etc/config/aliases.csh
 _foamSource `$WM_PROJECT_DIR/bin/foamEtcFile config/paraview.csh`
 _foamSource `$WM_PROJECT_DIR/bin/foamEtcFile config/ensight.csh`
 _foamSource `$WM_PROJECT_DIR/bin/foamEtcFile config/CGAL.csh`
+_foamSource `$WM_PROJECT_DIR/bin/foamEtcFile config/MUI.csh`
 
 
 # Clean environment paths again. Only remove duplicates
