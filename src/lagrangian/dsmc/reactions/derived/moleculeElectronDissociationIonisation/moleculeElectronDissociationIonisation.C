@@ -533,13 +533,14 @@ void moleculeElectronDissociationIonisation::reaction
                 p.ELevel() = ELevelAtom1;
                 
                 label classificationP = p.classification();
+                scalar RWF = p.RWF();
                 
                 // insert new product 2
                 cloud_.addNewParcel
                 (
                     position,
                     uP2,
-                    p.RWF(),
+                    RWF,
                     0.0,
                     0,
                     ELevelAtom2,
@@ -658,13 +659,14 @@ void moleculeElectronDissociationIonisation::reaction
                 p.ELevel() = 0;
                 
                 label classificationP = p.classification();
+                scalar RWF = p.RWF();
                 
                 // insert new product 2
                 cloud_.addNewParcel
                 (
                     position,
                     uP2,
-                    p.RWF(),
+                    RWF,
                     0.0,
                     0,
                     0,
@@ -882,13 +884,14 @@ void moleculeElectronDissociationIonisation::reaction
                 q.ELevel() = ELevelAtom1;
                 
                 label classificationQ = q.classification();
+                scalar RWF = q.RWF();
                 
                 // insert new product 2
                 cloud_.addNewParcel
                 (
                     position,
                     uP2,
-                    q.RWF(),
+                    RWF,
                     0.0,
                     0,
                     ELevelAtom2,
@@ -1003,13 +1006,14 @@ void moleculeElectronDissociationIonisation::reaction
                 q.ELevel() = 0;
                 
                 label classificationP = q.classification();
+                scalar RWF = q.RWF();
                 
                 // insert new product 2
                 cloud_.addNewParcel
                 (
                     position,
                     uP2,
-                    q.RWF(),
+                    RWF,
                     0.0,
                     0,
                     0,

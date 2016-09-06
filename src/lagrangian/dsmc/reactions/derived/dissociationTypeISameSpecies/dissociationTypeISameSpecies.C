@@ -629,13 +629,14 @@ void dissociationTypeISameSpecies::reaction
                 p.ELevel() = ELevelAtomP;
                 
                 label classificationP = p.classification();
+                scalar RWF = p.RWF();
 
                 // insert the second atom
                 cloud_.addNewParcel
                 (
                     position,
                     uP2,
-                    p.RWF(),
+                    RWF,
                     0.0,
                     0,
                     ELevelAtomQ,

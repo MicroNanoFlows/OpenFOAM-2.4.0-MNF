@@ -1403,7 +1403,7 @@ void Foam::dsmcCloud::axisymmetricWeighting()
         }
     }
     
-    reBuildCellOccupancy();
+    //reBuildCellOccupancy();
 }
 
 void Foam::dsmcCloud::insertParcelInCellOccupancy(dsmcParcel* p)

@@ -499,13 +499,14 @@ void dissociationTypeIDissimilarSpecies::reaction
                 p.ERot() = 0.0;
                 
                 label classificationP = p.classification();
+                scalar RWF = p.RWF();
                 
                 // insert new product 2
                 cloud_.addNewParcel
                 (
                     position,
                     uP2,
-                    p.RWF(),
+                    RWF,
                     0.0,
                     0,
                     0,
@@ -706,13 +707,14 @@ void dissociationTypeIDissimilarSpecies::reaction
                 q.ERot() = 0.0;
                 
                 label classificationQ = q.classification();
+                scalar RWF = q.RWF();
                 
                 // insert new product 2
                 cloud_.addNewParcel
                 (
                     position,
                     uP2,
-                    q.RWF(),
+                    RWF,
                     0.0,
                     0,
                     0,
@@ -892,13 +894,14 @@ void dissociationTypeIDissimilarSpecies::reaction
                 p.ERot() = 0.0;
                 
                 label classificationP = p.classification();
+                scalar RWF = p.RWF();
 
                 // insert new product 2
                 cloud_.addNewParcel
                 (
                     position,
                     uP2,
-                    p.RWF(),
+                    RWF,
                     0.0,
                     0,
                     0,
@@ -932,13 +935,14 @@ void dissociationTypeIDissimilarSpecies::reaction
                 q.ERot() = 0.0;
                 
                 label classificationQ = q.classification();
+                scalar RWF2 = q.RWF();
 
                 // insert new product 4
                 cloud_.addNewParcel
                 (
                     position,
                     uQ2,
-                    q.RWF(),
+                    RWF2,
                     0.0,
                     0,
                     0,
@@ -1221,13 +1225,14 @@ void dissociationTypeIDissimilarSpecies::reaction
                 p.ERot() = 0.0;
                 
                 label classificationP = p.classification();
+                scalar RWF = p.RWF();
                 
                 // insert new product 2
                 cloud_.addNewParcel
                 (
                     position,
                     uP2,
-                    p.RWF(),
+                    RWF,
                     0.0,
                     0,
                     0,
@@ -1403,13 +1408,14 @@ void dissociationTypeIDissimilarSpecies::reaction
                 q.ERot() = 0.0;
                 
                 label classificationQ = q.classification();
+                scalar RWF = q.RWF();
                 
                 // insert new product 2
                 cloud_.addNewParcel
                 (
                     position,
                     uP2,
-                    q.RWF(),
+                    RWF,
                     0.0,
                     0,
                     0,
@@ -1543,13 +1549,14 @@ void dissociationTypeIDissimilarSpecies::reaction
                 p.ERot() = 0.0;
                 
                 label classificationP = p.classification();
+                scalar RWF = p.RWF();
 
                 // insert new product 2
                 cloud_.addNewParcel
                 (
                     position,
                     uP2,
-                    p.RWF(),
+                    RWF,
                     0.0,
                     0,
                     0,
@@ -1582,13 +1589,14 @@ void dissociationTypeIDissimilarSpecies::reaction
                 q.ERot() = 0.0;
                 
                 label classificationQ = q.classification();
+                scalar RWF2 = q.RWF();
 
                 // insert new product 4
                 cloud_.addNewParcel
                 (
                     position,
                     uQ2,
-                    q.RWF(),
+                    RWF2,
                     0.0,
                     0,
                     0,

@@ -612,13 +612,14 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                 p.ELevel() = 0;
                 
                 label classificationP = p.classification();
+                scalar RWF = p.RWF();
                 
                 // insert new product 2
                 cloud_.addNewParcel
                 (
                     position,
                     uP2,
-                    p.RWF(),
+                    RWF,
                     0.0,
                     0,
                     0,
@@ -769,13 +770,14 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                 q.ELevel() = 0;
                 
                 label classificationQ = q.classification();
+                scalar RWF = q.RWF();
                 
                 // insert new product 2
                 cloud_.addNewParcel
                 (
                     position,
                     uQ2,
-                    q.RWF(),
+                    RWF,
                     0.0,
                     0,
                     0,
@@ -925,13 +927,14 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                 p.ELevel() = 0;
                 
                 label classificationP = p.classification();
+                scalar RWF = p.RWF();
                 
                 // insert new product 2
                 cloud_.addNewParcel
                 (
                     position,
                     uP2,
-                    p.RWF(),
+                    RWF,
                     0.0,
                     0,
                     0,
@@ -1081,14 +1084,15 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                 q.ERot() = 0.0;
                 q.ELevel() = 0;
                 
-                label classificationP = p.classification();
+                label classificationP = q.classification();
+                scalar RWF = q.RWF();
                 
                 // insert new product 2
                 cloud_.addNewParcel
                 (
                     position,
                     uQ2,
-                    q.RWF(),
+                    RWF,
                     0.0,
                     0,
                     0,
@@ -1414,13 +1418,14 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                 p.ELevel() = 0;
                 
                 label classificationP = p.classification();
+                scalar RWF = p.RWF();
                 
                 // insert new product 2
                 cloud_.addNewParcel
                 (
                     position,
                     uP2,
-                    p.RWF(),
+                    RWF,
                     0.0,
                     0,
                     0,
@@ -1570,14 +1575,15 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                 q.ERot() = 0.0;
                 q.ELevel() = 0;
                 
-                label classificationP = p.classification();
+                label classificationP = q.classification();
+                scalar RWF = q.RWF();
                 
                 // insert new product 2
                 cloud_.addNewParcel
                 (
                     position,
                     uQ2,
-                    q.RWF(),
+                    RWF,
                     0.0,
                     0,
                     0,
@@ -1727,13 +1733,14 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                 p.ELevel() = 0;
                 
                 label classificationP = p.classification();
+                scalar RWF = p.RWF();
                 
                 // insert new product 2
                 cloud_.addNewParcel
                 (
                     position,
                     uP2,
-                    p.RWF(),
+                    RWF,
                     0.0,
                     0,
                     0,
@@ -1883,14 +1890,15 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                 q.ERot() = 0.0;
                 q.ELevel() = 0;
                 
-                label classificationP = p.classification();
+                label classificationP = q.classification();
+                scalar RWF = q.RWF();
                 
                 // insert new product 2
                 cloud_.addNewParcel
                 (
                     position,
                     uQ2,
-                    q.RWF(),
+                    RWF,
                     0.0,
                     0,
                     0,

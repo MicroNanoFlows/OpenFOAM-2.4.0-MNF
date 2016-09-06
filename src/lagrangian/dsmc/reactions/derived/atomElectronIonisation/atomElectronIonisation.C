@@ -393,13 +393,14 @@ void atomElectronIonisation::reaction
                 p.ELevel() = 0;
                 
                 label classificationP = p.classification();
+                scalar RWF = p.RWF();
                 
                 // insert new product 2
                 cloud_.addNewParcel
                 (
                     position,
                     uP2,
-                    p.RWF(),
+                    RWF,
                     0.0,
                     0,
                     0,
@@ -544,13 +545,14 @@ void atomElectronIonisation::reaction
                 q.ELevel() = 0;
                 
                 label classificationP = q.classification();
+                scalar RWF = q.RWF();
                 
                 // insert new product 2
                 cloud_.addNewParcel
                 (
                     position,
                     uP2,
-                    q.RWF(),
+                    RWF,
                     0.0,
                     0,
                     0,

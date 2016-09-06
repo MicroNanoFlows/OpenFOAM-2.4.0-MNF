@@ -476,13 +476,14 @@ void mixedTypeIIDissociationReverseExchange::reaction
                 p.vibLevel() = 0;
                 
                 label classificationP = p.classification();
+                scalar RWF = p.RWF();
                 
                 // insert new product 2
                 cloud_.addNewParcel
                 (
                     position,
                     uP2,
-                    p.RWF(),
+                    RWF,
                     0.0,
                     0,
                     0,
@@ -842,13 +843,14 @@ void mixedTypeIIDissociationReverseExchange::reaction
                 q.vibLevel() = 0;
                 
                 label classificationQ = q.classification();
+                scalar RWF = q.RWF();
                 
                 // insert new product 2
                 cloud_.addNewParcel
                 (
                     position,
                     uP2,
-                    q.RWF(),
+                    RWF,
                     0.0,
                     0,
                     0,
