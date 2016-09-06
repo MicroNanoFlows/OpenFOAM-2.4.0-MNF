@@ -1,0 +1,5 @@
+#!/bin/bash
+
+rm -r 0/ potentials/ random_* process*/ timings/
+rm system/cyclicBoundaries
+rm constant/polyMesh/boundary constant/polyMesh/cellZones constant/polyMesh/faces constant/polyMesh/neighbour constant/polyMesh/owner constant/polyMesh/points

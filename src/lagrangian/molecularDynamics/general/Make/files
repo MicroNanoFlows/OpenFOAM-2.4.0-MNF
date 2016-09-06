@@ -20,7 +20,6 @@ boundaries/derived/standardCyclic/standardCyclic.C
 
 constructCyclicBoundaries/constructCyclicBoundaries.C
 
-
 /* REDUCED UNITS*/
 
 reducedUnits/reducedUnits.C
@@ -129,5 +128,8 @@ randomPointsInSquareZone/randomPointsInSquareZone.C
 multiscale/boundaryConditions/mixedFixedValueSlipFvPatchFields.C
 multiscale/boundaryConditions/nonLinMaxwellSlipUFvPatchVectorField.C
 
+/* COUPLING */
+
+couplingMD/couplingMD.C
 
 LIB = $(FOAM_LIBBIN)/libgeneralMolecule

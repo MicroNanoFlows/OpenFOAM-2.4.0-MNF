@@ -83,6 +83,7 @@ SourceFiles
 #include "word.H"
 #include "fileName.H"
 #include "parRun.H"
+#include "cplRun.H"
 #include "IStringStream.H"
 #include "OSspecific.H"
 
@@ -105,8 +106,11 @@ class argList
     // Private data
         static bool bannerEnabled;
 
-        //- Switch on/off parallel mode. Has to be first to be constructed
+        //- Switch on/off coupled mode. Has to be first to be constructed
         //  so destructor is done last.
+        CplRunControl cplRunControl_;
+
+        //- Switch on/off parallel mode.
         ParRunControl parRunControl_;
 
         stringList args_;
@@ -159,6 +163,9 @@ public:
 
         //- A list of valid parallel options
         static HashTable<string> validParOptions;
+
+        //- A list of valid coupling options
+		static HashTable<string> validCplOptions;
 
         //- Short usage information for validOptions
         static HashTable<string> optionUsage;
@@ -237,6 +244,9 @@ public:
 
             //- Return parRunControl
             inline const ParRunControl& parRunControl() const;
+
+            //- Return cplRunControl
+			inline const CplRunControl& cplRunControl() const;
 
             //- Return the path to the caseName
             inline fileName path() const;

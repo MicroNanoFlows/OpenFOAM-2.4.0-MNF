@@ -22,18 +22,15 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::ParRunControl
+    Foam::CplRunControl
 
 Description
-    Helper class for initializing parallel jobs from the command arguments.
+    Helper class for initializing coupled jobs from the command arguments.
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef parRun_H
-#define parRun_H
-
-#include "Pstream.H"
-#include "IOstreams.H"
+#ifndef cplRun_H
+#define cplRun_H
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -41,43 +38,31 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class ParRunControl Declaration
+                           Class CplRunControl Declaration
 \*---------------------------------------------------------------------------*/
 
-class ParRunControl
+class CplRunControl
 {
-    bool RunPar;
+    bool RunCpl;
 
 public:
 
-    ParRunControl()
+    CplRunControl()
     :
-        RunPar(false)
+        RunCpl(false)
     {}
 
-    ~ParRunControl()
+    ~CplRunControl()
+    {}
+
+    void runCpl()
     {
-        if (RunPar)
-        {
-            Info<< "Finalising parallel run" << endl;
-            Pstream::exit(0);
-        }
+        RunCpl = true;
     }
 
-    void runPar(int& argc, char**& argv, bool coupled=false)
+    bool cplRun() const
     {
-        RunPar = true;
-
-        if (!Pstream::init(argc, argv, coupled))
-        {
-            Info<< "Failed to start parallel run" << endl;
-            Pstream::exit(1);
-        }
-    }
-
-    bool parRun() const
-    {
-        return RunPar;
+        return RunCpl;
     }
 };
 

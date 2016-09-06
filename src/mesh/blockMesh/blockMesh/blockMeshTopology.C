@@ -218,6 +218,7 @@ bool Foam::blockMesh::readBoundary
         }
 
         patchNames[patchI] = patchInfo.keyword();
+
         // Construct dictionary
         patchDicts.set(patchI, new dictionary(patchInfo.dict()));
         // Read block faces

@@ -57,6 +57,7 @@ int PstreamGlobals::nTags_ = 0;
 DynamicList<int> PstreamGlobals::freedTags_;
 //! \endcond
 
+MPI_Comm PstreamGlobals::commWorld_;
 
 // Allocated communicators.
 //! \cond fileScope

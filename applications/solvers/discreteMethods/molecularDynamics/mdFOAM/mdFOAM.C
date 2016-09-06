@@ -33,6 +33,12 @@ Description
 #include "fvCFD.H"
 #include "mdPoly.H"
 
+// NOTE:
+// MUI header included if the switch -DUSE_MUI included during compilation.
+#ifdef USE_MUI
+	#include "mui.h"
+#endif
+
 int main(int argc, char *argv[])
 {
 
@@ -40,6 +46,15 @@ int main(int argc, char *argv[])
 #   include "createTime.H"
 #   include "createMesh.H"
 #   include "createRandom.H"
+
+#ifdef USE_MUI
+	if (args.cplRunControl().cplRun())
+	{
+		# 	include "create1DCoupling.H"
+		# 	include "create2DCoupling.H"
+		# 	include "create3DCoupling.H"
+	}
+#endif
     
     reducedUnits rU(runTime, mesh);
 

@@ -2,16 +2,16 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2008-2009 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
     This file is part of OpenFOAM.
 
-    OpenFOAM is free software: you can redistribute it and/or modify it
-    under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
 
     OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -19,26 +19,29 @@ License
     for more details.
 
     You should have received a copy of the GNU General Public License
-    along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Namespace
-    Foam::PstreamGlobals
+Class
+    Foam::couplingMD
 
 Description
-    Global functions and variables for working with parallel streams,
-    but principally for mpi
 
 SourceFiles
-    PstreamGlobals.C
+    couplingMD.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef PstreamGlobals_H
-#define PstreamGlobals_H
+#ifndef couplingMD_H
+#define couplingMD_H
 
-#include "mpi.h"
+#include "scalar.H"
 
-#include "DynamicList.H"
+// NOTE:
+// MUI header included if the switch -DUSE_MUI included during compilation.
+#ifdef USE_MUI
+	#include "mui.h"
+#endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -46,32 +49,45 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class PstreamGlobals Declaration
+                         Class coupling Declaration
 \*---------------------------------------------------------------------------*/
 
-namespace PstreamGlobals
+class couplingMD
 {
+	// Private data
+private:
+	string _appName;
+	string _uri;
+	scalar _dim;
 
-extern DynamicList<MPI_Request> outstandingRequests_;
+#ifdef USE_MUI
+	mui::uniface1d *_interface1d;
+	mui::uniface2d *_interface2d;
+	mui::uniface3d *_interface3d;
+#endif
 
-//extern int nRequests_;
-//extern DynamicList<label> freedRequests_;
+public:
 
-extern int nTags_;
+    // Constructors
 
-extern DynamicList<int> freedTags_;
+        //- Construct
+		couplingMD
+		(
+			scalar dimensions,
+			string name
+		);
 
-//Default MPI communicator (either allocated by MUI if in use or becomes MPI_COMM_WORLD)
-extern MPI_Comm commWorld_;
+    // Destructor
 
-// Current communicators. First element will be commWorld
-extern DynamicList<MPI_Comm> MPICommunicators_;
-extern DynamicList<MPI_Group> MPIGroups_;
+        ~couplingMD();
 
-void checkCommunicator(const label, const label procNo);
-
+    // Member Functions
+#ifdef USE_MUI
+        inline mui::uniface1d* interface1d() const;
+        inline mui::uniface2d* interface2d() const;
+        inline mui::uniface3d* interface3d() const;
+#endif
 };
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

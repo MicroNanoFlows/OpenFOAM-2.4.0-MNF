@@ -55,6 +55,7 @@ SourceFiles
 #include "potentials.H" 
 #include "constantMoleculeProperties.H"
 #include "polyIntegrators.H"
+#include "couplingMD.H"
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -112,6 +113,11 @@ private:
         
         clockTimer clock_;
 
+        List<couplingMD> cpl1D_;
+
+        List<couplingMD> cpl2D_;
+
+        List<couplingMD> cpl3D_;
 
     // Private Member Functions
 

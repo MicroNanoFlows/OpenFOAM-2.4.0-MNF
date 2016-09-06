@@ -24,7 +24,6 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "mpi.h"
-
 #include "UPstream.H"
 #include "PstreamReduceOps.H"
 #include "OSspecific.H"
@@ -35,6 +34,13 @@ License
 #include <cstring>
 #include <cstdlib>
 #include <csignal>
+
+// NOTE:
+// MUI header included if the switch -DUSE_MUI included during compilation.
+#ifdef USE_MUI
+	#include "mui.h"
+#endif
+
 
 #if defined(WM_SP)
 #   define MPI_SCALAR MPI_FLOAT
@@ -59,14 +65,22 @@ void Foam::UPstream::addValidParOptions(HashTable<string>& validParOptions)
 }
 
 
-bool Foam::UPstream::init(int& argc, char**& argv)
+bool Foam::UPstream::init(int& argc, char**& argv, bool coupled)
 {
-    MPI_Init(&argc, &argv);
+	int numprocs, myRank;
+	if(coupled)
+	{
+		//Use world returned by MUI, based on MPI MPMD model, calls MPI_Init if not already called
+		PstreamGlobals::commWorld_ = mui::mpi_split_by_app(argc, argv);
+	}
+	else
+	{
+		PstreamGlobals::commWorld_ = MPI_COMM_WORLD;
+		MPI_Init(&argc, &argv);
+	}
 
-    int numprocs;
-    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
-    int myRank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
+	MPI_Comm_size(PstreamGlobals::commWorld_, &numprocs);
+	MPI_Comm_rank(PstreamGlobals::commWorld_, &myRank);
 
     if (debug)
     {
@@ -161,14 +175,14 @@ void Foam::UPstream::exit(int errnum)
     }
     else
     {
-        MPI_Abort(MPI_COMM_WORLD, errnum);
+    	MPI_Abort(PstreamGlobals::commWorld_, errnum);
     }
 }
 
 
 void Foam::UPstream::abort()
 {
-    MPI_Abort(MPI_COMM_WORLD, 1);
+	MPI_Abort(PstreamGlobals::commWorld_, 1);
 }
 
 
@@ -340,8 +354,9 @@ void Foam::UPstream::allocatePstreamCommunicator
                 << UPstream::worldComm << Foam::exit(FatalError);
         }
 
-        PstreamGlobals::MPICommunicators_[index] = MPI_COMM_WORLD;
-        MPI_Comm_group(MPI_COMM_WORLD, &PstreamGlobals::MPIGroups_[index]);
+       	PstreamGlobals::MPICommunicators_[index] = PstreamGlobals::commWorld_;
+		MPI_Comm_group(PstreamGlobals::commWorld_, &PstreamGlobals::MPIGroups_[index]);
+
         MPI_Comm_rank
         (
             PstreamGlobals::MPICommunicators_[index],
