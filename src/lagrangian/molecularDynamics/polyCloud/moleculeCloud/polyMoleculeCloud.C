@@ -689,8 +689,13 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     cyclics_(t, mesh_, -1), 
     iL_(mesh, rU, cyclics_, p_.rCutMax(), "poly"),
     ipl_(mesh.nCells()),
-	clock_(t, "evolve", true)
+	clock_(t, "evolve", true),
+	oneDCouplings_(List<couplingInterface>(0)),
+	twoDCouplings_(List<couplingInterface>(0)),
+	threeDCouplings_(List<couplingInterface>(0))
 {
+	couplingEnabled_ = false;
+
     polyMolecule::readFields(*this);
 
     rndGen.initialise(this->size() != 0 ? this->size() : 10000); //Initialise the random number cache (initialise to 10000 if size is zero)
@@ -722,20 +727,157 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     calculateForce();
     updateAcceleration();
     
-
-    
     // TESTS
     writeReferredCloud();
 }
 
+//- Use for running MD (mdFoam) with MUI coupling
+Foam::polyMoleculeCloud::polyMoleculeCloud
+(
+    Time& t,
+    const polyMesh& mesh,
+    const reducedUnits& rU,
+    const constantMoleculeProperties& cP,
+    cachedRandomMD& rndGen,
+	List<couplingInterface>& oneDCouplings,
+	List<couplingInterface>& twoDCouplings,
+	List<couplingInterface>& threeDCouplings
+)
+:
+    Cloud<polyMolecule>(mesh, "polyMoleculeCloud", false),
+    mesh_(mesh),
+//     p_(p),
+    redUnits_(rU),
+    cP_(cP),
+    rndGen_(rndGen),
+    int_(t, mesh_, *this),
+    p_(mesh, *this, rU, cP),
+    cellOccupancy_(mesh_.nCells()),
+//     constPropList_(),
+    fields_(t, mesh_, *this),
+    boundaries_(t, mesh, *this),
+    controllers_(t, mesh, *this),
+    trackingInfo_(mesh, *this),
+    moleculeTracking_(),
+    cyclics_(t, mesh_, -1),
+    iL_(mesh, rU, cyclics_, p_.rCutMax(), "poly"),
+    ipl_(mesh.nCells()),
+	clock_(t, "evolve", true),
+	oneDCouplings_(oneDCouplings),
+	twoDCouplings_(twoDCouplings),
+	threeDCouplings_(threeDCouplings)
+{
+	couplingEnabled_ = true;
 
+#ifdef USE_MUI
+	for(int i=0; i<oneDCouplings_.size(); ++i)
+	{
+		word couplingName = oneDCouplings_[i].couplingName;
+		word currInterfaceName = oneDCouplings_[i].interfaceName;
+		mui::uniface1d *currInterface = oneDCouplings_[i].interface->interface1d();
+
+		int pushPoint=0, pullPoint=1;
+		double pushValue=1.0;
+
+		//Instance 1
+		if(couplingName.compare("mdFOAM_1") == 0)
+		{
+			pushPoint = 0;
+			pullPoint = 1;
+			pushValue = 0.1;
+		}
+
+		//Instance 1
+		if(couplingName.compare("mdFOAM_2") == 0)
+		{
+			pushPoint = 1;
+			pullPoint = 0;
+			pushValue = 0.2;
+		}
+
+		int currTime = 0; //Example time state
+
+		//Push value
+
+		//"testData" is an identifier, "pushPoint" is the 1D location of the "point" and "pushValue" the value being pushed
+		currInterface->push("testData", pushPoint, pushValue);
+
+		//currTime might be the current time-step iterator count or exact value, commit should only be called once all
+		//"push" commands are complete for a "frame"
+		currInterface->commit(currTime);
+
+		//Fetch value
+		double fetchValue;
+		//"testData" is the data identifier, "pullPoint" is the 1D location of the "point", "currTime" is the time-frame to fetch from
+		//sampler_exact1d<double> defines that we are using an exact 1D sampler with double precision,
+		//chrono_sampler_exact1d dfines we are sampling the point exactly at the value of currTime and not using an interpolation
+		fetchValue = currInterface->fetch("testData", pullPoint, currTime, mui::sampler_exact1d<double>(), mui::chrono_sampler_exact1d());
+
+		const Time& runTime = mesh_.time();
+
+		fileName outputFile(runTime.path()/"couplingResult");
+		OFstream os(outputFile);
+
+		os << "Value fetched from other instance: " << fetchValue << endl;
+	}
+
+	/*
+	for(int i=0; i<twoDCouplings_->size(); ++i)
+	{
+
+	}
+	*/
+
+	/*
+	for(int i=0; i<threeDCouplings_->size(); ++i)
+	{
+
+	}
+	*/
+#endif
+
+    polyMolecule::readFields(*this);
+
+    rndGen.initialise(this->size() != 0 ? this->size() : 10000); //Initialise the random number cache (initialise to 10000 if size is zero)
+
+//     buildConstProps();
+
+    setSiteSizesAndPositions();
+
+    checkMoleculesInMesh();
+
+    // read in tracking numbers
+    updateTrackingNumbersAfterRead();
+    p_.pairPots().initialiseExclusionModels();
+
+    int_.integrator()->init();
+
+    //check and remove high energy overalps
+    checkForOverlaps();
+//     controllers_.initialConfig();
+
+    buildCellOccupancy();
+
+
+    fields_.createFields();
+    boundaries_.setInitialConfig();
+    controllers_.initialConfig();
+
+    clearLagrangianFields();
+    calculateForce();
+    updateAcceleration();
+
+
+
+    // TESTS
+    writeReferredCloud();
+}
 
 //- general constructor
 Foam::polyMoleculeCloud::polyMoleculeCloud
 (
     Time& t,
     const polyMesh& mesh,
-//     const potentials& p,
     const reducedUnits& rU,
     const constantMoleculeProperties& cP,
     cachedRandomMD& rndGen, 
@@ -760,8 +902,13 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     cyclics_(t, mesh_, -1),
     iL_(mesh, rU, cyclics_, p_.rCutMax(), "poly"),
     ipl_(mesh.nCells()),
-	clock_(t, "evolve", true)
+	clock_(t, "evolve", true),
+	oneDCouplings_(List<couplingInterface>(0)),
+	twoDCouplings_(List<couplingInterface>(0)),
+	threeDCouplings_(List<couplingInterface>(0))
 {
+	couplingEnabled_ = false;
+
     polyMolecule::readFields(*this);
 
     label initialMolecules = this->size();
@@ -863,6 +1010,24 @@ Foam::autoPtr<Foam::polyMoleculeCloud> Foam::polyMoleculeCloud::New
     const polyMesh& mesh,
     const reducedUnits& rU,
     const constantMoleculeProperties& cP, 
+    cachedRandomMD& rndGen,
+	List<couplingInterface>& oneDCouplings,
+	List<couplingInterface>& twoDCouplings,
+	List<couplingInterface>& threeDCouplings
+)
+{
+    return autoPtr<polyMoleculeCloud>
+    (
+        new polyMoleculeCloud(t, mesh, rU, cP, rndGen, oneDCouplings, twoDCouplings, threeDCouplings)
+    );
+}
+
+Foam::autoPtr<Foam::polyMoleculeCloud> Foam::polyMoleculeCloud::New
+(
+    Time& t,
+    const polyMesh& mesh,
+    const reducedUnits& rU,
+    const constantMoleculeProperties& cP,
     cachedRandomMD& rndGen,
     const word& option,
     const bool& clearFields

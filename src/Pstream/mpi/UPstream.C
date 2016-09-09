@@ -70,8 +70,13 @@ bool Foam::UPstream::init(int& argc, char**& argv, bool coupled)
 	int numprocs, myRank;
 	if(coupled)
 	{
-		//Use world returned by MUI, based on MPI MPMD model, calls MPI_Init if not already called
-		PstreamGlobals::commWorld_ = mui::mpi_split_by_app(argc, argv);
+		#ifdef USE_MUI
+			//Use world returned by MUI, based on MPI MPMD model, calls MPI_Init if not already called
+			PstreamGlobals::commWorld_ = mui::mpi_split_by_app(argc, argv);
+		#else
+			PstreamGlobals::commWorld_ = MPI_COMM_WORLD;
+			MPI_Init(&argc, &argv);
+		#endif
 	}
 	else
 	{

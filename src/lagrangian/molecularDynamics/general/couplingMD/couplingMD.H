@@ -83,13 +83,20 @@ public:
 
     // Member Functions
 #ifdef USE_MUI
-        inline mui::uniface1d* interface1d() const;
-        inline mui::uniface2d* interface2d() const;
-        inline mui::uniface3d* interface3d() const;
+        mui::uniface1d* interface1d() const;
+        mui::uniface2d* interface2d() const;
+        mui::uniface3d* interface3d() const;
 #endif
 };
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+struct couplingInterface
+{
+	word couplingName;
+	word interfaceName;
+	couplingMD* interface;
+};
 
 } // End namespace Foam
 

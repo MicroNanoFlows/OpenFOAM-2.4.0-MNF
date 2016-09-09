@@ -48,41 +48,44 @@ int main(int argc, char *argv[])
 #   include "createRandom.H"
 
 #ifdef USE_MUI
+	# 	include "createCouplingData.H"
+
 	if (args.cplRunControl().cplRun())
 	{
-		# 	include "create1DCoupling.H"
-		# 	include "create2DCoupling.H"
-		# 	include "create3DCoupling.H"
+		# 	include "createCouplings.H"
 	}
 #endif
     
     reducedUnits rU(runTime, mesh);
 
     constantMoleculeProperties cP (mesh, rU);
-        
-    polyMoleculeCloud molecules
-    (
-        runTime,
-        mesh,
-        rU,
-        cP,
-        rndGen
-    );
+
+    polyMoleculeCloud *molecules;
+
+#ifdef USE_MUI
+	if (args.cplRunControl().cplRun())
+	{
+		molecules = new polyMoleculeCloud(runTime, mesh, rU, cP, rndGen, oneDCouplings, twoDCouplings, threeDCouplings);
+	}
+	else
+	{
+		molecules = new polyMoleculeCloud(runTime, mesh, rU, cP, rndGen);
+	}
+#else
+    molecules = new polyMoleculeCloud(runTime, mesh, rU, cP, rndGen);
+#endif
     
-
     Info << "\nStarting time loop\n" << endl;
-
-//     clockTimer evolveTimer(runTime, "evolve", true);
 
     while (runTime.loop())
     {
         Info << "Time = " << runTime.timeName() << endl;
 
-        molecules.clock().startClock();
+        molecules->clock().startClock();
 
-        molecules.evolve();
+        molecules->evolve();
 
-        molecules.clock().stopClock();
+        molecules->clock().stopClock();
 
         runTime.write();
 

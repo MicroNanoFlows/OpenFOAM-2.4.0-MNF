@@ -77,17 +77,17 @@ Foam::couplingMD::~couplingMD()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 #ifdef USE_MUI
-inline mui::uniface1d* Foam::couplingMD::interface1d() const
+mui::uniface1d* Foam::couplingMD::interface1d() const
 {
     return _interface1d;
 }
 
-inline mui::uniface2d* Foam::couplingMD::interface2d() const
+mui::uniface2d* Foam::couplingMD::interface2d() const
 {
     return _interface2d;
 }
 
-inline mui::uniface3d* Foam::couplingMD::interface3d() const
+mui::uniface3d* Foam::couplingMD::interface3d() const
 {
     return _interface3d;
 }

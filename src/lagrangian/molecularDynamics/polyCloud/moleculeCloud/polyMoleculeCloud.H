@@ -37,6 +37,7 @@ SourceFiles
 #ifndef polyMoleculeCloud_H
 #define polyMoleculeCloud_H
 
+#include "couplingMD.H"
 #include "Cloud.H"
 #include "polyMolecule.H"
 #include "IOdictionary.H"
@@ -55,8 +56,6 @@ SourceFiles
 #include "potentials.H" 
 #include "constantMoleculeProperties.H"
 #include "polyIntegrators.H"
-#include "couplingMD.H"
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -113,11 +112,13 @@ private:
         
         clockTimer clock_;
 
-        List<couplingMD> cpl1D_;
+        const List<couplingInterface>& oneDCouplings_;
 
-        List<couplingMD> cpl2D_;
+        const List<couplingInterface>& twoDCouplings_;
 
-        List<couplingMD> cpl3D_;
+        const List<couplingInterface>& threeDCouplings_;
+
+		bool couplingEnabled_;
 
     // Private Member Functions
 
@@ -145,18 +146,29 @@ public:
         (
             Time& t,
             const polyMesh& mesh,
-//             const potentials& p,
             const reducedUnits& rU,
             const constantMoleculeProperties& cP,
             cachedRandomMD& rndGen
         );
+
+        //- Construct for mdFoam with MUI coupling
+		polyMoleculeCloud
+		(
+			Time& t,
+			const polyMesh& mesh,
+			const reducedUnits& rU,
+			const constantMoleculeProperties& cP,
+			cachedRandomMD& rndGen,
+			List<couplingInterface>& oneDCouplings,
+			List<couplingInterface>& twoDCouplings,
+			List<couplingInterface>& threeDCouplings
+		);
 
         //- General constructor
         polyMoleculeCloud
         (
             Time& t,
             const polyMesh& mesh,
-//             const potentials& p,
             const reducedUnits& rU,
             const constantMoleculeProperties& cP,
             cachedRandomMD& rndGen,
@@ -170,17 +182,27 @@ public:
         (
             Time& t,
             const polyMesh& mesh,
-//             const potentials& p,
             const reducedUnits& rU,
             const constantMoleculeProperties& cP,
             cachedRandomMD& rndGen
         );
 
         static autoPtr<polyMoleculeCloud> New
+		(
+			Time& t,
+			const polyMesh& mesh,
+			const reducedUnits& rU,
+			const constantMoleculeProperties& cP,
+			cachedRandomMD& rndGen,
+			List<couplingInterface>& oneDCouplings,
+			List<couplingInterface>& twoDCouplings,
+			List<couplingInterface>& threeDCouplings
+		);
+
+        static autoPtr<polyMoleculeCloud> New
         (
             Time& t,
             const polyMesh& mesh,
-//             const potentials& p,
             const reducedUnits& rU,
             const constantMoleculeProperties& cP,
             cachedRandomMD& rndGen,
