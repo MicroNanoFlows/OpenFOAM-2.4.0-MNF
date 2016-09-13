@@ -95,20 +95,23 @@ void Foam::dsmcCloud::removeElectrons()
                                 
             const label& charge = constProp.charge();
             
+            scalar RWF = 1.0;
+            
+            if(axisymmetric_)
+            {
+                const point& cC = mesh_.cellCentres()[c];
+                scalar radius = cC.y();
+                
+                RWF = 1.0 + maxRWF_*(radius/radialExtent_);
+            }
+            
+            scalar mass = constProps(p->typeId()).mass();
+            
+            momentumMean_[c] += mass*RWF*p->U();
+            rhoMMean_[c] += mass*RWF;
+            
             if(charge == -1)
             {
-                scalar mass = constProps(p->typeId()).mass();
-                
-                scalar RWF = 1.0;
-            
-                if(axisymmetric_)
-                {
-                    const point& cC = mesh_.cellCentres()[c];
-                    scalar radius = cC.y();
-                    
-                    RWF = 1.0 + maxRWF_*(radius/radialExtent_);
-                }
-                
                 rhoNMeanElectron_[c] += 1.0*RWF;
                 rhoMMeanElectron_[c] += mass*RWF;
                 momentumMeanElectron_[c] += mass*RWF*p->U();
@@ -196,8 +199,13 @@ void Foam::dsmcCloud::addElectrons()
                     electronTemperature_[cellI],
                     constProps_[electronTypeId].mass()
                 );
+              
+            if(rhoMMean_[cellI] > VSMALL)
+            {
+                cellVelocity_[cellI] = momentumMean_[cellI]/rhoMMean_[cellI];
+            }
                 
-            electronVelocity += (momentumMeanElectron_[cellI]/(rhoMMeanElectron_[cellI]*nParticle_));
+            electronVelocity += cellVelocity_[cellI];
 
             scalar RWF = p.RWF();
 
@@ -521,9 +529,12 @@ Foam::dsmcCloud::dsmcCloud
     cellOccupancy_(mesh_.nCells()),
     rhoNMeanElectron_(mesh_.nCells()),
     rhoMMeanElectron_(mesh_.nCells()),
+    rhoMMean_(mesh_.nCells()),
     momentumMeanElectron_(mesh_.nCells()),
+    momentumMean_(mesh_.nCells()),
     linearKEMeanElectron_(mesh_.nCells()),
     electronTemperature_(mesh_.nCells()),
+    cellVelocity_(mesh_.nCells(), vector::zero),
     sigmaTcRMax_
     (
         IOobject
@@ -639,9 +650,12 @@ Foam::dsmcCloud::dsmcCloud
     cellOccupancy_(),
     rhoNMeanElectron_(),
     rhoMMeanElectron_(),
+    rhoMMean_(),
     momentumMeanElectron_(),
+    momentumMean_(),
     linearKEMeanElectron_(),
     electronTemperature_(),
+    cellVelocity_(),
     sigmaTcRMax_
     (
         IOobject

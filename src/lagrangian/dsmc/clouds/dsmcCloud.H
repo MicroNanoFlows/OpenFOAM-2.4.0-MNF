@@ -124,14 +124,23 @@ private:
         //- A data structure holding electron mass density
         scalarList rhoMMeanElectron_;
         
+        //- A data structure holding all species mass density
+        scalarList rhoMMean_;
+        
         //- A data structure holding electron momentum
         List<vector> momentumMeanElectron_;
+        
+        //- A data structure holding all species momentum
+        List<vector> momentumMean_;
         
         //- A data structure holding electron linearKE
         scalarList linearKEMeanElectron_;
         
         //- A data structure holding electron temperature
         scalarList electronTemperature_;
+        
+        //- A data structure holding cell velocity
+        List<vector> cellVelocity_;
 
         //- A field holding the value of (sigmaT * cR)max for each
         //  cell (see Bird p220). Initialised with the parcels,
