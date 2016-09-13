@@ -76,10 +76,10 @@ void Foam::dsmcCloud::buildCellOccupancy()
 
 void Foam::dsmcCloud::removeElectrons()
 {       
-    rhoNMeanElectron_ = 0.0;
-    rhoMMeanElectron_ = 0.0;
-    momentumMeanElectron_ = vector::zero;
-    linearKEMeanElectron_ = 0.0;
+//     rhoNMeanElectron_ = 0.0;
+//     rhoMMeanElectron_ = 0.0;
+//     momentumMeanElectron_ = vector::zero;
+//     linearKEMeanElectron_ = 0.0;
 //     electronTemperature_ = 0.0;
     
     forAll(cellOccupancy_, c)
@@ -154,6 +154,8 @@ void Foam::dsmcCloud::addElectrons()
             
             electronTemperature_[c] = 2.0/(3.0*physicoChemical::k.value()*rhoNMeanElectron)
                                     *(linearKEMeanElectron - 0.5*rhoMMeanElectron*(UElectron & UElectron));
+                                    
+//             electronVelocity_[c] = UElectron;
         }
     }
         
@@ -194,6 +196,8 @@ void Foam::dsmcCloud::addElectrons()
                     electronTemperature_[cellI],
                     constProps_[electronTypeId].mass()
                 );
+                
+            electronVelocity += (momentumMeanElectron_[cellI]/(rhoMMeanElectron_[cellI]*nParticle_));
 
             scalar RWF = p.RWF();
 
