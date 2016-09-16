@@ -102,7 +102,7 @@ void dsmcLaserHeatingFill::setInitialConfiguration()
     
     centrePoint_ = (dsmcInitialiseDict_.lookup("centrePoint"));
     
-    deltaT_ = readScalar((dsmcInitialiseDict_.lookup("deltaT")));
+    deltaT_ = readScalar((dsmcInitialiseDict_.lookup("axialTemperature")));
 
     const dictionary& numberDensitiesDict
     (
@@ -153,7 +153,13 @@ void dsmcLaserHeatingFill::setInitialConfiguration()
             
             const scalar& cellCentreI = mag(mesh_.cellCentres()[cellI] - centrePoint_);
             
-            scalar cellTemperature = deltaT_*exp(-1.0*sqr(cellCentreI/r0_));
+            const scalar& cellCentreY = mesh_.cellCentres()[cellI].y();
+            
+            scalar cellTemperature = deltaT_*exp(-1.0*pow(cellCentreY/r0_,2.0));
+            
+            const scalar& cellCentreX = mesh_.cellCentres()[cellI].x();
+            
+            cellTemperature *= (0.0218 - cellCentreX)/0.0036;
     
             forAll(cellTets, tetI)
             {

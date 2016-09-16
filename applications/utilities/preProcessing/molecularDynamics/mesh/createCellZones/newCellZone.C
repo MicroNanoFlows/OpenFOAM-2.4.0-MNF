@@ -125,18 +125,24 @@ void newCellZone::setZone()
     
     // other options can go here
     
-    if(option_ == "sphere")
+    if(option_ == "elipse")
     {    
         vector centrePoint = dict_.lookup("centrePoint");
-        scalar radius = readScalar(dict_.lookup("radius"));
+        scalar a = readScalar(dict_.lookup("a"));
+        scalar b = readScalar(dict_.lookup("b"));
+        scalar c = readScalar(dict_.lookup("c"));
         
         for (label i = 0; i < mesh_.nCells(); i++)
         {
-            const vector& cellCentreI = mesh_.cellCentres()[i];        
+            const vector& cellCentreI = mesh_.cellCentres()[i]; 
+            
+            scalar elipseEquation = sqr(cellCentreI.x() - centrePoint.x())/sqr(a)
+                        + sqr(cellCentreI.y() - centrePoint.y())/sqr(b)
+                        + sqr(cellCentreI.z() - centrePoint.z())/sqr(c);
             
 //             bool acceptedCell = false;
             
-            if(mag(cellCentreI - centrePoint) < radius)
+            if(elipseEquation <= 1.0)
             {
                 cells.append(i);
 //                 acceptedCell = true;
@@ -144,18 +150,26 @@ void newCellZone::setZone()
         }
     }
     
-    if(option_ == "outsideSphere")
+    if(option_ == "outsideElipse")
     {    
         vector centrePoint = dict_.lookup("centrePoint");
-        scalar radius = readScalar(dict_.lookup("radius"));
+        scalar a = readScalar(dict_.lookup("a"));
+        scalar b = readScalar(dict_.lookup("b"));
+        scalar c = readScalar(dict_.lookup("c"));
         
         for (label i = 0; i < mesh_.nCells(); i++)
         {
-            const vector& cellCentreI = mesh_.cellCentres()[i];        
+            const vector& cellCentreI = mesh_.cellCentres()[i]; 
+            
+            scalar elipseEquation = sqr(cellCentreI.x() - centrePoint.x())/sqr(a)
+                                    + sqr(cellCentreI.y() - centrePoint.y())/sqr(b)
+                                    + sqr(cellCentreI.z() - centrePoint.z())/sqr(c);
             
 //             bool acceptedCell = false;
+                                    
+//             Info << "elipseEquation = " << elipseEquation << endl;
             
-            if(mag(cellCentreI - centrePoint) > radius)
+            if(elipseEquation > 1.0)
             {
                 cells.append(i);
 //                 acceptedCell = true;
