@@ -75,13 +75,7 @@ void Foam::dsmcCloud::buildCellOccupancy()
 }
 
 void Foam::dsmcCloud::removeElectrons()
-{       
-     //rhoNMeanElectron_ = 0.0;
-     //rhoMMeanElectron_ = 0.0;
-     //momentumMeanElectron_ = vector::zero;
-     //linearKEMeanElectron_ = 0.0;
-     //electronTemperature_ = 0.0;
-    
+{   
     forAll(cellOccupancy_, c)
     {
         const DynamicList<dsmcParcel*>& molsInCell = cellOccupancy_[c];
