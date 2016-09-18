@@ -32,10 +32,11 @@ potentials/pairPotentials/derived/pairPotentialModels/lennardJonesEqn/lennardJon
 
 potentials/pairPotentials/derived/pairPotentialModels/lennardJones/lennardJones.C
 potentials/pairPotentials/derived/pairPotentialModels/noInteraction/noInteraction.C
-potentials/pairPotentials/derived/pairPotentialModels/morse/morse.C
+
+/*0.0 potentials/pairPotentials/derived/pairPotentialModels/morse/morse.C
 potentials/pairPotentials/derived/pairPotentialModels/FENE/FENE.C
 potentials/pairPotentials/derived/pairPotentialModels/harmonicPotential/harmonicPotential.C
-
+*/
 
 /* electrostatics */
 potentials/pairPotentials/derived/electrostaticPotentialModels/coulombShifted/coulombShifted.C
@@ -80,6 +81,7 @@ tetherPotential/derived/pitchForkRing/pitchForkRing.C
 
 initialiseMolecules/basic/polyAllConfigurations/polyAllConfigurations.C
 initialiseMolecules/basic/polyConfiguration/polyConfiguration.C
+
 initialiseMolecules/derived/polySimpleLattice/polySimpleLattice.C
 initialiseMolecules/derived/polyLatticeZone/polyLatticeZone.C
 initialiseMolecules/derived/polySimpleLatticeZone/polySimpleLatticeZone.C
@@ -116,6 +118,7 @@ molsToDel/derived/polyDelFromCosineWave/polyDelFromCosineWave.C
 molsToDel/derived/polyClosestDistance/polyClosestDistance.C
 molsToDel/derived/polySwitchMolecules/polySwitchMolecules.C
 
+
 /* Mapping */
 
 mappingModels/basic/polyMappingModel/polyMappingModel.C
@@ -145,6 +148,8 @@ measurements/derived/combinedFields/polyInstantBinsMethod/polyInstantBinsMethod.
 
 measurements/derived/density/polyDensity/polyDensity.C
 measurements/derived/density/polyTwoDimDropletDensity/polyTwoDimDropletDensity.C
+
+
 /*  - MASS FLUX  */
 
 measurements/derived/massFlux/polyMassFluxMultiSurfaces/polyMassFluxMultiSurfaces.C
@@ -181,6 +186,7 @@ controllers/basic/polyFluxController/polyFluxController.C
 
 /*  - VELOCITY  */
 
+
 controllers/derived/velocity/polyVelocityZoneControl/polyVelocityZoneControl.C
 controllers/derived/velocity/polyVelocityBounded/polyVelocityBounded.C
 controllers/derived/velocity/polyVelocityBins/polyVelocityBins.C
@@ -188,11 +194,13 @@ controllers/derived/velocity/polyVelocity2DBins/polyVelocity2DBins.C
 
 
 /*  - TEMPERATURE  */
+
 controllers/derived/temperature/polyTemperatureBerendsenBinsNew/polyTemperatureBerendsenBinsNew.C
 controllers/derived/temperature/polyTemperatureMaxwellDemon/polyTemperatureMaxwellDemon.C
 controllers/derived/temperature/polyTemperatureBerendsen/polyTemperatureBerendsen.C
 controllers/derived/temperature/polyLangevin/polyLangevin.C
 controllers/derived/temperature/polyTemperatureMaxwellDemonInputVelocity/polyTemperatureMaxwellDemonInputVelocity.C
+
 
 /*  - DENSITY  */
 
@@ -201,6 +209,7 @@ controllers/derived/density/polyDensityFadeBounded/polyDensityFadeBounded.C
 
 
 /*  - OTHERS  */
+
 controllers/derived/others/polyForce/polyForce.C
 controllers/derived/others/polyBoundedForce/polyBoundedForce.C
 controllers/derived/others/polyForceTwoShear/polyForceTwoShear.C

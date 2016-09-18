@@ -505,6 +505,9 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
 //         << endl;
     }
     
+//     Info << "sourceCells = " << sourceCells << endl;
+    
+    /* 1-old
     //- each source cell is made a referred cell,
     //- referred using translation and rotational transforms
     label nRefCells = 0;
@@ -533,13 +536,13 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
             nRefCells++;
         }
     }    
-    
+    */
 //     Info << "no of refCells after first cyclic boundary shift = " << nRefCells << endl;
    
     //- overlapping source cells
     
     // outer list = no of cells on mesh
-    // inner list = index to cyclic boundary - i.e. size of inner list = no of overlaps
+    // inner list = index to cyclic boundary - i.e. size of inner list = no of boundaries the cell touches 
     List<DynamicList<label> > ovSrcCells(mesh_.nCells());
     
     forAll(sourceCells, i)
@@ -548,15 +551,18 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
         {
             label cellI = sourceCells[i][j];
             
+            if(findIndex(ovSrcCells[cellI], i) == -1 )
+            {
+                ovSrcCells[cellI].append(i);
+            }
+            
             forAll(sourceCells, k)
             {
                 if(k != i)
                 {
-                    label id = findIndex(sourceCells[k], cellI);
-                    
-                    if(id != -1)
+                    if(findIndex(sourceCells[k], cellI) != -1)
                     {
-                        if(findIndex(ovSrcCells[cellI], k) == -1 )
+                        if(findIndex(ovSrcCells[cellI], k) == -1)
                         {
                             ovSrcCells[cellI].append(k);
                         }
@@ -568,23 +574,170 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
     
 //     Info << "ovSrcCells = " << ovSrcCells << endl;
     
-    label nOvCells = 0;
-    
+    /*
     forAll(ovSrcCells, i)
     {
         ovSrcCells[i].shrink();
         
-        if(ovSrcCells[i].size() > 0)
+        // correction step here for 6 boundaries (i.e. single cell simulation)
+        
+        if(ovSrcCells[i].size() == 6)
         {
-            nOvCells++;
+            DynamicList<label> mod(0);
+            DynamicList<label> mod2(0);
+            
+            forAll(cyclics_.cyclicBoundaryModels(), j)
+            {
+                label pI = cyclics_.cyclicBoundaryModels()[j]->patchId();
+                label pIN = cyclics_.cyclicBoundaryModels()[j]->patchIdN();
+                
+//                 Info << "pI = " << pI << endl;
+//                 Info << "pIN = " << pIN << endl;
+                
+                if(
+                    ( findIndex(mod, pI) == -1 ) &&
+                    ( findIndex(mod, pIN) == -1 )
+                )
+                {
+                    mod.append(pI);
+                    mod.append(pIN);
+                    mod2.append(j);
+                }
+            }
+            
+            mod.shrink();
+            mod2.shrink();
+            
+//             Info << "mod1 = " << mod << endl;
+//             Info << "mod2 = " << mod2 << endl;
+            
+            ovSrcCells[i].clear();
+            ovSrcCells[i].transfer(mod2);
+            
+        }
+    }
+    */
+        
+//     Info << "ovSrcCells = " << ovSrcCells << endl;    
+
+    // new code for building referred cells
+    
+    label nRefCells = 0;
+
+    List< DynamicList<referredCell> > referredCells(Pstream::nProcs());
+    
+    label pN = Pstream::myProcNo();
+    
+    forAll(ovSrcCells, i)
+    {
+        label nOvs=ovSrcCells[i].size();
+        
+        for (label n1 = 0; n1 < nOvs; n1++)
+        {
+            label k1 = ovSrcCells[i][n1];
+            referredCell refCell1(mesh_, rCut_, i);
+//             refCell1.setOffsetBoundBox();        
+            refCell1.translate(cyclics_.cyclicBoundaryModels()[k1]->separationVector());
+            referredCells[pN].append(refCell1);
+            nRefCells++;             
+            
+            for (label n2 = 0; n2 < nOvs; n2++)
+            {
+                if(n2 > n1)
+                {
+                    label k2 = ovSrcCells[i][n2];
+                    referredCell refCell2(refCell1);
+                    refCell2.translate(cyclics_.cyclicBoundaryModels()[k2]->separationVector());
+                    referredCells[pN].append(refCell2); 
+                    nRefCells++;
+                
+                    for (label n3 = 0; n3 < nOvs; n3++)
+                    {
+                        if(n3 > n2)
+                        {
+                            label k3 = ovSrcCells[i][n3];
+                            referredCell refCell3(refCell2);
+                            refCell3.translate(cyclics_.cyclicBoundaryModels()[k3]->separationVector());
+                            referredCells[pN].append(refCell3); 
+                            nRefCells++;                        
+                        }
+                    }
+                }
+            }
         }
     }
     
-//     Info << "nOvCells = " << nOvCells << endl;
+//     Info << "number of referredCells = " << nRefCells << ", " << referredCells[pN].size() << endl;
     
     
+    // check for overlapping referred cells
     
+//     if(Pstream::parRun())
+//     {
+//         List< DynamicList<referredCell> > referredCells(Pstream::nProcs());    
+//     }
+//     else
+    {
+//         List< DynamicList<referredCell> > referredCells(Pstream::nProcs()); 
+//         scalar treshold = 0.01;
+        scalar s = rCut_*0.2;
+        
+        List<DynamicList<referredCell> > newReferredCells(Pstream::nProcs());
+        
+        forAll(referredCells[pN], i)
+        {
+//             vector rI = referredCells[pN][i].midpoint();
+            
+            bool overlap = false;
+            
+            forAll(referredCells[pN], j)
+            {            
+                if(j > i)
+                {
+                    referredCells[pN][j].contractII(s);
+
+                    if(referredCells[pN][i].contains(referredCells[pN][j])) // overlap
+                    {
+                        overlap = true;
+                    }
+                    
+                    referredCells[pN][j].expandII(s);
+                }
+            }
+            
+            if(!overlap)
+            {
+                // bug 2 
+                // check that referred cells are not inside the domain
+                referredCells[pN][i].contractII(s);
+
+                boundedBox bb( mesh_.bounds().min(), mesh_.bounds().max());
+                
+                if(bb.contains(referredCells[pN][i])) // overlap
+                {
+                    referredCells[pN][i].expandII(s);
+                }
+                else
+                {
+                    referredCells[pN][i].expandII(s);
+                    newReferredCells[pN].append(referredCells[pN][i]);                    
+                }
+            }
+        }
+        
+//         Info << "number of new referredCells = " << newReferredCells[pN].size() << endl;
+        
+        referredCells[pN].clear();
+        referredCells[pN].transfer(newReferredCells[pN]);
+    }
     
+    // now prepare referred cells with offset box
+    forAll(referredCells[pN], i)
+    {
+        referredCells[pN][i].setOffsetBoundBox();
+    }
+    
+    /* 2 old
     //- referred cells 
     // for all cells on mesh
     forAll(ovSrcCells, i)
@@ -637,6 +790,8 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
             nRefCells++;
         }
     }
+    */
+    
     
 //     Info << "no of refCells after second cyclic boundary overlap shifts = " << nRefCells << endl;
     
@@ -795,6 +950,8 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
     {
         refCells_[i] = localRefCells[i];
     }
+    
+//     Info << "refCells total = " << refCells_.size() << endl;
     
     // Test
     
