@@ -63,7 +63,7 @@ agentProperties::agentProperties
     N_ = idList.size();
     
     names_.setSize(N_);
-    masses_.setSize(N_);
+//     masses_.setSize(N_);
     
     forAll(names_, i)
     {
@@ -116,8 +116,8 @@ agentProperties::agentProperties
                 << nl << abort(FatalError);
         }        
         
-        scalar massI = readScalar(subDict.lookup("mass"));
-        masses_[i]=massI;
+//         scalar massI = readScalar(subDict.lookup("mass"));
+//         masses_[i]=massI;
     }
     
 }
@@ -140,15 +140,15 @@ const List<word>& agentProperties::agentIds() const
     return names_;
 }
 
-const List<scalar>& agentProperties::mass() const
-{
-    return masses_;
-}    
-
-const scalar& agentProperties::mass(const label& id) const
-{
-    return masses_[id];    
-}
+// const List<scalar>& agentProperties::mass() const
+// {
+//     return masses_;
+// }    
+// 
+// const scalar& agentProperties::mass(const label& id) const
+// {
+//     return masses_[id];    
+// }
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 

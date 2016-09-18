@@ -694,10 +694,6 @@ inline Foam::trackingNumber& Foam::agentCloud::agentTracking()
 
 
 /*
-inline const  Foam::cyclicBoundaries& Foam::agentCloud::cyclics() const
-{
-    return cyclics_;
-}
 
 
 
@@ -758,5 +754,14 @@ inline Foam::agentControllers& Foam::agentCloud::controllers()
     return controllers_;
 }
 
-            
+inline const Foam::cyclicBoundaries& Foam::agentCloud::cyclics() const
+{
+    return cyclics_;
+}
+
+inline Foam::forceFields& Foam::agentCloud::f()
+{
+    return f_;
+}        
+
 // ************************************************************************* //

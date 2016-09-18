@@ -22,89 +22,23 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    agentProperties
-
-Description
-
-
-SourceFiles
-    agentProperties.C
-
 \*---------------------------------------------------------------------------*/
-
-#ifndef agentProperties_H
-#define agentProperties_H
-
-#include "Time.H"
-#include "polyMesh.H"
-#include "diagTensor.H"
-#include "transform.H"
-// #include "rotationTensor.H"
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
-/*---------------------------------------------------------------------------*\
-                           Class agentProperties Declaration
-\*---------------------------------------------------------------------------*/
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-class agentProperties
+inline const scalar& pairPotential::rCutSqr() const
 {
-    // Private data
-
-        const polyMesh& mesh_;
-        
-        // number of agent types 
-        label N_;
-        
-        // ordered list of agent names
-        List<word> names_;
-        
-        // list of total masses of each agent type
-//         List<scalar> masses_;
-        
-        
-        // any potential interactions go here 
-        
-public:
-
-    // Constructors
-
-        //- constructor
-        agentProperties
-        (
-            const polyMesh& mesh
-        );
-
-    // Destructor
-
-        ~agentProperties();
-
-
-    // Member functions
-        
-        // no of id types
-        const label& nAgentTypes() const;
-        
-        // namelist of all ids 
-        const List<word>& agentIds() const;
-        
-//         const List<scalar>& mass() const;
-//         const scalar& mass(const label& id) const;        
-
-};
+    return rCutSqr_;
+}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#endif
 
 // ************************************************************************* //

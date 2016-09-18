@@ -42,6 +42,8 @@ Foam::agent::agent
     a_(vector::zero),
     f_(vector::zero),    
     specialPosition_(vector::zero),
+    mass_(0.0),
+    potentialEnergy_(0.0),
     R_(GREAT),
     frac_(1.0),
     special_(0),
@@ -56,6 +58,8 @@ Foam::agent::agent
             is  >> a_;
             is  >> f_;
             is  >> specialPosition_;
+            is >> mass_;
+            is >> potentialEnergy_;
             is >> R_;
             is >> frac_;
             special_ = readLabel(is);
@@ -71,6 +75,8 @@ Foam::agent::agent
               + sizeof(a_)
               + sizeof(f_)
               + sizeof(specialPosition_)
+              + sizeof(mass_)
+              + sizeof(potentialEnergy_)
               + sizeof(R_)
               + sizeof(frac_)              
               + sizeof(special_)
@@ -118,9 +124,12 @@ void Foam::agent::readFields(Cloud<agent>& mC)
     
     mC.checkFieldIOobject(mC, specialPosition);
 
+    IOField<scalar> mass(mC.fieldIOobject("mass", IOobject::MUST_READ));
+    mC.checkFieldIOobject(mC, mass);    
+    
     IOField<label> special(mC.fieldIOobject("special", IOobject::MUST_READ));
     mC.checkFieldIOobject(mC, special);
-
+    
     IOField<label> id(mC.fieldIOobject("id", IOobject::MUST_READ));
     mC.checkFieldIOobject(mC, id);
     
@@ -135,6 +144,7 @@ void Foam::agent::readFields(Cloud<agent>& mC)
         mol.v_ = v[i];
 //         mol.a_ = a[i];
         mol.specialPosition_ = specialPosition[i];
+        mol.mass_ = mass[i];
         mol.special_ = special[i];
         mol.id_ = id[i];
         mol.trackingNumber_ = trackingNumber[i];        
@@ -162,6 +172,7 @@ void Foam::agent::writeFields(const Cloud<agent>& mC)
     );
     IOField<label> special(mC.fieldIOobject("special", IOobject::NO_READ), np);
     IOField<label> id(mC.fieldIOobject("id", IOobject::NO_READ), np);
+    IOField<scalar> mass(mC.fieldIOobject("mass", IOobject::NO_READ), np);    
     IOField<label> trackingNumber(mC.fieldIOobject("trackingNumber", IOobject::NO_READ), np);
     
     // Post processing fields
@@ -171,9 +182,8 @@ void Foam::agent::writeFields(const Cloud<agent>& mC)
     {
         const agent& mol = iter();
 
-
         v[i] = mol.v_;
-//         a[i] = mol.a_;
+        mass[i] = mol.mass_;
         specialPosition[i] = mol.specialPosition_;
         special[i] = mol.special_;
         id[i] = mol.id_;
@@ -182,7 +192,7 @@ void Foam::agent::writeFields(const Cloud<agent>& mC)
     }
 
     v.write();
-//     a.write();
+    mass.write();
     specialPosition.write();
     special.write();
     id.write();
@@ -214,6 +224,8 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const agent& mol)
             << token::SPACE << mol.a_
             << token::SPACE << mol.f_
             << token::SPACE << mol.specialPosition_
+            << token::SPACE << mol.mass_
+            << token::SPACE << mol.potentialEnergy_
             << token::SPACE << mol.R_
             << token::SPACE << mol.frac_
             << token::SPACE << mol.special_
@@ -230,6 +242,8 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const agent& mol)
           + sizeof(mol.a_)
           + sizeof(mol.f_)
           + sizeof(mol.specialPosition_)
+          + sizeof(mol.mass_)
+          + sizeof(mol.potentialEnergy_)
           + sizeof(mol.R_)
           + sizeof(mol.frac_)
           + sizeof(mol.special_)

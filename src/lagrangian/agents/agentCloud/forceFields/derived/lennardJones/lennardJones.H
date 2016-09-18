@@ -23,24 +23,26 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    agentProperties
+    lennardJones
 
 Description
-
+    Model that applies a gravitational force on all molecules.
 
 SourceFiles
-    agentProperties.C
+    lennardJonesI.H
+    lennardJones.C
+    lennardJonesIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef agentProperties_H
-#define agentProperties_H
+#ifndef lennardJones_H
+#define lennardJones_H
 
-#include "Time.H"
+#include "pairPotential.H"
+#include "vector.H"
 #include "polyMesh.H"
-#include "diagTensor.H"
-#include "transform.H"
-// #include "rotationTensor.H"
+#include "agentCloud.H"
+
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -49,53 +51,74 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class agentProperties Declaration
+                           Class lennardJones Declaration
 \*---------------------------------------------------------------------------*/
 
-class agentProperties
+class lennardJones
+:
+	public pairPotential
 {
+
+private:
+
     // Private data
 
-        const polyMesh& mesh_;
+        //- subDictionary containing the properties
+        dictionary propsDict_;
+
+        scalar sigma_;
+        scalar epsilon_;
         
-        // number of agent types 
-        label N_;
+        scalar E_at_Rmin_;
+        scalar F_at_Rmin_;
+
         
-        // ordered list of agent names
-        List<word> names_;
-        
-        // list of total masses of each agent type
-//         List<scalar> masses_;
-        
-        
-        // any potential interactions go here 
-        
+    // Private Member Functions
+
+ 
+
 public:
+
+    //- Runtime type information
+    TypeName("lennardJones");
 
     // Constructors
 
-        //- constructor
-        agentProperties
+        //- Construct from components
+        lennardJones
         (
-            const polyMesh& mesh
+            agentCloud& cloud,
+            const word& name,
+            const dictionary& dict
         );
 
     // Destructor
 
-        ~agentProperties();
+        ~lennardJones();
 
 
-    // Member functions
+    // Member Functions
+    // Member Functions
         
-        // no of id types
-        const label& nAgentTypes() const;
+        //- create an initial configuration
+        void initialConfiguration();
         
-        // namelist of all ids 
-        const List<word>& agentIds() const;
+        scalar energy(const scalar& r);
         
-//         const List<scalar>& mass() const;
-//         const scalar& mass(const label& id) const;        
+        scalar force(const scalar& r);
+        
+        void pairPotentialFunction
+        (
+            agent* molI,
+            agent* molJ,
+            const scalar& r,
+            scalar& energy,
+            scalar& force
+        );        
+        
+//         void writeTables(const fileName& pathName);
 
+        // Access
 };
 
 

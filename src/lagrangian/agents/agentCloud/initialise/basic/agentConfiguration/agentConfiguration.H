@@ -77,7 +77,8 @@ protected:
             const label cell,
             const label tetFace,
             const label tetPt,
-            const label& id,          
+            const label& id,      
+            const scalar& mass,
             const bool& frozen,
             const vector& v
         );

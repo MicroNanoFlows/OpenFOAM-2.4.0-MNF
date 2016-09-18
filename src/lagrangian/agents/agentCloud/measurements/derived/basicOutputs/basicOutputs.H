@@ -23,25 +23,27 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    agentProperties
 
 Description
-
+    The model which outputs standard properties to the terminal screen 
+    in an MD simulation run.
 
 SourceFiles
-    agentProperties.C
+    basicOutputsI.H
+    basicOutputs.C
+    basicOutputsIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef agentProperties_H
-#define agentProperties_H
+#ifndef basicOutputs_H
+#define basicOutputs_H
 
-#include "Time.H"
+#include "agentMeasurement.H"
+#include "vector.H"
 #include "polyMesh.H"
-#include "diagTensor.H"
-#include "transform.H"
-// #include "rotationTensor.H"
-
+#include "volFields.H"
+#include "agentCloud.H"
+// #include "distribution.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -49,54 +51,79 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class agentProperties Declaration
+                           Class basicOutputs Declaration
 \*---------------------------------------------------------------------------*/
 
-class agentProperties
+class basicOutputs
+:
+	public agentMeasurement
 {
+
+private:
+
     // Private data
 
-        const polyMesh& mesh_;
-        
-        // number of agent types 
-        label N_;
-        
-        // ordered list of agent names
-        List<word> names_;
-        
-        // list of total masses of each agent type
-//         List<scalar> masses_;
-        
-        
-        // any potential interactions go here 
-        
+//         propertyField fields_;
+
+        vector accumulatedTotalLinearMomentum_;
+        scalar accumulatedTotalMass_;
+        scalar accumulatedTotalLinearKE_;
+        scalar accumulatedTotalPE_;
+        scalar accumulatedNMols_;
+
+        scalar meshVolume_;
+        scalar nAvTimeSteps_;
+ 
+
+    // Private Member Functions
+
 public:
+
+    //- Runtime type information
+    TypeName("basicOutputs");
 
     // Constructors
 
-        //- constructor
-        agentProperties
-        (
-            const polyMesh& mesh
-        );
+        //- Construct from components
+        basicOutputs
+		(
+            Time& t,
+            const polyMesh& mesh,
+            agentCloud& molCloud,
+            const dictionary& dict
+		);
 
     // Destructor
 
-        ~agentProperties();
+ 		~basicOutputs();
 
+    // Member Functions
 
-    // Member functions
-        
-        // no of id types
-        const label& nAgentTypes() const;
-        
-        // namelist of all ids 
-        const List<word>& agentIds() const;
-        
-//         const List<scalar>& mass() const;
-//         const scalar& mass(const label& id) const;        
+        //- create initial field
+        void createField();
 
-};
+        //- calculate field
+        void calculateField();
+
+        //- write field
+        void writeField();
+
+        void measureDuringForceComputation
+        (
+            agent* molI,
+            agent* molJ
+        );
+
+        void measureDuringForceComputationSite
+        (
+            agent* molI,
+            agent* molJ,
+            label sI,
+            label sJ
+        );
+
+//         const propertyField& fields() const;
+}; 		
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

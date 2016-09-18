@@ -8,6 +8,14 @@ agentCloud/agentCloud.C
 constant/agentProperties/agentProperties.C
 constant/selectAgentIds/selectAgentIds.C
 
+/* force fields */
+
+forceFields/basic/forceFields/forceFields.C
+forceFields/basic/pairPotential/pairPotential.C
+    
+forceFields/derived/lennardJones/lennardJones.C    
+    
+    
 /* initialise */
 
 initialise/basic/agentConfigurations/agentConfigurations.C
@@ -29,7 +37,7 @@ measurements/basic/agentMeasurements/agentMeasurements.C
 measurements/basic/agentMeasurement/agentMeasurement.C
 
 measurements/derived/videoPDB/videoPDB.C
-
+measurements/derived/basicOutputs/basicOutputs.C
 
 /* controllers */
 

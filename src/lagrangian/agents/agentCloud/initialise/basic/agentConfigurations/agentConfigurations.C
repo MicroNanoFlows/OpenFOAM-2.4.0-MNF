@@ -42,7 +42,7 @@ agentConfigurations::agentConfigurations
     (
         IOobject
         (
-            "agentInitialiseDict",
+            "initialiseDict",
             mesh.time().system(),
             mesh,
             IOobject::NO_READ,
@@ -67,7 +67,7 @@ agentConfigurations::agentConfigurations
     (
         IOobject
         (
-            "agentInitialiseDict",
+            "initialiseDict",
             mesh.time().system(),
             mesh,
             IOobject::MUST_READ,

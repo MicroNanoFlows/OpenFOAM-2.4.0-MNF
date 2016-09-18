@@ -125,7 +125,9 @@ private:
         
         vector specialPosition_;
 
-//         scalar potentialEnergy_;
+        scalar mass_;
+        
+        scalar potentialEnergy_;
 
         scalar R_;
 
@@ -163,6 +165,8 @@ public:
             const vector& a,
             const vector& f,
             const vector& specialPosition,
+            const scalar& mass,         
+            const scalar& potentialEnergy,
             const scalar& R,
             const scalar& frac,   
             const label special,
@@ -250,12 +254,12 @@ public:
             inline const vector& specialPosition() const;
             inline vector& specialPosition();
 
-            inline label special() const;
-            inline label& special();
+            inline const scalar& mass() const;
+            inline scalar& mass();             
             
-            inline label id() const;
-            inline label& id();
-
+            inline const scalar& potentialEnergy() const;
+            inline scalar& potentialEnergy();            
+            
             // - return shortest radius
             inline const scalar& R() const;
             inline scalar& R();
@@ -263,6 +267,12 @@ public:
             inline const scalar& fraction() const;
             inline scalar& fraction();
 
+            inline label special() const;
+            inline label& special();
+            
+            inline label id() const;
+            inline label& id();            
+            
             // - return tracking number
             inline const label& trackingNumber() const;
             inline label& trackingNumber();

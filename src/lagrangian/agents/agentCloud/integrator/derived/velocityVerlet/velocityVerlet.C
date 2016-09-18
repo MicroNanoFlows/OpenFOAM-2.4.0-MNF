@@ -68,7 +68,9 @@ velocityVerlet::~velocityVerlet()
 
 void velocityVerlet::init()
 {
-    
+    clearLagrangianFields();
+    calculateForce();
+    updateAcceleration();
 }
 
 void velocityVerlet::evolve()
@@ -150,16 +152,7 @@ void velocityVerlet::updateHalfVelocity()
 
 void velocityVerlet::calculateForce()
 {
-    IDLList<agent>::iterator mol(cloud_.begin());
-
-    for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
-    {
-        if(!mol().frozen())
-        {
-            // mol().f()
-            // nothing yet 
-        }
-    }
+    cloud_.f().calculatePairForces();
 }
 
 void velocityVerlet::clearLagrangianFields()
@@ -184,9 +177,9 @@ void velocityVerlet::updateAcceleration()
     {
         if(!mol().frozen())
         {
-            scalar mass = cloud_.cP().mass(mol().id());
+//             scalar mass = cloud_.cP().mass(mol().id());
                 
-            mol().a() = mol().f()/mass ;
+            mol().a() = mol().f()/mol().mass();
         }
     }
 }

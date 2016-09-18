@@ -39,6 +39,8 @@ inline Foam::agent::agent
     const vector& a,
     const vector& f,
     const vector& specialPosition,
+    const scalar& mass,
+    const scalar& potentialEnergy, 
     const scalar& R,
     const scalar& frac,   
     const label special,
@@ -51,7 +53,9 @@ inline Foam::agent::agent
     a_(a),
     f_(f),
     specialPosition_(specialPosition),
-    R_(R),
+    mass_(mass),
+    potentialEnergy_(potentialEnergy),
+    R_(R),    
     frac_(frac),
     special_(special),
     id_(id),
@@ -107,6 +111,46 @@ inline Foam::vector& Foam::agent::specialPosition()
     return specialPosition_;
 }
 
+inline const Foam::scalar& Foam::agent::mass() const
+{
+    return mass_;
+}
+
+inline Foam::scalar& Foam::agent::mass()
+{
+    return mass_;
+}
+
+inline const Foam::scalar& Foam::agent::potentialEnergy() const
+{
+    return potentialEnergy_;
+}
+
+inline Foam::scalar& Foam::agent::potentialEnergy()
+{
+    return potentialEnergy_;
+}
+
+
+inline const Foam::scalar& Foam::agent::R() const
+{
+    return R_;
+}
+
+inline Foam::scalar& Foam::agent::R()
+{
+    return R_;
+}
+
+inline const Foam::scalar& Foam::agent::fraction() const
+{
+    return frac_;
+}
+
+inline Foam::scalar& Foam::agent::fraction()
+{
+    return frac_;
+}
 
 
 inline Foam::label Foam::agent::special() const
@@ -134,25 +178,6 @@ inline Foam::label& Foam::agent::id()
     return id_;
 }
 
-inline const Foam::scalar& Foam::agent::R() const
-{
-    return R_;
-}
-
-inline Foam::scalar& Foam::agent::R()
-{
-    return R_;
-}
-
-inline const Foam::scalar& Foam::agent::fraction() const
-{
-    return frac_;
-}
-
-inline Foam::scalar& Foam::agent::fraction()
-{
-    return frac_;
-}
 
 inline const Foam::label& Foam::agent::trackingNumber() const
 {

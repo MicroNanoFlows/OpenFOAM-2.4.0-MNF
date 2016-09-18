@@ -356,27 +356,23 @@ Foam::agentCloud::agentCloud
     rndGen_(rndGen),
     int_(t, mesh_, *this),
     rU_(1),
-//     p_(mesh, *this, rU, cP), 
     cellOccupancy_(mesh_.nCells()),
     fields_(t, mesh_, *this),
     controllers_(t, mesh, *this),
     agentTracking_(),
     cyclics_(t, mesh_, -1),
-    iL_(mesh, rU_, cyclics_, 3.17, "agent"),
-    ipl_(mesh.nCells()),
+    f_(t, mesh_, *this),
 	clock_(t, "evolve", true)
 {
     agent::readFields(*this);
-
-//    rndGen.initialise(this->size() != 0 ? this->size() : 10000); //Initialise the random number cache (initialise to 10000 if size is zero)
 
     checkMoleculesInMesh();
 
     // read in tracking numbers
     updateTrackingNumbersAfterRead();
-//     p_.pairPots().initialiseExclusionModels();
 
-    int_.integrator()->init();
+
+    f_.initialConfig();
     
     //check and remove high energy overalps
 //     checkForOverlaps();
@@ -386,12 +382,9 @@ Foam::agentCloud::agentCloud
     fields_.createFields();
 //     boundaries_.setInitialConfig();
     controllers_.initialConfig();
-    
-    int_.integrator()->clearLagrangianFields();
-    int_.integrator()->calculateForce();
-    int_.integrator()->updateAcceleration();
-    
 
+    int_.integrator()->init();
+    
     
     // TESTS
 //     writeReferredCloud();
@@ -416,15 +409,12 @@ Foam::agentCloud::agentCloud
     rndGen_(rndGen),    
     int_(t, mesh_, *this), 
     rU_(1),
-//     p_(mesh, *this, rU, cP), 
     cellOccupancy_(mesh_.nCells()),
     fields_(t, mesh_),
-//     boundaries_(t, mesh),
     controllers_(t, mesh),
     agentTracking_(),
     cyclics_(t, mesh_, -1),
-    iL_(mesh, rU_, cyclics_, 3.17, "agent"),
-    ipl_(mesh.nCells()),
+    f_(t, mesh_, *this),
 	clock_(t, "evolve", true)
 {
     agent::readFields(*this);
@@ -549,6 +539,8 @@ void  Foam::agentCloud::createAgent
     const vector& a,
     const vector& f,
     const vector& specialPosition,
+    const scalar& mass,
+    const scalar& potentialEnergy, 
     const scalar& R,
     const scalar& frac,   
     const label special,
@@ -570,6 +562,8 @@ void  Foam::agentCloud::createAgent
             a,
             f,
             specialPosition,
+            mass,
+            potentialEnergy,
             R,
             frac,
             special,

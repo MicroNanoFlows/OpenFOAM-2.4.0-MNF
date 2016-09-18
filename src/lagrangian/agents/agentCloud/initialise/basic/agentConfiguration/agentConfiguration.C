@@ -122,7 +122,8 @@ void agentConfiguration::insertAgent
     const label cell,
     const label tetFace,
     const label tetPt, 
-    const label& id, 
+    const label& id,
+    const scalar& mass, 
 //     const bool& tethered,
     const bool& frozen,
     const vector& v
@@ -154,6 +155,8 @@ void agentConfiguration::insertAgent
         vector::zero,
         vector::zero,
         specialPosition,
+        mass,
+        0.0,
         GREAT,
         1.0,
         special,

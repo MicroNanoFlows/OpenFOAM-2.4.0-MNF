@@ -45,11 +45,12 @@ SourceFiles
 #include "clockTimer.H"
 #include "agentIntegrators.H"
 #include "cyclicBoundaries.H"
-#include "twoDimCellListAlgorithm.H"
+// #include "twoDimCellInteractions.H"
 #include "agentProperties.H"
 #include "reducedUnits.H"
 #include "agentMeasurements.H"
 #include "agentControllers.H"
+#include "forceFields.H"
 
 //#include "labelVector.H"
 //#include "fileName.H"
@@ -88,25 +89,17 @@ private:
         
         reducedUnits rU_;
         
-//         potentials p_;
-        
         List<DynamicList<agent*> > cellOccupancy_;
        
-        //- measurement fields
         agentMeasurements fields_; 
         
-        //- controllers
         agentControllers controllers_;
-        
         
         trackingNumber agentTracking_;
         
         cyclicBoundaries cyclics_;
         
-        twoDimCellListAlgorithm<agent> iL_;
-        
-        //- interaction particle list
-        List<DynamicList<agent*> > ipl_;
+        forceFields f_;
         
         clockTimer clock_;
 
@@ -184,6 +177,8 @@ public:
             const vector& a,
             const vector& f,
             const vector& specialPosition,
+            const scalar& mass,
+            const scalar& potentialEnergy,
             const scalar& R,
             const scalar& frac,   
             const label special,
@@ -260,7 +255,11 @@ public:
             
             inline const agentControllers& controllers() const; 
             inline agentControllers& controllers();
+            
+            inline const cyclicBoundaries& cyclics() const;
 
+
+            inline forceFields& f();
             
 /*
             label nSites() const;

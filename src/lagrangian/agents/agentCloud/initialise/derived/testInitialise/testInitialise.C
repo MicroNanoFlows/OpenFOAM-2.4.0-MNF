@@ -90,7 +90,7 @@ void testInitialise::setInitialConfiguration()
             << exit(FatalError);
     }
 
-    scalar massI = cloud_.cP().mass(id);
+    scalar massI = readScalar(initialiseDict_.lookup("mass"));
 
     bool frozen = false;
 
@@ -191,6 +191,7 @@ void testInitialise::setInitialConfiguration()
                 tetFace,
                 tetPt,
                 id,
+                massI,
                 frozen,
                 v
             );
