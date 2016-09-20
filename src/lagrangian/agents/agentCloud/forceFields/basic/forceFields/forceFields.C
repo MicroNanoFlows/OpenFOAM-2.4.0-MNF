@@ -126,6 +126,8 @@ void forceFields::initialConfig()
 
 void forceFields::testPairPotentials()
 {
+    Info << "test for pair potentials" << endl;
+    
     const List<word>& idList = cP_.agentIds();
     
     pairPotentialLookUp_.setSize(idList.size());
@@ -185,6 +187,8 @@ void forceFields::testPairPotentials()
             }
         }
     }
+    
+    Info << "done" << endl;
 }
 
 void forceFields::calculatePairForces()

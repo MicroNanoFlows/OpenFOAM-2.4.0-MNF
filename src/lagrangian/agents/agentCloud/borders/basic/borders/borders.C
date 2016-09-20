@@ -105,6 +105,7 @@ void borders::initialConfig()
 {
     forAll(borders_, i)
     {
+        borders_[i]->initialiseBorders();
         borders_[i]->initialConfiguration();  
     }
 }

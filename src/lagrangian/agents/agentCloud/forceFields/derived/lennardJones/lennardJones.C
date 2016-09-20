@@ -55,12 +55,24 @@ lennardJones::lennardJones
     pairPotential(cloud, name, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
     sigma_(readScalar(propsDict_.lookup("sigma"))),
-    epsilon_(readScalar(propsDict_.lookup("epsilon")))      
+    epsilon_(readScalar(propsDict_.lookup("epsilon"))),      
+    maxForce_(readScalar(propsDict_.lookup("maxForce")))
 {
-    if(rU_.runReducedUnits())
+    bool notFound = true;
+    
+    while(notFound)
     {
-        sigma_ /= rU_.refLength();
-        epsilon_ /= rU_.refEnergy();
+        rMin_ += dr_;
+
+        F_at_Rmin_ = force(rMin_);
+        
+        if(F_at_Rmin_ < maxForce_)
+        {
+            Info << "new rMin = " << rMin_ 
+                << ", force = " << F_at_Rmin_ <<  endl;
+            
+            notFound = false;
+        }
     }
     
     E_at_Rmin_ = energy(rMin_);        

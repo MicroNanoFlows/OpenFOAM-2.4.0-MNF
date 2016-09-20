@@ -158,7 +158,7 @@ public:
 //             inline const List< autoPtr<pairPotential> >& stateControllers() const;
 // 
 //             inline const List<word>& stateControllersNames() const; 
-    
+        inline const scalar& rCut() const;
 };
 
 

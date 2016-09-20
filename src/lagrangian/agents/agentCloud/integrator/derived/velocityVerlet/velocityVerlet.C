@@ -68,9 +68,15 @@ velocityVerlet::~velocityVerlet()
 
 void velocityVerlet::init()
 {
+    cloud_.f().initialConfig();
+    cloud_.b().initialConfig();    
+    
     clearLagrangianFields();
     calculateForce();
     updateAcceleration();
+    
+    cloud_.fields().createFields();
+    cloud_.controllers().initialConfig();
 }
 
 void velocityVerlet::evolve()
@@ -85,6 +91,8 @@ void velocityVerlet::evolve()
     
     cloud_.buildCellOccupancy();
 
+    cloud_.b().afterMove();    
+
     cloud_.controllers().controlBeforeForces();
     
     clearLagrangianFields();
@@ -92,6 +100,8 @@ void velocityVerlet::evolve()
     calculateForce();
     
     updateAcceleration();
+    
+    cloud_.b().afterForce();  
     
     cloud_.controllers().controlAfterForces();
         
@@ -115,25 +125,24 @@ void velocityVerlet::postTimeStep()
     cloud_.controllers().outputStateResults();    
 }
 
-void velocityVerlet::test()
-{
-       
-    IDLList<agent>::iterator mol(cloud_.begin());
-    
-    label i = 0;
-    
-    for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
-    {
-        if(i==10)
-        {
-            Info << "position = " << mol().position() 
-                 << ", velocity = " << mol().v()  
-                 << endl;
-        }
-        
-        i++;
-    }
-}
+// void velocityVerlet::test()
+// {
+//     IDLList<agent>::iterator mol(cloud_.begin());
+//     
+//     label i = 0;
+//     
+//     for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
+//     {
+//         if(i==10)
+//         {
+//             Info << "position = " << mol().position() 
+//                  << ", velocity = " << mol().v()  
+//                  << endl;
+//         }
+//         
+//         i++;
+//     }
+// }
 
 void velocityVerlet::updateHalfVelocity()
 {

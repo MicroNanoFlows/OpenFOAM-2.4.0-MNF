@@ -74,7 +74,7 @@ void testInitialise::setInitialConfiguration()
 
     Info << nl << "Test initialise " << endl;
 
-//     const scalar temperature(readScalar(initialiseDict_.lookup("temperature")));
+    const scalar temperature(readScalar(initialiseDict_.lookup("temperature")));
 
 //     const vector bulkVelocity(initialiseDict_.lookup("bulkVelocity"));
 
@@ -99,6 +99,9 @@ void testInitialise::setInitialConfiguration()
         frozen = Switch(initialiseDict_.lookup("frozen"));
     }
 
+    const scalar binWidth(readScalar(initialiseDict_.lookup("binWidth")));
+    
+    distribution d(binWidth);
    
     
     // Bounding box 
@@ -178,9 +181,11 @@ void testInitialise::setInitialConfiguration()
             tetPt
         );
         
-        vector v = equipartitionLinearVelocity(300, massI)/1e-11;
+        vector v = equipartitionLinearVelocity(temperature, massI);
+//         Info << "v = " << v << endl;
         
         v.z()=0.0;
+        d.add(mag(v));
         
         if(cell != -1)
         {
@@ -291,6 +296,30 @@ void testInitialise::setInitialConfiguration()
     }
 
     Info << tab << " molecules added: " << nAgentsAdded_ << endl;
+ 
+    
+    List< Pair<scalar> > histogram = d.raw();
+    
+    {    
+        OFstream file("distribution.xy");
+
+        if(file.good())
+        {
+            forAll(histogram, i)
+            {
+                file 
+                    << histogram[i].first() << "\t"
+                    << histogram[i].second() << "\t"
+                    << endl;
+            }
+        }
+        else
+        {
+            FatalErrorIn("void pairPotentialModel::write()")
+                << "Cannot open file " << file.name()
+                << abort(FatalError);
+        }
+    }
    
 }
 

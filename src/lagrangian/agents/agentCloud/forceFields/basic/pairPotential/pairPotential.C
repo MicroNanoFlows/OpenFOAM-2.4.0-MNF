@@ -228,8 +228,9 @@ void pairPotential::writeTables(const fileName& pathName)
         U[i] = energy(r);
         f[i] = force(r);
     }
+    
     {
-        OFstream file(pathName/name_+"-RU.xy");
+        OFstream file(pathName/name_+".xy");
 
         if(file.good())
         {
@@ -239,28 +240,6 @@ void pairPotential::writeTables(const fileName& pathName)
                     << R[i] << "\t"
                     << U[i] << "\t"
                     << f[i]
-                    << endl;
-            }
-        }
-        else
-        {
-            FatalErrorIn("void pairPotentialModel::write()")
-                << "Cannot open file " << file.name()
-                << abort(FatalError);
-        }
-    }
-    
-    {
-        OFstream file(pathName/name_+"-SI.xy");
-
-        if(file.good())
-        {
-            forAll(U, i)
-            {
-                file 
-                    << dr_*i*rU_.refLength() << "\t"
-                    << U[i]*rU_.refEnergy() << "\t"
-                    << f[i]*rU_.refForce()
                     << endl;
             }
         }

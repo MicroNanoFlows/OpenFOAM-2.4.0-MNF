@@ -75,17 +75,93 @@ repulsiveBorder::~repulsiveBorder()
 
 void repulsiveBorder::initialConfiguration()
 {
+    // delete molecules inside 
+    const List< DynamicList<agent*> >& cellOccupancy
+        = cloud_.cellOccupancy();
     
+    DynamicList<agent*> agentsToDel;
+    
+    forAll(cellOccupancy, c)
+    {
+        const List<agent*>& molsInCell = cellOccupancy[c];
+
+        forAll(molsInCell, mIC)
+        {
+            agent* molI = molsInCell[mIC];
+            
+            forAll(interactionList_[c], i)
+            {
+                label index = interactionList_[c][i];
+                
+                if(isPointWithinBorder(index, molI->position()))
+                {
+                   agentsToDel.append(molI);
+                }
+            }
+        }
+    }    
+    
+    forAll(agentsToDel, i)
+    {
+        cloud_.removeMolFromCellOccupancy(agentsToDel[i]);
+        cloud_.deleteParticle(*agentsToDel[i]);
+    }
 }
 
 void repulsiveBorder::afterMove()
 {
+   // e.g. check for particles within borders
+    
+    const List< DynamicList<agent*> >& cellOccupancy
+        = cloud_.cellOccupancy();
+
+    forAll(cellOccupancy, c)
+    {
+        const List<agent*>& molsInCell = cellOccupancy[c];
+
+        forAll(molsInCell, mIC)
+        {
+            agent* molI = molsInCell[mIC];
+            
+            forAll(interactionList_[c], i)
+            {
+                
+                label index = interactionList_[c][i];
+                
+                if(isPointWithinBorder(index, molI->position()))
+                {
+//                     Info << "Warning: inside = " << molI->position() << endl;
+                    
+                    reflect(index, molI);
+                }
+            }
+        }
+    }    
     
 }
 
 void repulsiveBorder::afterForce()
 {
-    
+/*    const List< DynamicList<agent*> >& cellOccupancy
+        = cloud_.cellOccupancy();
+
+    forAll(cellOccupancy, c)
+    {
+        const List<agent*>& molsInCell = cellOccupancy[c];
+
+        forAll(molsInCell, mIC)
+        {
+            agent* molI = molsInCell[mIC];
+            
+            forAll(interactionList_[c], i)
+            {
+                label index = interactionList_[c][i];
+                
+                force 
+                
+            }
+        }
+    }*/       
 }
 
 

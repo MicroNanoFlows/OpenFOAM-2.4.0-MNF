@@ -373,19 +373,11 @@ Foam::agentCloud::agentCloud
     // read in tracking numbers
     updateTrackingNumbersAfterRead();
 
-
-    f_.initialConfig();
-    b_.initialConfig();
-    
     //check and remove high energy overalps
 //     checkForOverlaps();
     
     buildCellOccupancy();
     
-    fields_.createFields();
-//     boundaries_.setInitialConfig();
-    controllers_.initialConfig();
-
     int_.integrator()->init();
     
     
@@ -425,6 +417,10 @@ Foam::agentCloud::agentCloud
 
     label initialParticles = this->size();
 
+//     f_.initialConfig();
+    
+//     b_.initialConfig();
+    
     //rndGen.initialise(initialParticles != 0 ? initialParticles : 10000); //Initialise the random number cache (initialise to 10000 if size is zero)
 
     if (Pstream::parRun())

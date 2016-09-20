@@ -197,52 +197,7 @@ public:
         
         void move();
         
-//         void calculateForce();
-        
-        /*
-        void evolveBeforeForces();
-        void evolveAfterForces();
-        
-        void controlBeforeVelocity();
-        void updateVelocity();
-        void controlBeforeMove();
-        void move();
-        void move(const scalar& trackTime);        
-        void updateAfterMove(const scalar& trackTime);        
-        void controlAfterMove();
-        void controlBeforeForces();
-        void clearLagrangianFields();
-        void calculateForce();
-        void updateAcceleration();
-        void controlAfterForces();
-        void controlAfterVelocity();
-        void postTimeStep();*/
 
-        /*
-        void prepareInteractions();*/
-        /*
-        void buildCellOccupancy();
-        void rebuildCellOccupancy();
-
-        inline void evaluatePair
-        (
-            agent* molI,
-            agent* molJ
-        );
-
-        inline bool evaluatePotentialLimit
-        (
-            agent* molI,
-            agent* molJ,
-            const scalar& potentialEnergyLimit
-        ) ;
-
-
-        void updateRadii();
-        void readNewField();
-        void setIPL();
-        void writeReferredCloud();
-        */
         // Access
         
             inline const polyMesh& mesh() const;        
@@ -261,30 +216,11 @@ public:
             
             inline const cyclicBoundaries& cyclics() const;
 
-
             inline forceFields& f();
             inline borders& b();            
-/*
-            label nSites() const;
-            inline const potentials& pot() const;
-            inline potentials& pot();            
-//             inline const potential& pot() const;
 
-//             inline const List<agent::constantProperties> constProps() const;
-//             inline const agent::constantProperties& constProps(label id) const;
-
-
-
-            inline const cyclicBoundaries& cyclics() const;
-            inline const polyBoundaries& boundaries() const;
-            inline polyBoundaries& boundaries();
-
-            inline const polyFaceTracker& tracker() const;
-            inline polyFaceTracker& tracker();
-
-            inline cellInteractions<agent>& il();
-
-            */
+            
+            
     // Member Operators
 
         label nAgents() const;

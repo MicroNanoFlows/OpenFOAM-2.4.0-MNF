@@ -46,6 +46,7 @@ SourceFiles
 #include "agentCloud.H"
 #include "boundedBox.H"
 #include "distributePoints.H"
+#include "distribution.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -64,6 +65,7 @@ class testInitialise
 private:
 
     // Private data
+    
 
 
     // Private Member Functions

@@ -68,6 +68,8 @@ private:
 
         scalar sigma_;
         scalar epsilon_;
+        scalar maxForce_;
+        
         
         scalar E_at_Rmin_;
         scalar F_at_Rmin_;

@@ -72,7 +72,7 @@ private:
 //        void updateAcceleration();
     
     
-        void test();
+//         void test();
         void postTimeStep();
         
 public:

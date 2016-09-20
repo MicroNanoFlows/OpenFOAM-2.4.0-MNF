@@ -74,12 +74,24 @@ protected:
         const reducedUnits& rU_;        
         
         List<vectorList> borderList_;
-
+        
+        // border properties
+        
+        // normal vectors point outwards 
+        List<vectorList> normalVectors_;
+        List<vectorList> midPoints_;
+        
         scalar treshold_;
+ 
+        // outer list = nCells on mesh
+        // inner list = index to borderList_ to interact with
+        List<DynamicList<label> > interactionList_;        
         
     // Private Member Functions
 
         void checkClosedEndedBorders();
+       
+        void reflect(label index, agent* a);
         
 public:
 
@@ -128,7 +140,9 @@ public:
 
     // Member Functions
 
-
+        
+        
+        void initialiseBorders();
         
         virtual void initialConfiguration() = 0;
         
@@ -137,7 +151,9 @@ public:
         virtual void afterForce() = 0;
         
         const List<vectorList>& borderList() const;
-
+        
+        bool isPointWithinBorder(label index, const vector& r);
+        
         void writeBorders(const fileName& pathName);
         
 };

@@ -105,7 +105,10 @@ inline void forceFields::evaluatePair
         }
     }
 }
-
+inline const scalar& forceFields::rCut() const
+{
+    return rCut_;
+}
 // inline List< autoPtr<agentController> >& agentControllers::stateControllers()
 // {
 // 	return stateControllers_;
