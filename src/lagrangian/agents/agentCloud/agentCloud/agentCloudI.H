@@ -764,4 +764,9 @@ inline Foam::forceFields& Foam::agentCloud::f()
     return f_;
 }        
 
+inline Foam::borders& Foam::agentCloud::b()
+{
+    return b_;
+}    
+
 // ************************************************************************* //

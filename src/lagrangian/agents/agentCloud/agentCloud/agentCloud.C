@@ -362,7 +362,9 @@ Foam::agentCloud::agentCloud
     agentTracking_(),
     cyclics_(t, mesh_, -1),
     f_(t, mesh_, *this),
+    b_(t, mesh_, *this),
 	clock_(t, "evolve", true)
+    
 {
     agent::readFields(*this);
 
@@ -373,6 +375,7 @@ Foam::agentCloud::agentCloud
 
 
     f_.initialConfig();
+    b_.initialConfig();
     
     //check and remove high energy overalps
 //     checkForOverlaps();
@@ -415,6 +418,7 @@ Foam::agentCloud::agentCloud
     agentTracking_(),
     cyclics_(t, mesh_, -1),
     f_(t, mesh_, *this),
+    b_(t, mesh_, *this),
 	clock_(t, "evolve", true)
 {
     agent::readFields(*this);

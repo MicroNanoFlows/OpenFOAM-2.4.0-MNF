@@ -47,5 +47,14 @@ controllers/basic/agentController/agentController.C
 controllers/derived/agentForcing/agentForcing.C
 
 
+/* borders */
+
+borders/basic/borders/borders.C
+borders/basic/borderModel/borderModel.C
+
+borders/derived/repulsiveBorder/repulsiveBorder.C
+
+
+
 
 LIB = $(FOAM_LIBBIN)/libagentCloud

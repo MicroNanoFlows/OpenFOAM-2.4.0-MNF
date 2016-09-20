@@ -69,7 +69,7 @@ forceFields::forceFields
 
     Info << nl << "Creating forceFields" << nl << endl;
 
-    //- state forceFields
+    //- create forceFields
 
     if(pairPotentials_.size() > 0 )
     {

@@ -100,7 +100,7 @@ pairPotential::pairPotential
     {    
         control_ = Switch(dict.lookup("control"));
     }
-//     readStateFromFile_ = Switch(dict.lookup("readStateFromFile"))*/;
+//     readStateFromFile_ = Switch(dict.lookup("readStateFromFile"));*/
 }
 
 

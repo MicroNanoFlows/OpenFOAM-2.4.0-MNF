@@ -51,6 +51,7 @@ SourceFiles
 #include "agentMeasurements.H"
 #include "agentControllers.H"
 #include "forceFields.H"
+#include "borders.H"
 
 //#include "labelVector.H"
 //#include "fileName.H"
@@ -100,6 +101,8 @@ private:
         cyclicBoundaries cyclics_;
         
         forceFields f_;
+                
+        borders b_;
         
         clockTimer clock_;
 
@@ -260,7 +263,7 @@ public:
 
 
             inline forceFields& f();
-            
+            inline borders& b();            
 /*
             label nSites() const;
             inline const potentials& pot() const;
