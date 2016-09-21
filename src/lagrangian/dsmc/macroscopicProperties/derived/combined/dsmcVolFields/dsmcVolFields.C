@@ -916,8 +916,10 @@ void dsmcVolFields::calculateField()
                 
                 if(cloud_.axisymmetric())
                 {
-//                     const point& cC = cloud_.mesh().cellCentres()[cell];
-                    scalar radius = sqrt((p.position().y()*p.position().y()) + (p.position().z()*p.position().z()));
+                    const point& cC = cloud_.mesh().cellCentres()[cell];
+                    
+                    scalar radius = cC.y();
+//                     scalar radius = sqrt((p.position().y()*p.position().y()) + (p.position().z()*p.position().z()));
                     
                     scalar RWF = 1.0;
                     
@@ -963,8 +965,10 @@ void dsmcVolFields::calculateField()
                 
                 if(cloud_.axisymmetric())
                 {
-//                     const point& cC = cloud_.mesh().cellCentres()[cell];
-                    scalar radius = sqrt((p.position().y()*p.position().y()) + (p.position().z()*p.position().z()));
+                    const point& cC = cloud_.mesh().cellCentres()[cell];
+                    
+                    scalar radius = cC.y();
+//                     scalar radius = sqrt((p.position().y()*p.position().y()) + (p.position().z()*p.position().z()));
                     
                     scalar RWF = 1.0;
                     
