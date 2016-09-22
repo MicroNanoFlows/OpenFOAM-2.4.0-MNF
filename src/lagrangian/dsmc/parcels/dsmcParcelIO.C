@@ -142,43 +142,43 @@ void Foam::dsmcParcel::readFields(Cloud<dsmcParcel>& c)
 //template <class ParcelType>
 void Foam::dsmcParcel::writeFields(const Cloud<dsmcParcel>& c)
 {
-//     particle::writeFields(c);
-// 
-//     label np =  c.size();
-// 
-//     IOField<vector> U(c.fieldIOobject("U", IOobject::NO_READ), np);
-//     IOField<scalar> RWF(c.fieldIOobject("radialWeight", IOobject::NO_READ), np);
-//     IOField<scalar> ERot(c.fieldIOobject("ERot", IOobject::NO_READ), np);
-//     IOField<label> vibLevel(c.fieldIOobject("vibLevel", IOobject::NO_READ), np);
-//     IOField<label> ELevel(c.fieldIOobject("ELevel", IOobject::NO_READ), np);
-//     IOField<label> typeId(c.fieldIOobject("typeId", IOobject::NO_READ), np);
-//     IOField<label> newParcel(c.fieldIOobject("newParcel", IOobject::NO_READ), np);
-//     IOField<label> classification(c.fieldIOobject("classification", IOobject::NO_READ), np);
-// 
-//     label i = 0;
-//     forAllConstIter(dsmcCloud, c, iter)
-//     {
-//         const dsmcParcel& p = iter();
-// 
-//         U[i] = p.U();
-//         RWF[i] = p.RWF();
-//         ERot[i] = p.ERot();
-//         vibLevel[i] = p.vibLevel();
-//         ELevel[i] = p.ELevel();
-//         typeId[i] = p.typeId();
-//         newParcel[i] = p.newParcel();
-//         classification[i] = p.classification();
-//         i++;
-//     }
-// 
-//     U.write();
-//     RWF.write();
-//     ERot.write();
-//     vibLevel.write();
-//     ELevel.write();
-//     typeId.write();
-//     newParcel.write();
-//     classification.write();
+    particle::writeFields(c);
+
+    label np =  c.size();
+
+    IOField<vector> U(c.fieldIOobject("U", IOobject::NO_READ), np);
+    IOField<scalar> RWF(c.fieldIOobject("radialWeight", IOobject::NO_READ), np);
+    IOField<scalar> ERot(c.fieldIOobject("ERot", IOobject::NO_READ), np);
+    IOField<label> vibLevel(c.fieldIOobject("vibLevel", IOobject::NO_READ), np);
+    IOField<label> ELevel(c.fieldIOobject("ELevel", IOobject::NO_READ), np);
+    IOField<label> typeId(c.fieldIOobject("typeId", IOobject::NO_READ), np);
+    IOField<label> newParcel(c.fieldIOobject("newParcel", IOobject::NO_READ), np);
+    IOField<label> classification(c.fieldIOobject("classification", IOobject::NO_READ), np);
+
+    label i = 0;
+    forAllConstIter(dsmcCloud, c, iter)
+    {
+        const dsmcParcel& p = iter();
+
+        U[i] = p.U();
+        RWF[i] = p.RWF();
+        ERot[i] = p.ERot();
+        vibLevel[i] = p.vibLevel();
+        ELevel[i] = p.ELevel();
+        typeId[i] = p.typeId();
+        newParcel[i] = p.newParcel();
+        classification[i] = p.classification();
+        i++;
+    }
+
+    U.write();
+    RWF.write();
+    ERot.write();
+    vibLevel.write();
+    ELevel.write();
+    typeId.write();
+    newParcel.write();
+    classification.write();
 }
 
 
