@@ -23,28 +23,28 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    polyPDB
-
+    pressureFlux
 
 Description
-    to write out a pdb file for creating movies
+    Model that applies an adaptive force on molecules to ste a pressure
 
 SourceFiles
-    polyPDBI.H
-    polyPDB.C
-    polyPDBIO.C
+    pressureFluxI.H
+    pressureFlux.C
+    pressureFluxIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef polyPDB_H
-#define polyPDB_H
+#ifndef pressureFlux_H
+#define pressureFlux_H
 
-#include "polyField.H"
+#include "polyStateController.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
 #include "polyMoleculeCloud.H"
-#include "distribution.H"
+#include "gravityForce.H" 
+#include "boundedBox.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -52,12 +52,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class polyPDB Declaration
+                           Class pressureFlux Declaration
 \*---------------------------------------------------------------------------*/
 
-class polyPDB
+class pressureFlux
 :
-	public polyField
+	public polyStateController
 {
 
 private:
@@ -67,95 +67,85 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-        propertyField fields_;
-
+        word fileName_;  
+        
+        //- ids of mols
         List<label> molIds_;
 
-        List<word> excludeSites_;
-
-        word fieldName_;
-
-        label n_;
-
-        List<label> minLimit_;
-        List<label> maxLimit_;
-
-        label iteration_;
-
-        // PDB in zone        
-        bool zone_;
-        word regionName_;
-        label regionId_;
-
-        label timeIndex_;
-        label nSteps_;
+        boundedBox box_;
         
-        bool variableMols_;
-        label nSiteEstimate_;
-        vector rDummy_;
-    
-        scalar startTime_;
-        scalar endTime_;
-        scalar accumulatedTime_;
-        scalar deltaT_;
-    
-        bool writeFirstTimeStep_;
+        vector d_;
+        scalar area_;
+        scalar targetPressure_;
+        scalar min_;
+        
+        scalar nTimeSteps_;
+        vector force_;
+        scalar nMols_;
         
     // Private Member Functions
 
-            void write();
-
-            void writeInZone(List<labelField>& molIds, List<vectorField>& sites);
-
-            void writeInMesh(List<labelField>& molIds, List<vectorField>& sites);
+        
+        void setBoundBox
+        (
+            const dictionary& propsDict,
+            boundedBox& bb,
+            const word& name 
+        );
 
 public:
 
     //- Runtime type information
-    TypeName("polyPDB");
+    TypeName("pressureFlux");
 
     // Constructors
 
         //- Construct from components
-        polyPDB
-		(
+        pressureFlux
+        (
             Time& t,
-            const polyMesh& mesh,
             polyMoleculeCloud& molCloud,
             const dictionary& dict
-		);
+        );
 
     // Destructor
 
- 		~polyPDB();
+        ~pressureFlux();
+
 
     // Member Functions
+    // Member Functions
+        
+        //- create an initial configuration
+        void initialConfiguration();
 
-        //- create initial field
-        void createField();
-
-        //- calculate field
-        void calculateField();
-
-        void measureDuringForceComputation
+        //- control molecules at various stages of time-step
+        void controlBeforeVelocityI();
+        void controlBeforeMove();
+        void controlBeforeForces();
+        void controlDuringForces
         (
             polyMolecule* molI,
             polyMolecule* molJ
-        );
-
-        void measureDuringForceComputationSite
+        );        
+        void controlAfterForces();
+        void controlAfterVelocityII();
+        
+        //- calculate any required properties (end of time-step)
+        void calculateProperties(); 
+        
+        //- output data (optional)
+        void output
         (
-            polyMolecule* molI,
-            polyMolecule* molJ,
-            label sI,
-            label sJ
+            const fileName& fixedPathName, 
+            const fileName& timePath
         );
+        
+        //- update properties from a modified dictionary (optional)
+        void updateProperties(const dictionary&);
 
-        const propertyField& fields() const;
-
-        //- write field
-        void writeField();
-}; 		
+        // Access
+};
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

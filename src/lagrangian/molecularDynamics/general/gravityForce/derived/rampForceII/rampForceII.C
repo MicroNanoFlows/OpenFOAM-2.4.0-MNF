@@ -67,6 +67,7 @@ rampForceII::rampForceII
     currentTime_(time.timeOutputValue()),
     deltaTMD_(time.deltaT().value())
 {
+    timeVarying_ = true;
     
     Info << "current time = " << currentTime_ << endl;
 
@@ -144,7 +145,7 @@ rampForceII::~rampForceII()
 
 vector rampForceII::force(const vector& position)
 {
-    return force_;
+    return vector::zero;
 }
 
 void rampForceII::updateForce()

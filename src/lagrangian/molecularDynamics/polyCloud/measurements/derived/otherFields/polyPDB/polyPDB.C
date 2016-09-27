@@ -57,9 +57,7 @@ polyPDB::polyPDB
     molIds_(),
     excludeSites_(),
     fieldName_(propsDict_.lookup("fieldName")),
-    n_(readLabel(propsDict_.lookup("numberOfFiles"))),
-    minLimit_(n_, -1),
-    maxLimit_(n_, -1),
+//     n_(readLabel(propsDict_.lookup("numberOfFiles"))),
     iteration_(0),
     zone_(false),
     regionName_(),
@@ -67,7 +65,7 @@ polyPDB::polyPDB
     timeIndex_(0),    
     nSteps_(readLabel(propsDict_.lookup("numberOfOutputSteps"))),
     variableMols_(false),
-    nMolsEstimate_(-1),
+    nSiteEstimate_(-1),
     startTime_(0.0),
     endTime_(GREAT),
     accumulatedTime_(0.0),
@@ -102,32 +100,16 @@ polyPDB::polyPDB
                 << exit(FatalError);
         }
     }
-
-    if(n_ == 0) 
-    {
-        FatalErrorIn("polyPDB::polyPDB()")
-            << " number of files should be at least 1." << nl << "in: "
-            << time_.time().system()/"fieldPropertiesDict"
-            << exit(FatalError);
-    }
-    
+   
     if (propsDict_.found("variableMols"))
     {
         variableMols_ = Switch(propsDict_.lookup("variableMols"));
         
-        nMolsEstimate_ = readLabel(propsDict_.lookup("molEstimate"));
+        nSiteEstimate_ = readLabel(propsDict_.lookup("nSiteEstimate"));
         rDummy_ = propsDict_.lookup("outsidePosition");
     }
 
-    minLimit_[0] = 0;
-    maxLimit_[0] = 99999;
 
-    for (int i = 1; i < n_; i++)
-    {
-        minLimit_[i] = 100000*(i);
-        maxLimit_[i] = (100000*(i+1)) - 1;
-    }
-    
     if (propsDict_.found("startAtTime"))
     {    
         startTime_ = readScalar(propsDict_.lookup("startAtTime"));
@@ -136,6 +118,13 @@ polyPDB::polyPDB
     if (propsDict_.found("endAtTime"))
     {
         endTime_ = readScalar(propsDict_.lookup("endAtTime"));
+    }
+    
+    writeFirstTimeStep_ = true;
+    
+    if (propsDict_.found("writeFirstTimeStep"))
+    {    
+        writeFirstTimeStep_ = readScalar(propsDict_.lookup("writeFirstTimeStep"));
     }    
 }
 
@@ -161,6 +150,71 @@ void polyPDB::createField()
     excludeSites_.transfer(siteNames);
 
     Info   << "sites to exclude: " << excludeSites_ << endl;
+    
+    // set many files
+    label nSites = 0;
+    
+    {    
+        IDLList<polyMolecule>::iterator mol(molCloud_.begin());
+
+        for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
+        {
+            if(findIndex(molIds_, mol().id()) != -1)
+            {
+                forAll(mol().sitePositions(), i)
+                {
+                    if(findIndex(excludeSites_, molCloud_.cP().siteNames(mol().id())[i]) == -1)
+                    {
+                        nSites++;
+                    }
+                }
+            }
+        }    
+    }
+    
+    if (Pstream::parRun())
+    {
+        reduce(nSites, sumOp<label>());
+    }
+    
+    n_ = label(nSites/100000) + 1;
+
+    if(n_ == 0) 
+    {
+        FatalErrorIn("polyPDB::polyPDB()")
+            << " number of files should be at least 1." << nl << "in: "
+            << time_.time().system()/"fieldPropertiesDict"
+            << exit(FatalError);
+    }
+    else if (n_ == 1)
+    {
+        Info << "polyPDB" << nl
+             << "-> number of files set to = " << n_ 
+             << nl << endl;        
+    }
+    else
+    {
+        Info << "WARNING in polyPDB" << nl
+             << "-> number of files set to = " << n_ 
+             << nl << endl;
+    }
+    
+    minLimit_.setSize(n_, -1);
+    maxLimit_.setSize(n_, -1);
+    minLimit_[0] = 0;
+    maxLimit_[0] = 99999;
+
+    for (int i = 1; i < n_; i++)
+    {
+        minLimit_[i] = 100000*(i);
+        maxLimit_[i] = (100000*(i+1)) - 1;
+    }
+    
+    if(writeFirstTimeStep_)
+    {
+        iteration_++;        
+        write();
+    }
 }
 
 void polyPDB::calculateField()
@@ -509,12 +563,12 @@ void polyPDB::write()
                 
                 if(variableMols_)
                 {
-                    label nBufferMols = nMolsEstimate_ - nSites;
+                    label nBufferMols = nSiteEstimate_ - nSites;
                     
                     if(nBufferMols < 0)
                     {
                         FatalErrorIn("void combinedPDB::writeField()")
-                            << "Exceeded limits of estimated nMol. Increase -> " << nMolsEstimate_
+                            << "Exceeded limits of estimated nMol. Increase -> " << nSiteEstimate_
                             << ", to at least -> " << nSites 
                             << abort(FatalError);
                     }               

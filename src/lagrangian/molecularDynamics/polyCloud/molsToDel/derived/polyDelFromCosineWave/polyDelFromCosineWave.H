@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,22 +23,25 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
+    polyDelFromCosineWave
 
 Description
 
-    Gravity force - read in force distribution from file
-
 SourceFiles
-    timeVaryingForceI.H
-    timeVaryingForce.C
-    timeVaryingForceIO.C
+    polyDelFromCosineWaveI.H
+    polyDelFromCosineWave.C
+    polyDelFromCosineWaveIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef timeVaryingForce_H
-#define timeVaryingForce_H
+#ifndef polyDelFromCosineWave_H
+#define polyDelFromCosineWave_H
 
-#include "gravityForce.H"
+#include "polyMolsToDeleteModel.H"
+#include "vector.H"
+#include "polyMesh.H"
+#include "volFields.H"
+#include "polyMoleculeCloud.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -46,105 +49,64 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class timeVaryingForce Declaration
+                           Class polyDelFromCosineWave Declaration
 \*---------------------------------------------------------------------------*/
 
-class timeVaryingForce
+class polyDelFromCosineWave
 :
-    public gravityForce
+	public polyMolsToDeleteModel
 {
 
 private:
 
     // Private data
 
+        //- subDictionary containing the properties
         dictionary propsDict_;
 
-        vector force_;
+        vector startPoint_;
+        vector endPoint_;
+        vector unitVector_;
+
+        scalar L_;
         
-        vector forceDirection_;        
-        
-        label nBins_;
-        
-        scalar offsetTime_;
-        
-        scalar binWidth_;
-        
-        // read in forces
-     
-        scalarField forces_;
-        
-        
-        vector getForce(const scalar& t);
+        scalar rOut_;
+        scalar rIn_;
+
+        List<label> molIds_;
+
+    // Private Member Functions
+
+        void findMolsToDel();
 
 public:
 
     //- Runtime type information
-    TypeName("timeVaryingForce");
-
-    // Static data members
+    TypeName("polyDelFromCosineWave");
 
     // Constructors
 
-        //- construct from components
-        timeVaryingForce
-        (
-            Time& time,
+        //- Construct from components
+        polyDelFromCosineWave
+		(
+            polyMoleculeCloud& molCloud,
             const dictionary& dict
-        );
-
-    // Selectors
-
+		);
 
     // Destructor
 
-        ~timeVaryingForce();
+ 		~polyDelFromCosineWave();
+
 
     // Member Functions
 
-        // Access
-
-        // Check
-
-        // Edit
-
-            void updateForce();
-
-            vector force(const vector& position);
-
-            vector force(const scalar& time);
-            
-        // Write
-
-
-            void write
-            (
-                const fileName& fixedPathName,
-                const fileName& timePath
-            );
-
-            void updateProperties
-            (
-                const dictionary& dict
-            );
-
-    // Member Operators
-
-
-    // Friend Functions
-
-    // Friend Operators
-
-    // IOstream Operators
+ 
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

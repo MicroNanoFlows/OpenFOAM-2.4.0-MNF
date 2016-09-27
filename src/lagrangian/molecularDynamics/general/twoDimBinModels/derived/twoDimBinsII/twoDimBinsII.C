@@ -62,27 +62,28 @@ twoDimBinsII::twoDimBinsII
     endPoint_(propsDict_.lookup("endPoint")),
     unitVectorX_(propsDict_.lookup("unitVectorX")),
     unitVectorY_(propsDict_.lookup("unitVectorY")),
-
+    unitVectorZ_(propsDict_.lookup("unitVectorZ")),
     nBinsX_(readLabel(propsDict_.lookup("nBinsX"))),
     nBinsY_(readLabel(propsDict_.lookup("nBinsY")))
 {
 
     unitVectorX_ /= mag(unitVectorX_);
     unitVectorY_ /= mag(unitVectorY_);
-    
+    unitVectorZ_ /= mag(unitVectorZ_);  
     box_.resetBoundedBox(startPoint_, endPoint_);
     
     vector rS = box_.span();
     
     lengthX_ = rS & unitVectorX_;
     lengthY_ = rS & unitVectorY_;
+    lengthZ_ = rS & unitVectorZ_; 
     
     binWidthX_ = lengthX_/nBinsX_;
     binWidthY_ = lengthY_/nBinsY_;
     
-    unitVectorZ_ = unitVectorX_ ^ unitVectorY_;
-    unitVectorZ_ /= mag(unitVectorZ_);  
-    lengthZ_ = rS & unitVectorZ_;   
+//     unitVectorZ_ = unitVectorX_ ^ unitVectorY_;
+//     unitVectorZ_ /= mag(unitVectorZ_);  
+  
  
     
     Info  << nl << "twoDimBinsII properties" << nl 

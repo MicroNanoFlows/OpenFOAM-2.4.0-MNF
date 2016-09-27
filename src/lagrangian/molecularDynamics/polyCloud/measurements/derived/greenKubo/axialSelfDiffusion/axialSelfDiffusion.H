@@ -23,21 +23,22 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    polyPDB
+    axialSelfDiffusion
 
 
 Description
-    to write out a pdb file for creating movies
+    Used to determine self diffusion coefficient inside a carbon nanotube. 
+
 
 SourceFiles
-    polyPDBI.H
-    polyPDB.C
-    polyPDBIO.C
+    axialSelfDiffusionI.H
+    axialSelfDiffusion.C
+    axialSelfDiffusionIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef polyPDB_H
-#define polyPDB_H
+#ifndef axialSelfDiffusion_H
+#define axialSelfDiffusion_H
 
 #include "polyField.H"
 #include "vector.H"
@@ -45,6 +46,7 @@ SourceFiles
 #include "volFields.H"
 #include "polyMoleculeCloud.H"
 #include "distribution.H"
+#include "boundedBox.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -52,10 +54,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class polyPDB Declaration
+                           Class axialSelfDiffusion Declaration
 \*---------------------------------------------------------------------------*/
 
-class polyPDB
+class axialSelfDiffusion
 :
 	public polyField
 {
@@ -69,55 +71,68 @@ private:
 
         propertyField fields_;
 
-        List<label> molIds_;
-
-        List<word> excludeSites_;
-
         word fieldName_;
 
-        label n_;
-
-        List<label> minLimit_;
-        List<label> maxLimit_;
-
-        label iteration_;
-
-        // PDB in zone        
-        bool zone_;
         word regionName_;
+
         label regionId_;
 
-        label timeIndex_;
-        label nSteps_;
+        List<label> molIds_;        
+
+        bool useBoundBox_;
+
+        boundedBox bb_;
+
+        vector unitVector_;
+
+        // counter for one acf
+        label nS_;        
         
-        bool variableMols_;
-        label nSiteEstimate_;
-        vector rDummy_;
-    
-        scalar startTime_;
-        scalar endTime_;
-        scalar accumulatedTime_;
-        scalar deltaT_;
-    
-        bool writeFirstTimeStep_;
+        // number of MD time-steps for generating one acf
+        label nSteps_;
+
+        // outer counter to average over all acfs
+        scalar nAveragingSteps_;          
+        
+        
+        
+        label nMols_;
+        
+        // outer list = time (nSteps_)
+        // inner list = tracking numbers
+        List<List<scalar> > velocities_;
+        
+        // outer list = nSteps_
+        // inner list accumulation of sum over all mols of v(t=0) dot v(t)
+        List<scalar> acfTime_;
+        
+        List<label> mols_;
+        
+        // self diffusion
+        scalar D_;
+
         
     // Private Member Functions
+        
+        void setBoundBox
+        (
+            const dictionary& propsDict,
+            boundedBox& bb,
+            const word& name 
+        );
+        
+        scalar getIntegral(const List<scalar>& f);
 
-            void write();
-
-            void writeInZone(List<labelField>& molIds, List<vectorField>& sites);
-
-            void writeInMesh(List<labelField>& molIds, List<vectorField>& sites);
-
+        
 public:
 
     //- Runtime type information
-    TypeName("polyPDB");
+    TypeName("axialSelfDiffusion");
 
     // Constructors
 
         //- Construct from components
-        polyPDB
+        axialSelfDiffusion
 		(
             Time& t,
             const polyMesh& mesh,
@@ -127,7 +142,8 @@ public:
 
     // Destructor
 
- 		~polyPDB();
+ 		~axialSelfDiffusion();
+
 
     // Member Functions
 

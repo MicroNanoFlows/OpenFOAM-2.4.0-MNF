@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,22 +23,29 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
+    poly1DMassFluxZone
 
 Description
 
-    Gravity force - read in force distribution from file
-
+    
+    
 SourceFiles
-    timeVaryingForceI.H
-    timeVaryingForce.C
-    timeVaryingForceIO.C
+    poly1DMassFluxZoneI.H
+    poly1DMassFluxZone.C
+    poly1DMassFluxZoneIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef timeVaryingForce_H
-#define timeVaryingForce_H
+#ifndef poly1DMassFluxZone_H
+#define poly1DMassFluxZone_H
 
-#include "gravityForce.H"
+#include "polyField.H"
+#include "vector.H"
+#include "polyMesh.H"
+#include "volFields.H"
+#include "polyMoleculeCloud.H"
+#include "distribution.H"
+#include "binModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -46,105 +53,106 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class timeVaryingForce Declaration
+                           Class poly1DMassFluxZone Declaration
 \*---------------------------------------------------------------------------*/
 
-class timeVaryingForce
+class poly1DMassFluxZone
 :
-    public gravityForce
+	public polyField
 {
 
 private:
 
     // Private data
 
+        //- subDictionary containing the properties
         dictionary propsDict_;
 
-        vector force_;
-        
-        vector forceDirection_;        
-        
+        fileName pathName_;
+        fileName nameFile_;
+
+        propertyField fields_;
+
+        autoPtr<binModel> binModel_;
+
         label nBins_;
         
-        scalar offsetTime_;
+        word regionName_;
+        label regionId_;
+        word fieldName_;
+
+        scalar length_;
         
-        scalar binWidth_;
+        vector unitVector_;
         
-        // read in forces
-     
-        scalarField forces_;
+        List<label> molIds_;
+
+
+        List<DynamicList<scalar> > massFlowRate_;
         
         
-        vector getForce(const scalar& t);
+        
+    // Private Member Functions
+        
+        
+//             void writeToStorage();
+
+//             bool readFromStorage();
 
 public:
 
     //- Runtime type information
-    TypeName("timeVaryingForce");
-
-    // Static data members
+    TypeName("poly1DMassFluxZone");
 
     // Constructors
 
-        //- construct from components
-        timeVaryingForce
-        (
-            Time& time,
+        //- Construct from components
+        poly1DMassFluxZone
+		(
+            Time& t,
+            const polyMesh& mesh,
+            polyMoleculeCloud& molCloud,
             const dictionary& dict
-        );
-
-    // Selectors
-
+		);
 
     // Destructor
 
-        ~timeVaryingForce();
+ 		~poly1DMassFluxZone();
+
 
     // Member Functions
 
-        // Access
+        //- create initial field
+        void createField();
 
-        // Check
+        //- calculate field
+        void calculateField();
 
-        // Edit
+        //- return field
+        const propertyField& fields() const;
 
-            void updateForce();
+        void measureDuringForceComputation
+        (
+            polyMolecule* molI,
+            polyMolecule* molJ
+        );
 
-            vector force(const vector& position);
+        void measureDuringForceComputationSite
+        (
+            polyMolecule* molI,
+            polyMolecule* molJ,
+            label sI,
+            label sJ
+        );
 
-            vector force(const scalar& time);
-            
-        // Write
-
-
-            void write
-            (
-                const fileName& fixedPathName,
-                const fileName& timePath
-            );
-
-            void updateProperties
-            (
-                const dictionary& dict
-            );
-
-    // Member Operators
-
-
-    // Friend Functions
-
-    // Friend Operators
-
-    // IOstream Operators
-};
+        //- write field
+        void writeField();
+}; 		
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

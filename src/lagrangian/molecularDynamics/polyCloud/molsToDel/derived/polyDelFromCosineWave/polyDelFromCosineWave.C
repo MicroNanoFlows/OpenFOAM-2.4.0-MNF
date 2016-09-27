@@ -26,7 +26,7 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "polyDelListOfAtoms.H"
+#include "polyDelFromCosineWave.H"
 #include "addToRunTimeSelectionTable.H"
 #include "IFstream.H"
 #include "graph.H"
@@ -36,16 +36,16 @@ Description
 namespace Foam
 {
 
-defineTypeNameAndDebug(polyDelListOfAtoms, 0);
+defineTypeNameAndDebug(polyDelFromCosineWave, 0);
 
-addToRunTimeSelectionTable(polyMolsToDeleteModel, polyDelListOfAtoms, dictionary);
+addToRunTimeSelectionTable(polyMolsToDeleteModel, polyDelFromCosineWave, dictionary);
 
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-polyDelListOfAtoms::polyDelListOfAtoms
+polyDelFromCosineWave::polyDelFromCosineWave
 (
     polyMoleculeCloud& molCloud,
     const dictionary& dict
@@ -53,120 +53,104 @@ polyDelListOfAtoms::polyDelListOfAtoms
 :
     polyMolsToDeleteModel(molCloud, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
-    molIds_()
+    startPoint_(propsDict_.lookup("startPoint")),
+    endPoint_(propsDict_.lookup("endPoint")),
+    unitVector_((endPoint_ - startPoint_)/mag(endPoint_ - startPoint_)),
+    L_(mag(endPoint_-startPoint_)),
+    rOut_(readScalar(propsDict_.lookup("rOut"))),
+    rIn_(readScalar(propsDict_.lookup("rIn")))
 {
-    
-    molIds_.clear();
 
+    // check if start point is in the mesh
+   
+    if(mesh_.findCell(startPoint_) == -1)
+    {
+        Info<< "WARNING: starting point " << startPoint_ 
+            << " is selected outside the mesh."
+            << endl;
+    }
+
+    if(mesh_.findCell(endPoint_) == -1)
+    {
+        Info<< "WARNING: end point " << endPoint_ 
+            << " is selected outside the mesh."
+            << endl;
+    }
     selectIds ids
     (
         molCloud_.cP(),
         propsDict_
     );
-
+    
     molIds_ = ids.molIds();
-    
 
-    molPoints_ = List<vector>(propsDict_.lookup("molPoints"));  
-    
-    
+
     findMolsToDel();
-  
 }
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-polyDelListOfAtoms::~polyDelListOfAtoms()
+polyDelFromCosineWave::~polyDelFromCosineWave()
 {}
 
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-void polyDelListOfAtoms::findMolsToDel()
+void polyDelFromCosineWave::findMolsToDel()
 {
+    DynamicList<polyMolecule*> molsToDel;
+
+    IDLList<polyMolecule>::iterator mol(molCloud_.begin());
 
     label initialSize = molCloud_.size();
-    label deletedMols = 0;
-    
-    Info << nl << "Deleting the following molecules... " << nl << endl;
 
-    DynamicList<vector> positions;
-    DynamicList<scalar> rMinCollect;    
-    
-    forAll(molPoints_, i)
-    {    
-        DynamicList<polyMolecule*> molsToDel;
+    for
+    (
+        mol = molCloud_.begin();
+        mol != molCloud_.end();
+        ++mol
+    )
+    {
+        const vector& rI = mol().position();
+        vector rSI = rI - startPoint_;
+        scalar X = rSI & unitVector_;
 
-        IDLList<polyMolecule>::iterator mol(molCloud_.begin());
-       
-        scalar rMin = GREAT;
+        scalar R = rOut_ + rIn_*cos(2*constant::mathematical::pi*X/L_);
         
-        for
-        (
-            mol = molCloud_.begin();
-            mol != molCloud_.end();
-            ++mol
-        )
+        scalar Y = mag(rI - (startPoint_ + X*unitVector_));
+        
+        if(Y > R)
         {
-            if(findIndex(molIds_, mol().id()) != -1)
+            label molId = mol().id();
+
+            if(findIndex(molIds_, molId) != -1)
             {
-                vector rT = molPoints_[i];
-                scalar magRIJ = mag(rT-mol().position());
-                
-                if(magRIJ < rMin)
-                {
-                    molsToDel.clear();
-                    rMin = magRIJ;
-                    polyMolecule* molI = &mol();
-                    molsToDel.append(molI);
-                }
+                polyMolecule* molI = &mol();
+                molsToDel.append(molI);
             }
         }
-        
-       
-
-        forAll(molsToDel, m)
-        {
-            positions.append(molsToDel[m]->position());
-            rMinCollect.append(rMin);     
-            
-            Info << molsToDel[m]->position()
-                << endl;            
-
-
-                
-            deletedMols++;
-            deleteMolFromMoleculeCloud(*molsToDel[m]);
-        }
     }
-    
-    Info << nl << "more details ... " << nl << endl;
-    
-    forAll(molPoints_, i)
+
+    //molsToDel.shrink();
+
+    forAll(molsToDel, m)
     {
-
-        Info << "Deleting molecule at position = "
-                << positions[i]
-                << ", requested position = " << molPoints_[i]
-                << ", residual = " << rMinCollect[i]
-                << endl;        
-        
+        deleteMolFromMoleculeCloud(*molsToDel[m]);
     }
-    
 
-    label molsKept = initialSize - deletedMols;
+    label molsKept = initialSize - molsToDel.size();
 
     Info<< tab << " initial polyMolecules: " <<  initialSize 
         << ", polyMolecules kept: " <<  molsKept
-        << ", polyMolecules removed: " << deletedMols
+        << ", polyMolecules removed: " << molsToDel.size() 
         << endl;
 
 
     // as a precaution: rebuild cell occupancy
     molCloud_.rebuildCellOccupancy();
-    molCloud_.prepareInteractions();
 }
+
 
 } // End namespace Foam
 

@@ -23,21 +23,32 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    polyPDB
-
+    polyInstantBinsMethod
 
 Description
-    to write out a pdb file for creating movies
+    The method of bins measures 1D distribution properties localised in a
+    user-specified zone.
 
+    Parallelised.
+
+    Any binModel may be applied. So far implemented the following:
+
+        normal, cylindrical, multi sub-zones, cuboid 
+
+    Choice of properties to output also available.
+
+    This is an implemented model for running transient measurements ( very costly )
+    
+    
 SourceFiles
-    polyPDBI.H
-    polyPDB.C
-    polyPDBIO.C
+    polyInstantBinsMethodI.H
+    polyInstantBinsMethod.C
+    polyInstantBinsMethodIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef polyPDB_H
-#define polyPDB_H
+#ifndef polyInstantBinsMethod_H
+#define polyInstantBinsMethod_H
 
 #include "polyField.H"
 #include "vector.H"
@@ -45,6 +56,7 @@ SourceFiles
 #include "volFields.H"
 #include "polyMoleculeCloud.H"
 #include "distribution.H"
+#include "binModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -52,10 +64,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class polyPDB Declaration
+                           Class polyInstantBinsMethod Declaration
 \*---------------------------------------------------------------------------*/
 
-class polyPDB
+class polyInstantBinsMethod
 :
 	public polyField
 {
@@ -67,57 +79,68 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
+        fileName pathName_;
+        fileName nameFile_;
+
         propertyField fields_;
+
+        autoPtr<binModel> binModel_;
+
+        label nBins_;
+        
+        word regionName_;
+        label regionId_;
+        word fieldName_;
 
         List<label> molIds_;
 
-        List<word> excludeSites_;
 
-        word fieldName_;
+        List<DynamicList<scalar> > mols_;
+        List<DynamicList<scalar> > mass_;
+        List<DynamicList<vector> > mom_;
+//         Field<DynamicList<vector> > velocityB_;
+//         Field<DynamicList<scalar> > kE_;
+//         Field<DynamicList<scalar> > angularKeSum_;
+//         Field<DynamicList<scalar> > dof_;
+//         Field<DynamicList<tensor> > kineticTensor_;
+//         Field<DynamicList<tensor> > virialTensor_        
 
-        label n_;
+        // fields
+//         Field<DynamicList<scalar> > N_;
+        List<DynamicList<scalar> > rhoN_;
+        List<DynamicList<scalar> > rhoM_;
+//         Field<DynamicList<vector> > USAM_;
+        List<DynamicList<vector> > UCAM_;
+        List<DynamicList<scalar> > T_;
+//         Field<DynamicList<tensor> > stress_;
+        List<DynamicList<scalar> > p_;
 
-        List<label> minLimit_;
-        List<label> maxLimit_;
 
-        label iteration_;
-
-        // PDB in zone        
-        bool zone_;
-        word regionName_;
-        label regionId_;
-
-        label timeIndex_;
-        label nSteps_;
+        bool overideVolume_;
+        List<scalar> volumes_;
         
-        bool variableMols_;
-        label nSiteEstimate_;
-        vector rDummy_;
-    
-        scalar startTime_;
-        scalar endTime_;
-        scalar accumulatedTime_;
-        scalar deltaT_;
-    
-        bool writeFirstTimeStep_;
+//         scalar nAvTimeSteps_;
+        
+//         bool resetAtOutput_;
+        
+        
         
     // Private Member Functions
+        
+        
+//             void writeToStorage();
 
-            void write();
-
-            void writeInZone(List<labelField>& molIds, List<vectorField>& sites);
-
-            void writeInMesh(List<labelField>& molIds, List<vectorField>& sites);
+//             bool readFromStorage();
 
 public:
 
     //- Runtime type information
-    TypeName("polyPDB");
+    TypeName("polyInstantBinsMethod");
 
     // Constructors
 
         //- Construct from components
-        polyPDB
+        polyInstantBinsMethod
 		(
             Time& t,
             const polyMesh& mesh,
@@ -127,7 +150,8 @@ public:
 
     // Destructor
 
- 		~polyPDB();
+ 		~polyInstantBinsMethod();
+
 
     // Member Functions
 
@@ -136,6 +160,9 @@ public:
 
         //- calculate field
         void calculateField();
+
+        //- return field
+        const propertyField& fields() const;
 
         void measureDuringForceComputation
         (
@@ -150,8 +177,6 @@ public:
             label sI,
             label sJ
         );
-
-        const propertyField& fields() const;
 
         //- write field
         void writeField();

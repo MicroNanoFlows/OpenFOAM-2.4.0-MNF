@@ -442,7 +442,7 @@ writeTimeData::writeTimeData
 }
 
 
-// one scalar field (with append possible)
+// one scalar field (with append possible) [OLD]
 writeTimeData::writeTimeData
 (
     const fileName& pathName,
@@ -496,7 +496,88 @@ writeTimeData::writeTimeData
     }
 }
 
+// one scalar field - sideways (with append possible)
+writeTimeData::writeTimeData
+(
+    const fileName& pathName,
+    const word& nameFile,
+    const scalarField& xData,
+    const word& option, 
+    const bool& dummy     
 
+)
+{
+    if(option == "once")
+    {
+        OFstream file(pathName/nameFile);
+    
+        if(file.good())
+        {
+            forAll(xData, n)
+            {
+                file 
+                    << xData[n]
+                    << endl;
+            }
+        }
+        else
+        {
+            FatalErrorIn("void writeTimeData::writeTimeData()")
+                << "Cannot open file " << file.name()
+                << abort(FatalError);
+        }    
+    }
+    if(option == "append")
+    {
+        fileName fName(pathName/nameFile);
+
+        std::ofstream file(fName.c_str(),ios_base::app);
+        file.precision(11);
+
+        if(file.is_open())
+        {
+            forAll(xData, n)
+            {
+                file << xData[n] << nl;
+            }
+        }
+        else
+        {
+            FatalErrorIn("void writeTimeData::writeTimeData()")
+                << "Cannot open file " << fName
+                << abort(FatalError);
+        }
+
+        file.close();
+    }    
+    if(option == "sidewaysAppend")
+    {
+//         Pout <<"xData = " << xData << endl;
+        
+        fileName fName(pathName/nameFile);
+
+        std::ofstream file(fName.c_str(),ios_base::app);
+        file.precision(11);
+
+        if(file.is_open())
+        {
+            forAll(xData, n)
+            {
+                file << xData[n] << " ";
+            }
+            
+            file << nl;
+        }
+        else
+        {
+            FatalErrorIn("void writeTimeData::writeTimeData()")
+                << "Cannot open file " << fName
+                << abort(FatalError);
+        }
+
+        file.close();
+    }
+}
 
 
 // one scalar field one VECTOR field (with append possible)
@@ -577,6 +658,8 @@ writeTimeData::writeTimeData
 
     file.close();
 }
+
+
 
 
 // one scalar field one TENSOR field (with append possible)

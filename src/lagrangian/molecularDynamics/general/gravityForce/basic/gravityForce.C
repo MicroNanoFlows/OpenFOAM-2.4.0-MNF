@@ -56,7 +56,9 @@ gravityForce::gravityForce
     const dictionary& dict
 )
 :
-    time_(time)
+    time_(time),
+    spaceVarying_(false),
+    timeVarying_(false)
 {}
 
 // * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * * //
@@ -102,7 +104,15 @@ gravityForce::~gravityForce()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+bool gravityForce::spaceVarying()
+{
+    return spaceVarying_;
+}
 
+bool gravityForce::timeVarying()
+{
+    return timeVarying_;
+}
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
