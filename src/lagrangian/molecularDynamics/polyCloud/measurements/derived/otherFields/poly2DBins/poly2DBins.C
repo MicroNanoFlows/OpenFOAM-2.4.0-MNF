@@ -355,6 +355,104 @@ void poly2DBins::writeField()
             scalarField binsY = binModel_->binPositionsY();            
             
 
+            // new write out 
+            {
+                OFstream file(timePath_/"bins_twoDim_"+fieldName_+"_rhoM_II.xy");
+
+                if(file.good())
+                {
+                    forAll(binsY, j)
+                    {
+                        forAll(binsX, i)
+                        {
+                            file 
+                                << binsX[i] << "\t" 
+                                << binsY[j] << "\t" 
+                                << rhoM_[i][j] << "\t"
+                                << endl;
+                        }
+                    }
+                }
+                else
+                {
+                    FatalErrorIn("void writeTimeData::writeTimeData()")
+                        << "Cannot open file " << file.name()
+                        << abort(FatalError);
+                }            
+            }
+            {
+                OFstream file(timePath_/"bins_twoDim_"+fieldName_+"_U_CAM_II_X.xy");
+
+                if(file.good())
+                {
+                    forAll(binsY, j)
+                    {
+                        forAll(binsX, i)
+                        {
+                            file 
+                                << binsX[i] << "\t" 
+                                << binsY[j] << "\t" 
+                                << UCAM_[i][j].x() << "\t"
+                                << endl;
+                        }
+                    }
+                }
+                else
+                {
+                    FatalErrorIn("void writeTimeData::writeTimeData()")
+                        << "Cannot open file " << file.name()
+                        << abort(FatalError);
+                }            
+            }      
+            
+            {
+                OFstream file(timePath_/"bins_twoDim_"+fieldName_+"_U_CAM_II_Y.xy");
+
+                if(file.good())
+                {
+                    forAll(binsY, j)
+                    {
+                        forAll(binsX, i)
+                        {
+                            file 
+                                << binsX[i] << "\t" 
+                                << binsY[j] << "\t" 
+                                << UCAM_[i][j].y() << "\t"
+                                << endl;
+                        }
+                    }
+                }
+                else
+                {
+                    FatalErrorIn("void writeTimeData::writeTimeData()")
+                        << "Cannot open file " << file.name()
+                        << abort(FatalError);
+                }            
+            }
+            {
+                OFstream file(timePath_/"bins_twoDim_"+fieldName_+"_U_CAM_II_Z.xy");
+
+                if(file.good())
+                {
+                    forAll(binsY, j)
+                    {
+                        forAll(binsX, i)
+                        {
+                            file 
+                                << binsX[i] << "\t" 
+                                << binsY[j] << "\t" 
+                                << UCAM_[i][j].z() << "\t"
+                                << endl;
+                        }
+                    }
+                }
+                else
+                {
+                    FatalErrorIn("void writeTimeData::writeTimeData()")
+                        << "Cannot open file " << file.name()
+                        << abort(FatalError);
+                }            
+            }            
             
             writeTimeData
             (

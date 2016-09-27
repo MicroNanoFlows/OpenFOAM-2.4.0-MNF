@@ -57,12 +57,19 @@ forceFields::forceFields
         )
     ),
     rCut_(readScalar(forceFieldsDict_.lookup("rCut"))/ (cloud.redUnits().refLength()) ) ,
-    nPairPotentials_(0),
-    
-    pairPotList_(forceFieldsDict_.lookup("pairs")),
+
+    nBodyForces_(0),
+    bodyForceList_(forceFieldsDict_.lookup("bodyForces")),
+    bodyForceNames_(bodyForceList_.size()),
+    bodyForceIds_(bodyForceList_.size()),
+    bodyForces_(bodyForceList_.size()),
+   
+    nPairPotentials_(0),    
+    pairPotList_(forceFieldsDict_.lookup("pairPotentials")),
     pairPotNames_(pairPotList_.size()),
     pairPotIds_(pairPotList_.size()),
     pairPotentials_(pairPotList_.size()),
+    
     iL_(mesh, cloud.redUnits(), cloud.cyclics(), rCut_, "agent")
 //     ipl_(mesh.nCells())        
 {
@@ -71,6 +78,26 @@ forceFields::forceFields
 
     //- create forceFields
 
+    if(bodyForces_.size() > 0 )
+    {
+        forAll(bodyForces_, i)
+        {
+            const entry& bodyForceI = bodyForceList_[i];
+            const dictionary& forceFieldsIDict = bodyForceI.dict();
+            
+            bodyForces_[i] = autoPtr<bodyForce>
+            (
+                bodyForce::New(cloud_, time_, forceFieldsIDict)
+            );
+    
+            bodyForceNames_[i] = bodyForces_[i]->type();
+            bodyForceIds_[i] = i;
+    
+            nBodyForces_++;
+        }
+    }
+    
+    
     if(pairPotentials_.size() > 0 )
     {
         forAll(pairPotentials_, i)
@@ -95,7 +122,6 @@ forceFields::forceFields
         testPairPotentials();
     }
     
-    //test
     
     // making directory
     pathName_ = mesh_.time().path()/"forceFields";
@@ -115,13 +141,18 @@ forceFields::~forceFields()
 //- call this function after the agentCloud is completely initialised
 void forceFields::initialConfig()
 {
+    // body forces
+    forAll(bodyForces_, i)
+    {
+        bodyForces_[i]->initialConfiguration();        
+    }    
     
+    //pair forces
     forAll(pairPotentials_, i)
     {
         pairPotentials_[i]->initialConfiguration();        
         pairPotentials_[i]->writeTables(pathName_);
     }    
-    
 }
 
 void forceFields::testPairPotentials()
@@ -189,6 +220,25 @@ void forceFields::testPairPotentials()
     }
     
     Info << "done" << endl;
+}
+
+
+void forceFields::calculateBodyForces()
+{
+    forAll(bodyForces_, i)
+    {
+        bodyForces_[i]->newForce();
+    }
+ 
+    IDLList<agent>::iterator mol(cloud_.begin());
+
+    for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
+    {
+        forAll(bodyForces_, i)
+        {
+            bodyForces_[i]->force(&mol());
+        }
+    } 
 }
 
 void forceFields::calculatePairForces()

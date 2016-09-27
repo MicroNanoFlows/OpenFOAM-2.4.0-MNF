@@ -23,31 +23,27 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    velocityVerlet
+    uniformForce
 
 Description
-    simple velocity controller in a zone 
-
-    parallelised
-
-    recommendation: control and measure properties every time step, ensure  
-                    size of zone.
+    Model that applies a gravitational force on all molecules.
 
 SourceFiles
-    velocityVerletI.H
-    velocityVerlet.C
-    velocityVerletIO.C
+    uniformForceI.H
+    uniformForce.C
+    uniformForceIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef velocityVerlet_H
-#define velocityVerlet_H
+#ifndef uniformForce_H
+#define uniformForce_H
 
-#include "agentIntegrator.H"
+#include "bodyForce.H"
 #include "vector.H"
 #include "polyMesh.H"
-#include "volFields.H"
 #include "agentCloud.H"
+#include "gravityForce.H" 
+#include "boundedBox.H"
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -56,55 +52,68 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class velocityVerlet Declaration
+                           Class uniformForce Declaration
 \*---------------------------------------------------------------------------*/
 
-class velocityVerlet
+class uniformForce
 :
-    public agentIntegrator
+	public bodyForce
 {
 
 private:
 
-    
-        // Private data
-       
-    
-    
+    // Private data
+
+        //- subDictionary containing the properties
+        dictionary propsDict_;
+
+        autoPtr<gravityForce> model_;
+
+        //- ids of mols
+        List<label> agentIds_;
+
+        List<boundedBox> boxes_;
+  
+
+
+        
+    // Private Member Functions
+
+        void setBoundBoxes();
+        
+
 public:
 
     //- Runtime type information
-    TypeName("velocityVerlet");
+    TypeName("uniformForce");
 
     // Constructors
 
         //- Construct from components
-        velocityVerlet
+        uniformForce
         (
-            Time& t,
             agentCloud& cloud,
+            Time& t,
             const dictionary& dict
         );
 
     // Destructor
 
-        ~velocityVerlet();
+        ~uniformForce();
 
 
     // Member Functions
+        
+        //- create an initial configuration
+        void initialConfiguration();
+        
+        // inside loop of all agents
+        void force(agent* p);
+        
+        // new force definition; requires loop over all agents
+        void newForce();
 
-        void init();
-        
-        void evolve();
-        
-        void updateHalfVelocity();
-        
-        void clearLagrangianFields(); 
-
-        void calculateForce(); 
-        
-        void updateAcceleration();    
-  
+        // Access
 };
 
 

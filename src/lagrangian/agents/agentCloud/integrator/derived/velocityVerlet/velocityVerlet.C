@@ -71,6 +71,7 @@ void velocityVerlet::init()
     cloud_.f().initialConfig();
     cloud_.b().initialConfig();    
     
+    // initial force
     clearLagrangianFields();
     calculateForce();
     updateAcceleration();
@@ -91,7 +92,7 @@ void velocityVerlet::evolve()
     
     cloud_.buildCellOccupancy();
 
-    cloud_.b().afterMove();    
+    cloud_.b().afterMove();
 
     cloud_.controllers().controlBeforeForces();
     
@@ -105,25 +106,22 @@ void velocityVerlet::evolve()
     
     cloud_.controllers().controlAfterForces();
         
-//     cloud_.controlAfterForces();
     updateHalfVelocity();
     
     cloud_.controllers().controlVelocitiesII(); 
     
-//     test();
-//     cloud_.controlAfterVelocity();
-    
-    postTimeStep();
-}
 
-void velocityVerlet::postTimeStep()
-{
+    // after time step 
+    
     cloud_.fields().calculateFields();
+    
     cloud_.fields().writeFields();
     
     cloud_.controllers().calculateStateProps();
-    cloud_.controllers().outputStateResults();    
+    
+    cloud_.controllers().outputStateResults(); 
 }
+
 
 // void velocityVerlet::test()
 // {
@@ -159,11 +157,6 @@ void velocityVerlet::updateHalfVelocity()
     }
 }
 
-void velocityVerlet::calculateForce()
-{
-    cloud_.f().calculatePairForces();
-}
-
 void velocityVerlet::clearLagrangianFields()
 {
     IDLList<agent>::iterator mol(cloud_.begin());
@@ -178,6 +171,15 @@ void velocityVerlet::clearLagrangianFields()
     }
 }
 
+void velocityVerlet::calculateForce()
+{
+    cloud_.f().calculateBodyForces();
+    
+    cloud_.f().calculatePairForces();
+}
+
+
+
 void velocityVerlet::updateAcceleration()
 {
     IDLList<agent>::iterator mol(cloud_.begin());
@@ -187,7 +189,6 @@ void velocityVerlet::updateAcceleration()
         if(!mol().frozen())
         {
 //             scalar mass = cloud_.cP().mass(mol().id());
-                
             mol().a() = mol().f()/mol().mass();
         }
     }

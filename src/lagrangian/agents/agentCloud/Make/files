@@ -12,8 +12,11 @@ constant/selectAgentIds/selectAgentIds.C
 
 forceFields/basic/forceFields/forceFields.C
 forceFields/basic/pairPotential/pairPotential.C
+forceFields/basic/bodyForce/bodyForce.C    
     
-forceFields/derived/lennardJones/lennardJones.C    
+forceFields/derived/bodyForces/uniformForce/uniformForce.C      
+    
+forceFields/derived/pairPotentials/lennardJones/lennardJones.C    
     
     
 /* initialise */
@@ -53,6 +56,15 @@ borders/basic/borders/borders.C
 borders/basic/borderModel/borderModel.C
 
 borders/derived/repulsiveBorder/repulsiveBorder.C
+
+
+/* schedule */
+
+schedule/basic/schedules/schedules.C
+schedule/basic/scheduleModel/scheduleModel.C
+
+schedule/derived/tabularSchedule/tabularSchedule.C
+
 
 
 

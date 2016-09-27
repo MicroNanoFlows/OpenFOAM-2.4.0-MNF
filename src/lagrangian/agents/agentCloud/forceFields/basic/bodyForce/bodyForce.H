@@ -23,32 +23,31 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    velocityVerlet
+    bodyForce
 
 Description
-    simple velocity controller in a zone 
+    Basic/abstract class of a state controller
 
-    parallelised
-
-    recommendation: control and measure properties every time step, ensure  
-                    size of zone.
 
 SourceFiles
-    velocityVerletI.H
-    velocityVerlet.C
-    velocityVerletIO.C
+    bodyForceI.H
+    bodyForce.C
+    bodyForceIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef velocityVerlet_H
-#define velocityVerlet_H
+#ifndef bodyForce_H
+#define bodyForce_H
 
-#include "agentIntegrator.H"
+#include "IOdictionary.H"
+#include "autoPtr.H"
+#include "runTimeSelectionTables.H"
 #include "vector.H"
-#include "polyMesh.H"
 #include "volFields.H"
-#include "agentCloud.H"
-
+#include "agent.H"
+#include "writeTimeData.H"
+#include "selectAgentIds.H"
+#include "reducedUnits.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -56,55 +55,85 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class velocityVerlet Declaration
+                           Class bodyForce Declaration
 \*---------------------------------------------------------------------------*/
 
-class velocityVerlet
-:
-    public agentIntegrator
+class bodyForce
 {
 
-private:
+protected:
 
-    
-        // Private data
-       
-    
-    
+    // Protected data
+
+        const fvMesh& mesh_;
+
+        agentCloud& cloud_;
+
+        Time& time_;
+
+
+
+    // Private Member Functions
+
 public:
 
     //- Runtime type information
-    TypeName("velocityVerlet");
+    TypeName("bodyForce");
 
+    // Declare runtime constructor selection table
+        declareRunTimeSelectionTable
+        (
+            autoPtr,
+            bodyForce,
+            dictionary,
+            (
+                agentCloud& cloud,
+                Time& t,
+                const dictionary& dict
+            ),
+            (cloud, t, dict)
+        );
+   
     // Constructors
 
         //- Construct from components
-        velocityVerlet
+        bodyForce
         (
-            Time& t,
             agentCloud& cloud,
+            Time& t,
             const dictionary& dict
         );
 
+
+    // Selectors
+
+        static autoPtr<bodyForce> New
+        (
+            agentCloud& cloud,
+            Time& t,
+            const dictionary& dict
+        );
+
+
     // Destructor
 
-        ~velocityVerlet();
+        virtual ~bodyForce();
 
 
     // Member Functions
 
-        void init();
-        
-        void evolve();
-        
-        void updateHalfVelocity();
-        
-        void clearLagrangianFields(); 
 
-        void calculateForce(); 
+        //- create an initial configuration
+        virtual void initialConfiguration() = 0;
         
-        void updateAcceleration();    
-  
+        // inside loop of all agents
+        virtual void force(agent* p) = 0;
+        
+        // new force definition; requires loop over all agents
+        virtual void newForce() = 0;                
+        
+        
+        
 };
 
 
@@ -113,6 +142,7 @@ public:
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
 
 #endif
 

@@ -23,31 +23,26 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    velocityVerlet
+    tabularSchedule
 
 Description
-    simple velocity controller in a zone 
 
-    parallelised
-
-    recommendation: control and measure properties every time step, ensure  
-                    size of zone.
 
 SourceFiles
-    velocityVerletI.H
-    velocityVerlet.C
-    velocityVerletIO.C
+    tabularScheduleI.H
+    tabularSchedule.C
+    tabularScheduleIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef velocityVerlet_H
-#define velocityVerlet_H
+#ifndef tabularSchedule_H
+#define tabularSchedule_H
 
-#include "agentIntegrator.H"
+#include "scheduleModel.H"
 #include "vector.H"
 #include "polyMesh.H"
-#include "volFields.H"
 #include "agentCloud.H"
+
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -56,55 +51,57 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class velocityVerlet Declaration
+                           Class tabularSchedule Declaration
 \*---------------------------------------------------------------------------*/
 
-class velocityVerlet
+class tabularSchedule
 :
-    public agentIntegrator
+	public scheduleModel
 {
 
 private:
 
-    
-        // Private data
-       
-    
-    
+    // Private data
+
+        //- subDictionary containing the properties
+        dictionary propsDict_;
+
+
+
+        
+    // Private Member Functions
+
+ 
+
 public:
 
     //- Runtime type information
-    TypeName("velocityVerlet");
+    TypeName("tabularSchedule");
 
     // Constructors
 
         //- Construct from components
-        velocityVerlet
+        tabularSchedule
         (
-            Time& t,
+            Time& time,
             agentCloud& cloud,
             const dictionary& dict
         );
 
     // Destructor
 
-        ~velocityVerlet();
-
+        ~tabularSchedule();
 
     // Member Functions
+        
+//         void initialConfiguration();
+//         
+//         void afterMove();
+//         
+//         void afterForce();
+                
 
-        void init();
-        
-        void evolve();
-        
-        void updateHalfVelocity();
-        
-        void clearLagrangianFields(); 
-
-        void calculateForce(); 
-        
-        void updateAcceleration();    
-  
+        // Access
 };
 
 

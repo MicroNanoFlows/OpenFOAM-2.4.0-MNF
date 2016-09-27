@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    forceFields
+    schedules
 
 Description
 
@@ -33,29 +33,27 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef forceFields_H
-#define forceFields_H
+#ifndef schedules_H
+#define schedules_H
 
 #include "List.H"
 #include "IOdictionary.H"
 #include "autoPtr.H"
 #include "polyMesh.H"
+#include "scheduleModel.H"
 #include "agent.H"
 #include "fvMesh.H"
-#include "twoDimCellInteractions.H"
 
-#include "bodyForce.H"
-#include "pairPotential.H"
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class forceFields Declaration
+                           Class schedules Declaration
 \*---------------------------------------------------------------------------*/
 
-class forceFields
+class schedules
 {
 
     // Private data
@@ -70,57 +68,18 @@ class forceFields
         const agentProperties& cP_;
         
         //- The entire dictionary (containing multiple subDictionaries)
-        IOdictionary forceFieldsDict_;
-
-        fileName pathName_;        
+        IOdictionary schedulesDict_;
+     
         
-        scalar rCut_;
-
-        // number of one-body forceFields
-        label nBodyForces_;
-        
-        //- one-body force field
-        PtrList<entry> bodyForceList_;
-        List<word> bodyForceNames_;
-        List<label> bodyForceIds_;
-        List< autoPtr<bodyForce> > bodyForces_;
-        
-
-        // number of pair forceFields
-        label nPairPotentials_;
-        
-        //- pairPotentials
-        PtrList<entry> pairPotList_;
-        List<word> pairPotNames_;
-        List<label> pairPotIds_;
-        List< autoPtr<pairPotential> > pairPotentials_;
-        
-        
-        
-        
-        // use this when given two molecules to compute forces/energies
-        // e.g. index = pairPotentialLookUp_[idA][idB]
-        //      pairPotentials_[index]
-        // outer list = size of idlist
-        // inner list = size of idlist 
-        List<List<label> > pairPotentialLookUp_;
-        
-        // cellListAlgorithm
-        twoDimCellInteractions<agent> iL_;
-        
-        //- interaction particle list
-//         List<DynamicList<agent*> > ipl_;        
+        //- schedules
+        PtrList<entry> scheduleList_;
+        List<word> scheduleNames_;
+        List<label> scheduleIds_;
+        List< autoPtr<scheduleModel> > schedules_;
         
         
     // Private Member Functions
 
-        void testPairPotentials();
-        
-        inline void evaluatePair
-        (
-            agent* molI,
-            agent* molJ
-        );
         
 public:
 
@@ -129,29 +88,36 @@ public:
     // Constructors
 
         //- Constructor 
-        forceFields
+        schedules
         (
             Time& t,
             const polyMesh& mesh,
             agentCloud& cloud
         );
 
-        ~forceFields();
+        ~schedules();
 
     // Member Functions
 
         //- initial configuration
-        void initialConfig();
-
-        void calculateBodyForces();
-        
-        void calculatePairForces();
+//         void initialConfig();
+// 
+//         void afterMove();
+//         
+//         void afterForce();
+// 
+//         
+//         void write();
         
         // Access
 
-        inline List< autoPtr<bodyForce> >& bodyForces();
+//             const label& nStateControllers() const;
 
-        inline const scalar& rCut() const;
+//             inline List< autoPtr<pairPotential> >& stateControllers();
+//             inline const List< autoPtr<pairPotential> >& stateControllers() const;
+// 
+//             inline const List<word>& stateControllersNames() const; 
+    
 };
 
 
@@ -161,7 +127,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#include "forceFieldsI.H"
+#include "schedulesI.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

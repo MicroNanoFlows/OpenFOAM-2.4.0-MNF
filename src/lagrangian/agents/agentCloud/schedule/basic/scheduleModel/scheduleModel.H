@@ -23,88 +23,124 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    velocityVerlet
+    scheduleModel
 
 Description
-    simple velocity controller in a zone 
+    Basic/abstract class of a state controller
 
-    parallelised
-
-    recommendation: control and measure properties every time step, ensure  
-                    size of zone.
 
 SourceFiles
-    velocityVerletI.H
-    velocityVerlet.C
-    velocityVerletIO.C
+    scheduleModelI.H
+    scheduleModel.C
+    scheduleModelIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef velocityVerlet_H
-#define velocityVerlet_H
+#ifndef scheduleModel_H
+#define scheduleModel_H
 
-#include "agentIntegrator.H"
+#include "IOdictionary.H"
+#include "autoPtr.H"
+#include "runTimeSelectionTables.H"
 #include "vector.H"
-#include "polyMesh.H"
 #include "volFields.H"
-#include "agentCloud.H"
-
-
+#include "agent.H"
+#include "writeTimeData.H"
+#include "selectAgentIds.H"
+#include "reducedUnits.H"
+#include "vectorList.H"
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class velocityVerlet Declaration
+                           Class scheduleModel Declaration
 \*---------------------------------------------------------------------------*/
 
-class velocityVerlet
-:
-    public agentIntegrator
+class scheduleModel
 {
 
-private:
+protected:
 
-    
-        // Private data
-       
-    
-    
+    // Protected data
+
+        const fvMesh& mesh_;
+
+        Time& time_;        
+        
+        agentCloud& cloud_;
+
+        const reducedUnits& rU_;        
+        
+        
+    // Private Member Functions
+
+
+        
 public:
 
     //- Runtime type information
-    TypeName("velocityVerlet");
+    TypeName("scheduleModel");
 
+    // Declare runtime constructor selection table
+        declareRunTimeSelectionTable
+        (
+            autoPtr,
+            scheduleModel,
+            dictionary,
+            (
+                Time& time,
+                agentCloud& cloud,
+                const dictionary& dict
+            ),
+            (time, cloud, dict)
+        );
+   
     // Constructors
 
         //- Construct from components
-        velocityVerlet
+        scheduleModel
         (
-            Time& t,
+            Time& time,
             agentCloud& cloud,
             const dictionary& dict
         );
 
+
+    // Selectors
+
+        static autoPtr<scheduleModel> New
+        (
+            Time& time,
+            agentCloud& cloud,
+            const dictionary& dict
+        );
+
+
     // Destructor
 
-        ~velocityVerlet();
+        virtual ~scheduleModel();
 
 
     // Member Functions
 
-        void init();
         
-        void evolve();
         
-        void updateHalfVelocity();
+//         void initialiseBorders();
         
-        void clearLagrangianFields(); 
-
-        void calculateForce(); 
+//         virtual void initialConfiguration() = 0;
         
-        void updateAcceleration();    
-  
+//         virtual void afterMove() = 0;
+        
+//         virtual void afterForce() = 0;
+        
+//         const List<vectorList>& borderList() const;
+//         
+//         bool isPointWithinBorder(label index, const vector& r);
+        
+//         void writeBorders(const fileName& pathName);
+        
 };
 
 
@@ -113,6 +149,7 @@ public:
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
 
 #endif
 

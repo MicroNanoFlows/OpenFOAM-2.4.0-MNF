@@ -52,6 +52,7 @@ SourceFiles
 #include "agentControllers.H"
 #include "forceFields.H"
 #include "borders.H"
+#include "schedules.H"
 
 //#include "labelVector.H"
 //#include "fileName.H"
@@ -103,19 +104,17 @@ private:
         forceFields f_;
                 
         borders b_;
+
+        schedules s_;
         
         clockTimer clock_;
 
 
     // Private Member Functions
 
-//         void calculatePairForces();
-//         void checkForOverlaps();
         void checkMoleculesInMesh();
-        void setMoleculesForDirectInteraction();
-//         void computePairForces();
-//         void accelerationUpdate();
-//         void velocityUpdate(const scalar& trackTime);
+
+//         void setMoleculesForDirectInteraction();
 
 
         //- Disallow default bitwise copy construct
@@ -218,7 +217,7 @@ public:
 
             inline forceFields& f();
             inline borders& b();            
-
+            inline schedules& s();     
             
             
     // Member Operators
