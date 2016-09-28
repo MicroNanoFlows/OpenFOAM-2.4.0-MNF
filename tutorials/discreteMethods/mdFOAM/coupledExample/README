@@ -1,20 +1,20 @@
-This is a simple coupled example using MUI between two instances of mdFOAM
+This is a simple coupled example using MUI between two instances of mdFOAM, it has no real purpose other than to demonstrate how to use the functionality.
 
-Both cases are identical, when polyMoleculeCloud is instantiated in mdFOAM.C, each instance uses a "uniface1d" interface in the constructor of polyMoleculeCloud to:
-	1) Push a single floating point value (0.1 for instance 1 and 0.2 for instance 2)
-	2) Receieve the value from the other instance
-	3) Create an output file in the base of the case folder called "couplingResult" where the value receieved is stored (note: this is the corresponding processor folder when running in parallel, so this file will be created at the base of each processor folder)
+For details on how MUI has been fundamentally integrated into OpenFOAM see the document in the base of the repository called "README-MUI". For details on how MUI has been integrated into mdFOAM specifically see the associated document in the base of the mdFOAM application directory.
 
-The case can be run using the two supplied scripts, before you run either please edit them (and the corresponding "cleanCase and createCase" scripts in the base of each case directory) and update the path to your OpenFOAM bashrc file
-	1) ./coupledCaseCleanCreate: removes any pre-existing results in "case1" and "case2" and re-creates them
-	2) ./coupledCaseRun: This runs the MPI MPMD job, each instance is run with 4 MPI processes (8 in total), as both instances will output to the same console this can be confusing to watch so if you prefer you can pipe the concole output to a log file (commands for both included in the script file)
+This case does the following:
 
-Some notes about the implementation:
+1) Runs two instances of mdFOAM simultaneously (either in serial or parallel)
+2) Each instance solves a simple equilibrated water cube problem to 0.1s, however one has a lower molecular mass than the other to differentiate them
+3) Each instance creates a single 3D MUI coupling interface
+4) Each instance sends the average molecular mass and density for each cell in its mesh, with the associated point at the centre of each cell, this happens at every time-step
+5) Each instance writes out the data receieved to a file in the polyCoupling controller folder within the uniform directory in each [time] output folder whenever output occurs (every 0.012 s)
 
-0) There is a new dictionary file in the "system" folder called "couplingDict", this is where the coupling interfaces are defined, multiple interfaces can be specified as either 1D, 2D or 3D, each should have a unique name in the coupled system.
-1) The MUI library is detected during the ThirdParty compilation, by default it expects to find a folder called "MUI" in the base of the ThirdParty folder, if this is not found then MUI is assumed missing and won't be able to be used. I suggest downloading a copy of MUI directly from the original developers repository at https://github.com/yhtang/MUI, this will clone to a folder called "MUI" by default.
-2) MUI is included in the main OpenFOAM build using a new compilation switch "-DUSE_MUI". I have created a new set of build rules called "linux64GccMNF-MUI", which is the default for the coupled branch, the switch is added in the "general" build rules, if you remove it and compile then MUI won't be included even if it is in the ThirdParty folder. If you include it and MUI isn't in the ThirdParty folder then you will likely get an error during compile.
-3) Even once MUI is included in the build, in order for it to be used by mdFOAM (or any OpenFOAM application in fact), you need to supply a new runtime switch "-coupled", without this the coupling interface won't be used.
-4) This example shows the basics of incorporating MUI into an OpenFOAM application. The fundamentals are now available for any application to be extended to use MUI, however a number of the "set up" header files used at the top of mdFOAM are included as part of the molecularDynamics portion of the "src" directory. To use these in a wider context you will need to make sure you copy them to the relavent areas of the "src" directory.
-5) Always make sure you are mindful of using the right "#ifdef USE_MUI" command wherever you are using MUI specific code, this ensures that if the MUI library isn't available then the compiler won't try and use functionality it cannot.
-6) Of course, any source file you include the mui.h header file in will also need the appropriate new "Make" rules adding to the "options" file, refer to the files for mdFOAM.C to see the example (in mot cases you will want to add both MUI and the MPI headers as MUI relies on access to mpi.h and the majoroty of the OpenFOAM code base doesn't have this by default, only very specific parts like PStream.
+There are a number of scripts in the base of the case to ease running, you should look at these to understand what they are doing, however their descriptions are:
+
+1) coupledCaseCleanCreate: This completely cleans and re-creates the cases in the two case folders for a parallel run (default 2 CPUs per instance)
+2) coupledCaseCleanCreateSerial: As above but running each instance in serial
+3) coupledCaseRun: This runs the coupled case in parallel (default 2 CPUs per instance), by default console output is directed to the console, this can get confusing as both instances output simultaneously, therefore a commented version of the run command can also be found in this file that directs output to a file.
+4) coupledCaseRunSerial: As above but each instance is run in serial
+
+The two pertinent control dictionaries are located at system/couplingDict (this is described in greater detail in the README-MUI document) and system/controllersDict, where an entry for the new "polyCouplingControllers" control type can be found.

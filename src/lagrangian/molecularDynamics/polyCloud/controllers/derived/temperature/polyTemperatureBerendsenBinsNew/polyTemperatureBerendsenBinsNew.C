@@ -58,9 +58,7 @@ polyTemperatureBerendsenBinsNew::polyTemperatureBerendsenBinsNew
     Y_(false),
     Z_(false),
     peculiar_(false),
-
     molIds_(),
-
     averagingCounter_(0.0),
     resetFieldsAtOutput_(true),
     output_(false)
@@ -211,34 +209,31 @@ void polyTemperatureBerendsenBinsNew::initialConfiguration()
     if(Pstream::parRun())
     {
         //- sending
-        for (int p = 0; p < Pstream::nProcs(); p++)
+        for (int p = 0; p < Pstream::nProcs(); ++p)
         {
             if(p != Pstream::myProcNo())
             {
-                const int proc = p;
-                {
-                    OPstream toNeighbour(Pstream::blocking, proc);
-                    toNeighbour << mass << momentum;
-                }
+                OPstream toNeighbour(Pstream::nonBlocking, p, sizeof(mass)+sizeof(momentum));
+                toNeighbour << mass << momentum;
             }
         }
     
+        scalarField massProc;
+	    vectorField momProc;
+
         //- receiving
-        for (int p = 0; p < Pstream::nProcs(); p++)
+        for (int p = 0; p < Pstream::nProcs(); ++p)
         {
             if(p != Pstream::myProcNo())
             {
-                scalarField massProc;
-                vectorField momProc;
+               massProc = 0.0;
+               momProc = vector::zero;
 
-                const int proc = p;
-                {
-                    IPstream fromNeighbour(Pstream::blocking, proc);
-                    fromNeighbour >> massProc >> momProc;
-                }
+               IPstream fromNeighbour(Pstream::blocking, p);
+               fromNeighbour >> massProc >> momProc;
     
-                mass += massProc;
-                momentum += momProc;
+               mass += massProc;
+               momentum += momProc;
             }
         }
     }
@@ -252,21 +247,16 @@ void polyTemperatureBerendsenBinsNew::initialConfiguration()
             velocity_[n] = momentum[n]/mass[n];
         }
     }
-
 }
-
-
 
 void polyTemperatureBerendsenBinsNew::controlBeforeVelocityI()
 {}
 
 void polyTemperatureBerendsenBinsNew::controlBeforeMove()
-{
-}
+{}
 
 void polyTemperatureBerendsenBinsNew::controlBeforeForces()
 {}
-
 
 void polyTemperatureBerendsenBinsNew::controlDuringForces
 (
@@ -381,189 +371,180 @@ void polyTemperatureBerendsenBinsNew::calculateProperties()
         }
     }
 
-    {
-        scalarField mass = mass_;
-        vectorField momentum = momentum_;
+	scalarField mass = mass_;
+	vectorField momentum = momentum_;
 
-        //- parallel communication
-        if(Pstream::parRun())
-        {
-            //- sending
-            for (int p = 0; p < Pstream::nProcs(); p++)
-            {
-                if(p != Pstream::myProcNo())
-                {
-                    const int proc = p;
-                    {
-                        OPstream toNeighbour(Pstream::blocking, proc);
-                        toNeighbour << mass << momentum;
-                    }
-                }
-            }
-        
-            //- receiving
-            for (int p = 0; p < Pstream::nProcs(); p++)
-            {
-                if(p != Pstream::myProcNo())
-                {
-                    scalarField massProc;
-                    vectorField momProc;
+	//- parallel communication
+	if(Pstream::parRun())
+	{
+		//- sending
+		for (int p = 0; p < Pstream::nProcs(); p++)
+		{
+			if(p != Pstream::myProcNo())
+			{
+				const int proc = p;
+				{
+					OPstream toNeighbour(Pstream::nonBlocking, proc);
+					toNeighbour << mass << momentum;
+				}
+			}
+		}
 
-                    const int proc = p;
-                    {
-                        IPstream fromNeighbour(Pstream::blocking, proc);
-                        fromNeighbour >> massProc >> momProc;
-                    }
-        
-                    mass += massProc;
-                    momentum += momProc;
-                }
-            }
-        }
+		//- receiving
+		for (int p = 0; p < Pstream::nProcs(); p++)
+		{
+			if(p != Pstream::myProcNo())
+			{
+				scalarField massProc;
+				vectorField momProc;
 
-        velocity_ = vector::zero;
+				const int proc = p;
+				{
+					IPstream fromNeighbour(Pstream::blocking, proc);
+					fromNeighbour >> massProc >> momProc;
+				}
 
-        forAll(velocity_, n)
-        {
-            if(mass[n] > 0.0)
-            {
-                velocity_[n] = momentum[n]/mass[n];
-            }
-        }
+				mass += massProc;
+				momentum += momProc;
+			}
+		}
+	}
 
-        //- reset 
-        if(resetFieldsAtOutput_)
-        {
-            mass_ = 0.0;
-            momentum_ = vector::zero;
-        }
-    }
+	velocity_ = vector::zero;
 
-    {
-        const List< DynamicList<polyMolecule*> >& cellOccupancy
-                                        = molCloud_.cellOccupancy();
+	forAll(velocity_, n)
+	{
+		if(mass[n] > 0.0)
+		{
+			velocity_[n] = momentum[n]/mass[n];
+		}
+	}
+
+	//- reset
+	if(resetFieldsAtOutput_)
+	{
+		mass_ = 0.0;
+		momentum_ = vector::zero;
+	}
     
-        forAll(cells, c)
-        {
-            const label& cell = cells[c];
-            const List<polyMolecule*>& molsInCell = cellOccupancy[cell];
+	const List< DynamicList<polyMolecule*> > &cellOccupancy = molCloud_.cellOccupancy();
+
+	forAll(cells, c)
+	{
+		const label& cell = cells[c];
+		const List<polyMolecule*> &molsInCell = cellOccupancy[cell];
+
+		forAll(molsInCell, mIC)
+		{
+			polyMolecule* molI = molsInCell[mIC];
+			const vector& rI = molI->position();
+
+			label n = binModel_->isPointWithinBin(rI, cell);
+
+			if(n != -1)
+			{
+				if((findIndex(molIds_, molI->id()) != -1) || measureFullTemperature_)
+				{
+					const scalar& massI = molCloud_.cP().mass(molI->id());
+
+					kE_[n] += 0.5*massI*magSqr(molI->v() - velocity_[n]);
+					dof_[n] += molCloud_.cP().degreesOfFreedom(molI->id());
+
+					const diagTensor& molMoI(molCloud_.cP().momentOfInertia(molI->id()));
+					const vector& molOmega(inv(molMoI) & molI->pi());
+					angularKe_[n] += 0.5*(molOmega & molMoI & molOmega);
+				}
+			}
+		}
+	}
     
-            forAll(molsInCell, mIC)
-            {
-                polyMolecule* molI = molsInCell[mIC];
-                const vector& rI = molI->position();
-    
-                label n = binModel_->isPointWithinBin(rI, cell);
-    
-                if(n != -1)
-                {
-                    if((findIndex(molIds_, molI->id()) != -1) || measureFullTemperature_)
-                    {
-                        const scalar& massI = molCloud_.cP().mass(molI->id());
-    
-                        kE_[n] += 0.5*massI*magSqr(molI->v() - velocity_[n]);
-                        dof_[n] += molCloud_.cP().degreesOfFreedom(molI->id());
-                        
-                        const diagTensor& molMoI(molCloud_.cP().momentOfInertia(molI->id()));
-                        const vector& molOmega(inv(molMoI) & molI->pi());
-                        angularKe_[n] += 0.5*(molOmega & molMoI & molOmega);
-                    }
-                }
-            }
-        }
-    }
 
-//     if(time_.averagingTime())
-    {
-        scalarField kE = kE_;
-        scalarField dof = dof_;
-        scalarField angularKe = angularKe_;
-        
-       //- parallel processing
-        if(Pstream::parRun())
-        {
-            //- sending
-            for (int p = 0; p < Pstream::nProcs(); p++)
-            {
-                if(p != Pstream::myProcNo())
-                {
-                    const int proc = p;
-                    {
-                        OPstream toNeighbour(Pstream::blocking, proc);
-                        toNeighbour << kE << angularKe << dof;
-                    }
-                }
-            }
-        
-            //- receiving
-            for (int p = 0; p < Pstream::nProcs(); p++)
-            {
-                if(p != Pstream::myProcNo())
-                {
-                    scalarField kEProc;
-                    scalarField angularKeProc;
-                    scalarField dofProc;
+	scalarField kE = kE_;
+	scalarField dof = dof_;
+	scalarField angularKe = angularKe_;
 
-                    const int proc = p;
-                    {
-                        IPstream fromNeighbour(Pstream::blocking, proc);
-                        fromNeighbour >> kEProc >>angularKeProc >> dofProc;
-                    }
+   //- parallel processing
+	if(Pstream::parRun())
+	{
+		//- sending
+		for (int p = 0; p < Pstream::nProcs(); p++)
+		{
+			if(p != Pstream::myProcNo())
+			{
+				OPstream toNeighbour(Pstream::blocking, p, sizeof(kE)+sizeof(angularKe)+sizeof(dof));
+				toNeighbour << kE << angularKe << dof;
+			}
+		}
 
-                    kE += kEProc;
-                    angularKe += angularKeProc;
-                    dof += dofProc;
-                }
-            }
-        }
+		scalarField kEProc;
+		scalarField angularKeProc;
+		scalarField dofProc;
 
-        measuredT_ = scalar(0.0);
+		//- receiving
+		for (int p = 0; p < Pstream::nProcs(); p++)
+		{
+			if(p != Pstream::myProcNo())
+			{
+				kEProc = 0.0;
+				angularKeProc = 0.0;
+				dofProc = 0.0;
 
-        const scalar& kB = molCloud_.redUnits().kB();
-         const scalar deltaTMD = time_.deltaT().value(); 
-        chiAng_ = 1.0;
-        chiLin_ = 1.0;
-        
-        forAll(measuredT_, n)
-        {
-            if(dof[n] > 0)
-            {
-                measuredT_[n] = (2.0*(kE[n]+ angularKe[n]))/(kB*dof[n]);
+				IPstream fromNeighbour(Pstream::blocking, p);
+				fromNeighbour >> kEProc >>angularKeProc >> dofProc;
 
-                chi_[n] = sqrt(1.0 + (deltaTMD/tauT_)*((temperature_/measuredT_[n]) - 1.0) );
+				kE += kEProc;
+				angularKe += angularKeProc;
+				dof += dofProc;
+			}
+		}
+	}
 
-                scalar measuredTLin = (2.0*kE[n])/(kB*dof[n]);
-                scalar measuredTAng = (2.0*angularKe[n])/(kB*dof[n]);
-                
-                if(mag(measuredTLin) > 0)
-                {
-                    chiLin_[n] = sqrt(1.0 + (deltaTMD/tauT_)*((0.5*temperature_/measuredTLin) - 1.0) );
-                }
-                
-                if(mag(measuredTAng) > 0)
-                {
-                    chiAng_[n] = sqrt(1.0 + (deltaTMD/tauT_)*((0.5*temperature_/measuredTAng) - 1.0) );
-                }
+	measuredT_ = 0.0;
 
-                if(output_)
-                {
-                    Info << "measured T (R.U.) = " << measuredT_[n] 
-                        << ", chi: " << chi_[n] 
-                        << ", chiLin : " << chiLin_[n]
-                        << ", chiAng : " << chiAng_[n]
-                        << endl;
-                }
-            }
-        }
+	const scalar& kB = molCloud_.redUnits().kB();
+	const scalar deltaTMD = time_.deltaT().value();
+	chiAng_ = 1.0;
+	chiLin_ = 1.0;
 
-         //- reset
-        if(resetFieldsAtOutput_)
-        {
-            kE_ = 0.0;
-            angularKe_ = 0.0;            
-            dof_ = 0.0;
-        }
-    }
+	forAll(measuredT_, n)
+	{
+		if(dof[n] > 0)
+		{
+			measuredT_[n] = (2.0*(kE[n]+ angularKe[n]))/(kB*dof[n]);
+
+			chi_[n] = sqrt(1.0 + (deltaTMD/tauT_)*((temperature_/measuredT_[n]) - 1.0) );
+
+			scalar measuredTLin = (2.0*kE[n])/(kB*dof[n]);
+			scalar measuredTAng = (2.0*angularKe[n])/(kB*dof[n]);
+
+			if(mag(measuredTLin) > 0)
+			{
+				chiLin_[n] = sqrt(1.0 + (deltaTMD/tauT_)*((0.5*temperature_/measuredTLin) - 1.0) );
+			}
+
+			if(mag(measuredTAng) > 0)
+			{
+				chiAng_[n] = sqrt(1.0 + (deltaTMD/tauT_)*((0.5*temperature_/measuredTAng) - 1.0) );
+			}
+
+			if(output_)
+			{
+				Info << "measured T (R.U.) = " << measuredT_[n]
+					<< ", chi: " << chi_[n]
+					<< ", chiLin : " << chiLin_[n]
+					<< ", chiAng : " << chiAng_[n]
+					<< endl;
+			}
+		}
+	}
+
+	 //- reset
+	if(resetFieldsAtOutput_)
+	{
+		kE_ = 0.0;
+		angularKe_ = 0.0;
+		dof_ = 0.0;
+	}
 }
 
 
@@ -573,33 +554,14 @@ void polyTemperatureBerendsenBinsNew::output
     const fileName& fixedPathName, 
     const fileName& timePath
 )
-{
-
-}
-
-
+{}
 
 void polyTemperatureBerendsenBinsNew::updateProperties(const dictionary& newDict)
 {
     //- the main controller properties should be updated first
     updateStateControllerProperties(newDict);
-
     propsDict_ = newDict.subDict(typeName + "Properties");
-/*
-    if(propsDict_.found("tauT"))
-    {
-        tauT_ = readScalar(propsDict_.lookup("tauT"));
-    }
-
-    if (readStateFromFile_)
-    {
-        temperature_ = readScalar(propsDict_.lookup("temperature"));
-    }*/
-
 }
-
-
-
 
 } // End namespace Foam
 

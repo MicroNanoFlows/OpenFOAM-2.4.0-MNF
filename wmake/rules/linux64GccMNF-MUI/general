@@ -8,4 +8,4 @@ include $(RULES)/c
 include $(RULES)/c++
 
 GFLAGS += -DUSE_RANDOM
-GFLAGS += -DUSE_MUI
+#GFLAGS += -DUSE_MUI

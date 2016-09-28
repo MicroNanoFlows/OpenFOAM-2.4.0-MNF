@@ -8,36 +8,33 @@ moleculeCloud/polyMoleculeCloudFunctions.C
 
 faceTracker/polyFaceTracker.C
 
-/* INTEGRATOR */
-
+/*  INTEGRATOR */
 integrator/basic/polyIntegrators/polyIntegrators.C
 integrator/basic/polyIntegrator/polyIntegrator.C
-
 
 integrator/derived/velocityVerlet/velocityVerlet.C
 integrator/derived/adaptiveLangevin/adaptiveLangevin.C
 
-
-/* POTENTIALS */
+/*  POTENTIALS */
 
 potentials/potentials/potentials.C
 
-/* Basic Pair Potentials */
+/*  Basic Pair Potentials */
 potentials/pairPotentials/basic/pairPotentials/pairPotentials.C
 potentials/pairPotentials/basic/pairPotentialModel/pairPotentialModel.C
 
-/* Derived Pair Potentials */
+/*  Derived Pair Potentials */
 potentials/pairPotentials/derived/pairPotentialModels/lennardJones/lennardJones.C
 potentials/pairPotentials/derived/pairPotentialModels/noInteraction/noInteraction.C
 potentials/pairPotentials/derived/pairPotentialModels/morse/morse.C
 potentials/pairPotentials/derived/pairPotentialModels/FENE/FENE.C
 potentials/pairPotentials/derived/pairPotentialModels/harmonicPotential/harmonicPotential.C
 
-/* electrostatics */
+/*  electrostatics */
 potentials/pairPotentials/derived/electrostaticPotentialModels/coulomb/coulomb.C
 potentials/pairPotentials/derived/electrostaticPotentialModels/shortRangeElectrostatic/shortRangeElectrostatic.C
 
-/* energy scaling functions */
+/*  energy scaling functions */
 potentials/energyScalingFunction/basic/energyScalingFunction.C
 potentials/energyScalingFunction/derived/shiftedForce/shiftedForce.C
 potentials/energyScalingFunction/derived/shifted/shifted.C
@@ -45,34 +42,29 @@ potentials/energyScalingFunction/derived/noScaling/noScaling.C
 potentials/energyScalingFunction/derived/sigmoid/sigmoid.C
 potentials/energyScalingFunction/derived/doubleSigmoid/doubleSigmoid.C
 
-
-/* potentials exclusions */
+/*  potentials exclusions */
 potentials/exclusions/basic/exclusionModel.C
 potentials/exclusions/derived/noExclusions/noExclusions.C
 potentials/exclusions/derived/excludeAll/excludeAll.C
 potentials/exclusions/derived/neighbourInclusions/neighbourInclusions.C
 potentials/exclusions/derived/neighbourExclusions/neighbourExclusions.C
 
-/* NOT YET INCORP.
+/* NOT YET INCORP. */
+/*tether/basic/tether.C
+
 tetherPotential/tetherPotentialList/tetherPotentialList.C
 tetherPotential/basic/tetherPotential.C
 tetherPotential/basic/tetherPotentialNew.C
-*/
-
-
-/*/gpu/selectIdPairs/selectIdPairs.C*/
-
-/*tether/basic/tether.C*/
-
-/*tetherPotential/derived/harmonicSpring/harmonicSpring.C
+tetherPotential/derived/harmonicSpring/harmonicSpring.C
 tetherPotential/derived/restrainedHarmonicSpring/restrainedHarmonicSpring.C
 tetherPotential/derived/pitchForkRing/pitchForkRing.C
-*/
+
+/gpu/selectIdPairs/selectIdPairs.C*/
 
 /*  MD INITIALISATION  */
-
 initialiseMolecules/basic/polyAllConfigurations/polyAllConfigurations.C
 initialiseMolecules/basic/polyConfiguration/polyConfiguration.C
+
 initialiseMolecules/derived/polySimpleLattice/polySimpleLattice.C
 initialiseMolecules/derived/polyLatticeZone/polyLatticeZone.C
 initialiseMolecules/derived/polySimpleLatticeZone/polySimpleLatticeZone.C
@@ -92,8 +84,7 @@ initialiseMolecules/derived/ciliumIC/ciliumIC.C
 initialiseMolecules/derived/grapheneHydrogenFunctionalisation/grapheneHydrogenFunctionalisation.C
 initialiseMolecules/derived/freezeMolecules/freezeMolecules.C
 
-/* Deletion */
-
+/*  Deletion */
 molsToDel/basic/polyMolsToDeleteModel/polyMolsToDeleteModel.C
 molsToDel/basic/polyMolsToDelete/polyMolsToDelete.C
 
@@ -109,21 +100,17 @@ molsToDel/derived/polyDelFromCosineWave/polyDelFromCosineWave.C
 molsToDel/derived/polyClosestDistance/polyClosestDistance.C
 molsToDel/derived/polySwitchMolecules/polySwitchMolecules.C
 
-/* Mapping */
-
+/*  Mapping */
 mappingModels/basic/polyMappingModel/polyMappingModel.C
 mappingModels/basic/polyMappingModels/polyMappingModels.C
 mappingModels/derived/polyMappingZone/polyMappingZone.C
 
 
 /*  MEASUREMENTS */
-
 measurements/basic/polyFieldProperties/polyFieldProperties.C
 measurements/basic/polyField/polyField.C
 
-/*  - COMBINED  */
-
-
+/*  COMBINED  */
 measurements/derived/combinedFields/polyOutputProperties/polyOutputProperties.C
 measurements/derived/combinedFields/polyPropertiesZoneBounded/polyPropertiesZoneBounded.C
 measurements/derived/combinedFields/polyBinsMethod/polyBinsMethod.C
@@ -134,20 +121,18 @@ measurements/derived/combinedFields/polyARCHER/polyARCHER.C
 measurements/derived/combinedFields/polyARCHER/polyARCHER_outputFiles.C
 measurements/derived/combinedFields/polyInstantBinsMethod/polyInstantBinsMethod.C
 
-/* DENSITY */
-
+/*  DENSITY */
 measurements/derived/density/polyDensity/polyDensity.C
 measurements/derived/density/polyTwoDimDropletDensity/polyTwoDimDropletDensity.C
-/*  - MASS FLUX  */
 
+/*  MASS FLUX  */
 measurements/derived/massFlux/polyMassFluxMultiSurfaces/polyMassFluxMultiSurfaces.C
 measurements/derived/massFlux/polyMassFluxSurface/polyMassFluxSurface.C
 measurements/derived/massFlux/polyMassFluxZone/polyMassFluxZone.C
 measurements/derived/massFlux/polyMassFlux/polyMassFlux.C
 measurements/derived/massFlux/poly1DMassFluxZone/poly1DMassFluxZone.C
 
-/*  - OTHER  */
-
+/*  OTHER  */
 measurements/derived/otherFields/polyDensityMOB2DRadialCOM/polyDensityMOB2DRadialCOM.C
 measurements/derived/otherFields/polyForceTwoMolecules/polyForceTwoMolecules.C
 measurements/derived/otherFields/polyMoleculePotentialEnergy/polyMoleculePotentialEnergy.C
@@ -160,40 +145,24 @@ measurements/derived/otherFields/polyDensityRadialNew/polyDensityRadialNew.C
 measurements/derived/otherFields/polyBindingEnergyRadial/polyBindingEnergyRadial.C
 measurements/derived/otherFields/centreOfMass/centreOfMass.C
 
-/*  - GREEN KUBO  */
-/*measurements/derived/greenKubo/axialSelfDiffusion/axialSelfDiffusion.C*/
-
-/*measurements/derived/otherFields/forceInstantProperties/forceInstantProperties.C */
-
+/*  GREEN KUBO  */
+/*measurements/derived/greenKubo/axialSelfDiffusion/axialSelfDiffusion.C
+measurements/derived/otherFields/forceInstantProperties/forceInstantProperties.C*/
 
 /*  CONTROLLERS  */
-
 controllers/basic/polyControllers/polyControllers.C
-controllers/basic/polyStateController/polyStateController.C
+controllers/basic/polyCouplingController/polyCouplingController.C
 controllers/basic/polyFluxController/polyFluxController.C
+controllers/basic/polyStateController/polyStateController.C
 
-/*  - VELOCITY  */
+/*  COUPLING  */
+controllers/derived/coupling/polyCoupling/polyCoupling.C
 
-controllers/derived/velocity/polyVelocityZoneControl/polyVelocityZoneControl.C
-controllers/derived/velocity/polyVelocityBounded/polyVelocityBounded.C
-controllers/derived/velocity/polyVelocityBins/polyVelocityBins.C
-controllers/derived/velocity/polyVelocity2DBins/polyVelocity2DBins.C
-
-
-/*  - TEMPERATURE  */
-controllers/derived/temperature/polyTemperatureBerendsenBinsNew/polyTemperatureBerendsenBinsNew.C
-controllers/derived/temperature/polyTemperatureMaxwellDemon/polyTemperatureMaxwellDemon.C
-controllers/derived/temperature/polyTemperatureBerendsen/polyTemperatureBerendsen.C
-controllers/derived/temperature/polyLangevin/polyLangevin.C
-controllers/derived/temperature/polyTemperatureMaxwellDemonInputVelocity/polyTemperatureMaxwellDemonInputVelocity.C
-
-/*  - DENSITY  */
-
+/*  DENSITY  */
 controllers/derived/density/polyFadeII/polyFadeII.C
 controllers/derived/density/polyDensityFadeBounded/polyDensityFadeBounded.C
 
-
-/*  - OTHERS  */
+/*  OTHERS  */
 controllers/derived/others/polyForce/polyForce.C
 controllers/derived/others/polyBoundedForce/polyBoundedForce.C
 controllers/derived/others/polyForceTwoShear/polyForceTwoShear.C
@@ -209,20 +178,29 @@ controllers/derived/others/fadeInitialise/fadeInitialise.C
 controllers/derived/others/polyBoundedSwitchIds/polyBoundedSwitchIds.C
 controllers/derived/others/newPressureFlux/newPressureFlux.C
 
+/*  TEMPERATURE  */
+controllers/derived/temperature/polyTemperatureBerendsenBinsNew/polyTemperatureBerendsenBinsNew.C
+controllers/derived/temperature/polyTemperatureMaxwellDemon/polyTemperatureMaxwellDemon.C
+controllers/derived/temperature/polyTemperatureBerendsen/polyTemperatureBerendsen.C
+controllers/derived/temperature/polyLangevin/polyLangevin.C
+controllers/derived/temperature/polyTemperatureMaxwellDemonInputVelocity/polyTemperatureMaxwellDemonInputVelocity.C
+
+/*  VELOCITY  */
+controllers/derived/velocity/polyVelocityZoneControl/polyVelocityZoneControl.C
+controllers/derived/velocity/polyVelocityBounded/polyVelocityBounded.C
+controllers/derived/velocity/polyVelocityBins/polyVelocityBins.C
+controllers/derived/velocity/polyVelocity2DBins/polyVelocity2DBins.C
 
 /*  BOUNDARIES  */
-
 boundaries/basic/polyBoundaries/polyBoundaries.C
 boundaries/basic/polyCyclicBoundary/polyCyclicBoundary.C
 boundaries/basic/polyPatchBoundary/polyPatchBoundary.C
 boundaries/basic/polyGeneralBoundary/polyGeneralBoundary.C
 
-/*  - CYCLIC  */
-
+/*  CYCLIC  */
 boundaries/derived/cyclicBoundaries/polyStandardCyclic/polyStandardCyclic.C
 
-/*  - PATCH  */
-
+/*  PATCH  */
 boundaries/derived/patchBoundaries/polySpecularPatch/polySpecularPatch.C
 boundaries/derived/patchBoundaries/polyDeletionPatch/polyDeletionPatch.C
 

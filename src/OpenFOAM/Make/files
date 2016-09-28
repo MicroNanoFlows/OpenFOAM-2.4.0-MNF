@@ -653,4 +653,10 @@ $(writers)/jplotGraph/jplotGraph.C
 
 meshes/data/data.C
 
+/* COUPLING */
+
+coupling/coupling1d/coupling1d.C
+coupling/coupling2d/coupling2d.C
+coupling/coupling3d/coupling3d.C
+
 LIB = $(FOAM_LIBBIN)/libOpenFOAM

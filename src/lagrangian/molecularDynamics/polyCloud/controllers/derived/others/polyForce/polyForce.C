@@ -119,7 +119,7 @@ void polyForce::controlAfterForces()
         forAll(controlZone(), c)
         {
             const label& cellI = controlZone()[c];
-    
+
             const List<polyMolecule*>& molsInCell = molCloud_.cellOccupancy()[cellI];
     
             forAll(molsInCell, m)

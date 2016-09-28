@@ -48,7 +48,34 @@ polyStateControllers
 polyFluxControllers
 (
 
-);   
-    
+);
+
+polyCouplingControllers
+(
+    controller
+    {
+ 	zoneName                    mdZone;
+        stateControllerModel        polyCoupling;
+
+        polyCouplingProperties
+        {           
+	    interfaceName	    mdFOAM_ThreeD_case1_1;
+            molIds                  (water);      
+        }
+
+	polyCouplingSending
+	{
+	    mass		    yes;
+	    density		    yes;
+	}
+
+	polyCouplingReceiving
+	{
+	    receivingInterfaces     (mdFOAM_ThreeD_case2_1);
+	    mass		    yes;
+	    density		    yes;
+	}
+    }
+);    
 
 // ************************************************************************* //

@@ -1,0 +1,16 @@
+#!/bin/bash
+
+source $HOME/OpenFOAM/OpenFOAM-2.4.0-MNF/etc/bashrc
+
+# clean and create case 1
+cd equilibriumWaterCube_1
+./cleanCase
+./createCaseSerial
+cd ..
+
+# clean and create case 2
+cd equilibriumWaterCube_2
+./cleanCase
+./createCaseSerial
+cd ..
+

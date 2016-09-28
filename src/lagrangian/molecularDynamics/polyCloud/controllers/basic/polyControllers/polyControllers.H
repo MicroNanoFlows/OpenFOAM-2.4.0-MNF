@@ -43,6 +43,7 @@ Description
 #include "polyMesh.H"
 #include "polyStateController.H"
 #include "polyFluxController.H"
+#include "polyCouplingController.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -68,6 +69,7 @@ class polyControllers
         // number of polyControllers
         label nStateControllers_;
         label nFluxControllers_;
+        label nCouplingControllers_;
 
         //- state polyControllers
         PtrList<entry> stateControllersList_;
@@ -83,8 +85,20 @@ class polyControllers
         List<fileName> fCFixedPathNames_;
         List< autoPtr<polyFluxController> > fluxControllers_;
 
+        //- coupling polyControllers
+		PtrList<entry> couplingControllersList_;
+		List<word> cCNames_;
+		List<label> cCIds_;
+		List<fileName> cCFixedPathNames_;
+		List< autoPtr<polyCouplingController> > couplingControllers_;
+
         labelList controllersDuringForceComp_;
         
+        //- MUI coupling interfaces
+        List<couplingInterface1d> oneDCouplings_;
+		List<couplingInterface2d> twoDCouplings_;
+		List<couplingInterface3d> threeDCouplings_;
+
 public:
 
     // Constructors
@@ -103,6 +117,17 @@ public:
             const polyMesh& mesh,
             polyMoleculeCloud& molCloud
         );
+
+        //- Constructor for mdFOAM with MUI coupling
+		polyControllers
+		(
+			Time& t,
+			const polyMesh& mesh,
+			polyMoleculeCloud& molCloud,
+			List<couplingInterface1d>& oneDCouplings,
+			List<couplingInterface2d>& twoDCouplings,
+			List<couplingInterface3d>& threeDCouplings
+		);
 
 
         ~polyControllers();

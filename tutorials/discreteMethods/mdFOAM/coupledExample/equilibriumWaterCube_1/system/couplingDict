@@ -22,28 +22,24 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-couplingName mdFOAM_1;
+couplingName mdFOAM_1; //Unique application identifier
 
 couplingConfigurations
 ( 
-    OneD
+    OneD //1D coupling interfaces using MUI
     {
-	names (mdFOAM_OneD_case1_1);
+	
     }
 
-    TwoD
+    TwoD //2D coupling interfaces using MUI
     {
         
     }
-
-    ThreeD
+ 
+    ThreeD //3D coupling interfaces using MUI
     {
-        
+        names (mdFOAM_ThreeD_case1_1);
     }
 );
-
-
-
-
 
 // ************************************************************************* //

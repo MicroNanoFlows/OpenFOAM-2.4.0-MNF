@@ -37,7 +37,9 @@ SourceFiles
 #ifndef polyMoleculeCloud_H
 #define polyMoleculeCloud_H
 
-#include "couplingMD.H"
+#include "coupling1d.H"
+#include "coupling2d.H"
+#include "coupling3d.H"
 #include "Cloud.H"
 #include "polyMolecule.H"
 #include "IOdictionary.H"
@@ -95,6 +97,11 @@ private:
         //- boundaries
         polyBoundaries boundaries_;
         
+        //- MUI coupling interfaces
+		List<couplingInterface1d> oneDCouplings_;
+		List<couplingInterface2d> twoDCouplings_;
+		List<couplingInterface3d> threeDCouplings_;
+
         //- controllers
         polyControllers controllers_;
         
@@ -111,14 +118,6 @@ private:
         List<DynamicList<polyMolecule*> > ipl_;
         
         clockTimer clock_;
-
-        const List<couplingInterface>& oneDCouplings_;
-
-        const List<couplingInterface>& twoDCouplings_;
-
-        const List<couplingInterface>& threeDCouplings_;
-
-		bool couplingEnabled_;
 
     // Private Member Functions
 
@@ -159,9 +158,9 @@ public:
 			const reducedUnits& rU,
 			const constantMoleculeProperties& cP,
 			cachedRandomMD& rndGen,
-			List<couplingInterface>& oneDCouplings,
-			List<couplingInterface>& twoDCouplings,
-			List<couplingInterface>& threeDCouplings
+			List<couplingInterface1d>& oneDCouplings,
+			List<couplingInterface2d>& twoDCouplings,
+			List<couplingInterface3d>& threeDCouplings
 		);
 
         //- General constructor
@@ -194,9 +193,9 @@ public:
 			const reducedUnits& rU,
 			const constantMoleculeProperties& cP,
 			cachedRandomMD& rndGen,
-			List<couplingInterface>& oneDCouplings,
-			List<couplingInterface>& twoDCouplings,
-			List<couplingInterface>& threeDCouplings
+			List<couplingInterface1d>& oneDCouplings,
+			List<couplingInterface2d>& twoDCouplings,
+			List<couplingInterface3d>& threeDCouplings
 		);
 
         static autoPtr<polyMoleculeCloud> New
@@ -307,10 +306,7 @@ public:
             inline const potentials& pot() const;
             inline potentials& pot();            
             inline const constantMoleculeProperties& cP() const;
-//             inline const potential& pot() const;
             inline const List<DynamicList<polyMolecule*> >& cellOccupancy() const;
-//             inline const List<polyMolecule::constantProperties> constProps() const;
-//             inline const polyMolecule::constantProperties& constProps(label id) const;
             inline cachedRandomMD& rndGen();
             inline const reducedUnits& redUnits() const;
             inline const polyFieldProperties& fields() const;  

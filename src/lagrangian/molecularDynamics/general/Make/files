@@ -128,8 +128,4 @@ randomPointsInSquareZone/randomPointsInSquareZone.C
 multiscale/boundaryConditions/mixedFixedValueSlipFvPatchFields.C
 multiscale/boundaryConditions/nonLinMaxwellSlipUFvPatchVectorField.C
 
-/* COUPLING */
-
-couplingMD/couplingMD.C
-
 LIB = $(FOAM_LIBBIN)/libgeneralMolecule

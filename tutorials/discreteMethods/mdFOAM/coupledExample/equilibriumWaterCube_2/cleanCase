@@ -1,5 +1,5 @@
 #!/bin/bash
 
-rm -f -r 0/ potentials/ random_* processor*/ timings/ boundaries/ controllers/ fieldMeasurements/ storage/
+rm -f -r 0/ 0.*/ potentials/ random_* processor*/ timings/ boundaries/ controllers/ fieldMeasurements/ storage/
 rm -f system/cyclicBoundaries
 rm -f constant/polyMesh/boundary constant/polyMesh/cellZones constant/polyMesh/faces constant/polyMesh/neighbour constant/polyMesh/owner constant/polyMesh/points

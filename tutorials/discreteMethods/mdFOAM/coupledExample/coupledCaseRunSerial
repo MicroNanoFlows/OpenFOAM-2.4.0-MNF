@@ -1,0 +1,11 @@
+#!/bin/bash
+
+source $HOME/OpenFOAM/OpenFOAM-2.4.0-MNF/etc/bashrc
+case1Dir=${PWD}/equilibriumWaterCube_1
+case2Dir=${PWD}/equilibriumWaterCube_2
+
+# Console output to log file
+#mpirun -np 1 mdFOAM -case ${case1Dir} -coupled : -np 1 mdFOAM -case ${case2Dir} -coupled &> coupledRun.log
+
+# Console output to console
+mpirun -np 1 mdFOAM -case ${case1Dir} -coupled : -np 1 mdFOAM -case ${case2Dir} -coupled

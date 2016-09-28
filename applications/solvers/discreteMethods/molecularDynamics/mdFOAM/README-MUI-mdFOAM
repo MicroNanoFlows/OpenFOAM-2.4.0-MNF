@@ -1,0 +1,8 @@
+For details on how MUI has been fundamentally integrated into OpenFOAM, please see the document "README-MUI" in the base of the respository folder.
+
+MUI coupling has been added to mdFOAM in the form of a new controller framework, the basic class to derive from is called "polyCouplingController" and one derived example called "polyCoupling" is provided. This provides the ability to send and/or receieve the average molecular mass and density within each cell in a control region of the mesh. Sent values are calculated the end of each time-step and transmitted and values receieved are done so directly after this (this may not always be the right order but MUI blocks on receieve() if no data has yet been sent for a specific time, therefore we have to send before we can receieve if coupling mdFOAM to itself). Receieved values are currently simply stored to disk as a file in the folder controllers/polyCouplingController/polyCoupling in each corresponding time directory.
+
+Effectively however, this framework allows new derivations to be created which can provide either 1D, 2D or 3D coupling "interfaces" between mdFOAM and either itself or other applications. 
+
+The coupling can be used in conjunction with an MPI parallel job or with a serial case. An example of a coupled case that demonstrates the use of the new controller can be found in tutorials/discreteMethods/mdFOAM/coupledExample. For an example of how to run a MUI coupled example with the OpenMPI MPMD mpirun command, see the included tutorial case.
+

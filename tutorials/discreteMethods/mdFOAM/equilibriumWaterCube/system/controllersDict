@@ -21,7 +21,7 @@ polyStateControllers
     
     controller
     {
- 	    zoneName            mdZone;
+ 	zoneName            mdZone;
 
         stateControllerModel       polyTemperatureBerendsenBinsNew;
 
@@ -42,13 +42,41 @@ polyStateControllers
                 area                        100; // dummy variable
             }
         }
-    }
+    }    
 );
 
 polyFluxControllers
 (
 
-);   
+);
+
+polyCouplingControllers
+(
+    // coupling
+    
+    controller
+    {
+ 	zoneName            mdZone;
+
+        stateControllerModel       polyCouplingBins;
+
+        polyCouplingBinsProperties
+        {
+            tauT                    0.04;
+            molIds                  (water);          
+
+            binModel                uniformBins;
+
+            uniformBinsProperties
+            {
+                startPoint                  (0 0 0);
+                endPoint                    (16 0 0);
+                nBins                       8; 
+                area                        100; // dummy variable
+            }
+        }
+    }
+);
     
 
 // ************************************************************************* //

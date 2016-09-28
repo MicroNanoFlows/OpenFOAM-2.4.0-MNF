@@ -1,0 +1,115 @@
+MUI has been integrated fundamentally into OpenFOAM (and can therefore be used in any application) and a new controller architecture has been created for mdFOAM to allow its use.
+
+General MUI coupling is achieved using the following new source files:
+
+src/OpenFOAM/include:
+	* createCouplingData.H (creates 3 OpenFOAM Lists of coupling objects)
+	* createCouplings.H (reads coupling data from a new dictionary file at system/couplingDict (example provided in appendix A below) and creates MUI interfaces, storing them into the Lists created in createCouplingData.H)
+
+src/OpenFOAM/coupling:
+	* coupling1d/coupling1d.C (creates a 1d MUI coupling interface with a URI equal to "mpi://[interface name from couplingDict OneD names]/ifs")
+	* coupling1d/coupling1d.H
+	* coupling2d/coupling2d.C (creates a 2d MUI coupling interface with a URI equal to "mpi://[interface name from couplingDict TwoD names]/ifs")
+	* coupling2d/coupling2d.H
+	* coupling3d/coupling3d.C (creates a 3d MUI coupling interface with a URI equal to "mpi://[interface name from couplingDict ThreeD names]/ifs")
+	* coupling3d/coupling3d.H
+
+There are also a number of alterations to the PStream class and a few others but these do not need to be worried about.
+
+A number of modifications have also been made to the ThirdParty scripts to allow the MUI library to be included in all required paths. Effectively however, inclusion of MUI in a build is achieved by:
+	* Ensuring a copy of the MUI folder is in the base of the ThirdParty folder before ./Allwmake is run (this will create a copy in platforms/$ARCH$WM_COMPILER/MUI, the name of the MUI folder can be changed if required in the makeMUI script and also in the OpenFOAM script at $WM_PROJECT_DIR/etc/config/MUI.sh (or MUI.csh if not using bash), this follows the standard OpenFOAM way of working with libraries).
+	* Ensuring that the new wmake rule-set "linux64GccMNF-MUI" is in use (this is set as the default, however it can be changed in the file $WM_PROJECT_DIR/etc/prefs.sh) or that the rule-set you are using includes the new general switch "-DUSE_MUI", without this the MUI library will not be used during the build, effectively making the new coupling libraries into dummies.
+
+To use MUI in an OpenFOAM application, the general additions are as follows:
+	1) Add MUI and MPI library paths to your applications "options" Make file at Make/options (this requires the ThirdParty folder to have been successfully run and to have found MUI as this sets system variables). An example updated file for building the standard laplacianFoam solver (applications/solvers/basic/laplacianFoam) can be seen in Appendix B.
+	2) Include the mui.h header file in your application, this should be done AFTER any existing header includes and should be wrapped in an ifdef to ensure it is not included if -DUSE_MUI is not passed during compilation:
+		2.1) #ifdef USE_MUI
+		     	#include "mui.h"
+		     #endif
+	3) Include the new data and couplings creation headers, these should be included AFTER any existing "createXXX.H" files such as createTime.H (not that a new runtime parameter is parsed to determine whether to create couplings or not, this is actually a new switch "-coupled", which allows a MUI-compiled application to be run either with or without coupling enabled:
+		3.1) #ifdef USE_MUI
+		     	#include "createCouplingData.H"
+
+			if (args.cplRunControl().cplRun())
+			{
+				#include "createCouplings.H"
+			}
+		     #endif
+
+Assuming the above are added then you now have access to MUI interfaces in the List<> structures created by "createCouplingData.H", which are named "oneDCouplings", "twoDCouplings" and "threeDCouplings" respectively (these will be empty if no interfaces are specified in the corresponding section of the couplingDict dictionary). The Lists contain a custom data structure (couplingInterface1d, couplingInterface2d or couplingInterface3d), which are defined in the header files coupling1d.H, coupling2d.H and coupling3d.H respectively. This gives access to the following data:
+	1) word couplingName (this is the value of "couplingName" in the couplingDict dictionary)
+	2) word interfaceName (this is the value of the interface name in the couplingDict dictionary (i.e. for the example in appendix A there would only be 1 structure in the oneDCouplings List<> and the value of interfaceName would be "interface1d_1".
+	3) coupling[n]d* interface (this is a pointer to an instance of the coupling[n]d Class, which itself wraps the appropriate MUI uniface1d, uniface2d or uniface3d constructs.
+
+The coupling[n]d class consists of a single constructor (which does most of the work) and a single public access function "getInterface()", this is what needs to be called to access the MUI interface. Therefore a simple example of accessing the MUI "push" function for the 1D interface defined in Appendix A would be:
+	1) oneDCouplings[0].interface->getInterface()->push(name, point, data);
+	
+::::::::::::::::::::::: Appendix A - couplingDict example :::::::::::::::::::::::
+
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.4.0-MNF                             |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+
+    class           dictionary;
+    object          couplingDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+couplingName applicationName_instance; //Unique application identifier
+
+couplingConfigurations
+( 
+    OneD //1D coupling interfaces using MUI
+    {
+	names (interface1d_1);
+    }
+
+    TwoD //2D coupling interfaces using MUI
+    {
+        names (interface2d_1 interface2d_2 interface2d_3);
+    }
+ 
+    ThreeD //3D coupling interfaces using MUI
+    {
+        names (interface3d_1 interface3d_2);
+    }
+);
+
+// ************************************************************************* //
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+::::::::::::::::::::::: Appendix B - Make/options example :::::::::::::::::::::::
+
+sinclude $(GENERAL_RULES)/mplib$(WM_MPLIB) << This is new 
+sinclude $(RULES)/mplib$(WM_MPLIB) << This is new 
+sinclude $(GENERAL_RULES)/MUI << This is new 
+
+EXE_INC = \
+    $(PFLAGS) \ << This is new 
+    $(PINC) \ << This is new 
+    ${MUI_INC} \ << This is new 
+    -I$(LIB_SRC)/finiteVolume/lnInclude \
+    -I$(LIB_SRC)/meshTools/lnInclude
+
+EXE_LIBS = \
+    $(PLIBS) \ << This is new 
+    -lfiniteVolume \
+    -lmeshTools
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

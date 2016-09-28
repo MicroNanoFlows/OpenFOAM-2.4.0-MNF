@@ -41,81 +41,13 @@ namespace Foam
 };
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-/*
-void Foam::polyMoleculeCloud::buildConstProps()
-{
-    Info<< nl << "Reading moleculeProperties dictionary." << endl;
-
-    const List<word>& idList(pot_.idList());
-
-    constPropList_.setSize(idList.size()); 
-
-    const List<word>& siteIdList(pot_.siteIdList());
-
-    IOdictionary moleculePropertiesDict
-    (
-        IOobject
-        (
-            "moleculeProperties",
-            mesh_.time().constant(),
-            mesh_,
-            IOobject::MUST_READ,
-            IOobject::NO_WRITE,
-            false
-        )
-    );
-
-    dictionary moleculeProperties
-    (
-        moleculePropertiesDict.subDict("moleculeProperties")
-    );
-
-    forAll(idList, i)
-    {
-        const word& id(idList[i]);
-
-        const dictionary& molDict(moleculeProperties.subDict(id));
-
-        const word cloudType = molDict.lookup("cloudType");
-
-        if(cloudType == "polyMoleculeCloud")
-        {
-            List<word> siteIdNames = molDict.lookup("siteIds");
-    
-            List<label> siteIds(siteIdNames.size());
-    
-            forAll(siteIdNames, sI)
-            {
-                const word& siteId = siteIdNames[sI];
-    
-                siteIds[sI] = findIndex(siteIdList, siteId);
-    
-                if (siteIds[sI] == -1)
-                {
-                    FatalErrorIn("polyMoleculeCloud.C") << nl
-                        << siteId << " site not found."
-                        << nl << abort(FatalError);
-                }
-            }
-    
-            polyMolecule::constantProperties& constProp = constPropList_[i];
-    
-            constProp = polyMolecule::constantProperties(molDict, redUnits_, siteIds);
-        }
-    }
-}
-*/
-
 void Foam::polyMoleculeCloud::setSiteSizesAndPositions()
 {
     iterator mol(this->begin());
 
     for (mol = this->begin(); mol != this->end(); ++mol)
     {
-//         const polyMolecule::constantProperties& cP = constProps(mol().id());
-        
         mol().setSiteSizes(cP_.nSites(mol().id()));
-
         mol().setSitePositions(cP_);
     }
 }
@@ -145,7 +77,6 @@ void Foam::polyMoleculeCloud::buildCellOccupancy()
     }
 }
 
-// NEW //
 void Foam::polyMoleculeCloud::checkForOverlaps()
 {
     if(p_.checkPotentialOverlaps())
@@ -358,214 +289,6 @@ void Foam::polyMoleculeCloud::checkForOverlaps()
 
     prepareInteractions();
 }
-/*
-void Foam::polyMoleculeCloud::removeHighEnergyOverlaps()
-{
-    Info<< nl << "Removing high energy overlaps, limit = "
-        << pot_.potentialEnergyLimit()
-        << nl << "Removal order:";
-
-    forAll(pot_.removalOrder(), rO)
-    {
-        if(pot_.removalOrder()[rO] != -1)
-        {
-            Info<< ' ' << pot_.idList()[pot_.removalOrder()[rO]];
-        }
-    }
-
-    Info<< nl ;
-
-    label initialSize = this->size();
-
-    if (Pstream::parRun())
-    {
-        reduce(initialSize, sumOp<label>());
-    }
-
-    buildCellOccupancy();
-    
-    label nMolsDeleted = 0;
-
-    prepareInteractions();
-
-    setIPL();
-    
-    iL_.setRIPL();
-    
-    label nMolsInt = 0;
-    label nMolsExt = 0;
-    label nMolsRef = 0;
-
-    {
-        DynamicList<polyMolecule*> molsToDelete;
-
-        polyMolecule* molI = NULL;
-        polyMolecule* molJ = NULL;
-
-        forAll(ipl_, c)
-        {
-            nMolsExt = ipl_[c].size();
-            nMolsInt = cellOccupancy_[c].size();
-            nMolsRef = iL_.ripl()[c].size();
-                 
-            for (int i = 0; i < nMolsInt; i++)
-            {
-                molI = cellOccupancy_[c][i];
-
-				label idI = molI->id();
-				bool molIDeleted = false;
-
-				for (int j = 0; j < nMolsInt; j++)
-				{
-					if(j > i)
-					{
-						molJ = cellOccupancy_[c][j];
-
-						label molJDeleted = findIndex(molsToDelete, molJ);
-
-						if(!molIDeleted && (molJDeleted == -1))
-						{
-							if
-							(
-								evaluatePotentialLimit
-								(
-									molI,
-									molJ,
-									pot_.potentialEnergyLimit()
-								)
-							)
-							{
-								label idJ = molJ->id();
-
-								label removeIdI = findIndex(pot_.removalOrder(), idI);
-								label removeIdJ = findIndex(pot_.removalOrder(), idJ);
-
-								if(removeIdI < removeIdJ)
-								{
-									molsToDelete.append(molI);
-									molIDeleted = true;
-								}
-								else
-								{
-									molsToDelete.append(molJ);
-								}
-							}
-						}
-					}
-				}
-
-				for (int j = 0; j < nMolsExt; j++)
-				{
-					molJ = ipl_[c][j];
-
-					label molJDeleted = findIndex(molsToDelete, molJ);
-
-					if(!molIDeleted && (molJDeleted == -1))
-					{
-						if
-						(
-							evaluatePotentialLimit
-							(
-								molI,
-								molJ,
-								pot_.potentialEnergyLimit()
-							)
-						)
-						{
-							label idJ = molJ->id();
-
-							label removeIdI = findIndex(pot_.removalOrder(), idI);
-							label removeIdJ = findIndex(pot_.removalOrder(), idJ);
-
-							if(removeIdI < removeIdJ)
-							{
-								molsToDelete.append(molI);
-								molIDeleted = true;
-							}
-							else
-							{
-								molsToDelete.append(molJ);
-							}
-						}
-					}
-				}
-
-				for (int j = 0; j < nMolsRef; j++)
-				{
-					molJ = iL_.ripl()[c][j];
-
-					if(!molIDeleted)
-					{
-						if
-						(
-							evaluatePotentialLimit
-							(
-								molI,
-								molJ,
-								pot_.potentialEnergyLimit()
-							)
-						)
-						{
-							label idJ = molJ->id();
-
-							label removeIdI = findIndex(pot_.removalOrder(), idI);
-							label removeIdJ = findIndex(pot_.removalOrder(), idJ);
-
-							if(removeIdI < removeIdJ)
-							{
-								molsToDelete.append(molI);
-								molIDeleted = true;
-							}
-							else if
-							(
-								(removeIdI == removeIdJ)
-							)
-							{
-								if (molI->trackingNumber() > molJ->trackingNumber())
-								{
-									molsToDelete.append(molI);
-									molIDeleted = true;
-								}
-							}
-						}
-					}
-				}
-            }
-        }
-
-        forAll (molsToDelete, mTD)
-        {
-            nMolsDeleted++;
-            deleteParticle(*(molsToDelete[mTD]));
-        }
-    }
-
-    buildCellOccupancy();
-
-    label newSize = this->size();
-
-    if (Pstream::parRun())
-    {
-        reduce(newSize, sumOp<label>());
-    }
-    
-    if (Pstream::parRun())
-    {
-        reduce(nMolsDeleted, sumOp<label>());
-    }    
-
-    if(nMolsDeleted > 0)
-    {
-        // to make sure the user sees this
-        for (int j = 0; j < 50; j++)
-        {
-            Info << nl << "WARNING: molecules removed due to overlaps = "
-                << nMolsDeleted <<  endl;
-        }
-    }
-    
-}*/
-
 
 Foam::label Foam::polyMoleculeCloud::nSites() const
 {
@@ -575,13 +298,11 @@ Foam::label Foam::polyMoleculeCloud::nSites() const
 
     for (mol = this->begin(); mol != this->end(); ++mol)
     {
-//         n += constProps(mol().id()).nSites();
         n += cP_.nSites(mol().id());
     }
 
     return n;
 }
-
 
 void Foam::polyMoleculeCloud::checkMoleculesInMesh()
 {
@@ -659,13 +380,11 @@ void Foam::polyMoleculeCloud::checkMoleculesInMesh()
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-
 //- Use for running MD (mdFoam)
 Foam::polyMoleculeCloud::polyMoleculeCloud
 (
     Time& t,
     const polyMesh& mesh,
-//     const potentials& p,
     const reducedUnits& rU,
     const constantMoleculeProperties& cP, 
     cachedRandomMD& rndGen
@@ -673,14 +392,12 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
 :
     Cloud<polyMolecule>(mesh, "polyMoleculeCloud", false),
     mesh_(mesh),
-//     p_(p),
     redUnits_(rU),
     cP_(cP),
     rndGen_(rndGen),
     int_(t, mesh_, *this),    
     p_(mesh, *this, rU, cP), 
     cellOccupancy_(mesh_.nCells()),
-//     constPropList_(),
     fields_(t, mesh_, *this),
     boundaries_(t, mesh, *this),
     controllers_(t, mesh, *this),
@@ -690,18 +407,14 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     iL_(mesh, rU, cyclics_, p_.rCutMax(), "poly"),
     ipl_(mesh.nCells()),
 	clock_(t, "evolve", true),
-	oneDCouplings_(List<couplingInterface>(0)),
-	twoDCouplings_(List<couplingInterface>(0)),
-	threeDCouplings_(List<couplingInterface>(0))
+	oneDCouplings_(),
+	twoDCouplings_(),
+	threeDCouplings_()
 {
-	couplingEnabled_ = false;
-
     polyMolecule::readFields(*this);
 
     rndGen.initialise(this->size() != 0 ? this->size() : 10000); //Initialise the random number cache (initialise to 10000 if size is zero)
 
-//     buildConstProps();
-    
     setSiteSizesAndPositions();
 
     checkMoleculesInMesh();
@@ -714,10 +427,8 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     
     //check and remove high energy overalps
     checkForOverlaps();
-//     controllers_.initialConfig();
     
     buildCellOccupancy();
-
     
     fields_.createFields();
     boundaries_.setInitialConfig();
@@ -739,108 +450,35 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     const reducedUnits& rU,
     const constantMoleculeProperties& cP,
     cachedRandomMD& rndGen,
-	List<couplingInterface>& oneDCouplings,
-	List<couplingInterface>& twoDCouplings,
-	List<couplingInterface>& threeDCouplings
+	List<couplingInterface1d>& oneDCouplings,
+	List<couplingInterface2d>& twoDCouplings,
+	List<couplingInterface3d>& threeDCouplings
 )
 :
     Cloud<polyMolecule>(mesh, "polyMoleculeCloud", false),
     mesh_(mesh),
-//     p_(p),
     redUnits_(rU),
     cP_(cP),
     rndGen_(rndGen),
     int_(t, mesh_, *this),
     p_(mesh, *this, rU, cP),
     cellOccupancy_(mesh_.nCells()),
-//     constPropList_(),
     fields_(t, mesh_, *this),
     boundaries_(t, mesh, *this),
-    controllers_(t, mesh, *this),
+	oneDCouplings_(oneDCouplings),
+	twoDCouplings_(twoDCouplings),
+	threeDCouplings_(threeDCouplings),
+    controllers_(t, mesh, *this, oneDCouplings_, twoDCouplings_, threeDCouplings_),
     trackingInfo_(mesh, *this),
     moleculeTracking_(),
     cyclics_(t, mesh_, -1),
     iL_(mesh, rU, cyclics_, p_.rCutMax(), "poly"),
     ipl_(mesh.nCells()),
-	clock_(t, "evolve", true),
-	oneDCouplings_(oneDCouplings),
-	twoDCouplings_(twoDCouplings),
-	threeDCouplings_(threeDCouplings)
+	clock_(t, "evolve", true)
 {
-	couplingEnabled_ = true;
-
-#ifdef USE_MUI
-	for(int i=0; i<oneDCouplings_.size(); ++i)
-	{
-		word couplingName = oneDCouplings_[i].couplingName;
-		word currInterfaceName = oneDCouplings_[i].interfaceName;
-		mui::uniface1d *currInterface = oneDCouplings_[i].interface->interface1d();
-
-		int pushPoint=0, pullPoint=1;
-		double pushValue=1.0;
-
-		//Instance 1
-		if(couplingName.compare("mdFOAM_1") == 0)
-		{
-			pushPoint = 0;
-			pullPoint = 1;
-			pushValue = 0.1;
-		}
-
-		//Instance 1
-		if(couplingName.compare("mdFOAM_2") == 0)
-		{
-			pushPoint = 1;
-			pullPoint = 0;
-			pushValue = 0.2;
-		}
-
-		int currTime = 0; //Example time state
-
-		//Push value
-
-		//"testData" is an identifier, "pushPoint" is the 1D location of the "point" and "pushValue" the value being pushed
-		currInterface->push("testData", pushPoint, pushValue);
-
-		//currTime might be the current time-step iterator count or exact value, commit should only be called once all
-		//"push" commands are complete for a "frame"
-		currInterface->commit(currTime);
-
-		//Fetch value
-		double fetchValue;
-		//"testData" is the data identifier, "pullPoint" is the 1D location of the "point", "currTime" is the time-frame to fetch from
-		//sampler_exact1d<double> defines that we are using an exact 1D sampler with double precision,
-		//chrono_sampler_exact1d dfines we are sampling the point exactly at the value of currTime and not using an interpolation
-		fetchValue = currInterface->fetch("testData", pullPoint, currTime, mui::sampler_exact1d<double>(), mui::chrono_sampler_exact1d());
-
-		const Time& runTime = mesh_.time();
-
-		fileName outputFile(runTime.path()/"couplingResult");
-		OFstream os(outputFile);
-
-		os << "Value fetched from other instance: " << fetchValue << endl;
-	}
-
-	/*
-	for(int i=0; i<twoDCouplings_->size(); ++i)
-	{
-
-	}
-	*/
-
-	/*
-	for(int i=0; i<threeDCouplings_->size(); ++i)
-	{
-
-	}
-	*/
-#endif
-
     polyMolecule::readFields(*this);
 
     rndGen.initialise(this->size() != 0 ? this->size() : 10000); //Initialise the random number cache (initialise to 10000 if size is zero)
-
-//     buildConstProps();
 
     setSiteSizesAndPositions();
 
@@ -852,12 +490,10 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
 
     int_.integrator()->init();
 
-    //check and remove high energy overalps
+    //check and remove high energy overlaps
     checkForOverlaps();
-//     controllers_.initialConfig();
 
     buildCellOccupancy();
-
 
     fields_.createFields();
     boundaries_.setInitialConfig();
@@ -866,8 +502,6 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     clearLagrangianFields();
     calculateForce();
     updateAcceleration();
-
-
 
     // TESTS
     writeReferredCloud();
@@ -880,7 +514,7 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     const polyMesh& mesh,
     const reducedUnits& rU,
     const constantMoleculeProperties& cP,
-    cachedRandomMD& rndGen, 
+    cachedRandomMD& rndGen,
     const word& option,
     const bool& clearFields
 )
@@ -893,7 +527,6 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     int_(t, mesh_, *this),    
     p_(mesh, *this, rU, cP), 
     cellOccupancy_(mesh_.nCells()),
-//     constPropList_(),
     fields_(t, mesh_),
     boundaries_(t, mesh),
     controllers_(t, mesh),
@@ -903,12 +536,10 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     iL_(mesh, rU, cyclics_, p_.rCutMax(), "poly"),
     ipl_(mesh.nCells()),
 	clock_(t, "evolve", true),
-	oneDCouplings_(List<couplingInterface>(0)),
-	twoDCouplings_(List<couplingInterface>(0)),
-	threeDCouplings_(List<couplingInterface>(0))
+	oneDCouplings_(),
+	twoDCouplings_(),
+	threeDCouplings_()
 {
-	couplingEnabled_ = false;
-
     polyMolecule::readFields(*this);
 
     label initialMolecules = this->size();
@@ -1011,9 +642,9 @@ Foam::autoPtr<Foam::polyMoleculeCloud> Foam::polyMoleculeCloud::New
     const reducedUnits& rU,
     const constantMoleculeProperties& cP, 
     cachedRandomMD& rndGen,
-	List<couplingInterface>& oneDCouplings,
-	List<couplingInterface>& twoDCouplings,
-	List<couplingInterface>& threeDCouplings
+	List<couplingInterface1d>& oneDCouplings,
+	List<couplingInterface2d>& twoDCouplings,
+	List<couplingInterface3d>& threeDCouplings
 )
 {
     return autoPtr<polyMoleculeCloud>
@@ -1075,7 +706,6 @@ void  Foam::polyMoleculeCloud::createMolecule
             pi,
             tau,
             specialPosition,
-//             constProps(id),
             cP_,
             special,
             id,
@@ -1091,10 +721,6 @@ void  Foam::polyMoleculeCloud::createMolecule
 void Foam::polyMoleculeCloud::evolve()
 {
     int_.integrator()->evolve();
-
-//     evolveBeforeForces();
-//     calculateForce();
-//     evolveAfterForces();
 }
 
 void Foam::polyMoleculeCloud::evolveBeforeForces()
@@ -1159,7 +785,6 @@ void Foam::polyMoleculeCloud::move(const scalar& trackTime)
     Cloud<polyMolecule>::move(td1, trackTime);
 }
 
-
 void Foam::polyMoleculeCloud::updateAfterMove(const scalar& trackTime)
 {
     forAllIter(polyMoleculeCloud, *this, mol)
@@ -1171,13 +796,10 @@ void Foam::polyMoleculeCloud::updateAfterMove(const scalar& trackTime)
     }
 }
 
-
 void Foam::polyMoleculeCloud::controlAfterMove()
 {
     boundaries_.controlAfterMove();
 }
-
-
 
 // control
 void Foam::polyMoleculeCloud::controlBeforeForces()
@@ -1259,15 +881,6 @@ void Foam::polyMoleculeCloud::postTimeStep()
     trackingInfo_.clean(); 
 }
 
-
-
-
-
-
-
-
-
-
 //- used if you want to read a new field at every time-step from an input file
 //- e.g. to be used in a utility that computes measurements
 // Used by reconstructXmol utility - reconstructPar does not produce the XMOL
@@ -1306,9 +919,6 @@ void Foam::polyMoleculeCloud::readNewField()
 
     setSiteSizesAndPositions();    
 }
-
-
-
 
 void Foam::polyMoleculeCloud::setIPL()
 {
@@ -1404,7 +1014,6 @@ void Foam::polyMoleculeCloud::calculatePairForces()
             }
         }
     }
-
 }
 
 void Foam::polyMoleculeCloud::writeXYZ(const fileName& fName) const
@@ -1417,13 +1026,9 @@ void Foam::polyMoleculeCloud::writeXYZ(const fileName& fName) const
 
     for (mol = this->begin(); mol != this->end(); ++mol)
     {
-//         const polyMolecule::constantProperties& cP = constProps(mol().id());
-
         forAll(mol().sitePositions(), i)
         {
             const point& sP = mol().sitePositions()[i];
-
-//             os << pot_.siteIdList()[cP.sites()[i].siteId()]
             os << cP_.siteNames(mol().id())[i]
                 << ' ' << sP.x()*redUnits_.refLength()*1.0e10
                 << ' ' << sP.y()*redUnits_.refLength()*1.0e10
@@ -1484,20 +1089,16 @@ void Foam::polyMoleculeCloud::writeReferredCloud()
             mol
         )
         {
-//             const polyMolecule::constantProperties& cP = constProps(mol().id());
-
             forAll(mol().sitePositions(), j)
             {            
             	const point& sP = mol().sitePositions()[j];
 
-//                 os1 << pot_.siteIdList()[cP.sites()[j].siteId()]
                     os1 << cP_.siteNames(mol().id())[j]
                         << ' ' << sP.x()*redUnits_.refLength()*1e10
                         << ' ' << sP.y()*redUnits_.refLength()*1e10
                         << ' ' << sP.z()*redUnits_.refLength()*1e10
                         << nl;
-                        
-//                 os2 << pot_.siteIdList()[cP.sites()[j].siteId()]
+
                    os2 << cP_.siteNames(mol().id())[j]    
                         << ' ' << sP.x()
                         << ' ' << sP.y()
@@ -1585,8 +1186,6 @@ void Foam::polyMoleculeCloud::resetTrackingNumbers()
         }
     }
 }
-
-
 
 void Foam::polyMoleculeCloud::insertMolInCellOccupancy(polyMolecule* mol)
 {
