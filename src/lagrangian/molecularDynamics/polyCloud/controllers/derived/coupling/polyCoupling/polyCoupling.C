@@ -306,13 +306,13 @@ void polyCoupling::sendCoupling()
 				//Calculate average mass for the cell
 				mass /= molCount;
 
-				//Push average mass for the cell if enabled
+				//Push average mass for the cell if enabled (will be associated with cell centre pushed in initialConfiguration())
 				if(sendMass_)
 				{
-					currInterface->push(massLbl, cellCentres_[cellCount], mass);
+					currInterface->push(massLbl, mass);
 				}
 
-				//Push cell density if enabled
+				//Push cell density if enabled (will be associated with cell centre pushed in initialConfiguration())
 				if(sendDensity_)
 				{
 					density = mass / mesh_.V()[cellI];
