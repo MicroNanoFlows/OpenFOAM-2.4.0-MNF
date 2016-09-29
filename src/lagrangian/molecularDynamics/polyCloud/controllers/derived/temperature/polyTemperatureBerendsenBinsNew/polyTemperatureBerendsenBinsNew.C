@@ -213,8 +213,11 @@ void polyTemperatureBerendsenBinsNew::initialConfiguration()
         {
             if(p != Pstream::myProcNo())
             {
-                OPstream toNeighbour(Pstream::nonBlocking, p, sizeof(mass)+sizeof(momentum));
-                toNeighbour << mass << momentum;
+            	const int proc = p;
+				{
+            		OPstream toNeighbour(Pstream::blocking, proc);
+            		toNeighbour << mass << momentum;
+				}
             }
         }
     
@@ -229,8 +232,11 @@ void polyTemperatureBerendsenBinsNew::initialConfiguration()
                massProc = 0.0;
                momProc = vector::zero;
 
-               IPstream fromNeighbour(Pstream::blocking, p);
-               fromNeighbour >> massProc >> momProc;
+               const int proc = p;
+               {
+            	   IPstream fromNeighbour(Pstream::blocking, proc);
+            	   fromNeighbour >> massProc >> momProc;
+			   }
     
                mass += massProc;
                momentum += momProc;
@@ -384,7 +390,7 @@ void polyTemperatureBerendsenBinsNew::calculateProperties()
 			{
 				const int proc = p;
 				{
-					OPstream toNeighbour(Pstream::nonBlocking, proc);
+					OPstream toNeighbour(Pstream::blocking, proc);
 					toNeighbour << mass << momentum;
 				}
 			}
@@ -471,8 +477,11 @@ void polyTemperatureBerendsenBinsNew::calculateProperties()
 		{
 			if(p != Pstream::myProcNo())
 			{
-				OPstream toNeighbour(Pstream::blocking, p, sizeof(kE)+sizeof(angularKe)+sizeof(dof));
-				toNeighbour << kE << angularKe << dof;
+				const int proc = p;
+				{
+					OPstream toNeighbour(Pstream::blocking, proc);
+					toNeighbour << kE << angularKe << dof;
+				}
 			}
 		}
 
@@ -489,8 +498,11 @@ void polyTemperatureBerendsenBinsNew::calculateProperties()
 				angularKeProc = 0.0;
 				dofProc = 0.0;
 
-				IPstream fromNeighbour(Pstream::blocking, p);
-				fromNeighbour >> kEProc >>angularKeProc >> dofProc;
+				const int proc = p;
+				{
+					IPstream fromNeighbour(Pstream::blocking, proc);
+					fromNeighbour >> kEProc >>angularKeProc >> dofProc;
+				}
 
 				kE += kEProc;
 				angularKe += angularKeProc;
