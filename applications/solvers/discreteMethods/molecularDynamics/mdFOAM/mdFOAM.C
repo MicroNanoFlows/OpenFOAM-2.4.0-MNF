@@ -48,11 +48,11 @@ int main(int argc, char *argv[])
 #   include "createRandom.H"
 
 #ifdef USE_MUI
-	# 	include "createCouplingData.H"
+	#include "createCouplingData.H"
 
 	if (args.cplRunControl().cplRun())
 	{
-		# 	include "createCouplings.H"
+		#include "createCouplings.H"
 	}
 #endif
 
@@ -93,6 +93,10 @@ int main(int argc, char *argv[])
             << "  ClockTime = " << runTime.elapsedClockTime() << " s"
             << nl << endl;
     }
+
+#ifdef USE_MUI
+	#include "deleteCouplings.H"
+#endif
 
     Info << "End\n" << endl;
 

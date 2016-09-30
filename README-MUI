@@ -30,11 +30,15 @@ To use MUI in an OpenFOAM application, the general additions are as follows:
 		3.1) #ifdef USE_MUI
 		     	#include "createCouplingData.H"
 
-			if (args.cplRunControl().cplRun())
-			{
-				#include "createCouplings.H"
-			}
+				if (args.cplRunControl().cplRun())
+				{
+					#include "createCouplings.H"
+				}
 		     #endif
+	4) Important final step: Include the coupling delletion header at the END of the application. Without this the MUi interface objects will not be deleted on application exit, meaning MPI_Finalize will never be called if MUI is handling that. This should be called before the final "return 0" of the application:
+		4.1) #ifdef USE_MUI
+			 	#include "deleteCouplings.H"
+			 #endif
 
 Assuming the above are added then you now have access to MUI interfaces in the List<> structures created by "createCouplingData.H", which are named "oneDCouplings", "twoDCouplings" and "threeDCouplings" respectively (these will be empty if no interfaces are specified in the corresponding section of the couplingDict dictionary). The Lists contain a custom data structure (couplingInterface1d, couplingInterface2d or couplingInterface3d), which are defined in the header files coupling1d.H, coupling2d.H and coupling3d.H respectively. This gives access to the following data:
 	1) word couplingName (this is the value of "couplingName" in the couplingDict dictionary)

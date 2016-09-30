@@ -71,7 +71,7 @@ bool Foam::UPstream::init(int& argc, char**& argv, bool coupled)
 	if(coupled)
 	{
 		#ifdef USE_MUI
-			//Use world returned by MUI, based on MPI MPMD model, calls MPI_Init if not already called
+			//Use world returned by MUI, based on MPI MPMD model, calls MPI_Init if not already called (should have been by this point)
 			PstreamGlobals::commWorld_ = mui::mpi_split_by_app(argc, argv);
 		#else
 			PstreamGlobals::commWorld_ = MPI_COMM_WORLD;

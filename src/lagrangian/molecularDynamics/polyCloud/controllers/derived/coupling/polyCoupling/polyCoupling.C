@@ -376,37 +376,40 @@ void polyCoupling::output
 )
 {
 #ifdef USE_MUI
-	for(int i=0; i<recvInterfaces_.size(); ++i)
+	if(Pstream::master())
 	{
-		fileName outputFile(timePath/recvInterfaces_[i]);
-		OFstream of(outputFile);
-
-		if(recvMass_) //Output mass values
+		for(int i=0; i<recvInterfaces_.size(); ++i)
 		{
-			of << "Averaged mass values from coupled interface " << recvInterfaces_[i] << endl;
-			of << "{" << endl;
+			fileName outputFile(timePath/recvInterfaces_[i]);
+			OFstream of(outputFile);
 
-			for(int j=0; j<recvMassValues_[i].size(); ++j)
+			if(recvMass_) //Output mass values
 			{
-				of << "(" << cellCentres_[j][0] << "," << cellCentres_[j][1] << "," << cellCentres_[j][2] << "): ";
-				of << recvMassValues_[i][j] << endl;
+				of << "Averaged mass values from coupled interface " << recvInterfaces_[i] << endl;
+				of << "{" << endl;
+
+				for(int j=0; j<recvMassValues_[i].size(); ++j)
+				{
+					of << "(" << cellCentres_[j][0] << "," << cellCentres_[j][1] << "," << cellCentres_[j][2] << "): ";
+					of << recvMassValues_[i][j] << endl;
+				}
+
+				of << "};" << endl;
 			}
 
-			of << "};" << endl;
-		}
-
-		if(recvDensity_) //Output density values
-		{
-			of << "Averaged density values from coupled interface " << recvInterfaces_[i] << endl;
-			of << "{" << endl;
-
-			for(int j=0; j<recvDensityValues_[i].size(); ++j)
+			if(recvDensity_) //Output density values
 			{
-				of << "(" << cellCentres_[j][0] << "," << cellCentres_[j][1] << "," << cellCentres_[j][2] << "): ";
-				of << recvDensityValues_[i][j] << endl;
-			}
+				of << "Averaged density values from coupled interface " << recvInterfaces_[i] << endl;
+				of << "{" << endl;
 
-			of << "};" << endl;
+				for(int j=0; j<recvDensityValues_[i].size(); ++j)
+				{
+					of << "(" << cellCentres_[j][0] << "," << cellCentres_[j][1] << "," << cellCentres_[j][2] << "): ";
+					of << recvDensityValues_[i][j] << endl;
+				}
+
+				of << "};" << endl;
+			}
 		}
 	}
 #endif

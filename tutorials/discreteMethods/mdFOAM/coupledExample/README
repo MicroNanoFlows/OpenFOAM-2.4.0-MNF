@@ -8,7 +8,7 @@ This case does the following:
 2) Each instance solves a simple equilibrated water cube problem to 0.1s, however one has a lower molecular mass than the other to differentiate them
 3) Each instance creates a single 3D MUI coupling interface
 4) Each instance sends the average molecular mass and density for each cell in its mesh, with the associated point at the centre of each cell, this happens at every time-step
-5) Each instance writes out the data receieved to a file in the polyCoupling controller folder within the uniform directory in each [time] output folder whenever output occurs (every 0.012 s)
+5) The master process for each instance writes out the data receieved to a file in the polyCoupling controller folder within the uniform directory in each [time] output folder whenever output occurs (every 0.012 s)
 
 There are a number of scripts in the base of the case to ease running, you should look at these to understand what they are doing, however their descriptions are:
 
