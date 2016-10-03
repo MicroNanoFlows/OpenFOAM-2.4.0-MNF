@@ -37,9 +37,6 @@ SourceFiles
 #ifndef polyMoleculeCloud_H
 #define polyMoleculeCloud_H
 
-#include "coupling1d.H"
-#include "coupling2d.H"
-#include "coupling3d.H"
 #include "Cloud.H"
 #include "polyMolecule.H"
 #include "IOdictionary.H"

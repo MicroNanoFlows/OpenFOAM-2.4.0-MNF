@@ -2,6 +2,9 @@ MUI has been integrated fundamentally into OpenFOAM (and can therefore be used i
 
 General MUI coupling is achieved using the following new source files:
 
+src/finiteVolume/cfdTools/general/include:
+	* fvCoupling.H (includes coupling[n]d header files for general use)
+
 src/OpenFOAM/include:
 	* createCouplingData.H (creates 3 OpenFOAM Lists of coupling objects)
 	* createCouplings.H (reads coupling data from a new dictionary file at system/couplingDict (example provided in appendix A below) and creates MUI interfaces, storing them into the Lists created in createCouplingData.H)
@@ -22,12 +25,16 @@ A number of modifications have also been made to the ThirdParty scripts to allow
 
 To use MUI in an OpenFOAM application, the general additions are as follows:
 	1) Add MUI and MPI library paths to your applications "options" Make file at Make/options (this requires the ThirdParty folder to have been successfully run and to have found MUI as this sets system variables). An example updated file for building the standard laplacianFoam solver (applications/solvers/basic/laplacianFoam) can be seen in Appendix B.
-	2) Include the mui.h header file in your application, this should be done AFTER any existing header includes and should be wrapped in an ifdef to ensure it is not included if -DUSE_MUI is not passed during compilation:
+	2) Include the fvCoupling.H header file in your application. This should be done after the main OpenFOAM header (i.e. fvCFD.H in most cases):
 		2.1) #ifdef USE_MUI
+		     	#include "fvCoupling.H"
+		     #endif
+	3) Include the mui.h header file in your application, this should be done AFTER any existing header includes and should be wrapped in an ifdef to ensure it is not included if -DUSE_MUI is not passed during compilation:
+		3.1) #ifdef USE_MUI
 		     	#include "mui.h"
 		     #endif
-	3) Include the new data and couplings creation headers, these should be included AFTER any existing "createXXX.H" files such as createTime.H (not that a new runtime parameter is parsed to determine whether to create couplings or not, this is actually a new switch "-coupled", which allows a MUI-compiled application to be run either with or without coupling enabled:
-		3.1) #ifdef USE_MUI
+	4) Include the new data and couplings creation headers, these should be included AFTER any existing "createXXX.H" files such as createTime.H (not that a new runtime parameter is parsed to determine whether to create couplings or not, this is actually a new switch "-coupled", which allows a MUI-compiled application to be run either with or without coupling enabled:
+		4.1) #ifdef USE_MUI
 		     	#include "createCouplingData.H"
 
 				if (args.cplRunControl().cplRun())
@@ -35,8 +42,8 @@ To use MUI in an OpenFOAM application, the general additions are as follows:
 					#include "createCouplings.H"
 				}
 		     #endif
-	4) Important final step: Include the coupling delletion header at the END of the application. Without this the MUi interface objects will not be deleted on application exit, meaning MPI_Finalize will never be called if MUI is handling that. This should be called before the final "return 0" of the application:
-		4.1) #ifdef USE_MUI
+	5) Important final step: Include the coupling delletion header at the END of the application. Without this the MUi interface objects will not be deleted on application exit, meaning MPI_Finalize will never be called if MUI is handling that. This should be called before the final "return 0" of the application:
+		5.1) #ifdef USE_MUI
 			 	#include "deleteCouplings.H"
 			 #endif
 

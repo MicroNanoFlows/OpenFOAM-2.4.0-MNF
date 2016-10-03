@@ -31,6 +31,11 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
+
+#ifdef USE_MUI
+	#include "fvCoupling.H"
+#endif
+
 #include "mdPoly.H"
 
 // NOTE:

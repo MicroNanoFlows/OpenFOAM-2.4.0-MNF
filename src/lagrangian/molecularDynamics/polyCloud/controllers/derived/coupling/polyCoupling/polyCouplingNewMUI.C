@@ -189,7 +189,7 @@ void polyCoupling::initialConfiguration()
 		// The coordinate sets for the individual points
 		const pointField &pp = mesh_.points();
 
-		//Start by calculating list of points at cell centres in the control zone
+		//Start by sending list of points at cell centres in the control zone
 		forAll(controlZone(), c)
 		{
 			const label& cellI = controlZone()[c];
@@ -204,8 +204,14 @@ void polyCoupling::initialConfiguration()
 
 			cellCentres_[cellCount] = centre;
 
+			//Push the cell centre to the local MUI interface
+			currInterface->push(centre);
+
 			cellCount++;
 		}
+
+		Info << "Static point list stored to 3D MUI coupling interface "
+			 << cplInterfaceName_ << endl;
 
 		for(int i=0; i<recvInterfaces_.size(); ++i)
 		{
@@ -241,17 +247,17 @@ void polyCoupling::initialConfiguration()
 				//Calculate average mass for the cell
 				mass /= molCount;
 
-				//Push average mass for the cell if enabled
+				//Push average mass for the cell if enabled (static cell centre list used)
 				if(sendMass_)
 				{
-					currInterface->push(massLbl, cellCentres_[cellCount], mass);
+					currInterface->push(massLbl, mass);
 				}
 
-				//Push cell density if enabled
+				//Push cell density if enabled (static cell centre list used)
 				if(sendDensity_)
 				{
 					density = mass / mesh_.V()[cellI];
-					currInterface->push(densityLbl, cellCentres_[cellCount], density);
+					currInterface->push(densityLbl, density);
 				}
 
 				cellCount++;
@@ -300,17 +306,17 @@ void polyCoupling::sendCoupling()
 				//Calculate average mass for the cell
 				mass /= molCount;
 
-				//Push average mass for the cell if enabled
+				//Push average mass for the cell if enabled (static cell centre list used)
 				if(sendMass_)
 				{
-					currInterface->push(massLbl, cellCentres_[cellCount], mass);
+					currInterface->push(massLbl, mass);
 				}
 
-				//Push cell density if enabled
+				//Push cell density if enabled (static cell centre list used)
 				if(sendDensity_)
 				{
 					density = mass / mesh_.V()[cellI];
-					currInterface->push(densityLbl, cellCentres_[cellCount], density);
+					currInterface->push(densityLbl, density);
 				}
 
 				cellCount++;
