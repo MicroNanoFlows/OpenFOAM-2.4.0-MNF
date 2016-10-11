@@ -39,7 +39,7 @@ Foam::agent::agent
 :
     particle(mesh, is, readFields),
     v_(vector::zero),
-    a_(vector::zero),
+    d_(vector::zero),
     f_(vector::zero),    
     specialPosition_(vector::zero),
     mass_(0.0),
@@ -55,7 +55,7 @@ Foam::agent::agent
         if (is.format() == IOstream::ASCII)
         {
             is  >> v_;
-            is  >> a_;
+            is  >> d_;
             is  >> f_;
             is  >> specialPosition_;
             is >> mass_;
@@ -72,7 +72,7 @@ Foam::agent::agent
             (
                 reinterpret_cast<char*>(&v_),
                 sizeof(v_)
-              + sizeof(a_)
+              + sizeof(d_)
               + sizeof(f_)
               + sizeof(specialPosition_)
               + sizeof(mass_)
@@ -221,7 +221,7 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const agent& mol)
             << token::SPACE << mol.face()
             << token::SPACE << mol.stepFraction()
             << token::SPACE << mol.v_
-            << token::SPACE << mol.a_
+            << token::SPACE << mol.d_
             << token::SPACE << mol.f_
             << token::SPACE << mol.specialPosition_
             << token::SPACE << mol.mass_
@@ -239,7 +239,7 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const agent& mol)
         (
             reinterpret_cast<const char*>(&mol.v_),
             sizeof(mol.v_)
-          + sizeof(mol.a_)
+          + sizeof(mol.d_)
           + sizeof(mol.f_)
           + sizeof(mol.specialPosition_)
           + sizeof(mol.mass_)

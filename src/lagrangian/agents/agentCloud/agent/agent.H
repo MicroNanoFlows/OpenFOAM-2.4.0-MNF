@@ -118,11 +118,16 @@ private:
         //- linear velocity
         vector v_;
 
-        //- linear acceleration
-        vector a_;
-
-        vector f_;
+        //- destination
+        vector d_;
         
+        //- linear acceleration
+//         vector a_;
+        
+        //- force
+        vector f_;
+
+       
         vector specialPosition_;
 
         scalar mass_;
@@ -162,7 +167,7 @@ public:
             const label tetFaceI,
             const label tetPtI,
             const vector& v,
-            const vector& a,
+            const vector& d,
             const vector& f,
             const vector& specialPosition,
             const scalar& mass,         
@@ -245,12 +250,14 @@ public:
             inline const vector& v() const;
             inline vector& v();
 
-            inline const vector& a() const;
-            inline vector& a();
+            inline const vector& d() const;
+            inline vector& d();            
             
             inline const vector& f() const;
             inline vector& f();            
-
+            
+            inline vector a();
+            
             inline const vector& specialPosition() const;
             inline vector& specialPosition();
 

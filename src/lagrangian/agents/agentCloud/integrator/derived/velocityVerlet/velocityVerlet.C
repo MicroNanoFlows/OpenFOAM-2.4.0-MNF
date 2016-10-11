@@ -70,11 +70,11 @@ void velocityVerlet::init()
 {
     cloud_.f().initialConfig();
     cloud_.b().initialConfig();    
+    cloud_.s().initialConfig();
     
     // initial force
     clearLagrangianFields();
     calculateForce();
-    updateAcceleration();
     
     cloud_.fields().createFields();
     cloud_.controllers().initialConfig();
@@ -82,6 +82,8 @@ void velocityVerlet::init()
 
 void velocityVerlet::evolve()
 {
+    cloud_.s().setSchedules();
+    
     cloud_.controllers().controlVelocitiesI();
     
     updateHalfVelocity();
@@ -98,9 +100,9 @@ void velocityVerlet::evolve()
     
     clearLagrangianFields();
     
+
     calculateForce();
     
-    updateAcceleration();
     
     cloud_.b().afterForce();  
     
@@ -123,24 +125,9 @@ void velocityVerlet::evolve()
 }
 
 
-// void velocityVerlet::test()
-// {
-//     IDLList<agent>::iterator mol(cloud_.begin());
-//     
-//     label i = 0;
-//     
-//     for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
-//     {
-//         if(i==10)
-//         {
-//             Info << "position = " << mol().position() 
-//                  << ", velocity = " << mol().v()  
-//                  << endl;
-//         }
-//         
-//         i++;
-//     }
-// }
+
+
+
 
 void velocityVerlet::updateHalfVelocity()
 {
@@ -163,8 +150,6 @@ void velocityVerlet::clearLagrangianFields()
 
     for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
     {
-        mol().a() = vector::zero;
-
         mol().f() = vector::zero;
 
         mol().R() = GREAT;
@@ -180,19 +165,6 @@ void velocityVerlet::calculateForce()
 
 
 
-void velocityVerlet::updateAcceleration()
-{
-    IDLList<agent>::iterator mol(cloud_.begin());
-
-    for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
-    {
-        if(!mol().frozen())
-        {
-//             scalar mass = cloud_.cP().mass(mol().id());
-            mol().a() = mol().f()/mol().mass();
-        }
-    }
-}
 
 
 } // End namespace Foam

@@ -23,20 +23,20 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    tabularSchedule
+    agentTypeSchedule
 
 Description
 
 
 SourceFiles
-    tabularScheduleI.H
-    tabularSchedule.C
-    tabularScheduleIO.C
+    agentTypeScheduleI.H
+    agentTypeSchedule.C
+    agentTypeScheduleIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef tabularSchedule_H
-#define tabularSchedule_H
+#ifndef agentTypeSchedule_H
+#define agentTypeSchedule_H
 
 #include "scheduleModel.H"
 #include "vector.H"
@@ -51,10 +51,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class tabularSchedule Declaration
+                           Class agentTypeSchedule Declaration
 \*---------------------------------------------------------------------------*/
 
-class tabularSchedule
+class agentTypeSchedule
 :
 	public scheduleModel
 {
@@ -66,8 +66,17 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-
-
+        //- ids of agents
+        List<label> agentIds_;
+        
+        
+        vectorList destinations_;
+        scalarList scheduledTimes_;
+        label nScheduledDestinations_;
+        
+        scalar timeIndex_;
+        label counter_;
+        scalar deltaT_;
         
     // Private Member Functions
 
@@ -76,12 +85,12 @@ private:
 public:
 
     //- Runtime type information
-    TypeName("tabularSchedule");
+    TypeName("agentTypeSchedule");
 
     // Constructors
 
         //- Construct from components
-        tabularSchedule
+        agentTypeSchedule
         (
             Time& time,
             agentCloud& cloud,
@@ -90,7 +99,7 @@ public:
 
     // Destructor
 
-        ~tabularSchedule();
+        ~agentTypeSchedule();
 
     // Member Functions
         

@@ -163,12 +163,8 @@ void agentForcing::controlAfterForces()
                             force = model_->force(mol().position());
                         }
                         
-//                         const scalar& massI = cloud_.cP().mass(mol().id());
-                        
                         mol().f() += force;
                         
-                        mol().a() += force/mol().mass();
-
                         force_ += force;
                     }
                 }

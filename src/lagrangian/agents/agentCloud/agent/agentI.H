@@ -36,7 +36,7 @@ inline Foam::agent::agent
     const label tetFaceI,
     const label tetPtI,
     const vector& v,
-    const vector& a,
+    const vector& d,
     const vector& f,
     const vector& specialPosition,
     const scalar& mass,
@@ -50,7 +50,7 @@ inline Foam::agent::agent
 :
     particle(mesh, position, cellI, tetFaceI, tetPtI),
     v_(v),
-    a_(a),
+    d_(d),
     f_(f),
     specialPosition_(specialPosition),
     mass_(mass),
@@ -77,15 +77,15 @@ inline Foam::vector& Foam::agent::v()
 }
 
 
-inline const Foam::vector& Foam::agent::a() const
+inline const Foam::vector& Foam::agent::d() const
 {
-    return a_;
+    return d_;
 }
 
 
-inline Foam::vector& Foam::agent::a()
+inline Foam::vector& Foam::agent::d()
 {
-    return a_;
+    return d_;
 }
 
 
@@ -98,6 +98,11 @@ inline const Foam::vector& Foam::agent::f() const
 inline Foam::vector& Foam::agent::f()
 {
     return f_;
+}
+
+inline Foam::vector Foam::agent::a()
+{
+    return f_*mass_;
 }
 
 inline const Foam::vector& Foam::agent::specialPosition() const

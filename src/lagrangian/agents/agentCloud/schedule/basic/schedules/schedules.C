@@ -44,7 +44,7 @@ schedules::schedules
     mesh_(refCast<const fvMesh>(mesh)),
     time_(t),
     cloud_(cloud),
-    cP_(cloud_.cP()),
+//     cP_(cloud_.cP()),
     schedulesDict_
     (
         IOobject
@@ -83,33 +83,31 @@ schedules::schedules
             scheduleIds_[i] = i;
         }
     }
-    
-    //test
-    
-    // making directory
-/*    pathName_ = mesh_.time().path()/"schedules";
-
-    if(isDir(pathName_))
-    {
-        rmDir(pathName_);
-    }     
-    
-    mkDir(pathName_);*/     
 }
 
 schedules::~schedules()
 {}
 
-/*
+
 void schedules::initialConfig()
 {
     forAll(schedules_, i)
     {
-        schedules_[i]->initialiseBorders();
         schedules_[i]->initialConfiguration();  
     }
 }
 
+
+void schedules::setSchedules()
+{
+    forAll(schedules_, i)
+    {
+        schedules_[i]->setSchedule();
+    }
+}
+
+
+/*
 void schedules::afterMove()
 {
     forAll(schedules_, i)

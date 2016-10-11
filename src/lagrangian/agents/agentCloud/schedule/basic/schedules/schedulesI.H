@@ -31,15 +31,15 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// inline List< autoPtr<agentController> >& agentControllers::stateControllers()
-// {
-// 	return stateControllers_;
-// }
-// 
-// inline const List< autoPtr<agentController> >& agentControllers::stateControllers() const
-// {
-// 	return stateControllers_;
-// }
+inline List< autoPtr<scheduleModel> >& schedules::scheduleModels()
+{
+	return schedules_;
+}
+
+inline const List< autoPtr<scheduleModel> >& schedules::scheduleModels() const
+{
+	return schedules_;
+}
 // 
 // inline const List<word>& agentControllers::stateControllersNames() const
 // {

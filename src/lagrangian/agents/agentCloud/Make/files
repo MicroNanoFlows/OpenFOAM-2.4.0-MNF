@@ -64,7 +64,7 @@ schedule/basic/schedules/schedules.C
 schedule/basic/scheduleModel/scheduleModel.C
 
 schedule/derived/tabularSchedule/tabularSchedule.C
-
+schedule/derived/agentTypeSchedule/agentTypeSchedule.C
 
 
 

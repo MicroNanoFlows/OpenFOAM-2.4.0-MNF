@@ -119,6 +119,7 @@ private:
 
         //- Disallow default bitwise copy construct
         agentCloud(const agentCloud&);
+        
         //- Disallow default bitwise assignment
         void operator=(const agentCloud&);
 
@@ -176,7 +177,7 @@ public:
             const label tetFaceI,
             const label tetPtI,
             const vector& v,
-            const vector& a,
+            const vector& d,
             const vector& f,
             const vector& specialPosition,
             const scalar& mass,
@@ -217,8 +218,9 @@ public:
 
             inline forceFields& f();
             inline borders& b();            
-            inline schedules& s();     
             
+            inline const schedules& s() const;     
+            inline schedules& s();     
             
     // Member Operators
 

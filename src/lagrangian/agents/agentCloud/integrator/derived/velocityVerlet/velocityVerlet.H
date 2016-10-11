@@ -26,12 +26,7 @@ Class
     velocityVerlet
 
 Description
-    simple velocity controller in a zone 
 
-    parallelised
-
-    recommendation: control and measure properties every time step, ensure  
-                    size of zone.
 
 SourceFiles
     velocityVerletI.H
@@ -103,7 +98,6 @@ public:
 
         void calculateForce(); 
         
-        void updateAcceleration();    
   
 };
 

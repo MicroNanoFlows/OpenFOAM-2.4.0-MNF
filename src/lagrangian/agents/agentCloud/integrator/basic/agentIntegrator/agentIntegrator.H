@@ -126,12 +126,9 @@ public:
         //- evolve MD simulation
         virtual void evolve() = 0;
         
-        virtual void clearLagrangianFields() = 0; 
+//         virtual void clearLagrangianFields() = 0; 
 
-        virtual void calculateForce() = 0; 
-        
-        virtual void updateAcceleration() = 0;         
-    
+//         virtual void calculateForce() = 0; 
         
 };
 

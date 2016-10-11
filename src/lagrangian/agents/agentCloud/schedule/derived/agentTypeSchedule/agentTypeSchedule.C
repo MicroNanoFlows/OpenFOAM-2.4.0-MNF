@@ -26,7 +26,7 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "tabularSchedule.H"
+#include "agentTypeSchedule.H"
 #include "addToRunTimeSelectionTable.H"
 #include "IFstream.H"
 #include "graph.H"
@@ -36,16 +36,16 @@ Description
 namespace Foam
 {
 
-defineTypeNameAndDebug(tabularSchedule, 0);
+defineTypeNameAndDebug(agentTypeSchedule, 0);
 
-addToRunTimeSelectionTable(scheduleModel, tabularSchedule, dictionary);
+addToRunTimeSelectionTable(scheduleModel, agentTypeSchedule, dictionary);
 
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-tabularSchedule::tabularSchedule
+agentTypeSchedule::agentTypeSchedule
 (
     Time& time,
     agentCloud& cloud,
@@ -53,35 +53,86 @@ tabularSchedule::tabularSchedule
 )
 :
     scheduleModel(time, cloud, dict),
-    propsDict_(dict.subDict(typeName + "Properties"))
+    propsDict_(dict.subDict(typeName + "Properties")),
+    timeIndex_(0.0),
+    counter_(-1),
+    deltaT_(time_.deltaT().value())
 {
-    
+
+    agentIds_.clear();
+
+    selectAgentIds ids
+    (
+        cloud_.cP(),
+        propsDict_
+    );
+
+    agentIds_ = ids.agentIds();    
 
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-tabularSchedule::~tabularSchedule()
+agentTypeSchedule::~agentTypeSchedule()
 {}
 
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void tabularSchedule::initialConfiguration()
+void agentTypeSchedule::initialConfiguration()
 {
-    // e.g. read in table 
+    destinations_ = vectorList(propsDict_.lookup("destinations"));
+    scheduledTimes_ = scalarList(propsDict_.lookup("scheduledTimes"));
     
+    nScheduledDestinations_ = destinations_.size();
     
+    if( (nScheduledDestinations_ <= 0) || (nScheduledDestinations_ != scheduledTimes_.size()) )
+    {
+        FatalError
+            << "Something went wrong with the agentTypeSchedule " << endl
+            << " lists must match in size and need to have sizes greater than zero"
+            << endl << "destinations = " << destinations_
+            << endl << "scheduledTimes = " << scheduledTimes_ << endl;
+        
+    }    
 }
 
 // is called every time-step to set new destinations of agents
-void tabularSchedule::setSchedule()
+void agentTypeSchedule::setSchedule()
 {
-    // e.g. read in table 
+    timeIndex_ += deltaT_;
     
+    // next destination index
+    label nextDest=counter_+1;
     
+    if(nextDest < nScheduledDestinations_)
+    {
+        if(scheduledTimes_[nextDest] >= timeIndex_)
+        {
+            // next destination
+            
+            vector r = destinations_[nextDest];
+            
+            Info << "Changing destinations of agents of type " << agentIds_ 
+                 << " to destination " << r << endl; 
+                 
+            IDLList<agent>::iterator mol(cloud_.begin());
+
+            for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
+            {
+                if(findIndex(agentIds_, mol().id()) != -1)
+                {
+                    mol().d()=r;
+                }
+            }
+            
+            counter_++;        
+        }
+    }
 }
+
+
 
 } // End namespace Foam
 

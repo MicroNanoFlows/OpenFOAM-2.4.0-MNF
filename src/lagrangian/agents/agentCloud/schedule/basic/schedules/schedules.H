@@ -65,7 +65,7 @@ class schedules
         
         agentCloud& cloud_;
 
-        const agentProperties& cP_;
+//         const agentProperties& cP_;
         
         //- The entire dictionary (containing multiple subDictionaries)
         IOdictionary schedulesDict_;
@@ -100,9 +100,9 @@ public:
     // Member Functions
 
         //- initial configuration
-//         void initialConfig();
-// 
-//         void afterMove();
+        void initialConfig();
+
+        void setSchedules();
 //         
 //         void afterForce();
 // 
@@ -113,8 +113,8 @@ public:
 
 //             const label& nStateControllers() const;
 
-//             inline List< autoPtr<pairPotential> >& stateControllers();
-//             inline const List< autoPtr<pairPotential> >& stateControllers() const;
+            inline List< autoPtr<scheduleModel> >& scheduleModels();
+            inline const List< autoPtr<scheduleModel> >& scheduleModels() const;
 // 
 //             inline const List<word>& stateControllersNames() const; 
     

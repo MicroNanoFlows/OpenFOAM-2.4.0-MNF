@@ -127,11 +127,10 @@ public:
 
         
         
-//         void initialiseBorders();
         
-//         virtual void initialConfiguration() = 0;
+       virtual void initialConfiguration() = 0;
         
-//         virtual void afterMove() = 0;
+       virtual void setSchedule() = 0;
         
 //         virtual void afterForce() = 0;
         

@@ -365,7 +365,6 @@ Foam::agentCloud::agentCloud
     b_(t, mesh_, *this),
     s_(t, mesh_, *this),    
 	clock_(t, "evolve", true)
-    
 {
     agent::readFields(*this);
 
@@ -418,12 +417,6 @@ Foam::agentCloud::agentCloud
     agent::readFields(*this);
 
     label initialParticles = this->size();
-
-//     f_.initialConfig();
-    
-//     b_.initialConfig();
-    
-    //rndGen.initialise(initialParticles != 0 ? initialParticles : 10000); //Initialise the random number cache (initialise to 10000 if size is zero)
 
     if (Pstream::parRun())
     {
@@ -538,7 +531,7 @@ void  Foam::agentCloud::createAgent
     const label tetFaceI,
     const label tetPtI,
     const vector& v,
-    const vector& a,
+    const vector& d,
     const vector& f,
     const vector& specialPosition,
     const scalar& mass,
@@ -561,7 +554,7 @@ void  Foam::agentCloud::createAgent
             tetFaceI,
             tetPtI,
             v,
-            a,
+            d,
             f,
             specialPosition,
             mass,
