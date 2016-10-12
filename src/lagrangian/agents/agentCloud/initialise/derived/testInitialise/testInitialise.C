@@ -80,7 +80,7 @@ void testInitialise::setInitialConfiguration()
 
 //     const vector bulkVelocity(propsDict_.lookup("bulkVelocity"));
 
-    const word idName(propsDict_.lookup("id")); 
+    const word idName(propsDict_.lookup("agentId")); 
     const List<word>& idList(cloud_.cP().agentIds());
 
     label id = findIndex(idList, idName);
