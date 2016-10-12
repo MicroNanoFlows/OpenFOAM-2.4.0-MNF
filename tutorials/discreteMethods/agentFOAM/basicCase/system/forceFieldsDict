@@ -1,0 +1,97 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.6                                   |
+|   \\  /    A nd           | Web:      http://www.OpenFOAM.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      forceFieldsDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+rCut            10;
+
+// Pair potentials
+
+pairPotentials
+(
+    A-A
+    {
+        model   lennardJones;
+       
+        rCut            10;
+        rMin            1;
+        dr              0.001;
+        lennardJonesProperties
+        {
+            maxForce    2000;            
+            sigma       5;
+            epsilon     0.1;
+        }
+    }
+    
+    B-B
+    {
+        model   lennardJones;
+       
+        rCut            10;
+        rMin            1;
+        dr              0.001;
+        lennardJonesProperties
+        {
+            maxForce    2000;            
+            sigma       5;
+            epsilon     0.1;
+        }
+    }    
+    
+    A-B
+    {
+        model   lennardJones;
+       
+        rCut            10;
+        rMin            1;
+        dr              0.001;
+        lennardJonesProperties
+        {
+            maxForce    2000;            
+            sigma       5;
+            epsilon     0.1;
+        }
+    }    
+);
+
+
+bodyForces
+(
+    force
+    {
+        model       scheduledForce;
+        
+        scheduledForceProperties
+        {
+            agentIds                      (A);
+            factor                        1;
+        }
+    }
+    
+/*    force
+    {
+        model       randomForce;
+        
+        randomForceProperties
+        {
+            agentIds                      (A);
+            factor                        10;
+        }
+    }*/    
+);
+
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

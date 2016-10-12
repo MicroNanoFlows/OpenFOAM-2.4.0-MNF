@@ -1,0 +1,74 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.6                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+
+    class           dictionary;
+    object          agentInitialiseDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+agentConfigurations
+(
+    configuration
+    {
+        model                    testInitialise;
+        
+        testInitialiseProperties
+        {
+            agentId                 A;
+            Nx                      5;
+            Ny                      10;
+            mass                    70;
+            temperature             1e23;
+            binWidth                0.01;
+            boundBox
+            {
+                startPoint          (0 0 0);
+                endPoint            (20 100 0);
+            }
+        }
+    }
+    
+/*    configuration
+    {
+        model                    testInitialise;
+        
+        testInitialiseProperties
+        {
+            agentId                 B;
+            Nx                      5;
+            Ny                      10;
+            mass                    70;
+            temperature             1e24;
+            binWidth                0.01;
+            boundBox
+            {
+                startPoint          (80 0 0);
+                endPoint            (100 100 0);
+            }
+        }
+    }*/    
+ 
+);
+
+
+
+
+
+// ************************************************************************* //
