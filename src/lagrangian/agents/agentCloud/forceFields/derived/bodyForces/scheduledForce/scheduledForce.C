@@ -26,7 +26,7 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "uniformForce.H"
+#include "scheduledForce.H"
 #include "addToRunTimeSelectionTable.H"
 #include "IFstream.H"
 #include "graph.H"
@@ -36,16 +36,16 @@ Description
 namespace Foam
 {
 
-defineTypeNameAndDebug(uniformForce, 0);
+defineTypeNameAndDebug(scheduledForce, 0);
 
-addToRunTimeSelectionTable(bodyForce, uniformForce, dictionary);
+addToRunTimeSelectionTable(bodyForce, scheduledForce, dictionary);
 
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-uniformForce::uniformForce
+scheduledForce::scheduledForce
 (
     agentCloud& cloud,
     Time& t,
@@ -54,13 +54,8 @@ uniformForce::uniformForce
 :
     bodyForce(cloud, t, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
-    model_(),
     agentIds_()
 {
-    model_ = autoPtr<gravityForce>
-    (
-        gravityForce::New(t, propsDict_)
-    );
 
     agentIds_.clear();
 
@@ -71,74 +66,58 @@ uniformForce::uniformForce
     );
 
     agentIds_ = ids.agentIds();
-
-    setBoundBoxes();
+    
+    threshold_ = 0.1;
+    
+    // to be modified more elegantly in the future
+    factor_ = readScalar(propsDict_.lookup("factor"));
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-uniformForce::~uniformForce()
+scheduledForce::~scheduledForce()
 {}
 
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void uniformForce::initialConfiguration()
+void scheduledForce::initialConfiguration()
 {}
 
-void uniformForce::force(agent* p)
+void scheduledForce::force(agent* p)
 {
     if(findIndex(agentIds_, p->id()) != -1)
     {
-        forAll(boxes_, b)
+        // if the destination is outside the bounds, there is no destination to go to
+        if(p->d().x() >= 0.0)
         {
-            if(boxes_[b].contains(p->position()))
+            vector rIJ = p->d() - p->position();
+            
+            scalar rIJMag = mag(rIJ);
+            
+            if(rIJMag < threshold_)
             {
-                vector force = vector::zero;
+                //arrived at its destination - reset it to outside domain
+                p->d() = vector(-1,-1,-1);
+            }
+            else
+            {
+                // ideally we need to insert route based selection here
+                vector n = rIJ/rIJMag; // unit vector
                 
-                if(model_->timeVarying())   
-                {
-                    const scalar t = time_.timeOutputValue();
-                    
-                    force = model_->force(t);
-                }
-                else if(model_->spaceVarying())
-                {
-                    force = model_->force(p->position());
-                }
-                
-                p->f() += force;
-                
-                p->a() += force/p->mass();
+                p->f() += n*factor_;
             }
         }
     }
 }
 
-void uniformForce::newForce()
+void scheduledForce::newForce()
 {
     
 }
 
 
-void uniformForce::setBoundBoxes()
-{
- 
-    PtrList<entry> boxList(propsDict_.lookup("boxes"));
-
-    boxes_.setSize(boxList.size());
-
-    forAll(boxList, b)
-    {
-        const entry& boxI = boxList[b];
-        const dictionary& dict = boxI.dict();
-
-        vector startPoint = dict.lookup("startPoint");
-        vector endPoint = dict.lookup("endPoint");
-        boxes_[b].resetBoundedBox(startPoint, endPoint);
-    }
-}
 
 
 

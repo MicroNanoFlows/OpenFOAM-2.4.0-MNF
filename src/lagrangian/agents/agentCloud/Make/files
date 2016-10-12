@@ -13,11 +13,13 @@ constant/selectAgentIds/selectAgentIds.C
 forceFields/basic/forceFields/forceFields.C
 forceFields/basic/pairPotential/pairPotential.C
 forceFields/basic/bodyForce/bodyForce.C    
-    
-forceFields/derived/bodyForces/uniformForce/uniformForce.C      
+
+
+forceFields/derived/bodyForces/agentUniformForce/agentUniformForce.C      
+forceFields/derived/bodyForces/scheduledForce/scheduledForce.C
     
 forceFields/derived/pairPotentials/lennardJones/lennardJones.C    
-    
+
     
 /* initialise */
 

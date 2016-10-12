@@ -363,8 +363,7 @@ Foam::agentCloud::agentCloud
     cyclics_(t, mesh_, -1),
     f_(t, mesh_, *this),
     b_(t, mesh_, *this),
-    s_(t, mesh_, *this),    
-	clock_(t, "evolve", true)
+    s_(t, mesh_, *this)
 {
     agent::readFields(*this);
 
@@ -411,8 +410,7 @@ Foam::agentCloud::agentCloud
     cyclics_(t, mesh_, -1),
     f_(t, mesh_, *this),
     b_(t, mesh_, *this),
-    s_(t, mesh_, *this),    
-	clock_(t, "evolve", true)
+    s_(t, mesh_, *this)
 {
     agent::readFields(*this);
 
@@ -482,6 +480,7 @@ Foam::agentCloud::agentCloud
         reduce(finalParticles, sumOp<label>());
     }
 
+    
     Info << nl << "Initial agents = " << initialParticles 
          << ", modified agents = " << finalParticles - initialParticles
          << ", total agents: " << finalParticles 
@@ -795,22 +794,28 @@ void Foam::agentCloud::readNewField()
 //     setSiteSizesAndPositions();    
 }
 
-void Foam::agentCloud::writeXYZ(const fileName& fName) const
+void Foam::agentCloud::writeXMOL()
 {
-    OFstream os(fName);
 
-    os << nAgents() << nl << "agentCloud site positions in angstroms" << nl;
-
-    const_iterator mol(this->begin());
-
-    for (mol = this->begin(); mol != this->end(); ++mol)
     {
-        os << cP_.agentIds()[mol().id()]
-            << ' ' << mol().position().x()
-            << ' ' << mol().position().y()
-            << ' ' << mol().position().z()
-            << nl;
+        fileName path = mesh_.time().timePath()/cloud::prefix/"agentCloud.xmol";
+        
+        OFstream os(path);
+
+        os << this->size() << nl << "agentCloud site positions in angstroms" << nl;
+
+        const_iterator mol(this->begin());
+
+        for (mol = this->begin(); mol != this->end(); ++mol)
+        {
+            os << cP_.agentIds()[mol().id()]
+                << ' ' << mol().position().x()
+                << ' ' << mol().position().y()
+                << ' ' << mol().position().z()
+                << nl;
+        }
     }
+    
 }
 
 

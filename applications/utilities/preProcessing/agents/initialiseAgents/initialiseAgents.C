@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
-    Initialises fields for a molecular dynamics (MD) simulation.
+    Initialises fields for an agent based modelling simulation.
 
 \*---------------------------------------------------------------------------*/
 
@@ -59,7 +59,9 @@ int main(int argc, char *argv[])
             << "Failed writing cloud."
             << nl << exit(FatalError);
     }
-
+    
+    agents.writeXMOL();
+    
     Info<< nl << "ClockTime = " << runTime.elapsedClockTime() << " s"
         << nl << endl;
 

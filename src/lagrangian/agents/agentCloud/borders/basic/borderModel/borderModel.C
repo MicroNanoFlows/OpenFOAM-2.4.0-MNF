@@ -83,7 +83,7 @@ autoPtr<borderModel> borderModel::New
 {
     word borderModelName
     (
-        dict.lookup("borderModel")
+        dict.lookup("model")
     );
 
     Info<< "Selecting borderModel "

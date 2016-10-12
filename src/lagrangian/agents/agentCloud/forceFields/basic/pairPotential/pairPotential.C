@@ -115,7 +115,7 @@ autoPtr<pairPotential> pairPotential::New
 {
     word pairPotentialName
     (
-        dict.lookup("pairPotential")
+        dict.lookup("model")
     );
 
     Info<< "Selecting pairPotential "

@@ -23,15 +23,16 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
-    mdPolyFoam
+    agentFOAM
 
 Description
-    Molecular dynamics solver for fluid dynamics -- polyatomics only
+    
 
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
 #include "agents.H"
+#include "clockTimer.H"
 
 int main(int argc, char *argv[])
 {
@@ -53,20 +54,25 @@ int main(int argc, char *argv[])
 
     Info << "\nStarting time loop\n" << endl;
 
-//     clockTimer evolveTimer(runTime, "evolve", true);
+    clockTimer evolveTimer(runTime, "evolve", true);
 
     while (runTime.loop())
     {
         Info << "Time = " << runTime.timeName() << endl;
 
-        agents.clock().startClock();
+        evolveTimer.startClock();
 
         agents.evolve();
 
-        agents.clock().stopClock();
+        evolveTimer.stopClock();
 
         runTime.write();
 
+        if(runTime.outputTime())
+        {
+            agents.writeXMOL();
+        }
+        
         Info << "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
             << "  ClockTime = " << runTime.elapsedClockTime() << " s"
             << nl << endl;

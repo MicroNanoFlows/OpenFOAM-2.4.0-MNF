@@ -46,6 +46,8 @@ Description
 
 #include "bodyForce.H"
 #include "pairPotential.H"
+
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam

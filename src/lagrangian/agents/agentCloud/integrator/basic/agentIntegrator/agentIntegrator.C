@@ -70,11 +70,11 @@ autoPtr<agentIntegrator> agentIntegrator::New
 {
     word agentIntegratorName = "velocityVerlet";
     
-    if(dict.found("integrator"))
+    if(dict.found("integratorModel"))
     {
         const word agentIntegratorNameTemp
         (
-            dict.lookup("integrator")
+            dict.lookup("integratorModel")
         );
         
         agentIntegratorName = agentIntegratorNameTemp;

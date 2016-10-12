@@ -23,33 +23,28 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    borderModel
+    scheduledForce
 
 Description
-    Basic/abstract class of a state controller
-
+    Model that applies a gravitational force on all molecules.
 
 SourceFiles
-    borderModelI.H
-    borderModel.C
-    borderModelIO.C
+    scheduledForceI.H
+    scheduledForce.C
+    scheduledForceIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef borderModel_H
-#define borderModel_H
+#ifndef scheduledForce_H
+#define scheduledForce_H
 
-#include "IOdictionary.H"
-#include "autoPtr.H"
-#include "runTimeSelectionTables.H"
+#include "bodyForce.H"
 #include "vector.H"
-#include "volFields.H"
-#include "agent.H"
-#include "writeTimeData.H"
-#include "selectAgentIds.H"
-#include "reducedUnits.H"
-#include "vectorList.H"
+#include "polyMesh.H"
+#include "agentCloud.H"
+#include "gravityForce.H" 
 #include "boundedBox.H"
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -57,107 +52,71 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class borderModel Declaration
+                           Class scheduledForce Declaration
 \*---------------------------------------------------------------------------*/
 
-class borderModel
+class scheduledForce
+:
+	public bodyForce
 {
 
-protected:
+private:
 
-    // Protected data
+    // Private data
 
-        const fvMesh& mesh_;
+        //- subDictionary containing the properties
+        dictionary propsDict_;
 
-        Time& time_;        
+        //- ids of mols
+        List<label> agentIds_;
         
-        agentCloud& cloud_;
+        scalar threshold_;
+        
+        scalar factor_;
+        
+        
+//         List<boundedBox> boxes_;
+  
 
-        const reducedUnits& rU_;        
-        
-        List<vectorList> borderList_;
-        
-        // border properties
-        
-        // normal vectors point outwards 
-        List<vectorList> normalVectors_;
-        List<vectorList> midPoints_;
-        
-        scalar treshold_;
- 
-        // outer list = nCells on mesh
-        // inner list = index to borderList_ to interact with
-        List<DynamicList<label> > interactionList_;        
+
         
     // Private Member Functions
 
-        void checkClosedEndedBorders();
-       
-        void reflect(label index, agent* a);
+
         
+
 public:
 
     //- Runtime type information
-    TypeName("borderModel");
+    TypeName("scheduledForce");
 
-    // Declare runtime constructor selection table
-        declareRunTimeSelectionTable
-        (
-            autoPtr,
-            borderModel,
-            dictionary,
-            (
-                Time& time,
-                agentCloud& cloud,
-                const dictionary& dict
-            ),
-            (time, cloud, dict)
-        );
-   
     // Constructors
 
         //- Construct from components
-        borderModel
+        scheduledForce
         (
-            Time& time,
             agentCloud& cloud,
+            Time& t,
             const dictionary& dict
         );
-
-
-    // Selectors
-
-        static autoPtr<borderModel> New
-        (
-            Time& time,
-            agentCloud& cloud,
-            const dictionary& dict
-        );
-
 
     // Destructor
 
-        virtual ~borderModel();
+        ~scheduledForce();
 
 
     // Member Functions
+        
+        //- create an initial configuration
+        void initialConfiguration();
+        
+        // inside loop of all agents
+        void force(agent* p);
+        
+        // new force definition; requires loop over all agents
+        void newForce();
 
-        
-        
-        void initialiseBorders();
-        
-        virtual void initialConfiguration() = 0;
-        
-        virtual void afterMove() = 0;
-        
-        virtual void afterForce() = 0;
-        
-        const List<vectorList>& borderList() const;
-        
-        bool isPointWithinBorder(label index, const vector& r);
-        
-        void writeBorders(const fileName& pathName);
-        
+        // Access
 };
 
 
@@ -166,7 +125,6 @@ public:
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 
 #endif
 

@@ -105,6 +105,8 @@ inline void forceFields::evaluatePair
         }
     }
 }
+
+
 inline const scalar& forceFields::rCut() const
 {
     return rCut_;

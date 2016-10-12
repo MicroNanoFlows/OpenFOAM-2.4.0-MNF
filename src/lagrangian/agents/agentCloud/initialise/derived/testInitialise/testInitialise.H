@@ -66,6 +66,8 @@ private:
 
     // Private data
     
+        //- subDictionary containing the properties
+        dictionary propsDict_;
 
 
     // Private Member Functions

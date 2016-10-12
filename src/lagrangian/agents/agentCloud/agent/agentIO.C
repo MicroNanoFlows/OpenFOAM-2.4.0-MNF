@@ -39,7 +39,7 @@ Foam::agent::agent
 :
     particle(mesh, is, readFields),
     v_(vector::zero),
-    d_(vector::zero),
+    d_(vector(-1,-1,-1)),
     f_(vector::zero),    
     specialPosition_(vector::zero),
     mass_(0.0),
@@ -198,17 +198,17 @@ void Foam::agent::writeFields(const Cloud<agent>& mC)
     id.write();
     trackingNumber.write();
 
-    Info<< "writeFields " << mC.name() << endl;
-    
-    if (isA<agentCloud>(mC))
-    {
-        const agentCloud& m = dynamic_cast<const agentCloud&>(mC);
-
-        m.writeXYZ
-        (
-            m.mesh().time().timePath()/cloud::prefix/"agentCloud.xmol"
-        );
-    }
+//     Info<< "writeFields " << mC.name() << endl;
+//     
+//     if (isA<agentCloud>(mC))
+//     {
+//         const agentCloud& m = dynamic_cast<const agentCloud&>(mC);
+// 
+//         m.writeXYZ
+//         (
+//             m.mesh().time().timePath()/cloud::prefix/"agentCloud.xmol"
+//         );
+//     }
 }
 
 // * * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * //

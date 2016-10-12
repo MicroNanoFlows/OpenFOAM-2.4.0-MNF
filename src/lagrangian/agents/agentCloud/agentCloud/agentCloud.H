@@ -42,24 +42,17 @@ SourceFiles
 #include "IOdictionary.H"
 #include "trackingNumber.H"
 #include "cachedRandomMD.H"
-#include "clockTimer.H"
 #include "agentIntegrators.H"
 #include "cyclicBoundaries.H"
-// #include "twoDimCellInteractions.H"
 #include "agentProperties.H"
 #include "reducedUnits.H"
 #include "agentMeasurements.H"
 #include "agentControllers.H"
+#include "boundedBox.H"
 #include "forceFields.H"
 #include "borders.H"
 #include "schedules.H"
 
-//#include "labelVector.H"
-//#include "fileName.H"
-//#include "polyBoundaries.H"
-
-//#include "polyFaceTracker.H"
-//#include "potentials.H" 
 
 
 
@@ -107,15 +100,11 @@ private:
 
         schedules s_;
         
-        clockTimer clock_;
 
 
     // Private Member Functions
 
         void checkMoleculesInMesh();
-
-//         void setMoleculesForDirectInteraction();
-
 
         //- Disallow default bitwise copy construct
         agentCloud(const agentCloud&);
@@ -205,7 +194,7 @@ public:
             inline const agentProperties& cP() const;            
             inline cachedRandomMD& rndGen();            
             inline trackingNumber& agentTracking();            
-            inline clockTimer& clock();            
+//             inline clockTimer& clock();            
             
             inline const agentMeasurements& fields() const;  
             inline agentMeasurements& fields();            
@@ -260,7 +249,9 @@ public:
         void readNewField();    
 
         //- Write agent sites in XYZ format
-        void writeXYZ(const fileName& fName) const;
+//         void writeXYZ(const fileName& fName) const;
+        
+        void writeXMOL();
 };
 
 

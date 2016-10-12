@@ -71,7 +71,7 @@ autoPtr<scheduleModel> scheduleModel::New
 {
     word scheduleModelName
     (
-        dict.lookup("scheduleModel")
+        dict.lookup("model")
     );
 
     Info<< "Selecting scheduleModel "

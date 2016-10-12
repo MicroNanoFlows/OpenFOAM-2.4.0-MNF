@@ -51,7 +51,8 @@ testInitialise::testInitialise
     const dictionary& dict
 )
 :
-    agentConfiguration(molCloud, dict)
+    agentConfiguration(molCloud, dict),
+    propsDict_(dict.subDict(typeName + "Properties"))    
 {
 
 }
@@ -73,12 +74,13 @@ void testInitialise::setInitialConfiguration()
     label initialSize = cloud_.size();
 
     Info << nl << "Test initialise " << endl;
+    
+    
+    const scalar temperature(readScalar(propsDict_.lookup("temperature")));
 
-    const scalar temperature(readScalar(initialiseDict_.lookup("temperature")));
+//     const vector bulkVelocity(propsDict_.lookup("bulkVelocity"));
 
-//     const vector bulkVelocity(initialiseDict_.lookup("bulkVelocity"));
-
-    const word idName(initialiseDict_.lookup("id")); 
+    const word idName(propsDict_.lookup("id")); 
     const List<word>& idList(cloud_.cP().agentIds());
 
     label id = findIndex(idList, idName);
@@ -90,16 +92,16 @@ void testInitialise::setInitialConfiguration()
             << exit(FatalError);
     }
 
-    scalar massI = readScalar(initialiseDict_.lookup("mass"));
+    scalar massI = readScalar(propsDict_.lookup("mass"));
 
     bool frozen = false;
 
-    if (initialiseDict_.found("frozen"))
+    if (propsDict_.found("frozen"))
     {
-        frozen = Switch(initialiseDict_.lookup("frozen"));
+        frozen = Switch(propsDict_.lookup("frozen"));
     }
 
-    const scalar binWidth(readScalar(initialiseDict_.lookup("binWidth")));
+    const scalar binWidth(readScalar(propsDict_.lookup("binWidth")));
     
     distribution d(binWidth);
    
@@ -108,10 +110,10 @@ void testInitialise::setInitialConfiguration()
 
     boundedBox bb;
     
-    setBoundBox(initialiseDict_, bb, "boundBox");
+    setBoundBox(propsDict_, bb, "boundBox");
     
-    label Nx(readLabel(initialiseDict_.lookup("Nx")));
-    label Ny(readLabel(initialiseDict_.lookup("Ny")));
+    label Nx(readLabel(propsDict_.lookup("Nx")));
+    label Ny(readLabel(propsDict_.lookup("Ny")));
 //     label Nx = 10;
 //     label Ny = 10;
     
@@ -146,9 +148,9 @@ void testInitialise::setInitialConfiguration()
     
     label N = 0;
     
-    if (initialiseDict_.found("N"))
+    if (propsDict_.found("N"))
     {
-        N = readLabel(initialiseDict_.lookup("N"));
+        N = readLabel(propsDict_.lookup("N"));
         
         if(positions.size() < N)
         {

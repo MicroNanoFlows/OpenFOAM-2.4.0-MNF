@@ -100,7 +100,7 @@ inline Foam::vector& Foam::agent::f()
     return f_;
 }
 
-inline Foam::vector Foam::agent::a()
+inline Foam::vector Foam::agent::a() const
 {
     return f_*mass_;
 }

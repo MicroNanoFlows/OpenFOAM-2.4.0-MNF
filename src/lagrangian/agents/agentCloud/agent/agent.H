@@ -256,7 +256,7 @@ public:
             inline const vector& f() const;
             inline vector& f();            
             
-            inline vector a();
+            inline vector a() const;
             
             inline const vector& specialPosition() const;
             inline vector& specialPosition();

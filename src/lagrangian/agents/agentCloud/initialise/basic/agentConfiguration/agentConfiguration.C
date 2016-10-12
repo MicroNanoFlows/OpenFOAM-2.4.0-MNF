@@ -66,7 +66,7 @@ autoPtr<agentConfiguration> agentConfiguration::New
 {
     word agentConfigurationName
     (
-        dict.lookup("type")
+        dict.lookup("model")
     );
 
     Info<< "Selecting agentConfiguration "

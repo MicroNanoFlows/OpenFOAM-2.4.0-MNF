@@ -23,20 +23,20 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    uniformForce
+    agentUniformForce
 
 Description
     Model that applies a gravitational force on all molecules.
 
 SourceFiles
-    uniformForceI.H
-    uniformForce.C
-    uniformForceIO.C
+    agentUniformForceI.H
+    agentUniformForce.C
+    agentUniformForceIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef uniformForce_H
-#define uniformForce_H
+#ifndef agentUniformForce_H
+#define agentUniformForce_H
 
 #include "bodyForce.H"
 #include "vector.H"
@@ -52,10 +52,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class uniformForce Declaration
+                           Class agentUniformForce Declaration
 \*---------------------------------------------------------------------------*/
 
-class uniformForce
+class agentUniformForce
 :
 	public bodyForce
 {
@@ -85,12 +85,12 @@ private:
 public:
 
     //- Runtime type information
-    TypeName("uniformForce");
+    TypeName("agentUniformForce");
 
     // Constructors
 
         //- Construct from components
-        uniformForce
+        agentUniformForce
         (
             agentCloud& cloud,
             Time& t,
@@ -99,7 +99,7 @@ public:
 
     // Destructor
 
-        ~uniformForce();
+        ~agentUniformForce();
 
 
     // Member Functions

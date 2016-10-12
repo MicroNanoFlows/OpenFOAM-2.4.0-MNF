@@ -70,7 +70,7 @@ autoPtr<bodyForce> bodyForce::New
 {
     word bodyForceName
     (
-        dict.lookup("bodyForce")
+        dict.lookup("model")
     );
 
     Info<< "Selecting bodyForce "

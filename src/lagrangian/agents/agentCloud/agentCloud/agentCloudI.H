@@ -724,10 +724,10 @@ inline Foam::cellInteractions<Foam::agent>& Foam::agentCloud::il()
 
 */
 
-inline Foam::clockTimer& Foam::agentCloud::clock()
-{
-    return clock_;
-}
+// inline Foam::clockTimer& Foam::agentCloud::clock()
+// {
+//     return clock_;
+// }
 
 inline Foam::agentMeasurements& Foam::agentCloud::fields()
 {
