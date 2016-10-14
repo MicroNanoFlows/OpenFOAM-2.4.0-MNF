@@ -19,6 +19,8 @@ application     dsmcFOAM;
 
 startFrom       latestTime;
 
+nTerminalOutputs    1;
+
 startTime       0;
 
 stopAt          endTime;

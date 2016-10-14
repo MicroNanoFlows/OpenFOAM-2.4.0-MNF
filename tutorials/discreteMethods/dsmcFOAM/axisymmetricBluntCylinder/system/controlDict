@@ -19,6 +19,8 @@ application     dsmcFoamStrath;
 
 startFrom       latestTime;
 
+nTerminalOutputs    1;
+
 startTime       0;
 
 stopAt          endTime;
@@ -49,36 +51,7 @@ adjustTimeStep  no;
 
 functions
 {
-/*    fieldAverage1*/
-/*    {*/
-/*        type            fieldAverage;*/
-/*        functionObjectLibs ( "libfieldFunctionObjectsStrath.so" );*/
-/*        outputControl   outputTime;*/
-/*        resetOnOutput   on;*/
 
-/*        fields*/
-/*        (*/
-/*            q*/
-/*            {*/
-/*                mean        on;*/
-/*                prime2Mean  off;*/
-/*                base        time;*/
-/*            }*/
-/*            fD*/
-/*            {*/
-/*                mean        on;*/
-/*                prime2Mean  off;*/
-/*                base        time;*/
-/*            }*/
-/*        );*/
-/*    }*/
-/*    dsmcFields1*/
-/*    {*/
-/*        type            dsmcFieldsStrath;*/
-/*        functionObjectLibs ( "libutilityFunctionObjectsStrath.so" );*/
-/*        enabled         true;*/
-/*        outputControl   outputTime;*/
-/*    }*/
 }
 
 // ************************************************************************* //

@@ -57,9 +57,28 @@ cellZones
 		option             boundBox;         
 		startPoint		(16e-7 -0.2e-6 -0.5);
 		endPoint		(20e-7 0.2e-6 0.5);
-	}
+	}	
+);
 
-		
+
+faceZones
+(
+      zone
+      {
+         zoneName        face1;
+         option          pointToPoint;
+         startPoint      (0.499e-06 0 0 );
+         endPoint        (0.501e-06 0 0 );
+      }
+
+      zone
+      {
+         zoneName        face2;
+         option          pointToPoint;
+         startPoint      (1.499e-06 0 0 );
+         endPoint        (1.501e-06 0 0 );
+      }
+
 );
 
 

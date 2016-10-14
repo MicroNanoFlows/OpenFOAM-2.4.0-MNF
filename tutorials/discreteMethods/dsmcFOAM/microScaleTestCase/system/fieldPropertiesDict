@@ -62,6 +62,44 @@ dsmcFields
          	typeIds                 (N2);
          }
      }
+
+     field
+     {
+         fieldModel          	dsmcMassFluxSurface;
+ 
+         timeProperties
+         {
+         	timeOption          write;
+ 	    	resetAtOutput		on;
+         }
+         
+         dsmcMassFluxSurfaceProperties
+         {
+            fieldName               N2;
+         	typeIds                 (N2);
+            faceZoneName            face1;
+            fluxDirection           (1 0 0);
+         }
+     }
+
+     field
+     {
+         fieldModel          	dsmcMassFluxSurface;
+ 
+         timeProperties
+         {
+         	timeOption          write;
+ 	    	resetAtOutput		on;
+         }
+         
+         dsmcMassFluxSurfaceProperties
+         {
+            fieldName               N2;
+         	typeIds                 (N2);
+            faceZoneName            face2;
+            fluxDirection           (1 0 0);
+         }
+     }
 );
 
 // ************************************************************************* //

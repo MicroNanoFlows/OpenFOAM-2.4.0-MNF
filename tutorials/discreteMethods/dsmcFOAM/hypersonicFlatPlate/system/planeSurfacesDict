@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  dev                                   |
+|  \\    /   O peration     | Version:  1.7.1                                 |
 |   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -11,47 +11,21 @@ FoamFile
     format      ascii;
     class       dictionary;
     location    "system";
-    object      controlDict;
+    object      planeSurfacesDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-application     dsmcFOAM;
-
-startFrom       startTime;
-
-nTerminalOutputs    1;
-
-startTime       0;
-
-stopAt          endTime;
-
-endTime         0.05;
-
-deltaT          5e-7;
-
-writeControl    runTime;
-
-writeInterval   5e-5;
-
-purgeWrite      2;
-
-writeFormat     ascii;
-
-writePrecision  6;
-
-writeCompression off;
-
-timeFormat      general;
-
-timePrecision   6;
-
-runTimeModifiable true;
-
-adjustTimeStep  no;
-
-functions
+surfaces
+(
+zone
 {
-
+     zoneName    face1;
+    startPoint    (1.499e-6 0 0);
+    endPoint    (1.501e-6 0 0);
+    writeFaceSet    no;
 }
+
+);
+
 
 // ************************************************************************* //

@@ -1,8 +1,8 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  dev                                   |
-|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|  \\    /   O peration     | Version:  1.6                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -17,21 +17,21 @@ FoamFile
 
 application     dsmcFOAM;
 
-startFrom       startTime;
+nTerminalOutputs	1; //output to terminal every nTerminalOutputs-th time step
 
-nTerminalOutputs    1;
+startFrom       latestTime;
 
 startTime       0;
 
 stopAt          endTime;
 
-endTime         0.05;
+endTime         4.9632e-3;
 
-deltaT          5e-7;
+deltaT          3.102e-7;
 
 writeControl    runTime;
 
-writeInterval   5e-5;
+writeInterval   3.102e-5;
 
 purgeWrite      2;
 
@@ -50,8 +50,20 @@ runTimeModifiable true;
 adjustTimeStep  no;
 
 functions
-{
+(
+    forces1
+    {
+        type            forces;
+        enabled         true;
+        functionObjectLibs ( "libforces.so" );
+        outputControl   outputTime;
+        patches         ( plate );
+        directForceDensity true;
+        fDName          fD_N2;
+        CofR            ( 0 0 0 );
+        log             on;
+    }
+);
 
-}
 
 // ************************************************************************* //
