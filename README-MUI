@@ -1,4 +1,4 @@
-MUI has been integrated fundamentally into OpenFOAM (and can therefore be used in any application) and a new controller architecture has been created for mdFOAM to allow its use.
+The MUI coupling library* has been integrated fundamentally into OpenFOAM (and can therefore be used in any application) and a new controller architecture has been created for mdFOAM to allow its use.
 
 General MUI coupling is achieved using the following new source files:
 
@@ -6,18 +6,18 @@ src/finiteVolume/cfdTools/general/include:
 	* fvCoupling.H (includes coupling[n]d header files for general use)
 
 src/OpenFOAM/include:
-	* createCouplingData.H (creates 3 OpenFOAM Lists of coupling objects)
-	* createCouplings.H (reads coupling data from a new dictionary file at system/couplingDict (example provided in appendix A below) and creates MUI interfaces, storing them into the Lists created in createCouplingData.H)
+	* createCouplingData.H (creates 3 coupling objects that contain 1d, 2d and 3d coupling interfaces)
+	* createCouplings.H (reads coupling data from a new dictionary file at system/couplingDict (example provided in appendix A below) and creates MUI interfaces, storing them into the objects created in createCouplingData.H)
 
 src/OpenFOAM/coupling:
-	* coupling1d/coupling1d.C (creates a 1d MUI coupling interface with a URI equal to "mpi://[interface name from couplingDict OneD names]/ifs")
+	* coupling1d/coupling1d.C (creates 1 or more 1D MUI coupling interfaces with URIs equal to "mpi://[couplingName name from couplingDict]/[interfaceNames values from couplingDict OneD section]")
 	* coupling1d/coupling1d.H
-	* coupling2d/coupling2d.C (creates a 2d MUI coupling interface with a URI equal to "mpi://[interface name from couplingDict TwoD names]/ifs")
+	* coupling2d/coupling2d.C (creates 1 or more 2D MUI coupling interfaces with URIs equal to "mpi://[couplingName name from couplingDict]/[interfaceNames values from couplingDict TwoD section]")
 	* coupling2d/coupling2d.H
-	* coupling3d/coupling3d.C (creates a 3d MUI coupling interface with a URI equal to "mpi://[interface name from couplingDict ThreeD names]/ifs")
+	* coupling3d/coupling3d.C (creates 1 or more 3D MUI coupling interfaces with URIs equal to "mpi://[couplingName name from couplingDict]/[interfaceNames values from couplingDict ThreeD section]")
 	* coupling3d/coupling3d.H
 
-There are also a number of alterations to the PStream class and a few others but these do not need to be worried about.
+There are also a number of alterations to the PStream class and a few others but these do not need to be worried about by the general developer.
 
 A number of modifications have also been made to the ThirdParty scripts to allow the MUI library to be included in all required paths. Effectively however, inclusion of MUI in a build is achieved by:
 	* Ensuring a copy of the MUI folder is in the base of the ThirdParty folder before ./Allwmake is run (this will create a copy in platforms/$ARCH$WM_COMPILER/MUI, the name of the MUI folder can be changed if required in the makeMUI script and also in the OpenFOAM script at $WM_PROJECT_DIR/etc/config/MUI.sh (or MUI.csh if not using bash), this follows the standard OpenFOAM way of working with libraries).
@@ -47,13 +47,26 @@ To use MUI in an OpenFOAM application, the general additions are as follows:
 			 	#include "deleteCouplings.H"
 			 #endif
 
-Assuming the above are added then you now have access to MUI interfaces in the List<> structures created by "createCouplingData.H", which are named "oneDCouplings", "twoDCouplings" and "threeDCouplings" respectively (these will be empty if no interfaces are specified in the corresponding section of the couplingDict dictionary). The Lists contain a custom data structure (couplingInterface1d, couplingInterface2d or couplingInterface3d), which are defined in the header files coupling1d.H, coupling2d.H and coupling3d.H respectively. This gives access to the following data:
-	1) word couplingName (this is the value of "couplingName" in the couplingDict dictionary)
-	2) word interfaceName (this is the value of the interface name in the couplingDict dictionary (i.e. for the example in appendix A there would only be 1 structure in the oneDCouplings List<> and the value of interfaceName would be "interface1d_1".
-	3) coupling[n]d* interface (this is a pointer to an instance of the coupling[n]d Class, which itself wraps the appropriate MUI uniface1d, uniface2d or uniface3d constructs.
+Assuming the above are added then you now have access to MUI interfaces in the objects created by "createCouplingData.H", which are named "couplingInterface1d", "couplingInterface2d" and "couplingInterface3d" respectively (these will be empty if no interfaces are specified in the corresponding section of the couplingDict dictionary). The objects data structures are defined in the header files coupling1d.H, coupling2d.H and coupling3d.H respectively. This gives access to the following data:
+	1) word domainName (this is the value of "couplingName" in the couplingDict dictionary)	
+	2) coupling[n]d* interface (this is a pointer to an instance of the coupling[n]d Class, which itself wraps the appropriate MUI uniface constructs.
 
-The coupling[n]d class consists of a single constructor (which does most of the work) and a single public access function "getInterface()", this is what needs to be called to access the MUI interface. Therefore a simple example of accessing the MUI "push" function for the 1D interface defined in Appendix A would be:
-	1) oneDCouplings[0].interface->getInterface()->push(name, point, data);
+The coupling[n]d classes consist of a single constructor (which does most of the work) and 3 public access functions:
+	1) getInterface(int index): This is what needs to be called to access a MUI interface at a specified index. 
+	2) size(): This returns the number of intefaces stored in the object.
+	3) getInterfaceName(int index): This returns the name of the interface stored at a specified indec.
+Therefore a simple example of accessing the MUI "push" function for the two 3D interfaces defined in Appendix A (ifs_1 & ifs_2) would be:
+	1) word dataName = "exampleData";
+	   mui::point3d examplePoint(0.0,0.0,0.0);
+	   scalar data = 1.0;
+	   scalar time = 0.0;
+	   std::cout << "Domain Name: " << couplingInterface3d.domainName << std::endl;
+	   for (size_t ifs = 0; i < couplingInterface3d->interfaces.size(); i++)
+	   {	   		
+	   		std::cout << "Interface Name: " << couplingInterface3d->interfaces.getInterfaceName(i) << std::endl;
+	   		couplingInterface3d->interfaces.getInterface(i)->push(dataName, examplePoint, data);
+	   }
+	   couplingInterface3d->interfaces.getInterface(i)->commit(time);
 	
 ::::::::::::::::::::::: Appendix A - couplingDict example :::::::::::::::::::::::
 
@@ -81,23 +94,23 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-couplingName applicationName_instance; //Unique application identifier
+couplingName mdFOAM_domain1; //MUI domain name
 
 couplingConfigurations
 ( 
-    OneD //1D coupling interfaces using MUI
+    OneD //1D MUI coupling interface names
     {
-	names (interface1d_1);
+	
     }
 
-    TwoD //2D coupling interfaces using MUI
+    TwoD //2D MUI coupling interface names
     {
-        names (interface2d_1 interface2d_2 interface2d_3);
+        
     }
- 
-    ThreeD //3D coupling interfaces using MUI
+
+    ThreeD //3D MUI coupling interface names
     {
-        names (interface3d_1 interface3d_2);
+        interfaceNames (ifs_1 ifs_2);
     }
 );
 
@@ -124,3 +137,5 @@ EXE_LIBS = \
     -lmeshTools
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+* Tang Y.-H., Kudo, S., Bian, X., Li, Z., & Karniadakis, G. E. Multiscale Universal Interface: A Concurrent Framework for Coupling Heterogeneous Solvers, Journal of Computational Physics, 2015, 297.15, 13-31.

@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 #ifdef USE_MUI
 	if (args.cplRunControl().cplRun())
 	{
-		molecules = new polyMoleculeCloud(runTime, mesh, rU, cP, rndGen, oneDCouplings, twoDCouplings, threeDCouplings);
+		molecules = new polyMoleculeCloud(runTime, mesh, rU, cP, rndGen, oneDInterfaces, twoDInterfaces, threeDInterfaces);
 	}
 	else
 	{

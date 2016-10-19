@@ -36,6 +36,7 @@ SourceFiles
 #define coupling3d_H
 
 #include "scalar.H"
+#include "List.H"
 
 // NOTE:
 // MUI header included if the switch -DUSE_MUI included during compilation.
@@ -56,11 +57,11 @@ class coupling3d
 {
 	// Private data
 private:
-	string appName_;
-	string uri_;
+	word appName_;
+	Foam::List<Foam::word> interfaceNames_;
 
 #ifdef USE_MUI
-	mui::uniface3d *interface_;
+	std::vector<mui::uniface<mui::config_3d>* > interfaces_;
 #endif
 
 public:
@@ -70,7 +71,8 @@ public:
         //- Construct
 		coupling3d
 		(
-			string name
+			Foam::word name,
+			Foam::List<Foam::word>& interfaceNames
 		);
 
     // Destructor
@@ -79,17 +81,18 @@ public:
 
     // Member Functions
 #ifdef USE_MUI
-        mui::uniface3d* getInterface() const;
+        mui::uniface<mui::config_3d>* getInterface(int index) const;
 #endif
+        size_t size() const;
+        const Foam::word& getInterfaceName(int index) const;
 };
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 struct couplingInterface3d
 {
-	word couplingName;
-	word interfaceName;
-	coupling3d* interface;
+	Foam::word domainName;
+	Foam::coupling3d* interfaces;
 };
 
 } // End namespace Foam

@@ -49,9 +49,9 @@ polyCouplingController::polyCouplingController
     Time& t,
     polyMoleculeCloud& molCloud,
     const dictionary& dict,
-	List<couplingInterface1d>& oneDCouplings,
-	List<couplingInterface2d>& twoDCouplings,
-	List<couplingInterface3d>& threeDCouplings
+	couplingInterface1d &oneDInterfaces,
+	couplingInterface2d &twoDInterfaces,
+	couplingInterface3d &threeDInterfaces
 )
 :
     mesh_(refCast<const fvMesh>(molCloud.mesh())),
@@ -63,9 +63,9 @@ polyCouplingController::polyCouplingController
     controlInterForces_(false),
     writeInTimeDir_(true),
     writeInCase_(true),
-	oneDCouplings_(oneDCouplings),
-	twoDCouplings_(twoDCouplings),
-	threeDCouplings_(threeDCouplings)
+	oneDInterfaces_(oneDInterfaces),
+	twoDInterfaces_(twoDInterfaces),
+	threeDInterfaces_(threeDInterfaces)
 {
     const cellZoneMesh& cellZones = mesh_.cellZones();
     regionId_ = cellZones.findZoneID(regionName_);
@@ -91,9 +91,9 @@ autoPtr<polyCouplingController> polyCouplingController::New
     Time& t,
     polyMoleculeCloud& molCloud,
     const dictionary& dict,
-	List<couplingInterface1d>& oneDCouplings,
-	List<couplingInterface2d>& twoDCouplings,
-	List<couplingInterface3d>& threeDCouplings
+	couplingInterface1d &oneDInterfaces,
+	couplingInterface2d &twoDInterfaces,
+	couplingInterface3d &threeDInterfaces
 )
 {
     word polyCouplingControllerName
@@ -120,7 +120,7 @@ autoPtr<polyCouplingController> polyCouplingController::New
 
     return autoPtr<polyCouplingController>
 	(
-		cstrIter()(t, molCloud, dict, oneDCouplings, twoDCouplings, threeDCouplings)
+		cstrIter()(t, molCloud, dict, oneDInterfaces, twoDInterfaces, threeDInterfaces)
 	);
 }
 

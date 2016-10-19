@@ -95,9 +95,9 @@ class polyControllers
         labelList controllersDuringForceComp_;
         
         //- MUI coupling interfaces
-        List<couplingInterface1d> oneDCouplings_;
-		List<couplingInterface2d> twoDCouplings_;
-		List<couplingInterface3d> threeDCouplings_;
+        couplingInterface1d oneDInterfaces_;
+		couplingInterface2d twoDInterfaces_;
+		couplingInterface3d threeDInterfaces_;
 
 public:
 
@@ -124,9 +124,9 @@ public:
 			Time& t,
 			const polyMesh& mesh,
 			polyMoleculeCloud& molCloud,
-			List<couplingInterface1d>& oneDCouplings,
-			List<couplingInterface2d>& twoDCouplings,
-			List<couplingInterface3d>& threeDCouplings
+			couplingInterface1d& oneDInterfaces,
+			couplingInterface2d& twoDInterfaces,
+			couplingInterface3d& threeDInterfaces
 		);
 
 

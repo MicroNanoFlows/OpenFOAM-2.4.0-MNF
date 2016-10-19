@@ -71,31 +71,33 @@ private:
         bool output_;
 
         //- MUI coupling interfaces (1D & 2D unused in this controller derivation)
-        List<couplingInterface1d> oneDCouplings_;
-        List<couplingInterface2d> twoDCouplings_;
-		List<couplingInterface3d> threeDCouplings_;
+        couplingInterface1d oneDInterfaces_;
+        couplingInterface2d twoDInterfaces_;
+		couplingInterface3d threeDInterfaces_;
 
 #ifdef USE_MUI
-		//- Pointer to correct MUI interface
-		mui::uniface3d *currInterface;
 		//- Calculated cell centres
 		List<mui::point3d> cellCentres_;
 #endif
-
-		word cplInterfaceName_; //Name for interface (set in system/couplingDict)
-		bool sending_;			//Determine whether this interface will send
-		bool receiving_;		//Determine whether this interface will receive
-
 		//- Sending properties
+#ifdef USE_MUI
+		List<mui::uniface<mui::config_3d>* > sendInterfaces_; //- 3D MUI interfaces to send through
+#endif
+		bool sending_;			//- Determine whether this interface will send
+		List<Foam::word> sendInterfaceNames_;
 		bool sendMass_;
 		bool sendDensity_;
 
 		//- Receiving properties
-		List<word> recvInterfaces_;
+#ifdef USE_MUI
+		List<mui::uniface<mui::config_3d>* > recvInterfaces_; //- 3D MUI interfaces to receive from
+#endif
+		bool receiving_;		//- Determine whether this interface will receive
+		List<Foam::word> recvInterfaceNames_;
 		bool recvMass_;
 		bool recvDensity_;
-		List<List<scalar> > recvMassValues_;
-		List<List<scalar> > recvDensityValues_;
+		Foam::List<List<Foam::scalar> > recvMassValues_;
+		Foam::List<List<Foam::scalar> > recvDensityValues_;
 
     // Private Member Functions
 
@@ -115,9 +117,9 @@ public:
             Time& t,
             polyMoleculeCloud& molCloud,
             const dictionary& dict,
-			List<couplingInterface1d>& oneDCouplings,
-			List<couplingInterface2d>& twoDCouplings,
-			List<couplingInterface3d>& threeDCouplings
+			couplingInterface1d &oneDInterfaces,
+			couplingInterface2d &twoDInterfaces,
+			couplingInterface3d &threeDInterfaces
         );
 
     // Destructor

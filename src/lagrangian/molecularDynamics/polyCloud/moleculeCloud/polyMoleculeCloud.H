@@ -95,9 +95,9 @@ private:
         polyBoundaries boundaries_;
         
         //- MUI coupling interfaces
-		List<couplingInterface1d> oneDCouplings_;
-		List<couplingInterface2d> twoDCouplings_;
-		List<couplingInterface3d> threeDCouplings_;
+		couplingInterface1d oneDInterfaces_;
+		couplingInterface2d twoDInterfaces_;
+		couplingInterface3d threeDInterfaces_;
 
         //- controllers
         polyControllers controllers_;
@@ -155,9 +155,9 @@ public:
 			const reducedUnits& rU,
 			const constantMoleculeProperties& cP,
 			cachedRandomMD& rndGen,
-			List<couplingInterface1d>& oneDCouplings,
-			List<couplingInterface2d>& twoDCouplings,
-			List<couplingInterface3d>& threeDCouplings
+			couplingInterface1d& oneDInterfaces,
+			couplingInterface2d& twoDInterfaces,
+			couplingInterface3d& threeDInterfaces
 		);
 
         //- General constructor
@@ -190,9 +190,9 @@ public:
 			const reducedUnits& rU,
 			const constantMoleculeProperties& cP,
 			cachedRandomMD& rndGen,
-			List<couplingInterface1d>& oneDCouplings,
-			List<couplingInterface2d>& twoDCouplings,
-			List<couplingInterface3d>& threeDCouplings
+			couplingInterface1d& oneDInterfaces,
+			couplingInterface2d& twoDInterfaces,
+			couplingInterface3d& threeDInterfaces
 		);
 
         static autoPtr<polyMoleculeCloud> New

@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.6                                   |
+|  \\    /   O peration     | Version:  2.4.0-MNF                             |
 |   \\  /    A nd           | Web:      http://www.OpenFOAM.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -58,24 +58,24 @@ polyCouplingControllers
         stateControllerModel        polyCoupling;
 
         polyCouplingProperties
-        {           
-	    interfaceName	    mdFOAM_ThreeD_case1_1;
+        { 	   
             molIds                  (water);      
         }
 
 	polyCouplingSending
 	{
+	    sendingInterfaces       (ifs_1and2 ifs_1and3);	    
 	    mass		    yes;
 	    density		    yes;
 	}
 
 	polyCouplingReceiving
 	{
-	    receivingInterfaces     (mdFOAM_ThreeD_case2_1);
+	    receivingInterfaces     (ifs_1and2 ifs_1and3);
 	    mass		    yes;
 	    density		    yes;
 	}
     }
-);    
+);   
 
 // ************************************************************************* //

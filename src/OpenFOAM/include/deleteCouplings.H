@@ -1,17 +1,23 @@
 //
 // deleteCouplings.H
 // ~~~~~~~~~~~~
-	for(size_t i=0; i<oneDCouplings.size(); ++i)
+	if(oneDInterfaces.interfaces != NULL)
 	{
-		delete oneDCouplings[i].interface;
+		delete oneDInterfaces.interfaces;
 	}
 
-	for(size_t i=0; i<twoDCouplings.size(); ++i)
+	if(twoDInterfaces.interfaces != NULL)
 	{
-		delete twoDCouplings[i].interface;
+		delete twoDInterfaces.interfaces;
 	}
 
-	for(size_t i=0; i<threeDCouplings.size(); ++i)
+	if(threeDInterfaces.interfaces != NULL)
 	{
-		delete threeDCouplings[i].interface;
+		delete threeDInterfaces.interfaces;
+	}
+
+	//- If this is not a parallel run then need to finalise MPI (otherwise this is handled by MUI due to the use of split_by_app() function)
+	if (!args.parRunControl().parRun())
+	{
+		MPI_Finalize();
 	}

@@ -1,6 +1,6 @@
 //
 // createCouplingData.H
 // ~~~~~~~~~~~~
-	List<couplingInterface1d> oneDCouplings;
-	List<couplingInterface2d> twoDCouplings;
-	List<couplingInterface3d> threeDCouplings;
+	couplingInterface1d oneDInterfaces;
+	couplingInterface2d twoDInterfaces;
+	couplingInterface3d threeDInterfaces;

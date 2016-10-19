@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.6                                   |
+|  \\    /   O peration     | Version:  2.4.0-MNF                             |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -22,23 +22,23 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-couplingName mdFOAM_1; //Unique application identifier
+couplingName mdFOAM_1; //MUI domain name
 
 couplingConfigurations
 ( 
-    OneD //1D coupling interfaces using MUI
+    OneD //1D MUI coupling interface names
     {
 	
     }
 
-    TwoD //2D coupling interfaces using MUI
+    TwoD //2D MUI coupling interface names
     {
         
     }
- 
-    ThreeD //3D coupling interfaces using MUI
+
+    ThreeD //3D MUI coupling interface names
     {
-        names (mdFOAM_ThreeD_case1_1);
+        interfaceNames (ifs_1and2 ifs_1and3);
     }
 );
 

@@ -71,9 +71,9 @@ polyControllers::polyControllers
 	cCFixedPathNames_(),
 	couplingControllers_(),
     controllersDuringForceComp_(),
-	oneDCouplings_(),
-	twoDCouplings_(),
-	threeDCouplings_()
+	oneDInterfaces_(),
+	twoDInterfaces_(),
+	threeDInterfaces_()
 {}
 
 //- Constructor for mdFOAM
@@ -114,11 +114,11 @@ polyControllers::polyControllers
 	cCNames_(),
 	cCIds_(),
 	cCFixedPathNames_(),
-	couplingControllers_(),
+	couplingControllers_(0),
     controllersDuringForceComp_(),
-	oneDCouplings_(),
-	twoDCouplings_(),
-	threeDCouplings_()
+	oneDInterfaces_(),
+	twoDInterfaces_(),
+	threeDInterfaces_()
 {
 
     Info << nl << "Creating polyControllers" << nl << endl;
@@ -291,9 +291,9 @@ polyControllers::polyControllers
     Time& t,
     const polyMesh& mesh,
     polyMoleculeCloud& molCloud,
-	List<couplingInterface1d>& oneDCouplings,
-	List<couplingInterface2d>& twoDCouplings,
-	List<couplingInterface3d>& threeDCouplings
+	couplingInterface1d& oneDInterfaces,
+	couplingInterface2d& twoDInterfaces,
+	couplingInterface3d& threeDInterfaces
 )
 :
     time_(t),
@@ -328,9 +328,9 @@ polyControllers::polyControllers
 	cCFixedPathNames_(couplingControllersList_.size()),
 	couplingControllers_(couplingControllersList_.size()),
     controllersDuringForceComp_(),
-	oneDCouplings_(oneDCouplings),
-	twoDCouplings_(twoDCouplings),
-	threeDCouplings_(threeDCouplings)
+	oneDInterfaces_(oneDInterfaces),
+	twoDInterfaces_(twoDInterfaces),
+	threeDInterfaces_(threeDInterfaces)
 {
     Info << nl << "Creating polyControllers" << nl << endl;
 
@@ -397,7 +397,7 @@ polyControllers::polyControllers
 
 			couplingControllers_[cC] = autoPtr<polyCouplingController>
 			(
-				polyCouplingController::New(time_, molCloud, polyControllersIDict, oneDCouplings_, twoDCouplings_, threeDCouplings_)
+				polyCouplingController::New(time_, molCloud, polyControllersIDict, oneDInterfaces_, twoDInterfaces_, threeDInterfaces_)
 			);
 
 			cCNames_[cC] = couplingControllers_[cC]->type();
@@ -690,7 +690,7 @@ void polyControllers::outputStateResults()
     
             if(nStateControllers_ > 0)
             {
-                if(Pstream::master())
+            	if(!Pstream::parRun() || (Pstream::parRun() && Pstream::master()))
                 {
                     // directory: case/<timeDir>/uniform
                     fileName uniformTimePath(runTime.path()/runTime.timeName()/"uniform");
@@ -755,12 +755,12 @@ void polyControllers::outputStateResults()
                         }
                     }
                 }
-            }
 
-            // -- write out data (do not comment this out)
-            forAll(stateControllers_, sC)
-            {
-                stateControllers_[sC]->output(sCFixedPathNames_[sC], timePathNames[sC]);
+				// -- write out data (do not comment this out)
+				forAll(stateControllers_, sC)
+				{
+					stateControllers_[sC]->output(sCFixedPathNames_[sC], timePathNames[sC]);
+				}
             }
         }
 
@@ -769,9 +769,8 @@ void polyControllers::outputStateResults()
     
             if(nFluxControllers_ > 0)
             {
-                if(Pstream::master())
+            	if(!Pstream::parRun() || (Pstream::parRun() && Pstream::master()))
                 {
-    
                     // directory: case/<timeDir>/uniform
                     fileName uniformTimePath(runTime.path()/runTime.timeName()/"uniform");
                 
@@ -833,12 +832,12 @@ void polyControllers::outputStateResults()
                         }
                     }
                 }
-            }
     
-            // -- write out data (do not comment this out)
-            forAll(fluxControllers_, fC)
-            {
-                fluxControllers_[fC]->output(fCFixedPathNames_[fC], timePathNames[fC]);
+				// -- write out data (do not comment this out)
+				forAll(fluxControllers_, fC)
+				{
+					fluxControllers_[fC]->output(fCFixedPathNames_[fC], timePathNames[fC]);
+				}
             }
         }
 
@@ -848,7 +847,7 @@ void polyControllers::outputStateResults()
 
 			if(nCouplingControllers_ > 0)
 			{
-				if(Pstream::master())
+				if(!Pstream::parRun() || (Pstream::parRun() && Pstream::master()))
 				{
 					// directory: case/<timeDir>/uniform
 					fileName uniformTimePath(runTime.path()/runTime.timeName()/"uniform");
@@ -913,12 +912,12 @@ void polyControllers::outputStateResults()
 						}
 					}
 				}
-			}
 
-			// -- write out data (do not comment this out)
-			forAll(couplingControllers_, cC)
-			{
-				couplingControllers_[cC]->output(cCFixedPathNames_[cC], timePathNames[cC]);
+				// -- write out data (do not comment this out)
+				forAll(couplingControllers_, cC)
+				{
+					couplingControllers_[cC]->output(cCFixedPathNames_[cC], timePathNames[cC]);
+				}
 			}
 		}
 

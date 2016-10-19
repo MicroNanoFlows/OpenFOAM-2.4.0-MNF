@@ -3,6 +3,16 @@
 // ~~~~~~~~~~~~
 
 	{
+		//- If this is not a parallel run then need to first call MPI_Init for MUI (otherwise this is called during PStream creation)
+		if (!args.parRunControl().parRun())
+		{
+			MPI_Init(&argc, &argv);
+		}
+
+		oneDInterfaces.interfaces = NULL;
+		twoDInterfaces.interfaces = NULL;
+		threeDInterfaces.interfaces = NULL;
+
 		string inputFile("couplingDict");
 
 		IOdictionary couplingDict
@@ -50,53 +60,56 @@
 
 					if(couplingName.compare("OneD") == 0)
 					{
-						if (coupling.dict().found("names"))
+						if (coupling.dict().found("interfaceNames"))
 						{
 							wordList couplingNames;
-							coupling.dict().lookup("names") >> couplingNames;
+							coupling.dict().lookup("interfaceNames") >> couplingNames;
+
+							Foam::List<word> interfaceNames;
 
 							for(int j=0; j<couplingNames.size(); ++j)
 							{
-								couplingInterface1d newInterface;
-								newInterface.couplingName = mainCouplingName;
-								newInterface.interfaceName = couplingNames[j];
-								newInterface.interface = new coupling1d(couplingNames[j]);
-								oneDCouplings.append(newInterface);
+								interfaceNames.append(couplingNames[j]);
 							}
+
+							oneDInterfaces.domainName = mainCouplingName;
+							oneDInterfaces.interfaces = new coupling1d(mainCouplingName, interfaceNames);
 						}
 					}
 					else if(couplingName.compare("TwoD") == 0)
 					{
-						if (coupling.dict().found("names"))
+						if (coupling.dict().found("interfaceNames"))
 						{
 							wordList couplingNames;
-							coupling.dict().lookup("names") >> couplingNames;
+							coupling.dict().lookup("interfaceNames") >> couplingNames;
+
+							Foam::List<word> interfaceNames;
 
 							for(int j=0; j<couplingNames.size(); ++j)
 							{
-								couplingInterface2d newInterface;
-								newInterface.couplingName = mainCouplingName;
-								newInterface.interfaceName = couplingNames[j];
-								newInterface.interface = new coupling2d(couplingNames[j]);
-								twoDCouplings.append(newInterface);
+								interfaceNames.append(couplingNames[j]);
 							}
+
+							twoDInterfaces.domainName = mainCouplingName;
+							twoDInterfaces.interfaces = new coupling2d(mainCouplingName, interfaceNames);
 						}
 					}
 					else if(couplingName.compare("ThreeD") == 0)
 					{
-						if (coupling.dict().found("names"))
+						if (coupling.dict().found("interfaceNames"))
 						{
 							wordList couplingNames;
-							coupling.dict().lookup("names") >> couplingNames;
+							coupling.dict().lookup("interfaceNames") >> couplingNames;
+
+							Foam::List<word> interfaceNames;
 
 							for(int j=0; j<couplingNames.size(); ++j)
 							{
-								couplingInterface3d newInterface;
-								newInterface.couplingName = mainCouplingName;
-								newInterface.interfaceName = couplingNames[j];
-								newInterface.interface = new coupling3d(couplingNames[j]);
-								threeDCouplings.append(newInterface);
+								interfaceNames.append(couplingNames[j]);
 							}
+
+							threeDInterfaces.domainName = mainCouplingName;
+							threeDInterfaces.interfaces = new coupling3d(mainCouplingName, interfaceNames);
 						}
 					}
 				}

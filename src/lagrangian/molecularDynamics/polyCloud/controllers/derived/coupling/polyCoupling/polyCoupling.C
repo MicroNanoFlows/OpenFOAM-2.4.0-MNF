@@ -46,62 +46,126 @@ polyCoupling::polyCoupling
     Time& t,
     polyMoleculeCloud& molCloud,
     const dictionary& dict,
-	List<couplingInterface1d>& oneDCouplings,
-	List<couplingInterface2d>& twoDCouplings,
-	List<couplingInterface3d>& threeDCouplings
+	couplingInterface1d &oneDInterfaces,
+	couplingInterface2d &twoDInterfaces,
+	couplingInterface3d &threeDInterfaces
 )
 :
-	polyCouplingController(t, molCloud, dict, oneDCouplings, twoDCouplings, threeDCouplings),
+	polyCouplingController(t, molCloud, dict, oneDInterfaces, twoDInterfaces, threeDInterfaces),
     propsDict_(dict.subDict(typeName + "Properties")),
 	propsDictSend_(dict.subDict(typeName + "Sending")),
 	propsDictRecv_(dict.subDict(typeName + "Receiving")),
     molIds_(),
     output_(false),
-	oneDCouplings_(),
-	twoDCouplings_(),
-	threeDCouplings_(threeDCouplings),
-	cplInterfaceName_(),
+	oneDInterfaces_(),
+	twoDInterfaces_(),
+	threeDInterfaces_(threeDInterfaces),
 #ifdef USE_MUI
-	currInterface(NULL),
 	cellCentres_(),
 #endif
 	sending_(false),
 	receiving_(false),
+#ifdef USE_MUI
+	sendInterfaces_(),
+#endif
 	sendMass_(false),
 	sendDensity_(false),
+#ifdef USE_MUI
 	recvInterfaces_(),
+#endif
 	recvMass_(false),
 	recvDensity_(false),
 	recvMassValues_(),
 	recvDensityValues_()
 {
-	propsDict_.readIfPresent("interfaceName", cplInterfaceName_);
-
-	//Find MUI interface
 #ifdef USE_MUI
-	for(int i=0; i<threeDCouplings_.size(); ++i)
+	//- Determine sending interfaces if defined
+	sendInterfaces_.clear();
+	sendInterfaces_.setSize(0);
+
+	if(propsDictSend_.found("sendingInterfaces"))
 	{
-		if(threeDCouplings_[i].interfaceName.compare(cplInterfaceName_) == 0)
+		const List<word> interfaces(propsDictSend_.lookup("sendingInterfaces"));
+		sendInterfaces_.setSize(interfaces.size(), NULL);
+		sendInterfaceNames_.setSize(interfaces.size());
+
+		for(size_t i=0; i<interfaces.size(); ++i)
 		{
-			currInterface = threeDCouplings_[i].interface->getInterface();
-			break;
+			//- Find MUI interfaces
+			for(size_t j=0; j<threeDInterfaces.interfaces->size(); ++j)
+			{
+				//- If the MUI interface is found then create a copy of its pointer address and store in sendInterfaces_
+				if(threeDInterfaces.interfaces->getInterfaceName(j).compare(interfaces[i]) == 0)
+				{
+					sendInterfaces_[i] = threeDInterfaces.interfaces->getInterface(j);
+					sendInterfaceNames_[i] = interfaces[i]; //- Store the receiving interface name
+					break;
+				}
+			}
+		}
+
+		//- Check all interfaces were found
+		for(size_t i=0; i<sendInterfaces_.size(); ++i)
+		{
+			if(sendInterfaces_[i] == NULL)
+			{
+				FatalErrorIn("polyCoupling::polyCoupling()")
+							<< "Could not find 3D MUI coupling interface (" << interfaces[i]
+							<< ") to send for domain " << threeDInterfaces.domainName << exit(FatalError);
+			}
+			else
+			{
+				Info << "polyCoupling::polyCoupling(): Found 3D MUI coupling interface ("
+					 << interfaces[i] << ") to send for domain " << threeDInterfaces.domainName << endl;
+			}
 		}
 	}
 
-	if(currInterface == NULL)
+	//- Determine receiving interfaces if defined
+	recvInterfaces_.clear();
+	recvInterfaces_.setSize(0);
+
+	if(propsDictRecv_.found("receivingInterfaces"))
 	{
-		FatalErrorIn("polyCoupling::polyCoupling()")
-					<< "Could not find 3D MUI coupling interface " << cplInterfaceName_
-					<< exit(FatalError);
-	}
-	else
-	{
-		Info << "Found 3D MUI coupling interface " << cplInterfaceName_ << endl;
+		const List<word> interfaces(propsDictRecv_.lookup("receivingInterfaces"));
+		recvInterfaces_.setSize(interfaces.size(), NULL);
+		recvInterfaceNames_.setSize(interfaces.size());
+
+		for(size_t i=0; i<interfaces.size(); ++i)
+		{
+			recvInterfaces_[i] = NULL;
+			//- Find MUI interfaces
+			for(size_t j=0; j<threeDInterfaces.interfaces->size(); ++j)
+			{
+				//- If the MUI interface is found then create a copy of its pointer address and store in sendInterfaces_
+				if(threeDInterfaces.interfaces->getInterfaceName(j).compare(interfaces[i]) == 0)
+				{
+					recvInterfaces_[i] = threeDInterfaces.interfaces->getInterface(j);
+					recvInterfaceNames_[i] = interfaces[i]; //- Store the receiving interface name
+					break;
+				}
+			}
+		}
+
+		//- Check all interfaces were found
+		for(size_t i=0; i<recvInterfaces_.size(); ++i)
+		{
+			if(recvInterfaces_[i] == NULL)
+			{
+				FatalErrorIn("polyCoupling::polyCoupling()")
+							<< "Could not find 3D MUI coupling interface (" << interfaces[i]
+							<< ") to receive for domain " << threeDInterfaces.domainName << exit(FatalError);
+			}
+			else
+			{
+				Info << "polyCoupling::polyCoupling(): Found 3D MUI coupling interface ("
+					 << interfaces[i] << ") to receive for domain " << threeDInterfaces.domainName << endl;
+			}
+		}
 	}
 #else
 	FatalErrorIn("polyCoupling::polyCoupling()")
-				<< "MUI library not enabled at compilation"
-				<< exit(FatalError);
+				<< "MUI library not enabled at compilation"	<< exit(FatalError);
 #endif
 
 	//Determine sending properties
@@ -115,23 +179,10 @@ polyCoupling::polyCoupling
 		sendDensity_ = Switch(propsDictSend_.lookup("density"));
 	}
 
-	if(sendMass_ || sendDensity_)
+	if((sendInterfaces_.size() != 0) || sendMass_ || sendDensity_)
 	{
 		sending_ = true;
 	}
-
-	//Determine receiving properties
-	recvInterfaces_.clear();
-	const List<word> interfaces(propsDictRecv_.lookup("receivingInterfaces"));
-	recvInterfaces_.setSize(interfaces.size());
-
-	for(int i=0; i<interfaces.size(); ++i)
-	{
-		recvInterfaces_[i] = interfaces[i];
-	}
-
-	recvMassValues_.setSize(recvInterfaces_.size());
-	recvDensityValues_.setSize(recvInterfaces_.size());
 
 	if(propsDictRecv_.found("mass"))
 	{
@@ -143,9 +194,12 @@ polyCoupling::polyCoupling
 		recvDensity_ = Switch(propsDictRecv_.lookup("density"));
 	}
 
-	if(recvMass_ || recvDensity_)
+	if((recvInterfaces_.size() != 0) || recvMass_ || recvDensity_)
 	{
 		receiving_ = true;
+
+		recvMassValues_.setSize(recvInterfaces_.size());
+		recvDensityValues_.setSize(recvInterfaces_.size());
 	}
 
 	writeInTimeDir_ = true;
@@ -178,18 +232,18 @@ polyCoupling::~polyCoupling()
 void polyCoupling::initialConfiguration()
 {
 #ifdef USE_MUI
-	//Only send initial list of points if this interface is sending
+	//- Only send initial data if at least one sending interface is defined
 	if(sending_)
 	{
 		cellCentres_.setSize(controlZone().size());
 		label cellCount = 0;
 
-		// Label list of the face labels
+		//- Label list of the face labels
 		const faceList &ff = mesh_.faces();
-		// The coordinate sets for the individual points
+		//- The coordinate sets for the individual points
 		const pointField &pp = mesh_.points();
 
-		//Start by calculating list of points at cell centres in the control zone
+		//- Start by calculating list of points at cell centres in the control zone
 		forAll(controlZone(), c)
 		{
 			const label& cellI = controlZone()[c];
@@ -199,7 +253,7 @@ void polyCoupling::initialConfiguration()
 
 			point cellCentre = mesh_.cells()[cellI].centre(pp, ff);
 
-			//Create MUI point from OpenFOAM class
+			//- Create MUI point from OpenFOAM point object
 			mui::point3d centre(cellCentre.x(), cellCentre.y(), cellCentre.z());
 
 			cellCentres_[cellCount] = centre;
@@ -213,16 +267,13 @@ void polyCoupling::initialConfiguration()
 			recvDensityValues_[i].setSize(cellCentres_.size());
 		}
 
-		if(sendMass_ || sendDensity_) //If calculating at least one average value per cell then commit initial t=0 values
+		if(sendMass_ || sendDensity_) //- If calculating at least one average value per cell then commit initial t=0 values
 		{
 			scalar mass;
 			scalar density;
 			label molCount;
 			polyMolecule* molI = NULL;
 			label cellCount = 0;
-
-			word massLbl = "m_"+cplInterfaceName_;
-			word densityLbl = "p_"+cplInterfaceName_;
 
 			forAll(controlZone(), c)
 			{
@@ -238,29 +289,50 @@ void polyCoupling::initialConfiguration()
 					molCount++;
 				}
 
-				//Calculate average mass for the cell
-				mass /= molCount;
-
-				//Push average mass for the cell if enabled
-				if(sendMass_)
+				//- Calculate average mass for the cell
+				if(molCount > 0)
 				{
-					currInterface->push(massLbl, cellCentres_[cellCount], mass);
+					mass /= molCount;
 				}
 
-				//Push cell density if enabled
-				if(sendDensity_)
+				//- Iterate through sending interfaces and push mass and/or density
+				for(size_t i=0; i<sendInterfaces_.size(); ++i)
 				{
-					density = mass / mesh_.V()[cellI];
-					currInterface->push(densityLbl, cellCentres_[cellCount], density);
+					//- Push average mass for the cell if enabled to each interface
+					if(sendMass_)
+					{
+						sendInterfaces_[i]->push("m", cellCentres_[cellCount], mass);
+					}
+
+					//Push cell density if enabled
+					if(sendDensity_)
+					{
+						scalar volume = mesh_.V()[cellI];
+						if(volume > 0.0)
+						{
+							density = mass / mesh_.V()[cellI];
+						}
+						else
+						{
+							density = 0.0;
+						}
+
+						sendInterfaces_[i]->push("p", cellCentres_[cellCount], density);
+					}
 				}
 
 				cellCount++;
 			}
 
-			//Commit (transmit) values to the MUI interface
-			currInterface->commit(time_.value());
-			Info << "MUI values pushed for time " << time_.value() << endl;
-			currInterface->barrier(time_.value());
+			//Commit (transmit) values to the MUI interfaces
+			for(size_t i=0; i<sendInterfaces_.size(); ++i)
+			{
+				sendInterfaces_[i]->commit(time_.value());
+				sendInterfaces_[i]->barrier(time_.value());
+			}
+
+			Info << threeDInterfaces_.domainName << ": MUI values pushed for time " << time_.value()
+				 << " to " << sendInterfaces_.size() << " interfaces" << endl;
 		}
 	}
 #endif
@@ -269,19 +341,16 @@ void polyCoupling::initialConfiguration()
 void polyCoupling::sendCoupling()
 {
 #ifdef USE_MUI
-	//Only send data if this interface is sending
+	//- Only send data if at least one sending interface is defined
 	if(sending_)
 	{
-		if(sendMass_ || sendDensity_) //Calculating at least one average value per cell
+		if(sendMass_ || sendDensity_) //- If calculating at least one average value per cell then commit initial t=0 values
 		{
 			scalar mass;
 			scalar density;
 			label molCount;
 			polyMolecule* molI = NULL;
 			label cellCount = 0;
-
-			word massLbl = "m_"+cplInterfaceName_;
-			word densityLbl = "p_"+cplInterfaceName_;
 
 			forAll(controlZone(), c)
 			{
@@ -297,28 +366,50 @@ void polyCoupling::sendCoupling()
 					molCount++;
 				}
 
-				//Calculate average mass for the cell
-				mass /= molCount;
-
-				//Push average mass for the cell if enabled
-				if(sendMass_)
+				//- Calculate average mass for the cell
+				if(molCount > 0)
 				{
-					currInterface->push(massLbl, cellCentres_[cellCount], mass);
+					mass /= molCount;
 				}
 
-				//Push cell density if enabled
-				if(sendDensity_)
+				//- Iterate through sending interfaces and push mass and/or density
+				for(size_t i=0; i<sendInterfaces_.size(); ++i)
 				{
-					density = mass / mesh_.V()[cellI];
-					currInterface->push(densityLbl, cellCentres_[cellCount], density);
+					//- Push average mass for the cell if enabled to each interface
+					if(sendMass_)
+					{
+						sendInterfaces_[i]->push("m", cellCentres_[cellCount], mass);
+					}
+
+					//Push cell density if enabled
+					if(sendDensity_)
+					{
+						scalar volume = mesh_.V()[cellI];
+						if(volume > 0.0)
+						{
+							density = mass / mesh_.V()[cellI];
+						}
+						else
+						{
+							density = 0.0;
+						}
+
+						sendInterfaces_[i]->push("p", cellCentres_[cellCount], density);
+					}
 				}
 
 				cellCount++;
 			}
 
-			//Commit (transmit) values to the MUI interface
-			currInterface->commit(time_.value());
-			Info << "MUI values pushed for time " << time_.value() << endl;
+			//Commit (transmit) values to the MUI interfaces
+			for(size_t i=0; i<sendInterfaces_.size(); ++i)
+			{
+				sendInterfaces_[i]->commit(time_.value());
+				sendInterfaces_[i]->barrier(time_.value());
+			}
+
+			Info << threeDInterfaces_.domainName << ": MUI values pushed for time " << time_.value()
+				 << " to " << sendInterfaces_.size() << " interfaces" << endl;
 		}
 	}
 #endif
@@ -327,37 +418,41 @@ void polyCoupling::sendCoupling()
 void polyCoupling::receiveCoupling()
 {
 #ifdef USE_MUI
-	//Only receive data if this interface is receiving
+	//- Only receive data if at least one receiving interface is defined
 	if(receiving_)
 	{
-		Info << "Receiving MUI values for time " << time_.value() << endl;
+		Info << threeDInterfaces_.domainName << ": Receiving MUI values for time " << time_.value()
+			 << " through " << recvInterfaces_.size() << " interfaces" << endl;
 
-		if(recvMass_ || recvDensity_) //Calculating at least one average value per cell
+		if(recvMass_ || recvDensity_) //- Calculating at least one average value per cell
 		{
-			for(int i=0; i<recvInterfaces_.size(); ++i) //Iterate through the interfaces
-			{
-				word massLbl = "m_"+recvInterfaces_[i];
-				word densityLbl = "p_"+recvInterfaces_[i];
+			mui::sampler_exact3d<scalar> spatial_sampler;
+			mui::chrono_sampler_exact3d chrono_sampler;
 
-				for(int j=0; j<cellCentres_.size(); ++j)
+			for(size_t i=0; i<recvInterfaces_.size(); ++i) //- Iterate through the interfaces
+			{
+				for(int j=0; j<cellCentres_.size(); ++j) //- Iterate through the cell centres (we receive exactly as many as were sent in this example)
 				{
-					if(recvMass_)
+					if(recvMass_) //- If we are receiving mass values
 					{
-						recvMassValues_[i][j] = currInterface->fetch(massLbl, cellCentres_[j], time_.value(),
-														  mui::sampler_exact3d<scalar>(),
-														  mui::chrono_sampler_exact3d());
+						recvMassValues_[i][j] = recvInterfaces_[i]->fetch("m", cellCentres_[j], time_.value(),
+																	 spatial_sampler, chrono_sampler);
 
 					}
 
-					if(recvMass_)
+					if(recvMass_) //- If we are receiving density values
 					{
-						recvDensityValues_[i][j] = currInterface->fetch(densityLbl, cellCentres_[j], time_.value(),
-														  mui::sampler_exact3d<scalar>(),
-														  mui::chrono_sampler_exact3d());
+						recvDensityValues_[i][j] = recvInterfaces_[i]->fetch("p", cellCentres_[j], time_.value(),
+																			 spatial_sampler, chrono_sampler);
 					}
 				}
 			}
-			currInterface->commit(time_.value()); // Signal other interfaces they can move on if they have a block
+		}
+
+		//- Signal other interfaces they can move on if they have a block by committing the receive time to each interface, not needed in this example, provided for clarity
+		for(size_t i=0; i<sendInterfaces_.size(); ++i)
+		{
+			sendInterfaces_[i]->commit(time_.value());
 		}
 	}
 #endif
@@ -370,16 +465,16 @@ void polyCoupling::output
 )
 {
 #ifdef USE_MUI
-	if(Pstream::master())
+	if(!Pstream::parRun() || (Pstream::parRun() && Pstream::master()))
 	{
 		for(int i=0; i<recvInterfaces_.size(); ++i)
 		{
-			fileName outputFile(timePath/recvInterfaces_[i]);
+			fileName outputFile(timePath/recvInterfaceNames_[i]);
 			OFstream of(outputFile);
 
-			if(recvMass_) //Output mass values
+			if(recvMass_) //- Output mass values
 			{
-				of << "Averaged mass values from coupled interface " << recvInterfaces_[i] << endl;
+				of << "Averaged mass values from coupled interface " << recvInterfaceNames_[i] << endl;
 				of << "{" << endl;
 
 				for(int j=0; j<recvMassValues_[i].size(); ++j)
@@ -391,9 +486,9 @@ void polyCoupling::output
 				of << "};" << endl;
 			}
 
-			if(recvDensity_) //Output density values
+			if(recvDensity_) //- Output density values
 			{
-				of << "Averaged density values from coupled interface " << recvInterfaces_[i] << endl;
+				of << "Averaged density values from coupled interface " << recvInterfaceNames_[i] << endl;
 				of << "{" << endl;
 
 				for(int j=0; j<recvDensityValues_[i].size(); ++j)

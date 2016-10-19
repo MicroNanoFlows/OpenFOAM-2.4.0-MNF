@@ -14,3 +14,9 @@ cd equilibriumWaterCube_2
 ./createCaseSerial
 cd ..
 
+# clean and create case 3
+cd equilibriumWaterCube_3
+./cleanCase
+./createCaseSerial
+cd ..
+

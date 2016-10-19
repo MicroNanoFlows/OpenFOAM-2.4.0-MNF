@@ -407,9 +407,9 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     iL_(mesh, rU, cyclics_, p_.rCutMax(), "poly"),
     ipl_(mesh.nCells()),
 	clock_(t, "evolve", true),
-	oneDCouplings_(),
-	twoDCouplings_(),
-	threeDCouplings_()
+	oneDInterfaces_(),
+	twoDInterfaces_(),
+	threeDInterfaces_()
 {
     polyMolecule::readFields(*this);
 
@@ -450,9 +450,9 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     const reducedUnits& rU,
     const constantMoleculeProperties& cP,
     cachedRandomMD& rndGen,
-	List<couplingInterface1d>& oneDCouplings,
-	List<couplingInterface2d>& twoDCouplings,
-	List<couplingInterface3d>& threeDCouplings
+	couplingInterface1d& oneDInterfaces,
+	couplingInterface2d& twoDInterfaces,
+	couplingInterface3d& threeDInterfaces
 )
 :
     Cloud<polyMolecule>(mesh, "polyMoleculeCloud", false),
@@ -465,10 +465,10 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     cellOccupancy_(mesh_.nCells()),
     fields_(t, mesh_, *this),
     boundaries_(t, mesh, *this),
-	oneDCouplings_(oneDCouplings),
-	twoDCouplings_(twoDCouplings),
-	threeDCouplings_(threeDCouplings),
-    controllers_(t, mesh, *this, oneDCouplings_, twoDCouplings_, threeDCouplings_),
+	oneDInterfaces_(oneDInterfaces),
+	twoDInterfaces_(twoDInterfaces),
+	threeDInterfaces_(threeDInterfaces),
+    controllers_(t, mesh, *this, oneDInterfaces_, twoDInterfaces_, threeDInterfaces_),
     trackingInfo_(mesh, *this),
     moleculeTracking_(),
     cyclics_(t, mesh_, -1),
@@ -536,9 +536,9 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     iL_(mesh, rU, cyclics_, p_.rCutMax(), "poly"),
     ipl_(mesh.nCells()),
 	clock_(t, "evolve", true),
-	oneDCouplings_(),
-	twoDCouplings_(),
-	threeDCouplings_()
+	oneDInterfaces_(),
+	twoDInterfaces_(),
+	threeDInterfaces_()
 {
     polyMolecule::readFields(*this);
 
@@ -642,14 +642,14 @@ Foam::autoPtr<Foam::polyMoleculeCloud> Foam::polyMoleculeCloud::New
     const reducedUnits& rU,
     const constantMoleculeProperties& cP, 
     cachedRandomMD& rndGen,
-	List<couplingInterface1d>& oneDCouplings,
-	List<couplingInterface2d>& twoDCouplings,
-	List<couplingInterface3d>& threeDCouplings
+	couplingInterface1d& oneDInterfaces,
+	couplingInterface2d& twoDInterfaces,
+	couplingInterface3d& threeDInterfaces
 )
 {
     return autoPtr<polyMoleculeCloud>
     (
-        new polyMoleculeCloud(t, mesh, rU, cP, rndGen, oneDCouplings, twoDCouplings, threeDCouplings)
+        new polyMoleculeCloud(t, mesh, rU, cP, rndGen, oneDInterfaces, twoDInterfaces, threeDInterfaces)
     );
 }
 

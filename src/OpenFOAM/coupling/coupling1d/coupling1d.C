@@ -30,15 +30,19 @@ License
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::coupling1d::coupling1d(string name)
+Foam::coupling1d::coupling1d(Foam::word name, Foam::List<Foam::word>& interfaceNames)
 {
+	std::vector<std::string> interfaces;
+
 	appName_ = name;
-	uri_ = "mpi://";
-	uri_.append(name);
-	uri_.append("/ifs");
+	for(size_t i=0; i<interfaceNames.size(); ++i)
+	{
+		interfaceNames_.append(interfaceNames[i]);
+		interfaces.push_back(static_cast<string>(interfaceNames[i]));
+	}
 
 	#ifdef USE_MUI
-		interface_ = new mui::uniface1d(uri_);
+		interfaces_ = mui::create_uniface<mui::config_1d>(static_cast<std::string>(name), interfaces);
 	#endif
 }
 
@@ -47,18 +51,40 @@ Foam::coupling1d::coupling1d(string name)
 Foam::coupling1d::~coupling1d()
 {
 	#ifdef USE_MUI
-		delete interface_;
+		for(size_t i=0; i<interfaces_.size(); ++i)
+		{
+			delete interfaces_[i];
+		}
 	#endif
 }
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 #ifdef USE_MUI
-mui::uniface1d* Foam::coupling1d::getInterface() const
+mui::uniface<mui::config_1d>* Foam::coupling1d::getInterface(int index) const
 {
-    return interface_;
+    return interfaces_[index];
 }
 #endif
+
+size_t Foam::coupling1d::size() const
+{
+#ifdef USE_MUI
+	return interfaces_.size();
+#else
+	return 0;
+#endif
+}
+
+const Foam::word& Foam::coupling1d::getInterfaceName(int index) const
+{
+#ifdef USE_MUI
+	return interfaceNames_[index];
+#else
+	return NULL;
+#endif
+}
+
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
 
