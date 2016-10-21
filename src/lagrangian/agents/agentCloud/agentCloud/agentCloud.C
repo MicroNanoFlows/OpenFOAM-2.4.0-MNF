@@ -346,14 +346,15 @@ Foam::agentCloud::agentCloud
 (
     Time& t,
     const polyMesh& mesh,
-    const agentProperties& cP, 
-    cachedRandomMD& rndGen
+    const agentProperties& cP
+//     cachedRandomMD& rndGen
 )
 :
     Cloud<agent>(mesh, "agentCloud", false),
     mesh_(mesh),
     cP_(cP),
-    rndGen_(rndGen),
+//     rndGen_(rndGen),
+    rndGen_(clock::getTime()),
     int_(t, mesh_, *this),
     rU_(1),
     cellOccupancy_(mesh_.nCells()),
@@ -392,7 +393,7 @@ Foam::agentCloud::agentCloud
     Time& t,
     const polyMesh& mesh,
     const agentProperties& cP,
-    cachedRandomMD& rndGen, 
+//     cachedRandomMD& rndGen, 
     const word& option,
     const bool& clearFields
 )
@@ -400,7 +401,8 @@ Foam::agentCloud::agentCloud
     Cloud<agent>(mesh, "agentCloud", false),
     mesh_(mesh),
     cP_(cP),
-    rndGen_(rndGen),    
+//     rndGen_(rndGen),    
+    rndGen_(clock::getTime()),
     int_(t, mesh_, *this), 
     rU_(1),
     cellOccupancy_(mesh_.nCells()),
@@ -494,13 +496,13 @@ Foam::autoPtr<Foam::agentCloud> Foam::agentCloud::New
 (
     Time& t,
     const polyMesh& mesh,
-    const agentProperties& cP, 
-    cachedRandomMD& rndGen
+    const agentProperties& cP
+//     cachedRandomMD& rndGen
 )
 {
     return autoPtr<agentCloud>
     (
-        new agentCloud(t, mesh, cP, rndGen)
+        new agentCloud(t, mesh, cP)
     );
 }
 
@@ -509,14 +511,14 @@ Foam::autoPtr<Foam::agentCloud> Foam::agentCloud::New
     Time& t,
     const polyMesh& mesh,
     const agentProperties& cP, 
-    cachedRandomMD& rndGen,
+//     cachedRandomMD& rndGen,
     const word& option,
     const bool& clearFields
 )
 {
     return autoPtr<agentCloud>
     (
-        new agentCloud(t, mesh, cP, rndGen, option, clearFields)
+        new agentCloud(t, mesh, cP, option, clearFields)
     );
 }
 

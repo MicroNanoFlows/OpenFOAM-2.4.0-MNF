@@ -41,7 +41,7 @@ SourceFiles
 #include "agent.H"
 #include "IOdictionary.H"
 #include "trackingNumber.H"
-#include "cachedRandomMD.H"
+// #include "cachedRandomMD.H"
 #include "agentIntegrators.H"
 #include "cyclicBoundaries.H"
 #include "agentProperties.H"
@@ -52,7 +52,7 @@ SourceFiles
 #include "forceFields.H"
 #include "borders.H"
 #include "schedules.H"
-
+#include "Random.H"
 
 
 
@@ -78,8 +78,9 @@ private:
         
         const agentProperties& cP_;
         
-        cachedRandomMD& rndGen_;
-
+//         cachedRandomMD& rndGen_;
+        Random rndGen_;
+        
         agentIntegrators int_;
         
         reducedUnits rU_;
@@ -121,8 +122,8 @@ public:
         (
             Time& t,
             const polyMesh& mesh,
-            const agentProperties& cP,
-            cachedRandomMD& rndGen
+            const agentProperties& cP
+//             cachedRandomMD& rndGen
         );
 
         //- General constructor
@@ -131,7 +132,7 @@ public:
             Time& t,
             const polyMesh& mesh,
             const agentProperties& cP,
-            cachedRandomMD& rndGen,
+//             cachedRandomMD& rndGen,
             const word& option,
             const bool& clearFields
         );
@@ -142,8 +143,8 @@ public:
         (
             Time& t,
             const polyMesh& mesh,
-            const agentProperties& cP,
-            cachedRandomMD& rndGen
+            const agentProperties& cP
+//             cachedRandomMD& rndGen
         );
 
         static autoPtr<agentCloud> New
@@ -151,7 +152,7 @@ public:
             Time& t,
             const polyMesh& mesh,
             const agentProperties& cP,
-            cachedRandomMD& rndGen,
+//             cachedRandomMD& rndGen,
             const word& option,
             const bool& clearFields
         );
@@ -192,7 +193,7 @@ public:
             inline const polyMesh& mesh() const;        
             inline const List<DynamicList<agent*> >& cellOccupancy() const;            
             inline const agentProperties& cP() const;            
-            inline cachedRandomMD& rndGen();            
+            inline Random& rndGen();            
             inline trackingNumber& agentTracking();            
 //             inline clockTimer& clock();            
             

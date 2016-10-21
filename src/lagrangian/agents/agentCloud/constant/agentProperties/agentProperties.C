@@ -58,11 +58,19 @@ agentProperties::agentProperties
         )
     );
     
+    
     List<word> idList = dict.lookup("idList");    
     
     N_ = idList.size();
     
     names_.setSize(N_);
+    
+    velocityMax_.setSize(N_);
+
+    desDir_.setSize(N_);
+    
+    desSpeed_.setSize(N_);    
+    
 //     masses_.setSize(N_);
     
     forAll(names_, i)
@@ -116,8 +124,16 @@ agentProperties::agentProperties
                 << nl << abort(FatalError);
         }        
         
-//         scalar massI = readScalar(subDict.lookup("mass"));
-//         masses_[i]=massI;
+        scalar velI = readScalar(subDict.lookup("maxVelocity"));
+        velocityMax_[i]=velI;
+        
+        vector desDirI = subDict.lookup("desiredDirection");
+        desDir_[i]=desDirI;        
+        
+        
+        scalar desSpeedI = readScalar(subDict.lookup("desiredSpeed"));
+        desSpeed_[i]=desSpeedI;       
+        
     }
     
 }
@@ -139,6 +155,23 @@ const List<word>& agentProperties::agentIds() const
 {
     return names_;
 }
+
+const List<scalar>& agentProperties::vMax() const
+{
+    return velocityMax_;
+}
+
+
+const List<vector>& agentProperties::desDir() const
+{
+    return desDir_;
+}
+
+const List<scalar>& agentProperties::desSpeed() const
+{
+    return desSpeed_;
+}
+
 
 // const List<scalar>& agentProperties::mass() const
 // {

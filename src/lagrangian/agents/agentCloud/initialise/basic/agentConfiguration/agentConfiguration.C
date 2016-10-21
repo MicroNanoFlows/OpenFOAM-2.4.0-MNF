@@ -108,9 +108,9 @@ vector agentConfiguration::equipartitionLinearVelocity
 {
     return sqrt(1.38064852e-23*temperature/mass)*vector
     (
-        cloud_.rndGen().GaussNormalMD<scalar>(),
-        cloud_.rndGen().GaussNormalMD<scalar>(),
-        cloud_.rndGen().GaussNormalMD<scalar>()
+        cloud_.rndGen().GaussNormal(),
+        cloud_.rndGen().GaussNormal(),
+        cloud_.rndGen().GaussNormal()
     );
 }
 

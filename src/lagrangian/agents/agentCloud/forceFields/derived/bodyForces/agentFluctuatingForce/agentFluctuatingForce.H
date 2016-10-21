@@ -23,25 +23,24 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    velocityVerlet
+    agentFluctuatingForce
 
 Description
-
+    Model that applies a gravitational force on all molecules.
 
 SourceFiles
-    velocityVerletI.H
-    velocityVerlet.C
-    velocityVerletIO.C
+    agentFluctuatingForceI.H
+    agentFluctuatingForce.C
+    agentFluctuatingForceIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef velocityVerlet_H
-#define velocityVerlet_H
+#ifndef agentFluctuatingForce_H
+#define agentFluctuatingForce_H
 
-#include "agentIntegrator.H"
+#include "bodyForce.H"
 #include "vector.H"
 #include "polyMesh.H"
-#include "volFields.H"
 #include "agentCloud.H"
 
 
@@ -51,62 +50,66 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class velocityVerlet Declaration
+                           Class agentFluctuatingForce Declaration
 \*---------------------------------------------------------------------------*/
 
-class velocityVerlet
+class agentFluctuatingForce
 :
-    public agentIntegrator
+	public bodyForce
 {
 
 private:
 
-    
-        // Private data
-       
-    
-    
+    // Private data
+
+        //- subDictionary containing the properties
+        dictionary propsDict_;
+
+
+        //- ids of mols
+        List<label> agentIds_;
+
+        scalar gamma_;
+        scalar deltaT_;
+        scalar T_;
+        
+        scalar kB_;
+        
+    // Private Member Functions
+
+
 public:
 
     //- Runtime type information
-    TypeName("velocityVerlet");
+    TypeName("agentFluctuatingForce");
 
     // Constructors
 
         //- Construct from components
-        velocityVerlet
+        agentFluctuatingForce
         (
-            Time& t,
             agentCloud& cloud,
+            Time& t,
             const dictionary& dict
         );
 
     // Destructor
 
-        ~velocityVerlet();
+        ~agentFluctuatingForce();
 
 
     // Member Functions
+        
+        //- create an initial configuration
+        void initialConfiguration();
+        
+        // inside loop of all agents
+        void force(agent* p);
+        
+        // new force definition; requires loop over all agents
+        void newForce();
 
-        void init();
-        
-        void evolve();
-        
-        void updateHalfVelocity();
-        
-        void clearLagrangianFields(); 
-
-        void calculateForce(); 
-        
-        
-        // 
-        
-        void checkMaxVelocity();
-
-        void applyWillForce();        
-        
-
-        
+        // Access
 };
 
 

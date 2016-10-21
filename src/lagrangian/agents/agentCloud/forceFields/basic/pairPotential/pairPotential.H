@@ -154,7 +154,7 @@ public:
             agent* molJ,
             const scalar& r,
             scalar& energy,
-            scalar& force
+            vector& force
         ) = 0;        
 
         inline const scalar& rCutSqr() const;

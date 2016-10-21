@@ -102,7 +102,7 @@ inline Foam::vector& Foam::agent::f()
 
 inline Foam::vector Foam::agent::a() const
 {
-    return f_*mass_;
+    return f_/mass_;
 }
 
 inline const Foam::vector& Foam::agent::specialPosition() const

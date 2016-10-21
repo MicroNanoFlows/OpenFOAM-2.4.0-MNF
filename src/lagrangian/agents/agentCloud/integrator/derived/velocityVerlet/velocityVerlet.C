@@ -82,12 +82,16 @@ void velocityVerlet::init()
 
 void velocityVerlet::evolve()
 {
+//     setDesiredDirection();
+    
     cloud_.s().setSchedules();
     
     cloud_.controllers().controlVelocitiesI();
     
     updateHalfVelocity();
-
+    
+    checkMaxVelocity();
+    
     cloud_.controllers().controlBeforeMove();
     
     cloud_.move();
@@ -100,15 +104,19 @@ void velocityVerlet::evolve()
     
     clearLagrangianFields();
     
-
+   
     calculateForce();
-    
+
+    applyWillForce();
+
     
     cloud_.b().afterForce();  
     
     cloud_.controllers().controlAfterForces();
         
     updateHalfVelocity();
+    
+    checkMaxVelocity();
     
     cloud_.controllers().controlVelocitiesII(); 
     
@@ -163,6 +171,36 @@ void velocityVerlet::calculateForce()
     cloud_.f().calculatePairForces();
 }
 
+void velocityVerlet::checkMaxVelocity()
+{
+    IDLList<agent>::iterator mol(cloud_.begin());
+
+    for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
+    {
+        scalar vMax = cloud_.cP().vMax()[mol().id()];
+        
+        if( mag(mol().v()) > vMax )
+        {
+            vector n = mol().v()/mag(mol().v());
+            mol().v() = vMax*n;
+        }
+    }
+}
+
+void velocityVerlet::applyWillForce()
+{
+    IDLList<agent>::iterator mol(cloud_.begin());
+
+    for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
+    {
+        vector desDir = cloud_.cP().desDir()[mol().id()];
+        scalar desSpeed = cloud_.cP().desSpeed()[mol().id()];
+        
+        scalar tau = 0.5;
+        
+        mol().f() += (desSpeed*desDir - mol().v())*mol().mass() / tau;
+    }
+}
 
 
 

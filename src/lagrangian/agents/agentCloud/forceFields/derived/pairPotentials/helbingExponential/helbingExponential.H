@@ -23,26 +23,26 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    velocityVerlet
+    helbingExponential
 
 Description
-
+    Model that applies a gravitational force on all molecules.
 
 SourceFiles
-    velocityVerletI.H
-    velocityVerlet.C
-    velocityVerletIO.C
+    helbingExponentialI.H
+    helbingExponential.C
+    helbingExponentialIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef velocityVerlet_H
-#define velocityVerlet_H
+#ifndef helbingExponential_H
+#define helbingExponential_H
 
-#include "agentIntegrator.H"
+#include "pairPotential.H"
 #include "vector.H"
 #include "polyMesh.H"
-#include "volFields.H"
 #include "agentCloud.H"
+
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -51,62 +51,74 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class velocityVerlet Declaration
+                           Class helbingExponential Declaration
 \*---------------------------------------------------------------------------*/
 
-class velocityVerlet
+class helbingExponential
 :
-    public agentIntegrator
+	public pairPotential
 {
 
 private:
 
-    
-        // Private data
-       
-    
-    
+    // Private data
+
+        //- subDictionary containing the properties
+        dictionary propsDict_;
+
+        scalar A_;
+        scalar B_;
+        scalar k_;
+        scalar kappa_;
+
+
+        
+    // Private Member Functions
+
+ 
+
 public:
 
     //- Runtime type information
-    TypeName("velocityVerlet");
+    TypeName("helbingExponential");
 
     // Constructors
 
         //- Construct from components
-        velocityVerlet
+        helbingExponential
         (
-            Time& t,
             agentCloud& cloud,
+            const word& name,
             const dictionary& dict
         );
 
     // Destructor
 
-        ~velocityVerlet();
+        ~helbingExponential();
 
 
     // Member Functions
+    // Member Functions
+        
+        //- create an initial configuration
+        void initialConfiguration();
+        
+        scalar energy(const scalar& r);
+        
+        scalar force(const scalar& r);
+        
+        void pairPotentialFunction
+        (
+            agent* molI,
+            agent* molJ,
+            const scalar& r,
+            scalar& energy,
+            vector& force
+        );        
+        
+//         void writeTables(const fileName& pathName);
 
-        void init();
-        
-        void evolve();
-        
-        void updateHalfVelocity();
-        
-        void clearLagrangianFields(); 
-
-        void calculateForce(); 
-        
-        
-        // 
-        
-        void checkMaxVelocity();
-
-        void applyWillForce();        
-        
-
-        
+        // Access
 };
 
 

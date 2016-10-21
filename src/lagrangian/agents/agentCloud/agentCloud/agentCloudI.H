@@ -682,7 +682,7 @@ inline const Foam::agentProperties& Foam::agentCloud::cP() const
 //     return constPropList_[id];
 // }
 
-inline Foam::cachedRandomMD& Foam::agentCloud::rndGen()
+inline Foam::Random& Foam::agentCloud::rndGen()
 {
     return rndGen_;
 }

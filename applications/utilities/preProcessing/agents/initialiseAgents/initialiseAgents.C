@@ -37,7 +37,6 @@ int main(int argc, char *argv[])
 #   include "setRootCase.H"
 #   include "createTime.H"
 #   include "createMesh.H"
-#   include "createRandom.H"    
 
     agentProperties cP (mesh);
         
@@ -46,7 +45,6 @@ int main(int argc, char *argv[])
         runTime,
         mesh,
         cP,
-        rndGen,
         "initialise",
         true
     );    

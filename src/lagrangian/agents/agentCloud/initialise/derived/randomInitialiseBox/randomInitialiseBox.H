@@ -23,27 +23,30 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    velocityVerlet
+    randomInitialiseBox
 
 Description
 
 
 SourceFiles
-    velocityVerletI.H
-    velocityVerlet.C
-    velocityVerletIO.C
+    randomInitialiseBoxI.H
+    randomInitialiseBox.C
+    randomInitialiseBoxIO.C
+
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef velocityVerlet_H
-#define velocityVerlet_H
+#ifndef randomInitialiseBox_H
+#define randomInitialiseBox_H
 
-#include "agentIntegrator.H"
+#include "agentConfiguration.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
 #include "agentCloud.H"
-
+#include "boundedBox.H"
+#include "distributePoints.H"
+#include "distribution.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,62 +54,54 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class velocityVerlet Declaration
+                           Class randomInitialiseBox Declaration
 \*---------------------------------------------------------------------------*/
 
-class velocityVerlet
+class randomInitialiseBox
 :
-    public agentIntegrator
+	public agentConfiguration
 {
 
 private:
 
+    // Private data
     
-        // Private data
-       
-    
-    
+        //- subDictionary containing the properties
+        dictionary propsDict_;
+
+
+    // Private Member Functions
+
+        void setBoundBox
+        (
+            const dictionary& propsDict,
+            boundedBox& bb,
+            const word& name 
+        );
+
 public:
 
     //- Runtime type information
-    TypeName("velocityVerlet");
+    TypeName("randomInitialiseBox");
 
     // Constructors
 
         //- Construct from components
-        velocityVerlet
+        randomInitialiseBox
         (
-            Time& t,
-            agentCloud& cloud,
+            agentCloud& molCloud,
             const dictionary& dict
         );
 
     // Destructor
 
-        ~velocityVerlet();
+        ~randomInitialiseBox();
 
 
     // Member Functions
 
-        void init();
-        
-        void evolve();
-        
-        void updateHalfVelocity();
-        
-        void clearLagrangianFields(); 
+        void setInitialConfiguration();
 
-        void calculateForce(); 
-        
-        
-        // 
-        
-        void checkMaxVelocity();
-
-        void applyWillForce();        
-        
-
-        
 };
 
 

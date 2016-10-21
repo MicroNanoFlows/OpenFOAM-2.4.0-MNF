@@ -69,14 +69,14 @@ inline void forceFields::evaluatePair
         if(rIJMagSq < pairPotentials_[k]->rCutSqr())
         {
             scalar energy = 0.0;
-            scalar force = 0.0;
+            vector force = vector::zero;
 
             pairPotentials_[k]->pairPotentialFunction(molI, molJ, rIJMag, energy, force);
             
-            vector fIJ = f*(rIJ/rIJMag)*force;
+//             vector fIJ = f*(rIJ/rIJMag)*force;
 
-            molI->f() += fIJ;
-            molJ->f() += -fIJ;
+            molI->f() += force;
+            molJ->f() += -force;
 
             molI->potentialEnergy() += 0.5*f*energy;
             molJ->potentialEnergy() += 0.5*f*energy;

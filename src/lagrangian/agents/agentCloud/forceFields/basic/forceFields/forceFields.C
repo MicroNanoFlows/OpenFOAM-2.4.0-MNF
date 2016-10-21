@@ -230,15 +230,15 @@ void forceFields::calculateBodyForces()
         bodyForces_[i]->newForce();
     }
  
-//     IDLList<agent>::iterator mol(cloud_.begin());
-// 
-//     for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
-//     {
-//         forAll(bodyForces_, i)
-//         {
-//             bodyForces_[i]->force(&mol());
-//         }
-//     } 
+    IDLList<agent>::iterator mol(cloud_.begin());
+
+    for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
+    {
+        forAll(bodyForces_, i)
+        {
+            bodyForces_[i]->force(&mol());
+        }
+    } 
 }
 
 void forceFields::calculatePairForces()

@@ -64,6 +64,15 @@ class agentProperties
         // ordered list of agent names
         List<word> names_;
         
+        // maximum velocities of agents
+        List<scalar> velocityMax_;
+        
+        // unit vector for desired direction
+        List<vector> desDir_;
+
+        // unit vector for desired velocity
+        List<scalar> desSpeed_;
+        
         // list of total masses of each agent type
 //         List<scalar> masses_;
         
@@ -92,6 +101,14 @@ public:
         
         // namelist of all ids 
         const List<word>& agentIds() const;
+        
+        // maximum velocities of agents
+        const List<scalar>& vMax() const;        
+
+        //
+        const List<vector>& desDir() const;   
+
+        const List<scalar>& desSpeed() const;   
         
 //         const List<scalar>& mass() const;
 //         const scalar& mass(const label& id) const;        

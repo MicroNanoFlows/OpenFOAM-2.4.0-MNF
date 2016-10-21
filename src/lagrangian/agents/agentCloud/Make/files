@@ -17,17 +17,20 @@ forceFields/basic/bodyForce/bodyForce.C
 
 forceFields/derived/bodyForces/agentUniformForce/agentUniformForce.C      
 forceFields/derived/bodyForces/scheduledForce/scheduledForce.C
+forceFields/derived/bodyForces/agentFluctuatingForce/agentFluctuatingForce.C    
     
-forceFields/derived/pairPotentials/lennardJones/lennardJones.C    
-
+    
+/*forceFields/derived/pairPotentials/lennardJones/lennardJones.C  */  
+    
+forceFields/derived/pairPotentials/helbingExponential/helbingExponential.C    
     
 /* initialise */
 
 initialise/basic/agentConfigurations/agentConfigurations.C
 initialise/basic/agentConfiguration/agentConfiguration.C
 
-initialise/derived/testInitialise/testInitialise.C
-
+/*initialise/derived/testInitialise/testInitialise.C*/
+initialise/derived/randomInitialiseBox/randomInitialiseBox.C
 
 /* integrator */
 

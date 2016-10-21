@@ -39,17 +39,15 @@ int main(int argc, char *argv[])
 
 #   include "setRootCase.H"
 #   include "createTime.H"
-#   include "createMesh.H"
-#   include "createRandom.H"
-    
+#   include "createMesh.H"    
+
     agentProperties cP (mesh);
  
     agentCloud agents
     (
         runTime,
         mesh,
-        cP,
-        rndGen
+        cP
     ); 
 
     Info << "\nStarting time loop\n" << endl;
