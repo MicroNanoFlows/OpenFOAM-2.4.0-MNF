@@ -1230,6 +1230,7 @@ void  moleculeIonDissociationIonisation::outputResults(const label& counterIndex
 
         numberDensities_[0] = (mols[0]*cloud().nParticle())/volume;
         numberDensities_[1] = (mols[1]*cloud().nParticle())/volume;
+        
 
         const scalar& deltaT = mesh_.time().deltaT().value();
 

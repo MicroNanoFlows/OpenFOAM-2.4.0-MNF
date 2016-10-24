@@ -368,8 +368,8 @@ void chargeExchange::reaction
                 if(imaxP-idP > 0)
                 {
                     //Dissociation can occur
-//                     totalReactionProbability += 1.0;
-//                     reactionProbabilities[0] = 1.0;
+                    totalReactionProbability += 1.0;
+                    reactionProbabilities[0] = 1.0;
                 }
             }
         }
@@ -382,8 +382,8 @@ void chargeExchange::reaction
         if((EcP - ionisationEnergy) > VSMALL)
         {
             //Ionisation can occur
-//             totalReactionProbability += 1.0;
-//             reactionProbabilities[1] = 1.0;
+            totalReactionProbability += 1.0;
+            reactionProbabilities[1] = 1.0;
         }
         
         scalar heatOfReactionExchJoules = heatOfReactionExch_*physicoChemical::k.value();
@@ -993,8 +993,8 @@ void chargeExchange::reaction
                 if(imaxQ-idQ > 0)
                 {
                     //Dissociation can occur
-//                     totalReactionProbability += 1.0;
-//                     reactionProbabilities[0] = 1.0;
+                    totalReactionProbability += 1.0;
+                    reactionProbabilities[0] = 1.0;
                 }
             }
         }
@@ -1007,8 +1007,8 @@ void chargeExchange::reaction
         if((EcQ - ionisationEnergy) > VSMALL)
         {
             //Ionisation can occur
-//             totalReactionProbability += 1.0;
-//             reactionProbabilities[1] = 1.0;
+            totalReactionProbability += 1.0;
+            reactionProbabilities[1] = 1.0;
         }
         
         scalar heatOfReactionExchJoules = heatOfReactionExch_*physicoChemical::k.value();
@@ -1673,7 +1673,7 @@ void  chargeExchange::outputResults(const label& counterIndex)
                 Info<< "Dissociation reaction " 
                     <<  reactantMolA << " + " << reactantMolB
                     <<  " --> " 
-                    << productMolD << " + " << productMolD
+                    << productMolC << " + " << productMolD
                     << ", reaction rate = " << reactionRateDissociation
                     << endl;
             }
