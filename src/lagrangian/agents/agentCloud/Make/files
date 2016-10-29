@@ -18,7 +18,7 @@ forceFields/basic/bodyForce/bodyForce.C
 forceFields/derived/bodyForces/agentUniformForce/agentUniformForce.C      
 forceFields/derived/bodyForces/scheduledForce/scheduledForce.C
 forceFields/derived/bodyForces/agentFluctuatingForce/agentFluctuatingForce.C    
-    
+forceFields/derived/bodyForces/agentWillForce/agentWillForce.C     
     
 /*forceFields/derived/pairPotentials/lennardJones/lennardJones.C  */  
     

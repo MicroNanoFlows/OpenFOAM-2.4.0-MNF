@@ -23,25 +23,24 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    velocityVerlet
+    agentWillForce
 
 Description
 
 
 SourceFiles
-    velocityVerletI.H
-    velocityVerlet.C
-    velocityVerletIO.C
+    agentWillForceI.H
+    agentWillForce.C
+    agentWillForceIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef velocityVerlet_H
-#define velocityVerlet_H
+#ifndef agentWillForce_H
+#define agentWillForce_H
 
-#include "agentIntegrator.H"
+#include "bodyForce.H"
 #include "vector.H"
 #include "polyMesh.H"
-#include "volFields.H"
 #include "agentCloud.H"
 
 
@@ -51,62 +50,70 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class velocityVerlet Declaration
+                           Class agentWillForce Declaration
 \*---------------------------------------------------------------------------*/
 
-class velocityVerlet
+class agentWillForce
 :
-    public agentIntegrator
+	public bodyForce
 {
 
 private:
 
-    
-        // Private data
-       
-    
-    
+    // Private data
+
+        //- subDictionary containing the properties
+        dictionary propsDict_;
+
+        //- ids of agents
+        List<label> agentIds_;
+        
+        scalar desiredSpeed_;
+        
+        vector desiredDirection_;
+        
+        scalar tau_;
+
+//         scalar stdev_;
+        
+        // size = number of agents
+//         List<scalar> agentVelocities_;
+        
+    // Private Member Functions
+
+
 public:
 
     //- Runtime type information
-    TypeName("velocityVerlet");
+    TypeName("agentWillForce");
 
     // Constructors
 
         //- Construct from components
-        velocityVerlet
+        agentWillForce
         (
-            Time& t,
             agentCloud& cloud,
+            Time& t,
             const dictionary& dict
         );
 
     // Destructor
 
-        ~velocityVerlet();
+        ~agentWillForce();
 
 
     // Member Functions
+        
+        //- create an initial configuration
+        void initialConfiguration();
+        
+        // inside loop of all agents
+        void force(agent* p);
+        
+        // new force definition; requires loop over all agents
+        void newForce();
 
-        void init();
-        
-        void evolve();
-        
-        void updateHalfVelocity();
-        
-        void clearLagrangianFields(); 
-
-        void calculateForce(); 
-        
-        
-        // 
-        
-        void checkMaxVelocity();
-
-//         void applyWillForce();        
-        
-
-        
+        // Access
 };
 
 

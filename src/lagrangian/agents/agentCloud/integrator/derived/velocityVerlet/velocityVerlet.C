@@ -107,8 +107,6 @@ void velocityVerlet::evolve()
    
     calculateForce();
 
-    applyWillForce();
-
     
     cloud_.b().afterForce();  
     
@@ -187,21 +185,20 @@ void velocityVerlet::checkMaxVelocity()
     }
 }
 
-void velocityVerlet::applyWillForce()
-{
-    IDLList<agent>::iterator mol(cloud_.begin());
-
-    for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
-    {
-        vector desDir = cloud_.cP().desDir()[mol().id()];
-        scalar desSpeed = cloud_.cP().desSpeed()[mol().id()];
-        
-        scalar tau = 0.5;
-        
-        mol().f() += (desSpeed*desDir - mol().v())*mol().mass() / tau;
-    }
-}
-
+// void velocityVerlet::applyWillForce()
+// {
+//     IDLList<agent>::iterator mol(cloud_.begin());
+// 
+//     for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
+//     {
+//         vector desDir = cloud_.cP().desDir()[mol().id()];
+//         scalar desSpeed = cloud_.cP().desSpeed()[mol().id()];
+//         
+//         scalar tau = 0.5;
+//         
+//         mol().f() += (desSpeed*desDir - mol().v())*mol().mass() / tau;
+//     }
+// }
 
 
 

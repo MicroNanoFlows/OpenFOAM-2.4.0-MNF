@@ -92,19 +92,22 @@ private:
         label nSteps_;
 
         // outer counter to average over all acfs
-        scalar nAveragingSteps_;          
+        scalar nBatch_;          
         
+        label actualNmols_;
         
+        // trackingNumbers available
         
         label nMols_;
         
-        // outer list = time (nSteps_)
-        // inner list = tracking numbers
+        // inner list = tracking numbers (i.e. mols)
+        // outer list = time (nSteps_)        
         List<List<scalar> > velocities_;
         
-        // outer list = nSteps_
-        // inner list accumulation of sum over all mols of v(t=0) dot v(t)
-        List<scalar> acfTime_;
+        // outer list = tracking numbers (i.e. mols)
+        // inner list = nSteps_
+        // values = accumulation of sum over all mols of v(t=0) dot v(t)
+        List< List<scalar> > acf_;
         
         List<label> mols_;
         
@@ -114,14 +117,9 @@ private:
         
     // Private Member Functions
         
-        void setBoundBox
-        (
-            const dictionary& propsDict,
-            boundedBox& bb,
-            const word& name 
-        );
+        void setVelocities();
         
-        scalar getIntegral(const List<scalar>& f);
+        scalar getIntegral();
 
         
 public:

@@ -43,19 +43,6 @@ addToRunTimeSelectionTable(polyField, axialSelfDiffusion, dictionary);
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 
-void axialSelfDiffusion::setBoundBox
-(
-    const dictionary& propsDict,
-    boundedBox& bb,
-    const word& name 
-)
-{
-    const dictionary& dict(propsDict.subDict(name));
-    
-    vector startPoint = dict.lookup("startPoint");
-    vector endPoint = dict.lookup("endPoint");
-    bb.resetBoundedBox(startPoint, endPoint);
-}
 
 
 
@@ -105,35 +92,9 @@ axialSelfDiffusion::axialSelfDiffusion
     );
 
     molIds_ = ids.molIds();
-
-
-    //-set the total volume
-//     const labelList& cells = cellZones[regionId_];
-// 
-//     forAll(cells, c)
-//     {
-//         const label& cellI = cells[c];
-//         totalVolume_ += mesh_.cellVolumes()[cellI];
-//     }
-// 
-//     if (Pstream::parRun())
-//     {
-//         reduce(totalVolume_, sumOp<scalar>());
-//     }
-    
-    if (propsDict_.found("useBoundBox"))
-    {
-        useBoundBox_ = Switch(propsDict_.lookup("useBoundBox"));
-        
-        if(useBoundBox_)
-        {
-            setBoundBox(propsDict_, bb_, "samplingRegion");
-        }
-    }    
     
     nS_ = 0;
-    nAveragingSteps_ = 0.0;
-    acfTime_.setSize(nSteps_, 0.0);
+    nBatch_ = 0.0;
 }
 
 
@@ -149,13 +110,15 @@ void axialSelfDiffusion::createField()
 {
     nMols_ = molCloud_.moleculeTracking().getMaxTrackingNumber();
     
+    acf_.setSize(nMols_, 0.0);
     
     velocities_.clear();
-    velocities_.setSize(nSteps_);
+    velocities_.setSize(nMols_);
     
     forAll(velocities_, i)
     {
-        velocities_.setSize(nMols_, 0.0);    
+        velocities_.setSize(nSteps_, 0.0);
+        acf_.setSize(nSteps_, 0.0);
     }
     
     mols_.clear();
@@ -163,42 +126,20 @@ void axialSelfDiffusion::createField()
 
     // set initial velocities 
     
-    const List< DynamicList<polyMolecule*> >& cellOccupancy
-            = molCloud_.cellOccupancy();
+    IDLList<polyMolecule>::iterator mol(molCloud_.begin());
     
-    const labelList& cells = mesh_.cellZones()[regionId_];
+    label actualNmols_ = 0;
     
-    forAll(cells, c)
+    for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
     {
-        const label& cellI = cells[c];
-        const List<polyMolecule*>& molsInCell = cellOccupancy[cellI];
-        
-        forAll(molsInCell, mIC)
+        if(findIndex(molIds_, mol().id()) != -1)
         {
-            polyMolecule* molI = molsInCell[mIC];
-            
-            if(findIndex(molIds_, molI->id()) != -1)
-            {
-                label tN = molI->trackingNumber();
-                
-//                 const scalar& massI = molCloud_.cP().mass(molI->id());
-                
-                if(useBoundBox_)
-                {
-                    if(bb_.contains(molI->position()))
-                    {
-                        velocities_[nS_][tN] = molI->v() & unitVector_;
-                        mols_[tN] = 1;
-                    }
-                }
-                else
-                {
-                    velocities_[nS_][tN] = molI->v() & unitVector_;
-                    mols_[tN] = 1;
-                }
-            }
+            label tN = molI->trackingNumber();                
+            velocities_[tN][nS_] = molI->v() & unitVector_;
+            mols_[tN] = 1;                
+            actualNmols_ ++;
         }
-    }
+    }    
     
     if(Pstream::parRun())
     {
@@ -206,86 +147,84 @@ void axialSelfDiffusion::createField()
         {
             reduce(mols_[i], sumOp<label>());
         }
-    }    
         
+        reduce(actualNmols_, sumOp<label>());
+    }
+    
+    nS_++;
+}
+
+
+void axialSelfDiffusion::setVelocities()
+{
+    IDLList<polyMolecule>::iterator mol(molCloud_.begin());
+    
+    for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
+    {
+        if(findIndex(molIds_, mol().id()) != -1)
+        {
+            label tN = molI->trackingNumber();                
+            velocities_[tN][nS_] = molI->v() & unitVector_;
+        }
+    }     
 }
 
 void axialSelfDiffusion::calculateField()
 {
-    // set current velocities 
-    
-    const List< DynamicList<polyMolecule*> >& cellOccupancy
-            = molCloud_.cellOccupancy();
-    
-    const labelList& cells = mesh_.cellZones()[regionId_];
-    
-    List<scalar> vDotV(nMols_, 0.0);
-        
-    forAll(cells, c)
+    if(nS_ > nSteps_)
     {
-        const label& cellI = cells[c];
-        const List<polyMolecule*>& molsInCell = cellOccupancy[cellI];
+        Info << "axialSelfDiffusion averaging " << endl;
         
-        forAll(molsInCell, mIC)
+        // parallel processing
+        
+        if(Pstream::parRun())
         {
-            polyMolecule* molI = molsInCell[mIC];
-            
-            if(findIndex(molIds_, molI->id()) != -1)
+            forAll(velocities_, i)
             {
-                label tN = molI->trackingNumber();
-                
-//                 const scalar& massI = molCloud_.cP().mass(molI->id());
-                
-                if(useBoundBox_)
+                forAll(velocities_[i], j)
                 {
-                    if(bb_.contains(molI->position()))
+                    reduce(velocities_[i][j], sumOp<scalar>());
+                }
+            }
+        } 
+    
+        // calculate molecule based ACF 
+
+        for (label i=0; i<nMols_; i++)
+        {
+            if(mols_[i] == 1)
+            {
+                forAll(velocities_[i], j)
+                {
+                    scalar u1=velocities_[i][j];
+                    
+                    forAll(velocities_[i], k)
                     {
-                        velocities_[nS_][tN] = molI->v() & unitVector_;                        
-/*                        
-                        vDotV[tN] = (molI->v() & unitVector_) * initialVelocities_[tN];*/
+                        scalar u1=velocities_[i][j];
+                        scalar u11 = u1*u1;
                     }
                 }
-                else
-                {
-                    velocities_[nS_][tN] = molI->v() & unitVector_;                        
-                }
             }
         }
-    }    
     
-    if(nS_ >= nSteps_)
-    {
-        Info << "axialSelfDiffusion averaging " << endl; 
+        // accumulate acf_
+        nBatch_ += 1.0;        
+        
+        
+
+        
+        scalar integral = getIntegral();
+        
+        D_ = (1/(actualNmols_))*integral;
+        
         nS_ = 0;
-        nAveragingSteps_ += 1.0;
+
         
-        List<scalar> acfTime(nSteps_, 0.0);
-        
-        forAll(velocities_, i)
-        {
-            forAll(velocities_, j)
-            {
-                acfTime[i]
-            }
-        }
-            
-        List<scalar> acfTime = acfTime_;
-        
-        forAll(acfTime, i)
-        {
-            acfTime[i] /= nAveragingSteps_;
-        }
-        
-        scalar integral = getIntegral(acfTime);
-        
-        D_ = (1/(3.0*nMols_))*integral;
-        
-        //reset field
-        createField(); 
     }
     else
     {
-        nS_++;    
+        setVelocities();
+        nS_++;
     }    
     
     
@@ -311,47 +250,47 @@ void axialSelfDiffusion::calculateField()
 
 }
 
-scalar axialSelfDiffusion::getIntegral(const List<scalar>& f)
-{
-    scalar timeIntegration = 0.0;
-
-    const scalar& dt = time_.deltaT().value();
-    
-    if(((f.size() -1) % 2) == 0)// simpsons 1/3 rule
-    {
-        timeIntegration += f[0];
-        timeIntegration += f[f.size()-1];
-
-        for (label i=1; i<f.size()-1; i++)
-        {
-            if((i % 2) == 0) // -even
-            {
-                timeIntegration += 2.0*f[i];
-            }
-            else // odd
-            {
-                timeIntegration += 4.0*f[i];
-            }
-        }
-        
-        timeIntegration *= dt/3.0;
-
-    }
-    else // trapezoid rule
-    {
-        timeIntegration += f[0];
-        timeIntegration += f[f.size()-1];
-
-        for (label i=1; i<f.size()-1; i++)
-        {
-            timeIntegration += 2.0*f[i];
-        }
-
-        timeIntegration *= 0.5*dt;
-    }
-        
-    return timeIntegration;
-}
+// scalar axialSelfDiffusion::getIntegral()
+// {
+//     scalar timeIntegration = 0.0;
+// 
+//     const scalar& dt = time_.deltaT().value();
+//     
+//     if(((f.size() -1) % 2) == 0)// simpsons 1/3 rule
+//     {
+//         timeIntegration += f[0];
+//         timeIntegration += f[f.size()-1];
+// 
+//         for (label i=1; i<f.size()-1; i++)
+//         {
+//             if((i % 2) == 0) // -even
+//             {
+//                 timeIntegration += 2.0*f[i];
+//             }
+//             else // odd
+//             {
+//                 timeIntegration += 4.0*f[i];
+//             }
+//         }
+//         
+//         timeIntegration *= dt/3.0;
+// 
+//     }
+//     else // trapezoid rule
+//     {
+//         timeIntegration += f[0];
+//         timeIntegration += f[f.size()-1];
+// 
+//         for (label i=1; i<f.size()-1; i++)
+//         {
+//             timeIntegration += 2.0*f[i];
+//         }
+// 
+//         timeIntegration *= 0.5*dt;
+//     }
+//         
+//     return timeIntegration;
+// }
 
 void axialSelfDiffusion::writeField()
 {
