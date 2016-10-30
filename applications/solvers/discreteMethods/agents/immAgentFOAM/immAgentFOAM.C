@@ -33,6 +33,7 @@ Description
 #include "fvCFD.H"
 #include "agents.H"
 #include "clockTimer.H"
+#include "agentMicroElements.H"
 
 int main(int argc, char *argv[])
 {
@@ -44,34 +45,30 @@ int main(int argc, char *argv[])
     
     agentProperties cP (mesh);
  
-    agentCloud agents
-    (
-        runTime,
-        mesh,
-        "agentCloud",
-        cP
-    ); 
+    agentMicroElements imm(runTime, mesh, cP);
 
     Info << "\nStarting time loop\n" << endl;
 
     clockTimer evolveTimer(runTime, "evolve", true);
 
-    while (runTime.loop())
+    while(imm.run())
     {
-        Info << "Time = " << runTime.timeName() << endl;
+        Info << "Macro Time = " << imm.macroTime() << endl;
+        
+        Info << "Micro time = " << runTime.timeName() << endl;
 
         evolveTimer.startClock();
 
-        agents.evolve();
+//         agents.evolve();
 
         evolveTimer.stopClock();
 
         runTime.write();
 
-        if(runTime.outputTime())
-        {
-            agents.writeXMOL();
-        }
+//         if(runTime.outputTime())
+//         {
+//             agents.writeXMOL();
+//         }
         
         Info << "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
             << "  ClockTime = " << runTime.elapsedClockTime() << " s"

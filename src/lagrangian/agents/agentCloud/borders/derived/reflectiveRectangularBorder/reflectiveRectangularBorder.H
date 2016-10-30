@@ -23,24 +23,26 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    agentProperties
+    reflectiveRectangularBorder
 
 Description
 
 
 SourceFiles
-    agentProperties.C
+    reflectiveRectangularBorderI.H
+    reflectiveRectangularBorder.C
+    reflectiveRectangularBorderIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef agentProperties_H
-#define agentProperties_H
+#ifndef reflectiveRectangularBorder_H
+#define reflectiveRectangularBorder_H
 
-#include "Time.H"
+#include "borderModel.H"
+#include "vector.H"
 #include "polyMesh.H"
-#include "diagTensor.H"
-#include "transform.H"
-// #include "rotationTensor.H"
+#include "agentCloud.H"
+
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -49,70 +51,78 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class agentProperties Declaration
+                           Class reflectiveRectangularBorder Declaration
 \*---------------------------------------------------------------------------*/
 
-class agentProperties
+class reflectiveRectangularBorder
+:
+	public borderModel
 {
+
+private:
+
     // Private data
 
-        const polyMesh& mesh_;
-        
-        // number of agent types 
-        label N_;
-        
-        // ordered list of agent names
-        List<word> names_;
-        
-        // maximum velocities of agents
-        List<scalar> velocityMax_;
-        
-        // unit vector for desired direction
-//         List<vector> desDir_;
+        //- subDictionary containing the properties
+        dictionary propsDict_;
 
-        // unit vector for desired velocity
-//         List<scalar> desSpeed_;
+        List<vectorList> borderList_;
         
-        // list of total masses of each agent type
-//         List<scalar> masses_;
+        // border properties
         
+        // normal vectors point outwards 
+        List<vectorList> normalVectors_;
+        List<vectorList> midPoints_;
         
-        // any potential interactions go here 
+        scalar treshold_;
+ 
+        // outer list = nCells on mesh
+        // inner list = index to borderList_ to interact with
+        List<DynamicList<label> > interactionList_;  
+
+        
+    // Private Member Functions
+        
+        void initialiseBorders();
+
+        void checkClosedEndedBorders();
+       
+        void reflect(label index, agent* a); 
+
+        bool isPointWithinBorder(label index, const vector& r);       
         
 public:
 
+    //- Runtime type information
+    TypeName("reflectiveRectangularBorder");
+
     // Constructors
 
-        //- constructor
-        agentProperties
+        //- Construct from components
+        reflectiveRectangularBorder
         (
-            const polyMesh& mesh
+            Time& time,
+            agentCloud& cloud,
+            const dictionary& dict
         );
 
     // Destructor
 
-        ~agentProperties();
+        ~reflectiveRectangularBorder();
 
-
-    // Member functions
+    // Member Functions
         
-        // no of id types
-        const label& nAgentTypes() const;
+        void initialConfiguration();
         
-        // namelist of all ids 
-        const List<word>& agentIds() const;
+        void afterMove();
         
-        // maximum velocities of agents
-        const List<scalar>& vMax() const;        
-
-        //
-//         const List<vector>& desDir() const;   
-
-//         const List<scalar>& desSpeed() const;   
+        void afterForce();
         
-//         const List<scalar>& mass() const;
-//         const scalar& mass(const label& id) const;        
-
+                
+        // write
+        
+        void write(const fileName& pathName);
+ 
 };
 
 

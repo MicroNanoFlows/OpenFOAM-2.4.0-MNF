@@ -105,7 +105,7 @@ void borders::initialConfig()
 {
     forAll(borders_, i)
     {
-        borders_[i]->initialiseBorders();
+//         borders_[i]->initialiseBorders();
         borders_[i]->initialConfiguration();  
     }
 }
@@ -128,7 +128,10 @@ void borders::afterForce()
 
 void borders::write()
 {
-    
+    forAll(borders_, i)
+    {
+        borders_[i]->initialConfiguration();  
+    }
 }
 
 

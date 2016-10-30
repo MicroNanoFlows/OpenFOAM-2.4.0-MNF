@@ -23,33 +23,33 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    borderModel
+    agentCyclicBoundary
 
 Description
-    Basic/abstract class of a state controller
 
+    Used for applying instantaneous actions on molecules colliding with a cyclic 
+    boundary.
 
 SourceFiles
-    borderModelI.H
-    borderModel.C
-    borderModelIO.C
+    agentCyclicBoundaryI.H
+    agentCyclicBoundary.C
+    agentCyclicBoundaryIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef borderModel_H
-#define borderModel_H
+#ifndef agentCyclicBoundary_H
+#define agentCyclicBoundary_H
 
 #include "IOdictionary.H"
 #include "autoPtr.H"
 #include "runTimeSelectionTables.H"
 #include "vector.H"
 #include "volFields.H"
+#include "polyMesh.H"
 #include "agent.H"
+#include "Time.H"
 #include "writeTimeData.H"
-#include "selectAgentIds.H"
-#include "reducedUnits.H"
-#include "vectorList.H"
-#include "boundedBox.H"
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -57,10 +57,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class borderModel Declaration
+                           Class agentCyclicBoundary Declaration
 \*---------------------------------------------------------------------------*/
 
-class borderModel
+class agentCyclicBoundary
 {
 
 protected:
@@ -69,42 +69,49 @@ protected:
 
         const fvMesh& mesh_;
 
-        Time& time_;        
-        
         agentCloud& cloud_;
 
-        const reducedUnits& rU_;        
+        Time& time_;
+
+        //- name of this patch
+        word patchName_;
         
-      
-                
+        //- id on boundaryMesh
+        label patchId_;
+        
+        //- writing out properties
+        bool writeInTimeDir_;
+        bool writeInCase_;
+
     // Private Member Functions
 
-        
 public:
 
     //- Runtime type information
-    TypeName("borderModel");
+    TypeName("agentCyclicBoundary");
 
     // Declare runtime constructor selection table
         declareRunTimeSelectionTable
         (
             autoPtr,
-            borderModel,
+            agentCyclicBoundary,
             dictionary,
             (
-                Time& time,
+                Time& t,
+                const polyMesh& mesh,
                 agentCloud& cloud,
                 const dictionary& dict
             ),
-            (time, cloud, dict)
+            (t, mesh, cloud, dict)
         );
    
     // Constructors
 
         //- Construct from components
-        borderModel
+        agentCyclicBoundary
         (
-            Time& time,
+            Time& t,
+            const polyMesh& mesh,
             agentCloud& cloud,
             const dictionary& dict
         );
@@ -112,9 +119,10 @@ public:
 
     // Selectors
 
-        static autoPtr<borderModel> New
+        static autoPtr<agentCyclicBoundary> New
         (
-            Time& time,
+            Time& t,
+            const polyMesh& mesh,
             agentCloud& cloud,
             const dictionary& dict
         );
@@ -122,25 +130,39 @@ public:
 
     // Destructor
 
-        virtual ~borderModel();
+        virtual ~agentCyclicBoundary();
 
 
     // Member Functions
 
-        
-        
-//         void initialiseBorders();
-        
+
+        virtual void calculateProperties() = 0;
+
+        //- create an initial configuration
         virtual void initialConfiguration() = 0;
+
+        //- control the molecule
+        virtual void control
+        (
+            agent& p,
+            const cyclicPolyPatch& cpp,
+            agent::trackingData& td
+        ) = 0;
+
+
+        //- output data
+        virtual void output
+        (
+            const fileName& fixedPathName,
+            const fileName& timePath
+        ) = 0;
         
-        virtual void afterMove() = 0;
-        
-        virtual void afterForce() = 0;
-        
-        virtual void write(const fileName& pathName) = 0;
-        
-        //         const List<vectorList>& borderList() const;
-        
+        // Access
+
+            const word& patchName() const;
+            const label& patchId() const;
+            const bool& writeInTimeDir() const;
+            const bool& writeInCase() const;
 };
 
 
@@ -149,7 +171,6 @@ public:
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 
 #endif
 

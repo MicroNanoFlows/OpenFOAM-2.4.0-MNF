@@ -85,26 +85,6 @@ void Foam::agent::setAsReferred()
     special_ = 1;
 }
 
-// void Foam::agent::updateHalfVelocity
-// (
-//     const agentProperties& cP,       
-//     const scalar& trackTime
-// )
-// {
-//     v_ += 0.5*trackTime*a_;
-// }
-
-// void Foam::agent::updateAcceleration
-// (
-//     const agentProperties& cP    
-// )
-// {
-//     scalar m = cP.mass(id_);
-//     
-//     a_ += f_/m;
-// }
-
-
 
 void Foam::agent::transformProperties(const tensor& T)
 {
@@ -180,6 +160,22 @@ void Foam::agent::hitPatch
 //     // apply a boundary model when a molecule collides with this poly patch
 //     td.cloud().boundaries().patchBoundaryModels()[patchModelId]->controlMol(*this, td);
 }
+
+void Foam::agent::hitCyclicPatch
+(
+    const cyclicPolyPatch& cpp, 
+    trackingData& td
+)
+{
+    //-find which patch has been hit
+    label patchIndex = cpp.index();
+    
+    const label& patchModelId = td.cloud().ob().cyclicBoundaryToModelIds()[patchIndex];
+    
+    td.cloud().ob().cyclicBoundaryModels()[patchModelId]->control(*this, cpp, td);
+    
+}
+
 
 // ************************************************************************* //
 

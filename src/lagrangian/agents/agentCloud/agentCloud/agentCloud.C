@@ -346,11 +346,13 @@ Foam::agentCloud::agentCloud
 (
     Time& t,
     const polyMesh& mesh,
+    const word& cloudName, 
     const agentProperties& cP
 //     cachedRandomMD& rndGen
 )
 :
-    Cloud<agent>(mesh, "agentCloud", false),
+//     Cloud<agent>(mesh, "agentCloud", false),
+    Cloud<agent>(mesh, cloudName, false),
     mesh_(mesh),
     cP_(cP),
 //     rndGen_(rndGen),
@@ -364,6 +366,7 @@ Foam::agentCloud::agentCloud
     cyclics_(t, mesh_, -1),
     f_(t, mesh_, *this),
     b_(t, mesh_, *this),
+    ob_(t, mesh_, *this),
     s_(t, mesh_, *this)
 {
     agent::readFields(*this);
@@ -392,13 +395,14 @@ Foam::agentCloud::agentCloud
 (
     Time& t,
     const polyMesh& mesh,
+    const word& cloudName,
     const agentProperties& cP,
-//     cachedRandomMD& rndGen, 
     const word& option,
     const bool& clearFields
 )
     :
-    Cloud<agent>(mesh, "agentCloud", false),
+//     Cloud<agent>(mesh, "agentCloud", false),
+    Cloud<agent>(mesh, cloudName, false),
     mesh_(mesh),
     cP_(cP),
 //     rndGen_(rndGen),    
@@ -406,12 +410,13 @@ Foam::agentCloud::agentCloud
     int_(t, mesh_, *this), 
     rU_(1),
     cellOccupancy_(mesh_.nCells()),
-    fields_(t, mesh_),
-    controllers_(t, mesh),
+    fields_(t, mesh_, *this),
+    controllers_(t, mesh, *this),
     agentTracking_(),
     cyclics_(t, mesh_, -1),
     f_(t, mesh_, *this),
     b_(t, mesh_, *this),
+    ob_(t, mesh_, *this),
     s_(t, mesh_, *this)
 {
     agent::readFields(*this);
@@ -496,13 +501,14 @@ Foam::autoPtr<Foam::agentCloud> Foam::agentCloud::New
 (
     Time& t,
     const polyMesh& mesh,
+    const word& cloudName,
     const agentProperties& cP
 //     cachedRandomMD& rndGen
 )
 {
     return autoPtr<agentCloud>
     (
-        new agentCloud(t, mesh, cP)
+        new agentCloud(t, mesh, cloudName, cP)
     );
 }
 
@@ -510,6 +516,7 @@ Foam::autoPtr<Foam::agentCloud> Foam::agentCloud::New
 (
     Time& t,
     const polyMesh& mesh,
+    const word& cloudName, 
     const agentProperties& cP, 
 //     cachedRandomMD& rndGen,
     const word& option,
@@ -518,7 +525,7 @@ Foam::autoPtr<Foam::agentCloud> Foam::agentCloud::New
 {
     return autoPtr<agentCloud>
     (
-        new agentCloud(t, mesh, cP, option, clearFields)
+        new agentCloud(t, mesh, cloudName, cP, option, clearFields)
     );
 }
 

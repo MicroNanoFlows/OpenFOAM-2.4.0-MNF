@@ -23,32 +23,26 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    borderModel
+    agentNumbers
 
 Description
-    Basic/abstract class of a state controller
-
+    Model that applies a gravitational force on all molecules.
 
 SourceFiles
-    borderModelI.H
-    borderModel.C
-    borderModelIO.C
+    agentNumbersI.H
+    agentNumbers.C
+    agentNumbersIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef borderModel_H
-#define borderModel_H
+#ifndef agentNumbers_H
+#define agentNumbers_H
 
-#include "IOdictionary.H"
-#include "autoPtr.H"
-#include "runTimeSelectionTables.H"
+#include "agentController.H"
 #include "vector.H"
+#include "polyMesh.H"
 #include "volFields.H"
-#include "agent.H"
-#include "writeTimeData.H"
-#include "selectAgentIds.H"
-#include "reducedUnits.H"
-#include "vectorList.H"
+#include "agentCloud.H"
 #include "boundedBox.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -57,90 +51,98 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class borderModel Declaration
+                           Class agentNumbers Declaration
 \*---------------------------------------------------------------------------*/
 
-class borderModel
+class agentNumbers
+:
+	public agentController
 {
 
-protected:
+private:
 
-    // Protected data
+    // Private data
 
-        const fvMesh& mesh_;
+        //- subDictionary containing the properties
+        dictionary propsDict_;
 
-        Time& time_;        
+        //- id of agent
+        label agentId_;
+
+        boundedBox samplingBox_;
+        boundedBox controlBox_;
         
-        agentCloud& cloud_;
-
-        const reducedUnits& rU_;        
+        label N_;
         
-      
-                
+        scalar mass_;
+
     // Private Member Functions
 
+//         void readProperties();
+        
+        void setBoundBox
+        (
+            const dictionary& propsDict,
+            boundedBox& bb,
+            const word& name 
+        );
+     
+        void insertAgents(const label& N);
+        
+        
         
 public:
 
     //- Runtime type information
-    TypeName("borderModel");
+    TypeName("agentNumbers");
 
-    // Declare runtime constructor selection table
-        declareRunTimeSelectionTable
-        (
-            autoPtr,
-            borderModel,
-            dictionary,
-            (
-                Time& time,
-                agentCloud& cloud,
-                const dictionary& dict
-            ),
-            (time, cloud, dict)
-        );
-   
     // Constructors
 
         //- Construct from components
-        borderModel
+        agentNumbers
         (
-            Time& time,
+            Time& t,
             agentCloud& cloud,
             const dictionary& dict
         );
-
-
-    // Selectors
-
-        static autoPtr<borderModel> New
-        (
-            Time& time,
-            agentCloud& cloud,
-            const dictionary& dict
-        );
-
 
     // Destructor
 
-        virtual ~borderModel();
+        ~agentNumbers();
 
 
     // Member Functions
+    // Member Functions
+        
+        //- create an initial configuration
+        void initialConfiguration();
 
+        //- control molecules at various stages of time-step
+        void controlBeforeVelocityI();
+        void controlBeforeMove();
+        void controlBeforeForces();
+        void controlDuringForces
+        (
+            agent* molI,
+            agent* molJ
+        );        
+        void controlAfterForces();
+        void controlAfterVelocityII();
         
+        //- calculate any required properties (end of time-step)
+        void calculateProperties(); 
         
-//         void initialiseBorders();
+        //- output data (optional)
+        void output
+        (
+            const fileName& fixedPathName, 
+            const fileName& timePath
+        );
         
-        virtual void initialConfiguration() = 0;
-        
-        virtual void afterMove() = 0;
-        
-        virtual void afterForce() = 0;
-        
-        virtual void write(const fileName& pathName) = 0;
-        
-        //         const List<vectorList>& borderList() const;
-        
+        //- update properties from a modified dictionary (optional)
+//         void updateProperties(const dictionary&);
+
+        // Access
 };
 
 
@@ -149,7 +151,6 @@ public:
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 
 #endif
 

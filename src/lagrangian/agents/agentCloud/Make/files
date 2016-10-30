@@ -53,14 +53,23 @@ controllers/basic/agentControllers/agentControllers.C
 controllers/basic/agentController/agentController.C
 
 controllers/derived/agentForcing/agentForcing.C
-
+controllers/derived/agentNumbers/agentNumbers.C
 
 /* borders */
 
 borders/basic/borders/borders.C
 borders/basic/borderModel/borderModel.C
 
-borders/derived/repulsiveBorder/repulsiveBorder.C
+borders/derived/reflectiveRectangularBorder/reflectiveRectangularBorder.C
+
+
+/* boundaries */
+
+boundaries/basic/agentBoundaries/agentBoundaries.C
+boundaries/basic/agentCyclicBoundary/agentCyclicBoundary.C
+
+boundaries/derived/cyclicBoundaries/agentStandardCyclic/agentStandardCyclic.C
+boundaries/derived/cyclicBoundaries/agentRPM/agentRPM.C
 
 
 /* schedule */
@@ -71,7 +80,9 @@ schedule/basic/scheduleModel/scheduleModel.C
 schedule/derived/tabularSchedule/tabularSchedule.C
 schedule/derived/agentTypeSchedule/agentTypeSchedule.C
 
+/* multiscale */
 
+multiscale/agentMicroElements/agentMicroElements.C
 
 
 LIB = $(FOAM_LIBBIN)/libagentCloud

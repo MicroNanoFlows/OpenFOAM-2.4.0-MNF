@@ -69,7 +69,8 @@ velocityVerlet::~velocityVerlet()
 void velocityVerlet::init()
 {
     cloud_.f().initialConfig();
-    cloud_.b().initialConfig();    
+    cloud_.b().initialConfig();
+    cloud_.ob().initialConfig();        
     cloud_.s().initialConfig();
     
     // initial force
@@ -122,12 +123,10 @@ void velocityVerlet::evolve()
     // after time step 
     
     cloud_.fields().calculateFields();
-    
     cloud_.fields().writeFields();
-    
     cloud_.controllers().calculateStateProps();
-    
     cloud_.controllers().outputStateResults(); 
+    cloud_.ob().calculateProperties();     
 }
 
 

@@ -23,27 +23,26 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    repulsiveBorder
+    agentStandardCyclic
 
 Description
 
 
 SourceFiles
-    repulsiveBorderI.H
-    repulsiveBorder.C
-    repulsiveBorderIO.C
+    agentStandardCyclic.C
+
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef repulsiveBorder_H
-#define repulsiveBorder_H
+#ifndef agentStandardCyclic_H
+#define agentStandardCyclic_H
 
-#include "borderModel.H"
+#include "agentCyclicBoundary.H"
 #include "vector.H"
 #include "polyMesh.H"
+#include "volFields.H"
 #include "agentCloud.H"
-
-
+#include "distribution.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,57 +50,78 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class repulsiveBorder Declaration
+                           Class agentStandardCyclic Declaration
 \*---------------------------------------------------------------------------*/
 
-class repulsiveBorder
+class agentStandardCyclic
 :
-	public borderModel
+	public agentCyclicBoundary
 {
 
 private:
 
     // Private data
-
-        //- subDictionary containing the properties
         dictionary propsDict_;
 
 
 
-        
-    // Private Member Functions
-
- 
-
 public:
 
     //- Runtime type information
-    TypeName("repulsiveBorder");
+    TypeName("agentStandardCyclic");
 
     // Constructors
 
         //- Construct from components
-        repulsiveBorder
+        agentStandardCyclic
         (
-            Time& time,
+            Time& t,
+            const polyMesh& mesh,
             agentCloud& cloud,
             const dictionary& dict
         );
 
     // Destructor
 
-        ~repulsiveBorder();
+        ~agentStandardCyclic();
+
 
     // Member Functions
-        
+
+        void calculateProperties();
+
+        //- create an initial configuration
         void initialConfiguration();
-        
-        void afterMove();
-        
-        void afterForce();
-                
+
+        //- control the molecules
+        void control
+        (
+            agent& p,
+            const cyclicPolyPatch& cpp,
+            agent::trackingData& td
+            
+//             const label& patchi
+        );
+
+
+
+        //- output data
+        void output
+        (
+            const fileName& fixedPathName,
+            const fileName& timePath
+        );
+
+
+
+
 
         // Access
+
+
+
+
+
 };
 
 

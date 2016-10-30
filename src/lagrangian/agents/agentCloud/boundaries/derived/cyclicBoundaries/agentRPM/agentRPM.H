@@ -23,25 +23,26 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    agentProperties
+    agentRPM
 
 Description
 
 
 SourceFiles
-    agentProperties.C
+    agentRPM.C
+
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef agentProperties_H
-#define agentProperties_H
+#ifndef agentRPM_H
+#define agentRPM_H
 
-#include "Time.H"
+#include "agentCyclicBoundary.H"
+#include "vector.H"
 #include "polyMesh.H"
-#include "diagTensor.H"
-#include "transform.H"
-// #include "rotationTensor.H"
-
+#include "volFields.H"
+#include "agentCloud.H"
+#include "distribution.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -49,69 +50,79 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class agentProperties Declaration
+                           Class agentRPM Declaration
 \*---------------------------------------------------------------------------*/
 
-class agentProperties
+class agentRPM
+:
+	public agentCyclicBoundary
 {
+
+private:
+
     // Private data
+        dictionary propsDict_;
+        
+        // probability of reflection
+        // p=0 - pass through
+        // p=1 - full reflection
+        scalar p_;
+        
+        scalar nReflections_;
+        scalar nPasses_;
 
-        const polyMesh& mesh_;
-        
-        // number of agent types 
-        label N_;
-        
-        // ordered list of agent names
-        List<word> names_;
-        
-        // maximum velocities of agents
-        List<scalar> velocityMax_;
-        
-        // unit vector for desired direction
-//         List<vector> desDir_;
-
-        // unit vector for desired velocity
-//         List<scalar> desSpeed_;
-        
-        // list of total masses of each agent type
-//         List<scalar> masses_;
-        
-        
-        // any potential interactions go here 
-        
 public:
+
+    //- Runtime type information
+    TypeName("agentRPM");
 
     // Constructors
 
-        //- constructor
-        agentProperties
+        //- Construct from components
+        agentRPM
         (
-            const polyMesh& mesh
+            Time& t,
+            const polyMesh& mesh,
+            agentCloud& cloud,
+            const dictionary& dict
         );
 
     // Destructor
 
-        ~agentProperties();
+        ~agentRPM();
 
 
-    // Member functions
-        
-        // no of id types
-        const label& nAgentTypes() const;
-        
-        // namelist of all ids 
-        const List<word>& agentIds() const;
-        
-        // maximum velocities of agents
-        const List<scalar>& vMax() const;        
+    // Member Functions
 
-        //
-//         const List<vector>& desDir() const;   
+        void calculateProperties();
 
-//         const List<scalar>& desSpeed() const;   
-        
-//         const List<scalar>& mass() const;
-//         const scalar& mass(const label& id) const;        
+        //- create an initial configuration
+        void initialConfiguration();
+
+        //- control the molecules
+        void control
+        (
+            agent& p,
+            const cyclicPolyPatch& cpp,         
+            agent::trackingData& td
+        );
+
+        //- output data
+        void output
+        (
+            const fileName& fixedPathName,
+            const fileName& timePath
+        );
+
+
+
+
+
+        // Access
+
+
+
+
 
 };
 

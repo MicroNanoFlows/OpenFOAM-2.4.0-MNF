@@ -325,6 +325,12 @@ public:
             const polyPatch&,
             trackingData& td
         );
+        
+        void hitCyclicPatch
+        (
+            const cyclicPolyPatch& cpp, 
+            trackingData& td
+        );        
 
         static void readFields(Cloud<agent>& mC);
 

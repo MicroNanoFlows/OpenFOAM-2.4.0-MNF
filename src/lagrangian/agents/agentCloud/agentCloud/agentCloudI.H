@@ -769,6 +769,11 @@ inline Foam::borders& Foam::agentCloud::b()
     return b_;
 }    
 
+inline Foam::agentBoundaries& Foam::agentCloud::ob()
+{
+    return ob_;
+}  
+
 inline const Foam::schedules& Foam::agentCloud::s() const
 {
     return s_;

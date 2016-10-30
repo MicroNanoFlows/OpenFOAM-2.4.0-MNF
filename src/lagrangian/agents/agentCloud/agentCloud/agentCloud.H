@@ -51,6 +51,7 @@ SourceFiles
 #include "boundedBox.H"
 #include "forceFields.H"
 #include "borders.H"
+#include "agentBoundaries.H"
 #include "schedules.H"
 #include "Random.H"
 
@@ -99,6 +100,8 @@ private:
                 
         borders b_;
 
+        agentBoundaries ob_;
+        
         schedules s_;
         
 
@@ -122,8 +125,8 @@ public:
         (
             Time& t,
             const polyMesh& mesh,
+            const word& cloudName,         
             const agentProperties& cP
-//             cachedRandomMD& rndGen
         );
 
         //- General constructor
@@ -131,8 +134,8 @@ public:
         (
             Time& t,
             const polyMesh& mesh,
+            const word& cloudName,
             const agentProperties& cP,
-//             cachedRandomMD& rndGen,
             const word& option,
             const bool& clearFields
         );
@@ -143,16 +146,16 @@ public:
         (
             Time& t,
             const polyMesh& mesh,
+            const word& cloudName,
             const agentProperties& cP
-//             cachedRandomMD& rndGen
         );
 
         static autoPtr<agentCloud> New
         (
             Time& t,
             const polyMesh& mesh,
+            const word& cloudName,
             const agentProperties& cP,
-//             cachedRandomMD& rndGen,
             const word& option,
             const bool& clearFields
         );
@@ -208,6 +211,8 @@ public:
 
             inline forceFields& f();
             inline borders& b();            
+            
+            inline agentBoundaries& ob();             
             
             inline const schedules& s() const;     
             inline schedules& s();     
