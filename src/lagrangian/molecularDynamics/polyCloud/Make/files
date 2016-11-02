@@ -173,7 +173,7 @@ measurements/derived/otherFields/polyBindingEnergyRadial/polyBindingEnergyRadial
 measurements/derived/otherFields/centreOfMass/centreOfMass.C
 
 /*  - GREEN KUBO  */
-/*measurements/derived/greenKubo/axialSelfDiffusion/axialSelfDiffusion.C*/
+measurements/derived/greenKubo/axialSelfDiffusion/axialSelfDiffusion.C
 
 /*measurements/derived/otherFields/forceInstantProperties/forceInstantProperties.C */
 

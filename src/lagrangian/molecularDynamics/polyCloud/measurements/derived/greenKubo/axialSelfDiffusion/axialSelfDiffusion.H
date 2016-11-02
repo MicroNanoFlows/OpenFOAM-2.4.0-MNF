@@ -73,15 +73,15 @@ private:
 
         word fieldName_;
 
-        word regionName_;
+//         word regionName_;
 
-        label regionId_;
+//         label regionId_;
 
         List<label> molIds_;        
 
         bool useBoundBox_;
 
-        boundedBox bb_;
+//         boundedBox bb_;
 
         vector unitVector_;
 
@@ -96,7 +96,8 @@ private:
         
         label actualNmols_;
         
-        // trackingNumbers available
+
+        List<label> tNaddress_;
         
         label nMols_;
         
@@ -106,7 +107,7 @@ private:
         
         // outer list = tracking numbers (i.e. mols)
         // inner list = nSteps_
-        // values = accumulation of sum over all mols of v(t=0) dot v(t)
+        // values = accumulation sum
         List< List<scalar> > acf_;
         
         List<label> mols_;
@@ -114,12 +115,14 @@ private:
         // self diffusion
         scalar D_;
 
+        // mean ACF - for outputting 
+        List<scalar> ACF_;
         
     // Private Member Functions
         
         void setVelocities();
         
-        scalar getIntegral();
+//         scalar getIntegral();
 
         
 public:
