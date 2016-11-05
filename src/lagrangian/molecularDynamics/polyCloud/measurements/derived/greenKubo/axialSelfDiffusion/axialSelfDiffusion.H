@@ -94,12 +94,14 @@ private:
         // outer counter to average over all acfs
         scalar nBatch_;          
         
-        label actualNmols_;
+        // just the liquid mols
+        label nLiquidMols_;
         
-
+        label nTNs_;
+        
         List<label> tNaddress_;
         
-        label nMols_;
+//         label nMols_;
         
         // inner list = tracking numbers (i.e. mols)
         // outer list = time (nSteps_)        
@@ -110,7 +112,7 @@ private:
         // values = accumulation sum
         List< List<scalar> > acf_;
         
-        List<label> mols_;
+//         List<label> mols_;
         
         // self diffusion
         scalar D_;

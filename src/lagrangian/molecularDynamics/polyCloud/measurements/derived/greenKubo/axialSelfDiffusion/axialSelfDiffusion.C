@@ -108,24 +108,25 @@ axialSelfDiffusion::~axialSelfDiffusion()
 
 void axialSelfDiffusion::createField()
 {
-    nMols_ = molCloud_.moleculeTracking().getMaxTrackingNumber();
-    
-    tNaddress_.setSize(nMols_);
-    
-    
-    label actualNmols_ = 0;
+    label maxTN = 0; 
     
     IDLList<polyMolecule>::iterator mol(molCloud_.begin());
     
-    label actualNmols_ = 0;
+    DynamicList<label> tNs(0);
     
     for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
     {
         if(findIndex(molIds_, mol().id()) != -1)
         {
             label tN = mol().trackingNumber();
-            tNaddress_[tN] = actualNmols_;
-            actualNmols_ ++;
+            tNs.append(tN);
+        }
+        
+        label tN = mol().trackingNumber();
+        
+        if(tN > maxTN)
+        {
+            maxTN = tN;
         }
     }
     
@@ -141,9 +142,7 @@ void axialSelfDiffusion::createField()
                 {
                     OPstream toNeighbour(Pstream::blocking, proc);
 
-                    toNeighbour << mols << mass << mom 
-                                << kE << angularKeSum << dof << kineticTensor 
-                                << virialTensor;
+                    toNeighbour << maxTN;
                 }
             }
         }
@@ -153,74 +152,156 @@ void axialSelfDiffusion::createField()
         {
             if(p != Pstream::myProcNo())
             {
-                scalarField molsProc;
-                scalarField massProc;
-                vectorField momProc;
-                scalarField kEProc;
-                scalarField angularKeSumProc;
-                scalarField dofProc;
-                tensorField kineticTensorProc;
-                tensorField virialTensorProc;
+                label maxTNProc;
 
                 const int proc = p;
                 {
                     IPstream fromNeighbour(Pstream::blocking, proc);
-                    fromNeighbour  >> molsProc >> massProc >> momProc 
-                                >> kEProc >> angularKeSumProc >> dofProc >> kineticTensorProc
-                                >> virialTensorProc;
+                    fromNeighbour  >> maxTNProc;
+                }
+                if(maxTNProc > maxTN)
+                {
+                    maxTN = maxTNProc;
+                }
+            }
+        }
+    }    
+   
+    Pout << "maxTN = " << maxTN << endl;
+   
+    
+    //- parallel communication
+    if(Pstream::parRun())
+    {
+        List<label> tNsTransfer(tNs.size());
+        
+        forAll(tNs, i)
+        {
+            tNsTransfer[i]=tNs[i];
+        }
+        
+        //-sending
+        for (int p = 0; p < Pstream::nProcs(); p++)
+        {
+            if(p != Pstream::myProcNo())
+            {
+                const int proc = p;
+                {
+                    OPstream toNeighbour(Pstream::blocking, proc);
+
+                    toNeighbour << tNsTransfer;
+                }
+            }
+        }
+    
+        //- receiving
+        for (int p = 0; p < Pstream::nProcs(); p++)
+        {
+            if(p != Pstream::myProcNo())
+            {
+                List<label> tNsProc;
+
+                const int proc = p;
+                {
+                    IPstream fromNeighbour(Pstream::blocking, proc);
+                    fromNeighbour  >> tNsProc;
                 }
     
-                mols += molsProc;
-                mass += massProc;
-                mom += momProc;
-                kE += kEProc;
-                angularKeSum += angularKeSumProc;
-                dof += dofProc;
-                kineticTensor += kineticTensorProc;
-                virialTensor += virialTensorProc;
+                forAll(tNsProc, i)
+                {
+                    tNs.append(tNsProc[i]);
+                }
             }
         }
     }
     
+//     Pout << "error1" << endl;
     
-    acf_.setSize(nMols_);
+    tNaddress_.setSize(maxTN+1, -1);
+    
+    if(Pstream::myProcNo() == 0)
+    {
+        forAll(tNs, i)
+        {        
+            tNaddress_[tNs[i]] = i;
+        }
+    }
+    
+    //- parallel communication
+    if(Pstream::parRun())
+    {
+        //-sending
+        for (int p = 0; p < Pstream::nProcs(); p++)
+        {
+            if(p != Pstream::myProcNo())
+            {
+                const int proc = p;
+                {
+                    OPstream toNeighbour(Pstream::blocking, proc);
+
+                    toNeighbour << tNaddress_;
+                }
+            }
+        }
+    
+        //- receiving
+        for (int p = 0; p < Pstream::nProcs(); p++)
+        {
+            if(p != Pstream::myProcNo())
+            {
+                List<label> tNaddressProc;
+
+                const int proc = p;
+                {
+                    IPstream fromNeighbour(Pstream::blocking, proc);
+                    fromNeighbour  >> tNaddressProc;
+                }
+    
+                forAll(tNaddressProc, i)
+                {
+                    if(tNaddressProc[i] != -1)
+                    {
+                        tNaddress_[i]=tNaddressProc[i];
+                    }
+                }
+            }
+        }
+    }
+    
+    nLiquidMols_ = 0;
+    
+    forAll(tNaddress_, i)
+    {
+        if(tNaddress_[i] != -1)
+        {
+            nLiquidMols_++;
+        }
+    }
+    
+    Pout << "number of liquid mols = " << nLiquidMols_ << endl;
+    
+    
+    
+    acf_.setSize(nLiquidMols_);
     
     velocities_.clear();
-    velocities_.setSize(nMols_);
+    velocities_.setSize(nLiquidMols_);
     
     forAll(velocities_, i)
     {
         velocities_[i].setSize(nSteps_, 0.0);
         acf_[i].setSize(nSteps_, 0.0);
     }
-    
-    mols_.clear();
-    mols_.setSize(nMols_, 0);
 
     ACF_.setSize(nSteps_, 0.0);
     
     // set initial velocities 
-    
-    IDLList<polyMolecule>::iterator mol(molCloud_.begin());
-    
-    
-    for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
-    {
-        if(findIndex(molIds_, mol().id()) != -1)
-        {
-            label tN = mol().trackingNumber();                
-            velocities_[tN][nS_] = mol().v() & unitVector_;
-            mols_[tN] = 1;                
-        }
-    }    
-    
-    
+        
+    setVelocities();
     nS_++;
     
-    
-        FatalErrorIn("axialSelfDiffusion::axialSelfDiffusion()")
-            << "Fatal error test "
-            << exit(FatalError);    
+    Pout << "done " << endl;
+
 }
 
 
@@ -232,8 +313,13 @@ void axialSelfDiffusion::setVelocities()
     {
         if(findIndex(molIds_, mol().id()) != -1)
         {
-            label tN = mol().trackingNumber();                
-            velocities_[tN][nS_] = mol().v() & unitVector_;
+            label tN = mol().trackingNumber();
+            label molIndex=tNaddress_[tN];
+            
+            if(molIndex != -1)
+            {
+                velocities_[molIndex][nS_] = mol().v() & unitVector_;
+            }
         }
     }     
 }
@@ -262,21 +348,18 @@ void axialSelfDiffusion::calculateField()
         label T = nSteps_;
         
         
-        for (label i=0; i<nMols_; i++)
+        for (label i=0; i<nLiquidMols_; i++)
         {
-            if(mols_[i] == 1)
+            for (label k=0; k<T; k++)
             {
-                for (label k=0; k<T; k++)
-                {
-                    scalar uSum = 0.0;
-                    
-                    for (label t=0; t<T-k; t++)
-                    {
-                        uSum += velocities_[i][t]*velocities_[i][t+k];
-                    }
+                scalar uSum = 0.0;
                 
-                    acf_[i][k] += uSum/(T-1);
+                for (label t=0; t<T-k; t++)
+                {
+                    uSum += velocities_[i][t]*velocities_[i][t+k];
                 }
+            
+                acf_[i][k] += uSum/(T-1);
             }
         }
     
@@ -285,21 +368,31 @@ void axialSelfDiffusion::calculateField()
         
         // the acf summed across molecule batches and all molecules
         
-        for (label i=0; i<nMols_; i++)
+        ACF_ = 0.0; // reset
+        
+        for (label i=0; i<nLiquidMols_; i++)
         {
-            if(mols_[i] == 1)
+            for (label k=0; k<T; k++)
             {
-                for (label k=0; k<T; k++)
-                {
-                    ACF_[k] += acf_[i][k]/(nBatch_*scalar(actualNmols_));
-                }
+                ACF_[k] += acf_[i][k]/(nBatch_*scalar(nLiquidMols_));
             }
         }
         
         
         // integrate ACF_ 
         
+        
+        // reset 
+        
         nS_ = 0;
+        
+        forAll(velocities_, i)
+        {
+            forAll(velocities_[i], j)
+            {
+                velocities_[i][j] = 0.0;
+            }
+        }
     }
     else
     {
