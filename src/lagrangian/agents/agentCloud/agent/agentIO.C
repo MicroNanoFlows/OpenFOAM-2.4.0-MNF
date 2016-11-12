@@ -43,6 +43,8 @@ Foam::agent::agent
     f_(vector::zero),    
     specialPosition_(vector::zero),
     mass_(0.0),
+    radius_(0.0),
+    desiredSpeed_(0.0),
     potentialEnergy_(0.0),
     R_(GREAT),
     frac_(1.0),
@@ -59,6 +61,8 @@ Foam::agent::agent
             is  >> f_;
             is  >> specialPosition_;
             is >> mass_;
+            is >> radius_;
+            is >> desiredSpeed_;
             is >> potentialEnergy_;
             is >> R_;
             is >> frac_;
@@ -76,6 +80,8 @@ Foam::agent::agent
               + sizeof(f_)
               + sizeof(specialPosition_)
               + sizeof(mass_)
+              + sizeof(radius_)
+              + sizeof(desiredSpeed_)
               + sizeof(potentialEnergy_)
               + sizeof(R_)
               + sizeof(frac_)              
@@ -127,6 +133,12 @@ void Foam::agent::readFields(Cloud<agent>& mC)
     IOField<scalar> mass(mC.fieldIOobject("mass", IOobject::MUST_READ));
     mC.checkFieldIOobject(mC, mass);    
     
+    IOField<scalar> radius(mC.fieldIOobject("radius", IOobject::MUST_READ));
+    mC.checkFieldIOobject(mC, radius);   
+    
+    IOField<scalar> desiredSpeed(mC.fieldIOobject("desiredSpeed", IOobject::MUST_READ));
+    mC.checkFieldIOobject(mC, desiredSpeed);       
+    
     IOField<label> special(mC.fieldIOobject("special", IOobject::MUST_READ));
     mC.checkFieldIOobject(mC, special);
     
@@ -145,6 +157,8 @@ void Foam::agent::readFields(Cloud<agent>& mC)
 //         mol.a_ = a[i];
         mol.specialPosition_ = specialPosition[i];
         mol.mass_ = mass[i];
+        mol.radius_ = radius[i];
+        mol.desiredSpeed_ = desiredSpeed[i];
         mol.special_ = special[i];
         mol.id_ = id[i];
         mol.trackingNumber_ = trackingNumber[i];        
@@ -173,6 +187,8 @@ void Foam::agent::writeFields(const Cloud<agent>& mC)
     IOField<label> special(mC.fieldIOobject("special", IOobject::NO_READ), np);
     IOField<label> id(mC.fieldIOobject("id", IOobject::NO_READ), np);
     IOField<scalar> mass(mC.fieldIOobject("mass", IOobject::NO_READ), np);    
+    IOField<scalar> radius(mC.fieldIOobject("radius", IOobject::NO_READ), np);
+    IOField<scalar> desiredSpeed(mC.fieldIOobject("desiredSpeed", IOobject::NO_READ), np);
     IOField<label> trackingNumber(mC.fieldIOobject("trackingNumber", IOobject::NO_READ), np);
     
     // Post processing fields
@@ -184,6 +200,8 @@ void Foam::agent::writeFields(const Cloud<agent>& mC)
 
         v[i] = mol.v_;
         mass[i] = mol.mass_;
+        radius[i] = mol.radius_;
+        desiredSpeed[i] = mol.desiredSpeed_;
         specialPosition[i] = mol.specialPosition_;
         special[i] = mol.special_;
         id[i] = mol.id_;
@@ -193,6 +211,8 @@ void Foam::agent::writeFields(const Cloud<agent>& mC)
 
     v.write();
     mass.write();
+    radius.write();
+    desiredSpeed.write();
     specialPosition.write();
     special.write();
     id.write();
@@ -225,6 +245,8 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const agent& mol)
             << token::SPACE << mol.f_
             << token::SPACE << mol.specialPosition_
             << token::SPACE << mol.mass_
+            << token::SPACE << mol.radius_
+            << token::SPACE << mol.desiredSpeed_
             << token::SPACE << mol.potentialEnergy_
             << token::SPACE << mol.R_
             << token::SPACE << mol.frac_
@@ -243,6 +265,8 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const agent& mol)
           + sizeof(mol.f_)
           + sizeof(mol.specialPosition_)
           + sizeof(mol.mass_)
+          + sizeof(mol.radius_)
+          + sizeof(mol.desiredSpeed_)
           + sizeof(mol.potentialEnergy_)
           + sizeof(mol.R_)
           + sizeof(mol.frac_)

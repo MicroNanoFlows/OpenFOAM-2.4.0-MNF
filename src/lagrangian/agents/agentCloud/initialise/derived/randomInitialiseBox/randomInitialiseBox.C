@@ -76,7 +76,7 @@ void randomInitialiseBox::setInitialConfiguration()
     Info << nl << "Test initialise " << endl;
     
     
-    const scalar temperature(readScalar(propsDict_.lookup("temperature")));
+//     const scalar temperature(readScalar(propsDict_.lookup("temperature")));
 
 //     const vector bulkVelocity(propsDict_.lookup("bulkVelocity"));
 
@@ -92,8 +92,18 @@ void randomInitialiseBox::setInitialConfiguration()
             << exit(FatalError);
     }
 
-    scalar massI = readScalar(propsDict_.lookup("mass"));
+    scalar meanMass = readScalar(propsDict_.lookup("meanMass"));
+    scalar massRange = readScalar(propsDict_.lookup("massRange"));
 
+    scalar meanRadius = readScalar(propsDict_.lookup("meanRadius"));
+    scalar radiusRange = readScalar(propsDict_.lookup("radiusRange"));
+
+    scalar meanDesSpeed = readScalar(propsDict_.lookup("meanDesiredSpeed"));
+    scalar desSpeedRange = readScalar(propsDict_.lookup("desiredSpeedRange"));
+   
+    scalar minV = readScalar(propsDict_.lookup("minV"));
+    scalar maxV = readScalar(propsDict_.lookup("maxV"));        
+    
     bool frozen = false;
 
     if (propsDict_.found("frozen"))
@@ -150,11 +160,17 @@ void randomInitialiseBox::setInitialConfiguration()
             tetPt
         );
         
-        vector v = equipartitionLinearVelocity(temperature, massI);
-//         Info << "v = " << v << endl;
+        // initialise agent using a random variable 
+        vector v = setInitialVelocity(minV, maxV);
+        
+        scalar massI = gaussianDistribution(meanMass, massRange);
+        scalar radius = gaussianDistribution(meanRadius, radiusRange);
+        scalar desiredSpeed = gaussianDistribution(meanDesSpeed, desSpeedRange);
+        
+        d.add(massI);
         
         v.z()=0.0;
-        d.add(mag(v));
+//         d.add(mag(v));
         
         if(cell != -1)
         {
@@ -166,6 +182,8 @@ void randomInitialiseBox::setInitialConfiguration()
                 tetPt,
                 id,
                 massI,
+                radius,
+                desiredSpeed,
                 frozen,
                 v
             );

@@ -97,13 +97,17 @@ void helbingExponential::pairPotentialFunction
     vector& force
 )
 {
+    // r is the distance between two agents 
+    
     vector rij = molI->position()-molJ->position();
-    scalar rijMag=mag(rij);
-    vector nij = rij/rijMag;
+//     scalar rijMag=mag(rij);
+    vector nij = rij/r;
     vector tij = vector (-nij.y(), nij.x(), 0);
     
     scalar dIJ = r;
-    scalar rIJ = 0.7;
+    
+    // the sum of radii
+    scalar rIJ = molI->radius() + molJ->radius();
     
     if(dIJ > rIJ)
     {

@@ -55,7 +55,7 @@ agentWillForce::agentWillForce
     bodyForce(cloud, t, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
     agentIds_(),
-    desiredSpeed_(readScalar(propsDict_.lookup("desiredSpeed"))),
+//     desiredSpeed_(readScalar(propsDict_.lookup("desiredSpeed"))),
     desiredDirection_(propsDict_.lookup("desiredDirection")),
     tau_(readScalar(propsDict_.lookup("tau")))
 //     stdev_(readScalar(propsDict_.lookup("stdev")))
@@ -90,7 +90,7 @@ void agentWillForce::force(agent* p)
 {
     if(findIndex(agentIds_, p->id()) != -1)
     {
-        p->f() += (desiredSpeed_*desiredDirection_ - p->v())*p->mass() / tau_;
+        p->f() += (p->desiredSpeed()*desiredDirection_ - p->v())*p->mass() / tau_;
     }
 }
 

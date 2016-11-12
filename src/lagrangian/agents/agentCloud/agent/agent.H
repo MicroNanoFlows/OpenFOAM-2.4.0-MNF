@@ -132,6 +132,10 @@ private:
 
         scalar mass_;
         
+        scalar radius_;
+        
+        scalar desiredSpeed_;
+        
         scalar potentialEnergy_;
 
         scalar R_;
@@ -170,7 +174,9 @@ public:
             const vector& d,
             const vector& f,
             const vector& specialPosition,
-            const scalar& mass,         
+            const scalar& mass,  
+            const scalar& radius,  
+            const scalar& desiredSpeed,  
             const scalar& potentialEnergy,
             const scalar& R,
             const scalar& frac,   
@@ -263,6 +269,12 @@ public:
 
             inline const scalar& mass() const;
             inline scalar& mass();             
+
+            inline const scalar& radius() const;
+            inline scalar& radius();  
+            
+            inline const scalar& desiredSpeed() const;
+            inline scalar& desiredSpeed();              
             
             inline const scalar& potentialEnergy() const;
             inline scalar& potentialEnergy();            

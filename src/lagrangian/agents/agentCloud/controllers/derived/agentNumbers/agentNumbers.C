@@ -215,6 +215,8 @@ void agentNumbers::insertAgents(const label& N)
                 vector::zero,
                 vector::zero,
                 mass_, // mass 
+                0.35,
+                1.0, 
                 0.0,
                 GREAT,
                 1.0,

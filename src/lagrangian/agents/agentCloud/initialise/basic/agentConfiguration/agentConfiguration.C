@@ -100,19 +100,55 @@ agentConfiguration::~agentConfiguration()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-vector agentConfiguration::equipartitionLinearVelocity
+
+// vector agentConfiguration::equipartitionLinearVelocity
+// (
+//     scalar temperature,
+//     scalar mass
+// )
+// {
+//     return sqrt(1.38064852e-23*temperature/mass)*vector
+//     (
+//         cloud_.rndGen().GaussNormal(),
+//         cloud_.rndGen().GaussNormal(),
+//         cloud_.rndGen().GaussNormal()
+//     );
+// }
+
+vector agentConfiguration::setInitialVelocity
 (
-    scalar temperature,
-    scalar mass
+    const scalar& minV,
+    const scalar& maxV 
 )
 {
-    return sqrt(1.38064852e-23*temperature/mass)*vector
+    return vector
     (
-        cloud_.rndGen().GaussNormal(),
-        cloud_.rndGen().GaussNormal(),
-        cloud_.rndGen().GaussNormal()
+        cloud_.rndGen().scalar01()*(maxV-minV) + minV,
+        cloud_.rndGen().scalar01()*(maxV-minV) + minV,
+        0.0
     );
 }
+
+
+scalar agentConfiguration::gaussianDistribution
+(
+    const scalar& mean,
+    const scalar& range
+ 
+)
+{
+    return mean + 0.25*range*cloud_.rndGen().GaussNormal();
+}
+
+// scalar agentConfiguration::uniformDistibution
+// (
+//     const scalar& mean,
+//     const scalar& range
+//  
+// )
+// {
+//     return cloud_.rndGen().scalar01()*(maxV-minV) + minV;
+// }
 
 
 
@@ -124,6 +160,8 @@ void agentConfiguration::insertAgent
     const label tetPt, 
     const label& id,
     const scalar& mass, 
+    const scalar& radius,
+    const scalar& desiredSpeed,
 //     const bool& tethered,
     const bool& frozen,
     const vector& v
@@ -156,6 +194,8 @@ void agentConfiguration::insertAgent
         vector::zero,
         specialPosition,
         mass,
+        radius,
+        desiredSpeed,
         0.0,
         GREAT,
         1.0,

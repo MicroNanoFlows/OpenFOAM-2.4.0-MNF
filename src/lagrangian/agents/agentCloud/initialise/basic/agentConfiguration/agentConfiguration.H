@@ -79,6 +79,8 @@ protected:
             const label tetPt,
             const label& id,      
             const scalar& mass,
+            const scalar& radius,
+            const scalar& desiredSpeed,         
             const bool& frozen,
             const vector& v
         );
@@ -100,10 +102,16 @@ protected:
             agent& mol
         );        
         
-        vector equipartitionLinearVelocity
+        vector setInitialVelocity
         (
-            scalar temperature,
-            scalar mass
+            const scalar& minV,
+            const scalar& maxV 
+        );
+        
+        scalar gaussianDistribution
+        (
+            const scalar& mean,
+            const scalar& range
         );
 
 public:

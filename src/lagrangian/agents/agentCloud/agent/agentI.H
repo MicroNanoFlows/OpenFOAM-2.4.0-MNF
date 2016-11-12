@@ -40,6 +40,8 @@ inline Foam::agent::agent
     const vector& f,
     const vector& specialPosition,
     const scalar& mass,
+    const scalar& radius,
+    const scalar& desiredSpeed, 
     const scalar& potentialEnergy, 
     const scalar& R,
     const scalar& frac,   
@@ -54,6 +56,8 @@ inline Foam::agent::agent
     f_(f),
     specialPosition_(specialPosition),
     mass_(mass),
+    radius_(radius),
+    desiredSpeed_(desiredSpeed),
     potentialEnergy_(potentialEnergy),
     R_(R),    
     frac_(frac),
@@ -125,6 +129,30 @@ inline Foam::scalar& Foam::agent::mass()
 {
     return mass_;
 }
+
+inline const Foam::scalar& Foam::agent::radius() const
+{
+    return radius_;
+}
+
+inline Foam::scalar& Foam::agent::radius()
+{
+    return radius_;
+}
+
+
+inline const Foam::scalar& Foam::agent::desiredSpeed() const
+{
+    return desiredSpeed_;
+}
+
+inline Foam::scalar& Foam::agent::desiredSpeed()
+{
+    return desiredSpeed_;
+}
+
+
+
 
 inline const Foam::scalar& Foam::agent::potentialEnergy() const
 {

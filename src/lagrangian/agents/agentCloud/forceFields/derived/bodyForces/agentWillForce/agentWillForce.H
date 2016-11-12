@@ -68,7 +68,7 @@ private:
         //- ids of agents
         List<label> agentIds_;
         
-        scalar desiredSpeed_;
+//         scalar desiredSpeed_;
         
         vector desiredDirection_;
         

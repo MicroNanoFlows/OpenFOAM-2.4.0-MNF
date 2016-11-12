@@ -174,6 +174,8 @@ public:
             const vector& f,
             const vector& specialPosition,
             const scalar& mass,
+            const scalar& radius,
+            const scalar& desiredSpeed,
             const scalar& potentialEnergy,
             const scalar& R,
             const scalar& frac,   
