@@ -62,25 +62,10 @@ axialSelfDiffusion::axialSelfDiffusion
     propsDict_(dict.subDict(typeName + "Properties")),
     fields_(t, mesh, "dummy"),
     fieldName_(propsDict_.lookup("fieldName")),
-//     regionName_(propsDict_.lookup("zoneName")),
-//     regionId_(-1),
-    useBoundBox_(false),
     unitVector_(propsDict_.lookup("unitVector")),    
     nSteps_(readLabel(propsDict_.lookup("nSteps")))  
 
 {
-//     const cellZoneMesh& cellZones = mesh_.cellZones();
-// 
-//     regionId_ = cellZones.findZoneID(regionName_);
-// 
-//     if(regionId_ == -1)
-//     {
-//         FatalErrorIn("axialSelfDiffusion::axialSelfDiffusion()")
-//             << "Cannot find region: " << regionName_ << nl << "in: "
-//             << time_.time().system()/"fieldPropertiesDict"
-//             << exit(FatalError);
-//     }
-
    // choose molecule ids to sample
 
     molIds_.clear();
@@ -116,13 +101,12 @@ void axialSelfDiffusion::createField()
     
     for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
     {
+        label tN = mol().trackingNumber();
+        
         if(findIndex(molIds_, mol().id()) != -1)
         {
-            label tN = mol().trackingNumber();
             tNs.append(tN);
         }
-        
-        label tN = mol().trackingNumber();
         
         if(tN > maxTN)
         {
@@ -159,6 +143,7 @@ void axialSelfDiffusion::createField()
                     IPstream fromNeighbour(Pstream::blocking, proc);
                     fromNeighbour  >> maxTNProc;
                 }
+                
                 if(maxTNProc > maxTN)
                 {
                     maxTN = maxTNProc;
@@ -168,7 +153,6 @@ void axialSelfDiffusion::createField()
     }    
    
     Pout << "maxTN = " << maxTN << endl;
-   
     
     //- parallel communication
     if(Pstream::parRun())
@@ -346,7 +330,6 @@ void axialSelfDiffusion::calculateField()
         // calculate molecule based ACF 
         
         label T = nSteps_;
-        
         
         for (label i=0; i<nLiquidMols_; i++)
         {

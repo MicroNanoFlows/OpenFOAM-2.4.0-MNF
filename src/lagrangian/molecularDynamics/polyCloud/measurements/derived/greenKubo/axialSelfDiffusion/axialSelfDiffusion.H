@@ -73,15 +73,7 @@ private:
 
         word fieldName_;
 
-//         word regionName_;
-
-//         label regionId_;
-
         List<label> molIds_;        
-
-        bool useBoundBox_;
-
-//         boundedBox bb_;
 
         vector unitVector_;
 
@@ -103,11 +95,11 @@ private:
         
 //         label nMols_;
         
-        // inner list = tracking numbers (i.e. mols)
+        // inner list = number of liquid mols
         // outer list = time (nSteps_)        
         List<List<scalar> > velocities_;
         
-        // outer list = tracking numbers (i.e. mols)
+        // outer list = number of liquid mols
         // inner list = nSteps_
         // values = accumulation sum
         List< List<scalar> > acf_;
@@ -117,7 +109,7 @@ private:
         // self diffusion
         scalar D_;
 
-        // mean ACF - for outputting 
+        // mean ACF - for outputting (list = number of steps)
         List<scalar> ACF_;
         
     // Private Member Functions
