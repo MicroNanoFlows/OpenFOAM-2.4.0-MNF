@@ -99,24 +99,31 @@ void helbingExponential::pairPotentialFunction
 {
     // r is the distance between two agents 
     
-    vector rij = molI->position()-molJ->position();
-//     scalar rijMag=mag(rij);
-    vector nij = rij/r;
-    vector tij = vector (-nij.y(), nij.x(), 0);
-    
-    scalar dIJ = r;
-    
-    // the sum of radii
-    scalar rIJ = molI->radius() + molJ->radius();
-    
-    if(dIJ > rIJ)
+    if(r > 0.01) // test
     {
-        force = A_*exp((rIJ-dIJ)/B_)*nij;
-    } 
+        vector rij = molI->position()-molJ->position();
+    //     scalar rijMag=mag(rij);
+        vector nij = rij/r;
+        vector tij = vector (-nij.y(), nij.x(), 0);
+        
+        scalar dIJ = r;
+        
+        // the sum of radii
+        scalar rIJ = molI->radius() + molJ->radius();
+        
+        if(dIJ > rIJ)
+        {
+            force = A_*exp((rIJ-dIJ)/B_)*nij;
+        } 
+        else
+        {
+            force = (A_*exp((rIJ-dIJ)/B_) + k_*(rIJ-dIJ) )*nij  + 
+                    kappa_*(rIJ-dIJ)*((molJ->v() - molI->v()) & tij)*tij;
+        }
+    }
     else
     {
-        force = (A_*exp((rIJ-dIJ)/B_) + k_*(rIJ-dIJ) )*nij  + 
-                kappa_*(rIJ-dIJ)*((molJ->v() - molI->v()) & tij)*tij;
+        force = vector::zero;
     }
 }
 
