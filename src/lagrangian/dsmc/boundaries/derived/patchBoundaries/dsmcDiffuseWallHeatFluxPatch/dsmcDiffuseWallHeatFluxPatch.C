@@ -54,9 +54,9 @@ dsmcDiffuseWallHeatFluxPatch::dsmcDiffuseWallHeatFluxPatch
 :
     dsmcPatchBoundary(t, mesh, cloud, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
-	faceAreas_(nFaces_,0.0),
-	preIE_(0.0),
-	postIE_(0.0),
+    faceAreas_(nFaces_,0.0),
+    preIE_(0.0),
+    postIE_(0.0),
     deltaQ_(nFaces_,0.0),
     mUnUp_(nFaces_,0.0),
     mUn_(nFaces_,0.0),
@@ -84,12 +84,12 @@ dsmcDiffuseWallHeatFluxPatch::~dsmcDiffuseWallHeatFluxPatch()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 void dsmcDiffuseWallHeatFluxPatch::initialConfiguration()
 {
-	forAll(faceAreas_, f)
-	{
-		const label& faceI = faces_[f];
-		const vector& sF = mesh_.faceAreas()[faceI];
-		faceAreas_[f] = mag(sF);
-	}
+    forAll(faceAreas_, f)
+    {
+        const label& faceI = faces_[f];
+        const vector& sF = mesh_.faceAreas()[faceI];
+        faceAreas_[f] = mag(sF);
+    }
 }
 
 void dsmcDiffuseWallHeatFluxPatch::calculateProperties()
@@ -110,15 +110,20 @@ void dsmcDiffuseWallHeatFluxPatch::controlParticle(dsmcParcel& p, dsmcParcel::tr
 
     scalar m = constProps.mass();
 
-    preIE_ = 0.5*m*(p.U() & p.U()) + p.ERot() + p.vibLevel()*constProps.thetaV()*physicoChemical::k.value();
+    preIE_ = 0.5*m*(p.U() & p.U()) + p.ERot();
 
+    forAll(p.vibLevel(), i)
+    {
+        preIE_ += p.vibLevel()[i]*constProps.thetaV()[i]*physicoChemical::k.value();
+    }
+    
     measurePropertiesBeforeControl(p);
 
     vector& U = p.U();
 
     scalar& ERot = p.ERot();
     
-    label& vibLevel = p.vibLevel();
+    labelList& vibLevel = p.vibLevel();
 
     label typeId = p.typeId();
 
@@ -181,8 +186,13 @@ void dsmcDiffuseWallHeatFluxPatch::controlParticle(dsmcParcel& p, dsmcParcel::tr
 
     measurePropertiesAfterControl(p,0.0);
 
-    postIE_ = 0.5*m*(p.U() & p.U()) + p.ERot() + p.vibLevel()*constProps.thetaV()*physicoChemical::k.value();
+    postIE_ = 0.5*m*(p.U() & p.U()) + p.ERot();
 
+    forAll(p.vibLevel(), i)
+    {
+        postIE_ += p.vibLevel()[i]*constProps.thetaV()[i]*physicoChemical::k.value();
+    }
+    
     deltaQ_[wppLocalFace] += cloud_.nParticle()*(preIE_ - postIE_)/(deltaT*faceAreas_[wppLocalFace]);
     
     mUnUp_[wppLocalFace] += ((cloud_.constProps(typeId).mass()/U_dot_nw)*Ut.x());
@@ -190,7 +200,7 @@ void dsmcDiffuseWallHeatFluxPatch::controlParticle(dsmcParcel& p, dsmcParcel::tr
     mUn_[wppLocalFace] += (cloud_.constProps(typeId).mass()/U_dot_nw);
     
     uSlip_[wppLocalFace] = mUnUp_[wppLocalFace]/mUn_[wppLocalFace];
-	
+
 }
 
 void dsmcDiffuseWallHeatFluxPatch::output

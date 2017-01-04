@@ -170,7 +170,7 @@ void dsmcDiffuseCatalyticWallPatch::controlParticle(dsmcParcel& p, dsmcParcel::t
 
     scalar& ERot = p.ERot();
     
-    label& vibLevel = p.vibLevel();
+    labelList& vibLevel = p.vibLevel();
     
     label& ELevel = p.ELevel();
 

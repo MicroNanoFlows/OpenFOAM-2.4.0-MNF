@@ -131,7 +131,7 @@ void atomAtomIonisationDissimilarSpecies::setProperties()
 
     const scalar& rDof1 = cloud_.constProps(reactantIds_[0]).rotationalDegreesOfFreedom();
 
-    if(rDof1 > 1)
+    if(rDof1 > VSMALL)
     {
         FatalErrorIn("atomAtomIonisationDissimilarSpecies::setProperties()")
             << "First reactant must be an atom (not a molecule or an electron): " << reactantMolecules[0] 
@@ -141,9 +141,55 @@ void atomAtomIonisationDissimilarSpecies::setProperties()
     
     // check that reactant two is an 'ATOM'
 
-    const scalar& rDof2 = cloud_.constProps(reactantIds_[1]).mass();
+    const label& rDof2 = cloud_.constProps(reactantIds_[1]).rotationalDegreesOfFreedom();
 
-    if(rDof2 > 1)
+    if(rDof2 > VSMALL)
+    {
+        FatalErrorIn("atomAtomIonisationDissimilarSpecies::setProperties()")
+            << "Second reactant must be an atom (not a molecule or an electron): " << reactantMolecules[1] 
+            << nl 
+            << exit(FatalError);
+    }
+    
+    const label& vDof1 = cloud_.constProps(reactantIds_[0]).vibrationalDegreesOfFreedom();
+
+    if(vDof1 > VSMALL)
+    {
+         FatalErrorIn("atomIonIonisation::setProperties()")
+            << "Reactions are currently only implemented for monatomic and diatomic species"
+            << " This is a polyatomic:" << reactantMolecules[0] 
+            << nl 
+            << exit(FatalError);
+    }
+    
+    // check that reactant two is an 'ATOM'
+
+    const label& vDof2 = cloud_.constProps(reactantIds_[1]).vibrationalDegreesOfFreedom();
+
+    if(vDof2 > VSMALL)
+    {
+         FatalErrorIn("atomIonIonisation::setProperties()")
+            << "Reactions are currently only implemented for monatomic and diatomic species"
+            << " This is a polyatomic:" << reactantMolecules[1] 
+            << nl 
+            << exit(FatalError);
+    }
+    
+     const label& charge1 = cloud_.constProps(reactantIds_[0]).charge();
+
+    if(charge1 == -1)
+    {
+        FatalErrorIn("atomAtomIonisationDissimilarSpecies::setProperties()")
+            << "First reactant must be an atom (not a molecule or an electron): " << reactantMolecules[0] 
+            << nl 
+            << exit(FatalError);
+    }
+    
+    // check that reactant two is an 'ATOM'
+
+    const label& charge2 = cloud_.constProps(reactantIds_[1]).charge();
+
+    if(charge2 == -1)
     {
         FatalErrorIn("atomAtomIonisationDissimilarSpecies::setProperties()")
             << "Second reactant must be an atom (not a molecule or an electron): " << reactantMolecules[1] 
@@ -422,8 +468,8 @@ void atomAtomIonisationDissimilarSpecies::reaction
         vector UQ = q.U();
         scalar ERotP = p.ERot();
         scalar ERotQ = q.ERot();
-        scalar EVibP = p.vibLevel()*cloud_.constProps(typeIdP).thetaV()*physicoChemical::k.value();
-        scalar EVibQ = q.vibLevel()*cloud_.constProps(typeIdQ).thetaV()*physicoChemical::k.value();
+        scalar EVibP = p.vibLevel()[0]*cloud_.constProps(typeIdP).thetaV()[0]*physicoChemical::k.value();
+        scalar EVibQ = q.vibLevel()[0]*cloud_.constProps(typeIdQ).thetaV()[0]*physicoChemical::k.value();
         scalar EEleP = cloud_.constProps(typeIdP).electronicEnergyList()[p.ELevel()];
         scalar EEleQ = cloud_.constProps(typeIdQ).electronicEnergyList()[q.ELevel()];
 
@@ -622,12 +668,13 @@ void atomAtomIonisationDissimilarSpecies::reaction
                 
                 p.typeId() = typeId1;
                 p.U() = uP1;
-                p.vibLevel() = 0;
+                p.vibLevel().setSize(0,0);
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
                 
                 label classificationP = p.classification();
                 scalar RWF = p.RWF();
+                labelList vibLevel(0,0);
                 
                 // insert new product 2
                 cloud_.addNewParcel
@@ -637,13 +684,13 @@ void atomAtomIonisationDissimilarSpecies::reaction
                     RWF,
                     0.0,
                     0,
-                    0,
                     cell,
                     tetFace,
                     tetPt,
                     typeId2,
                     0,
-                    classificationP
+                    classificationP,
+                    vibLevel
                 );
             }
         }
@@ -754,12 +801,13 @@ void atomAtomIonisationDissimilarSpecies::reaction
                 
                 q.typeId() = typeId1;
                 q.U() = uQ1;
-                q.vibLevel() = 0;
+                q.vibLevel().setSize(0,0);
                 q.ERot() = 0.0;
                 q.ELevel() = 0;
                 
                 label classificationQ = q.classification();
                 scalar RWF = q.RWF();
+                labelList vibLevel(0,0);
                 
                 // insert new product 2
                 cloud_.addNewParcel
@@ -769,13 +817,13 @@ void atomAtomIonisationDissimilarSpecies::reaction
                     RWF,
                     0.0,
                     0,
-                    0,
                     cell,
                     tetFace,
                     tetPt,
                     typeId2,
                     0,
-                    classificationQ
+                    classificationQ,
+                    vibLevel
                 );
             }
         }
@@ -792,8 +840,8 @@ void atomAtomIonisationDissimilarSpecies::reaction
         vector UQ = q.U();
         scalar ERotP = p.ERot();
         scalar ERotQ = q.ERot();
-        scalar EVibP = p.vibLevel()*cloud_.constProps(typeIdP).thetaV()*physicoChemical::k.value();
-        scalar EVibQ = q.vibLevel()*cloud_.constProps(typeIdQ).thetaV()*physicoChemical::k.value();
+        scalar EVibP = p.vibLevel()[0]*cloud_.constProps(typeIdP).thetaV()[0]*physicoChemical::k.value();
+        scalar EVibQ = q.vibLevel()[0]*cloud_.constProps(typeIdQ).thetaV()[0]*physicoChemical::k.value();
         scalar EEleP = cloud_.constProps(typeIdP).electronicEnergyList()[p.ELevel()];
         scalar EEleQ = cloud_.constProps(typeIdQ).electronicEnergyList()[q.ELevel()];
 
@@ -992,12 +1040,13 @@ void atomAtomIonisationDissimilarSpecies::reaction
                 
                 p.typeId() = typeId1;
                 p.U() = uP1;
-                p.vibLevel() = 0;
+                p.vibLevel().setSize(0,0);
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
                 
                 label classificationP = p.classification();
                 scalar RWF = p.RWF();
+                labelList vibLevel(0,0);
                 
                 // insert new product 2
                 cloud_.addNewParcel
@@ -1007,13 +1056,13 @@ void atomAtomIonisationDissimilarSpecies::reaction
                     RWF,
                     0.0,
                     0,
-                    0,
                     cell,
                     tetFace,
                     tetPt,
                     typeId2,
                     0,
-                    classificationP
+                    classificationP,
+                    vibLevel
                 );
             }
         }
@@ -1123,12 +1172,13 @@ void atomAtomIonisationDissimilarSpecies::reaction
                 
                 q.typeId() = typeId1;
                 q.U() = uQ1;
-                q.vibLevel() = 0;
+                q.vibLevel().setSize(0,0);
                 q.ERot() = 0.0;
                 q.ELevel() = 0;
                 
                 label classificationQ = q.classification();
                 scalar RWF = q.RWF();
+                labelList vibLevel(0,0);
                 
                 // insert new product 2
                 cloud_.addNewParcel
@@ -1138,13 +1188,13 @@ void atomAtomIonisationDissimilarSpecies::reaction
                     RWF,
                     0.0,
                     0,
-                    0,
                     cell,
                     tetFace,
                     tetPt,
                     typeId2,
                     0,
-                    classificationQ
+                    classificationQ,
+                    vibLevel
                 );
             }
         }
@@ -1159,7 +1209,7 @@ void atomAtomIonisationDissimilarSpecies::reaction
         vector UP = p.U();
         vector UQ = q.U();
         scalar ERotP = p.ERot();
-        scalar EVibP = p.vibLevel()*cloud_.constProps(typeIdP).thetaV()*physicoChemical::k.value();
+        scalar EVibP = p.vibLevel()[0]*cloud_.constProps(typeIdP).thetaV()[0]*physicoChemical::k.value();
         scalar EEleP = cloud_.constProps(typeIdP).electronicEnergyList()[p.ELevel()];
         scalar EEleQ = cloud_.constProps(typeIdQ).electronicEnergyList()[q.ELevel()];
 
@@ -1298,12 +1348,13 @@ void atomAtomIonisationDissimilarSpecies::reaction
                 
                 p.typeId() = typeId1;
                 p.U() = uP1;
-                p.vibLevel() = 0;
+                p.vibLevel().setSize(0,0);
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
                 
                 label classificationP = p.classification();
                 scalar RWF = p.RWF();
+                labelList vibLevel(0,0);
                 
                 // insert new product 2
                 cloud_.addNewParcel
@@ -1313,13 +1364,13 @@ void atomAtomIonisationDissimilarSpecies::reaction
                     RWF,
                     0.0,
                     0,
-                    0,
                     cell,
                     tetFace,
                     tetPt,
                     typeId2,
                     0,
-                    classificationP
+                    classificationP,
+                    vibLevel
                 );
             }
         }
@@ -1332,7 +1383,7 @@ void atomAtomIonisationDissimilarSpecies::reaction
         vector UP = p.U();
         vector UQ = q.U();
         scalar ERotQ = q.ERot();
-        scalar EVibQ = q.vibLevel()*cloud_.constProps(typeIdQ).thetaV()*physicoChemical::k.value();
+        scalar EVibQ = q.vibLevel()[0]*cloud_.constProps(typeIdQ).thetaV()[0]*physicoChemical::k.value();
         scalar EEleP = cloud_.constProps(typeIdP).electronicEnergyList()[p.ELevel()];
         scalar EEleQ = cloud_.constProps(typeIdQ).electronicEnergyList()[q.ELevel()];
 
@@ -1471,12 +1522,13 @@ void atomAtomIonisationDissimilarSpecies::reaction
                 
                 q.typeId() = typeId1;
                 q.U() = uQ1;
-                q.vibLevel() = 0;
+                q.vibLevel().setSize(0,0);
                 q.ERot() = 0.0;
                 q.ELevel() = 0;
                 
                 label classificationQ = q.classification();
                 scalar RWF = q.RWF();
+                labelList vibLevel(0,0);
                 
                 // insert new product 2
                 cloud_.addNewParcel
@@ -1486,13 +1538,13 @@ void atomAtomIonisationDissimilarSpecies::reaction
                     RWF,
                     0.0,
                     0,
-                    0,
                     cell,
                     tetFace,
                     tetPt,
                     typeId2,
                     0,
-                    classificationQ
+                    classificationQ,
+                    vibLevel
                 );
             }
         } 

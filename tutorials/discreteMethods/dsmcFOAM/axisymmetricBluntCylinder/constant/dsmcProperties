@@ -66,12 +66,12 @@ moleculeProperties
 		vibrationalModes        				0;
         omega                           		0.81;
         alpha                                   1.0;
-		characteristicVibrationalTemperature	0;
-        dissociationTemperature            		0;
+		characteristicVibrationalTemperature	();
+        dissociationTemperature            		();
         ionisationTemperature            		0;
-		charDissQuantumLevel					0;
-		Zref 									0;
-		referenceTempForZref                    0;
+		charDissQuantumLevel					();
+		Zref 									();
+		referenceTempForZref                    ();
         charge                                  0;
         numberOfElectronicLevels                1;
         electronicEnergyList                    (0);

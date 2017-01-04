@@ -114,7 +114,7 @@ void dsmcDiffuseWallFieldPatch::controlParticle(dsmcParcel& p, dsmcParcel::track
 
     scalar& ERot = p.ERot();
     
-    label& vibLevel = p.vibLevel();
+    labelList& vibLevel = p.vibLevel();
 
     label typeId = p.typeId();
 
@@ -122,12 +122,8 @@ void dsmcDiffuseWallFieldPatch::controlParticle(dsmcParcel& p, dsmcParcel::track
 
     const polyPatch& patch = mesh_.boundaryMesh()[wppIndex];
 
-//     label wppIndex = wpp.index();
-//     const wallPolyPatch& wpp = static_cast<const wallPolyPatch&>(patch);
-
     label wppLocalFace = patch.whichFace(p.face());
-	
-// 	Info << "wppLocalFace = " << wppLocalFace << endl;
+
 
     vector nw = p.normal();
     nw /= mag(nw);
@@ -179,16 +175,6 @@ void dsmcDiffuseWallFieldPatch::controlParticle(dsmcParcel& p, dsmcParcel::track
           + rndGen.GaussNormal()*tw2
           - sqrt(-2.0*log(max(1 - rndGen.scalar01(), VSMALL)))*nw
         );
-	   
-// 	if(wppLocalFace == 0)
-// 	{
-// 		Info << "Scattering angle, 0 mm = " << atan(U.x()/U.y()) << endl;
-// 	}
-// 	
-// 	if(wppLocalFace == 30)
-// 	{
-// 		Info << "Scattering angle, 5 mm = " << atan(U.x()/U.y()) << endl;
-// 	}
 
     U += boundaryU_.boundaryField()[wppIndex][wppLocalFace];
 

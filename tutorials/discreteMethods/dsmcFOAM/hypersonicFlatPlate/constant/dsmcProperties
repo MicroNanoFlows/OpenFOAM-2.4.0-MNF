@@ -63,16 +63,16 @@ moleculeProperties
         vibrationalModes       		            0;
         omega                             		0.74;
         alpha                                   1.0;
-        characteristicVibrationalTemperature	3371;
-		charDissQuantumLevel					33;
-        dissociationTemperature					113500;
+        characteristicVibrationalTemperature	();
+		charDissQuantumLevel					();
+        dissociationTemperature					();
         ionisationTemperature                   0;
         numberOfElectronicLevels                1;
         electronicEnergyList                    (0);
         degeneracyList                          (1);
         charge                                  0;
-        Zref									19.8; //calculated from the Zuppardi2010 paper = 52500
-        referenceTempForZref                    3371;
+        Zref									(); //calculated from the Zuppardi2010 paper = 52500
+        referenceTempForZref                    ();
     } 
 }
 

@@ -93,7 +93,7 @@ void dsmcDiffuseWallPatch::controlParticle(dsmcParcel& p, dsmcParcel::trackingDa
 
     scalar& ERot = p.ERot();
     
-    label& vibLevel = p.vibLevel();
+    labelList& vibLevel = p.vibLevel();
     
     label& ELevel = p.ELevel();
 
@@ -141,6 +141,8 @@ void dsmcDiffuseWallPatch::controlParticle(dsmcParcel& p, dsmcParcel::trackingDa
     scalar rotationalDof = cloud_.constProps(typeId).rotationalDegreesOfFreedom();
     
     scalar vibrationalDof = cloud_.constProps(typeId).vibrationalDegreesOfFreedom();
+    
+//     Info << "1" << endl;
 
     U =
         sqrt(physicoChemical::k.value()*T/mass)
@@ -150,9 +152,15 @@ void dsmcDiffuseWallPatch::controlParticle(dsmcParcel& p, dsmcParcel::trackingDa
           - sqrt(-2.0*log(max(1 - rndGen.scalar01(), VSMALL)))*nw
         );
 
+//        Info << "2" << endl;
+       
     ERot = cloud_.equipartitionRotationalEnergy(T, rotationalDof);
     
+//     Info << "3" << endl;
+    
     vibLevel = cloud_.equipartitionVibrationalEnergyLevel(T, vibrationalDof, typeId);
+    
+//     Info << "4" << endl;
     
     ELevel = cloud_.equipartitionElectronicLevel
                     (
@@ -161,13 +169,20 @@ void dsmcDiffuseWallPatch::controlParticle(dsmcParcel& p, dsmcParcel::trackingDa
                         cloud_.constProps(typeId).electronicEnergyList(),
                         typeId
                     );
+                    
+//                     Info << "5" << endl;
+    
     
     U += velocity_;
     
-    p.U() = U;
-    p.ERot() = ERot;
-    p.vibLevel() = vibLevel;
-    p.ELevel() = ELevel;
+//     Info << "6" << endl;
+    
+//     p.U() = U;
+//     p.ERot() = ERot;
+//     p.vibLevel() = vibLevel;
+//     p.ELevel() = ELevel;
+    
+//     Info << "7" << endl;
     
     measurePropertiesAfterControl(p, 0.0);
 }

@@ -371,7 +371,7 @@ public:
         );
         
         //- Generate a random vibrational energy
-        label equipartitionVibrationalEnergyLevel
+        labelList equipartitionVibrationalEnergyLevel
         (
             scalar temperature,
             scalar vibrationalDegreesOfFreedom,
@@ -531,14 +531,14 @@ public:
                 const vector& U,
                 const scalar RWF,
                 const scalar ERot,
-                const label vibLevel,
                 const label ELevel,
                 const label cellI,
                 const label tetFaceI,
                 const label tetPtI,
                 const label typeId,
                 const label newParcel,
-                const label classification
+                const label classification,
+                const labelList vibLevel
             );
             
             //- redistribute vibrational energy after a reaction

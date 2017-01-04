@@ -126,6 +126,7 @@ dsmcZoneBounded::dsmcZoneBounded
     mols_(0.0),
     dsmcMols_(0.0),
     molsInt_(0.0),
+    molsElec_(0.0),
     mass_(0.0),
     mcc_(0.0),
     mom_(vector::zero),
@@ -149,7 +150,6 @@ dsmcZoneBounded::dsmcZoneBounded
     e_(0.0),
     stepIndex_(0),
     speciesMols_(),
-    vibrationalETotal_(),
     vDof_(),
     mfp_(),
     
@@ -167,6 +167,7 @@ dsmcZoneBounded::dsmcZoneBounded
     qField_(),
     meanFreePath_(),
     Ma_(),
+    vibrationalETotal_(),
     
     outputField_(4, true),
     instantaneous_(false),
@@ -251,6 +252,7 @@ dsmcZoneBounded::dsmcZoneBounded
     translationalTemperature_.setSize(nBins, 0.0);
     rotationalTemperature_.setSize(nBins, 0.0);
     vibrationalTemperature_.setSize(nBins, 0.0);
+    electronicTemperature_.setSize(nBins, 0.0);
     overallTemperature_.setSize(nBins, 0.0);
     scalarPressure_.setSize(nBins, 0.0);
     pField_.setSize(nBins, tensor::zero);
@@ -261,7 +263,11 @@ dsmcZoneBounded::dsmcZoneBounded
     
     
     speciesMols_.setSize(typeIds_.size(), 0.0);
-    vibrationalETotal_.setSize(typeIds_.size(), 0.0);
+    mccSpecies_.setSize(typeIds_.size(), 0.0);
+    vibrationalETotal_.setSize(typeIds_.size());
+    electronicETotal_.setSize(typeIds_.size(), 0.0);
+    nParticlesGroundElectronicState_.setSize(typeIds_.size(), 0.0);
+    nParticlesFirstElectronicState_.setSize(typeIds_.size(), 0.0);
     vDof_.setSize(typeIds_.size(), 0.0); 
     mfp_.setSize(typeIds_.size(), 0.0);
     
@@ -369,8 +375,10 @@ void dsmcZoneBounded::readIn()
     dict.readIfPresent("mols", mols_);
     dict.readIfPresent("dsmcMols", dsmcMols_);
     dict.readIfPresent("molsInt", molsInt_);
+    dict.readIfPresent("molsElec", molsElec_);
     dict.readIfPresent("mass", mass_);
     dict.readIfPresent("mcc", mcc_);
+    dict.readIfPresent("mccSpecies", mccSpecies_);
     dict.readIfPresent("mom", mom_);
     dict.readIfPresent("UCollected", UCollected_);
     dict.readIfPresent("rotationalEMean", rotationalEMean_);
@@ -392,6 +400,9 @@ void dsmcZoneBounded::readIn()
     dict.readIfPresent("e", e_);     
     
     dict.readIfPresent("vibrationalETotal", vibrationalETotal_);
+    dict.readIfPresent("electronicETotal", electronicETotal_);
+    dict.readIfPresent("nParticlesGroundElectronicState", nParticlesGroundElectronicState_);
+    dict.readIfPresent("nParticlesFirstElectronicState", nParticlesFirstElectronicState_);
     dict.readIfPresent("speciesMols", speciesMols_);
     
     dict.readIfPresent("averagingCounter", averagingCounter_);
@@ -424,8 +435,10 @@ void dsmcZoneBounded::writeOut()
         dict.add("mols", mols_);
         dict.add("dsmcMols", dsmcMols_);
         dict.add("molsInt", molsInt_);
+        dict.add("molsElec", molsElec_);
         dict.add("mass", mass_);
         dict.add("mcc", mcc_);
+        dict.add("mccSpecies", mccSpecies_);
         dict.add("mom", mom_);
         dict.add("UCollected", UCollected_);
         dict.add("rotationalEMean", rotationalEMean_);
@@ -447,6 +460,9 @@ void dsmcZoneBounded::writeOut()
         dict.add("e", e_);
         
         dict.add("vibrationalETotal", vibrationalETotal_);
+        dict.add("electronicETotal", electronicETotal_);
+        dict.add("nParticlesGroundElectronicState", nParticlesGroundElectronicState_);
+        dict.add("nParticlesFirstElectronicState", nParticlesFirstElectronicState_);
         dict.add("speciesMols", speciesMols_);
         
         dict.add("averagingCounter", averagingCounter_);
@@ -467,6 +483,10 @@ void dsmcZoneBounded::writeOut()
 
 void dsmcZoneBounded::createField()
 { 
+    forAll(vibrationalETotal_, iD)
+    {
+        vibrationalETotal_[iD].setSize(cloud_.constProps(typeIds_[iD]).vibrationalDegreesOfFreedom(),0.0);
+    }
 }
 
 
@@ -509,6 +529,7 @@ void dsmcZoneBounded::calculateField()
                         cloud_.constProps(p->typeId()).rotationalDegreesOfFreedom();
                         
                     const scalar& mass = constProp.mass()*nParticle;
+                    const scalarList& electronicEnergies = cloud_.constProps(typeIds_[iD]).electronicEnergyList();
 
                     mols_ += nParticle;
                     dsmcMols_ += 1.0;
@@ -529,19 +550,48 @@ void dsmcZoneBounded::calculateField()
                     mccv_ += mass*mag(p->U())*mag(p->U())*(p->U().y());
                     mccw_ += mass*mag(p->U())*mag(p->U())*(p->U().z());
                     
-                    scalar EVib = p->vibLevel()*physicoChemical::k.value()*cloud_.constProps(p->typeId()).thetaV();
+//                     scalar EVib = p->vibLevel()*physicoChemical::k.value()*cloud_.constProps(p->typeId()).thetaV();
 
-                    eu_ += nParticle*( p->ERot() + EVib )*(p->U().x());
-                    ev_ += nParticle*( p->ERot() + EVib )*(p->U().y());
-                    ew_ += nParticle*( p->ERot() + EVib )*(p->U().z());
-                    e_ += nParticle*( p->ERot() + EVib );
+                    scalarList EVib(cloud_.constProps(typeIds_[iD]).vibrationalDegreesOfFreedom());
+                
+                    forAll(EVib, i)
+                    {
+                        EVib[i] = 0.0;
+                    }
+                    
+                    forAll(EVib, i)
+                    {
+                        EVib[i] = p->vibLevel()[i]*physicoChemical::k.value()*cloud_.constProps(p->typeId()).thetaV()[i];
+                    }
+                    
+                    eu_ += nParticle*( p->ERot() + gSum(EVib) )*(p->U().x());
+                    ev_ += nParticle*( p->ERot() + gSum(EVib) )*(p->U().y());
+                    ew_ += nParticle*( p->ERot() + gSum(EVib) )*(p->U().z());
+                    e_ += nParticle*( p->ERot() + gSum(EVib) );
                     
                     vibrationalETotal_[iD] += EVib;
+                    electronicETotal_[iD] += electronicEnergies[p->ELevel()];
                     speciesMols_[iD] += 1.0;
+                    mccSpecies_[iD] += mass*mag(p->U())*mag(p->U());
                     
                     if(rotationalDof > VSMALL)
                     {
                         molsInt_ += 1.0;
+                    }
+                    
+                    if(cloud_.constProps(p->typeId()).numberOfElectronicLevels() > 1)
+                    {
+                        molsElec_ += 1.0;
+                    }
+                    
+                    if(p->ELevel() == 0)
+                    {
+                        nParticlesGroundElectronicState_[iD] += 1.0;
+                    }
+                    
+                    if(p->ELevel() == 1)
+                    {
+                        nParticlesFirstElectronicState_[iD] += 1.0;
                     }
                 }
             }
@@ -558,6 +608,7 @@ void dsmcZoneBounded::calculateField()
         scalar mols = mols_;
         scalar dsmcMols = dsmcMols_;
         scalar molsInt = molsInt_;
+        scalar molsElec = molsElec_;
         scalar mcc = mcc_;
         vector mom = mom_;
         vector UCollected = UCollected_;
@@ -579,8 +630,12 @@ void dsmcZoneBounded::calculateField()
         scalar ew = ew_;
         scalar e = e_;
         
-        scalarField vibrationalETotal = vibrationalETotal_;
+        List<scalarField> vibrationalETotal = vibrationalETotal_;
+        scalarField electronicETotal = electronicETotal_;
+        scalarField nParticlesGroundElectronicState = nParticlesGroundElectronicState_;
+        scalarField nParticlesFirstElectronicState = nParticlesFirstElectronicState_;
         scalarField speciesMols = speciesMols_;
+        scalarField mccSpecies = mccSpecies_;
         
         //- parallel communication
 
@@ -588,6 +643,7 @@ void dsmcZoneBounded::calculateField()
         {
             reduce(mols, sumOp<scalar>());
             reduce(molsInt, sumOp<scalar>());
+            reduce(molsElec, sumOp<scalar>());
             reduce(mass, sumOp<scalar>());
             reduce(mcc, sumOp<scalar>());
             reduce(mom, sumOp<vector>());                
@@ -612,8 +668,12 @@ void dsmcZoneBounded::calculateField()
             
             forAll(vibrationalETotal, iD)
             {
-                reduce(vibrationalETotal[iD], sumOp<scalar>());
+                reduce(vibrationalETotal[iD], sumOp<scalarList>());
+                reduce(electronicETotal[iD], sumOp<scalar>());
                 reduce(speciesMols[iD], sumOp<scalar>());
+                reduce(mccSpecies[iD], sumOp<scalar>());
+                reduce(nParticlesGroundElectronicState[iD], sumOp<scalar>());
+                reduce(nParticlesFirstElectronicState[iD], sumOp<scalar>());
             }
         }
         
@@ -711,38 +771,174 @@ void dsmcZoneBounded::calculateField()
             qField_[n] = q;
             
             // vibrational temperature
-//             scalar vibTxvDof = 0.0;
             scalar totalvDof = 0.0;
+            scalar totalvDofOverall = 0.0;
             scalar vibT = 0.0;
+            scalarList degreesOfFreedomSpecies(typeIds_.size(),0.0);
+            scalarList vibTID(vibrationalETotal.size(),0.0);
             
-            forAll(vibrationalETotal, iD)
+            List<scalarList> degreesOfFreedomMode;
+            List<scalarList> vibTMode;
+            
+            degreesOfFreedomMode.setSize(typeIds_.size());
+            vibTMode.setSize(typeIds_.size());
+            
+            forAll(degreesOfFreedomMode, iD)
             {
-                if(vibrationalETotal[iD] > VSMALL && speciesMols[iD] > VSMALL)
-                {        
-                    const scalar& thetaV = cloud_.constProps(typeIds_[iD]).thetaV();
-                    
-                    scalar vibrationalEMean = (vibrationalETotal[iD]/speciesMols[iD]);
-                    
-                    scalar iMean = vibrationalEMean/(physicoChemical::k.value()*thetaV);
-                    
-                    scalar fraction = speciesMols[iD]/molsInt;
-                    
-                    scalar vibTID = thetaV / log(1.0 + (1.0/iMean));
-                    
-                    vDof_[iD] = fraction*(2.0*thetaV/vibTID) / (exp(thetaV/vibTID) - 1.0);
-                    
-//                     vibTxvDof += vibT*vDof_[iD];
-//                     
-                    totalvDof += vDof_[iD];
-                    
-                    vibT += vibTID*fraction;
-                }
+                degreesOfFreedomMode[iD].setSize(vibrationalETotal.size(), 0.0);
+                vibTMode[iD].setSize(vibrationalETotal.size(), 0.0);
             }
             
-//             if(totalvDof > VSMALL)
+            forAll(vibrationalETotal, iD)
+            {                
+                forAll(vibrationalETotal[iD], m)
+                {
+                    if(vibrationalETotal[iD][m] > VSMALL && speciesMols[iD] > VSMALL)
+                    {        
+                        scalar thetaV = cloud_.constProps(typeIds_[iD]).thetaV()[m];
+                             
+                        scalarList vibrationalEMean = (vibrationalETotal[iD]/speciesMols[iD]);
+                        
+                        scalar iMean = 0.0;
+                    
+                        iMean = vibrationalEMean[m]/(physicoChemical::k.value()*thetaV);
+
+                        vibTMode[iD][m] = thetaV / log(1.0 + (1.0/iMean));
+
+                        degreesOfFreedomMode[iD][m] = (2.0*thetaV/vibTMode[iD][m]) / (exp(thetaV/vibTMode[iD][m]) - 1.0);
+                    }
+                }
+                    
+                forAll(vibrationalETotal[iD], m)
+                {
+                    degreesOfFreedomSpecies[iD] += degreesOfFreedomMode[iD][m];
+                }
+                
+                forAll(vibrationalETotal[iD], m)
+                {
+                    if(degreesOfFreedomSpecies[iD] > VSMALL)
+                    {
+                        vibTID[iD] += vibTMode[iD][m]*degreesOfFreedomMode[iD][m]/degreesOfFreedomSpecies[iD];
+                    }
+                }
+                
+                totalvDof += degreesOfFreedomSpecies[iD];
+                
+                scalar fraction = 0.0;
+                   
+                if(molsInt > VSMALL)
+                {
+                    fraction = speciesMols[iD]/molsInt;
+                }
+                
+                scalar fractionOverall = speciesMols[iD]/mols;
+                
+                if(fraction > SMALL)
+                {
+                    totalvDofOverall += totalvDof*(fractionOverall/fraction);
+                }
+                
+                vibT += vibTID[iD]*fraction;
+            }
+            
+            vibrationalTemperature_[n] = vibT;
+            
+            // vibrational temperature
+//             scalar totalvDof = 0.0;
+//             scalar vibT = 0.0;
+//             
+//             forAll(vibrationalETotal, iD)
 //             {
-                vibrationalTemperature_[n] = vibT;
+//                 if(vibrationalETotal[iD] > VSMALL && speciesMols[iD] > VSMALL)
+//                 {        
+//                     const scalar& thetaV = cloud_.constProps(typeIds_[iD]).thetaV();
+//                     
+//                     scalar vibrationalEMean = (vibrationalETotal[iD]/speciesMols[iD]);
+//                     
+//                     scalar iMean = vibrationalEMean/(physicoChemical::k.value()*thetaV);
+//                     
+//                     scalar fraction = speciesMols[iD]/molsInt;
+//                     
+//                     scalar vibTID = thetaV / log(1.0 + (1.0/iMean));
+//                     
+//                     vDof_[iD] = fraction*(2.0*thetaV/vibTID) / (exp(thetaV/vibTID) - 1.0);
+//                                  
+//                     totalvDof += vDof_[iD];
+//                     
+//                     vibT += vibTID*fraction;
+//                 }
 //             }
+//             
+//             vibrationalTemperature_[n] = vibT;
+
+// electronic temperature
+            scalar totalEDof = 0.0;
+            scalar elecT = 0.0;
+                
+            forAll(speciesMols, iD)
+            {
+                label nElectronicLevels = cloud_.constProps(typeIds_[iD]).numberOfElectronicLevels();
+                
+                if(nElectronicLevels > 1 && speciesMols[iD] > VSMALL && molsElec > VSMALL)
+                {
+                    const scalarList& electronicEnergies = cloud_.constProps(typeIds_[iD]).electronicEnergyList();
+                    const labelList& degeneracies = cloud_.constProps(typeIds_[iD]).degeneracyList();
+                    
+//                     scalar speciesTransT = (1.0/(3.0*physicoChemical::k.value()))
+//                                             *(
+//                                                 ((mccSpecies[iD]/(speciesMols[iD]*cloud_.nParticle())))
+//                                                 - (
+//                                                     (cloud_.constProps(typeIds_[iD]).mass()/(speciesMols[iD]*cloud_.nParticle())
+//                                                     )*mag(UMean_[n])*mag(UMean_[n]))
+//                                             );
+//                     
+//                     scalar fraction = speciesMols[iD]/molsElec;
+//                     
+//                     if(speciesTransT > VSMALL)
+//                     {
+//                         scalar sum1 = 0.0;
+//                         scalar sum2 = 0.0;
+//                         
+//                         forAll(electronicEnergies, ii)
+//                         {
+//                             sum1 += degeneracies[ii]*exp(-electronicEnergies[ii]/(physicoChemical::k.value()*speciesTransT));
+//                             sum2 += degeneracies[ii]*(electronicEnergies[ii]/(physicoChemical::k.value()*speciesTransT))
+//                                         *exp(-electronicEnergies[ii]/(physicoChemical::k.value()*speciesTransT));
+//                         }
+//                         
+//                         scalar elecTID = (electronicETotal[iD]/(physicoChemical::k.value()*speciesMols[iD]))*(sum1/sum2);
+//                         
+//                         elecT += fraction*elecTID;
+//                         
+//                         scalar eDof = (2.0*(electronicETotal[iD]/speciesMols[iD]))/(physicoChemical::k.value()*speciesTransT);
+//                         
+//                         totalEDof += fraction*eDof;
+//                         
+//                         Info << "speciesTransT = " << speciesTransT << endl;
+//                     }
+                    
+                    if(nParticlesGroundElectronicState[iD] > VSMALL && nParticlesFirstElectronicState[iD] > VSMALL && ((nParticlesGroundElectronicState[iD]*degeneracies[1]) != (nParticlesFirstElectronicState[iD]*degeneracies[0])))
+                    {
+                        scalar fraction = speciesMols[iD]/molsElec;
+
+                        scalar elecTID = (electronicEnergies[1]-electronicEnergies[0])
+                            /(physicoChemical::k.value()*
+                            log((nParticlesGroundElectronicState[iD]*degeneracies[1])/(nParticlesFirstElectronicState[iD]*degeneracies[0])));
+    
+                        if(elecTID > VSMALL)
+                        {
+                            elecT += fraction*elecTID;
+                        }
+
+                        scalar eDof = (2.0*(electronicETotal[iD]/speciesMols[iD]))/(physicoChemical::k.value()*elecTID);
+    
+                        totalEDof += fraction*eDof;
+                    }
+                }
+            }
+
+            electronicTemperature_[n] = elecT;
+
             
             //overallTemperature
         
@@ -776,8 +972,9 @@ void dsmcZoneBounded::calculateField()
                                     (3.0*translationalTemperature_[n]) 
                                     + (nRotDof*rotationalTemperature_[n]) 
                                     + (totalvDof*vibrationalTemperature_[n])
+                                    + (totalEDof*electronicTemperature_[n])
                                 ) /
-                                (3.0 + nRotDof + totalvDof);
+                                (3.0 + nRotDof + totalvDof + totalEDof);
                                                      
             forAll(mfp_, iD)
             {
@@ -894,6 +1091,7 @@ void dsmcZoneBounded::calculateField()
             mols_ = 0.0;
             dsmcMols_ = 0.0;
             molsInt_ = 0.0;
+            molsElec_ = 0.0;
             mass_ = 0.0;
             mcc_ = 0.0;
             mom_ = vector::zero;
@@ -916,10 +1114,18 @@ void dsmcZoneBounded::calculateField()
             ew_ = 0.0;
             e_ = 0.0;  
             speciesMols_ = 0.0;
+            mccSpecies_ = 0.0;
             
-            forAll(vibrationalETotal_, iD)
+            forAll(electronicETotal_, iD)
             {
-                vibrationalETotal_[iD] = 0.0;
+                electronicETotal_[iD] = 0.0;
+                nParticlesGroundElectronicState_[iD] = 0.0;
+                nParticlesFirstElectronicState_[iD] = 0.0;
+                
+                forAll(vibrationalETotal_[iD], j)
+                {
+                    vibrationalETotal_[iD][j] = 0.0;
+                }
             }
         }
         
@@ -1042,6 +1248,15 @@ void dsmcZoneBounded::writeField()
                     "zone_bb_"+fieldName_+"_vibrationalTemperature.xy",
                     timeField,
                     vibrationalTemperature_,
+                    true
+                );
+                
+                writeTimeData
+                (
+                    casePath_,
+                    "zone_bb_"+fieldName_+"_electronicTemperature.xy",
+                    timeField,
+                    electronicTemperature_,
                     true
                 );
                 

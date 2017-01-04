@@ -276,7 +276,7 @@ void densityController::insertParcelWithinDSMC(const label& c)
         cP.rotationalDegreesOfFreedom()
     );
 
-    label vibLevel = cloud_.equipartitionVibrationalEnergyLevel
+    labelList vibLevel = cloud_.equipartitionVibrationalEnergyLevel
     (
         temperature_,
         cP.vibrationalDegreesOfFreedom(),
@@ -322,14 +322,14 @@ void densityController::insertParcelWithinDSMC(const label& c)
         U,
         RWF,
         ERot,
-        vibLevel,
         ELevel,
         cellI,
         tetFace,
         tetPt,
         typeId_,
         0,
-        0
+        0,
+        vibLevel
     );
 } 
 

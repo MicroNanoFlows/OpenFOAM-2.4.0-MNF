@@ -114,7 +114,7 @@ void dsmcMixedDiffuseSpecularWallFieldPatch::controlParticle(dsmcParcel& p, dsmc
 
     scalar& ERot = p.ERot();
     
-    label& vibLevel = p.vibLevel();
+    labelList& vibLevel = p.vibLevel();
 
     label typeId = p.typeId();
 

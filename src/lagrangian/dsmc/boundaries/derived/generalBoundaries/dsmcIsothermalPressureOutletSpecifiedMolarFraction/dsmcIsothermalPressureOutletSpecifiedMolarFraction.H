@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    dsmcWangPressureInlet
+    dsmcIsothermalPressureOutletSpecifiedMolarFraction
 
 Description
 
@@ -34,13 +34,13 @@ Description
     specularly reflected.
 
 SourceFiles
-    dsmcWangPressureInlet.C
+    dsmcIsothermalPressureOutletSpecifiedMolarFraction.C
 
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef dsmcWangPressureInlet_H
-#define dsmcWangPressureInlet_H
+#ifndef dsmcIsothermalPressureOutletSpecifiedMolarFraction_H
+#define dsmcIsothermalPressureOutletSpecifiedMolarFraction_H
 
 #include "dsmcGeneralBoundary.H"
 #include "vector.H"
@@ -55,10 +55,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class dsmcWangPressureInlet Declaration
+                           Class dsmcIsothermalPressureOutletSpecifiedMolarFraction Declaration
 \*---------------------------------------------------------------------------*/
 
-class dsmcWangPressureInlet
+class dsmcIsothermalPressureOutletSpecifiedMolarFraction
 :
     public dsmcGeneralBoundary
 {
@@ -66,67 +66,57 @@ class dsmcWangPressureInlet
 private:
 
     // Private data
-        dictionary propsDict_;
-        
-    labelList typeIds_;  // I Added.
-    scalarField moleFractions_; // I Added.
+    dictionary propsDict_;
+    
+    scalar outletPressure_;
+    scalar outletTemperature_;
+    scalar outletNumberDensity_;
+    scalar nTimeSteps_;
     label infoCounter_;
-    scalar inletPressure_;
-    scalar inletTemperature_;               
-    scalar n_; // inlet number density
+    labelList typeIds_;
+    vectorField UMean_;
+    vectorField outletVelocity_;
+    vectorField UCollected_;
+    List <scalarField> accumulatedParcelsToInsert_;
+    List <scalarField> totalVibrationalEnergy_;
+    List <scalarField> vibT_;
+    List <scalarField> vDof_;
+    List <scalarField> nTotalParcelsSpecies_;
+    scalarField moleFractions_;
     scalarField cellVolume_;
-    List <scalarField> accumulatedParcelsToInsert_;   // I Added.
-    vectorField inletVelocity_;
+//     scalarField outletNumberDensity_;
+//     scalarField outletMassDensity_;
     vectorField totalMomentum_;
     scalarField totalMass_;
-//     scalarField totalMassDensity_;
-//     scalarField totalNumberDensity_;
-//     scalarField totalRotationalEnergy_;
-//     scalarField totalRotationalDof_;
-//     List <scalarField> totalVibrationalEnergy_;
-//     List <scalarField> vibT_;
-//     List <scalarField> vDof_;
-//     scalarField velSqrMeanX_;
-//     scalarField velSqrMeanY_;
-//     scalarField velSqrMeanZ_;
-//     scalarField velMeanSqrX_;
-//     scalarField velMeanSqrY_;
-//     scalarField velMeanSqrZ_;
-//     scalarField totalVelSqrMeanX_;
-//     scalarField totalVelSqrMeanY_;
-//     scalarField totalVelSqrMeanZ_;
-//     scalarField totalVelMeanSqrX_;
-//     scalarField totalVelMeanSqrY_;
-//     scalarField totalVelMeanSqrZ_;
+    scalarField totalMassDensity_;
+    scalarField totalNumberDensity_;
+    scalarField totalRotationalEnergy_;
+    scalarField totalRotationalDof_;
     scalarField nTotalParcels_;
-//     scalarField nTotalParcelsInt_;
-//     List <scalarField> nTotalParcelsSpecies_;
-    scalar nTimeSteps_;
+    scalarField nTotalParcelsInt_;
     scalarField mcc_;
-    vectorField UMean_;
-    vectorField UCollected_;
 
     void setProperties();
 
 public:
 
     //- Runtime type information
-    TypeName("dsmcWangPressureInlet");
+    TypeName("dsmcIsothermalPressureOutletSpecifiedMolarFraction");
 
     // Constructors
 
-    //- Construct from components
-    dsmcWangPressureInlet
+        //- Construct from components
+    dsmcIsothermalPressureOutletSpecifiedMolarFraction
     (
-            Time& t,
-            const polyMesh& mesh,
-            dsmcCloud& cloud,
-            const dictionary& dict
+        Time& t,
+        const polyMesh& mesh,
+        dsmcCloud& cloud,
+        const dictionary& dict
     );
 
     // Destructor
 
-    ~dsmcWangPressureInlet();
+    ~dsmcIsothermalPressureOutletSpecifiedMolarFraction();
 
 
     // Member Functions
@@ -151,9 +141,7 @@ public:
     //- update properties from a modified dictionary
     void updateProperties(const dictionary&);
 
-
-
-    // Access
+        // Access
 
 };
 

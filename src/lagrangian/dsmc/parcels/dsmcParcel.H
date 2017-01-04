@@ -99,19 +99,19 @@ public:
             scalar alpha_;
         
             //- Characteristic vibrational temperature
-            scalar thetaV_;
+            scalarList thetaV_;
 
             //- Characteristic dissociation temperature
-            scalar thetaD_;
+            scalarList thetaD_;
         
             //- Reference vibrational relaxation number
-            scalar Zref_;
+            scalarList Zref_;
             
             //- Reference temperature for reference vibrational relaxation number
-            scalar TrefZv_;
+            scalarList TrefZv_;
             
             //- characteristic dissociation quantum level
-            label charDissQuantumLevel_;
+            labelList charDissQuantumLevel_;
             
             // - ionisation temperature
             scalar ionisationTemperature_;
@@ -164,19 +164,19 @@ public:
             inline scalar alpha() const;
     
             //- Return the characteristic vibrational temperature
-            inline scalar thetaV() const;    
+            inline scalarList thetaV() const;    
             
             //- Return the characteristic dissociation temperature
-            inline scalar thetaD() const;
+            inline scalarList thetaD() const;
     
             //- Return the characteristic vibrational relaxation number
-            inline scalar Zref() const;
+            inline scalarList Zref() const;
                       
             //- Return the reference temperature for the characteristic vibrational relaxation number
-            inline scalar TrefZv() const;
+            inline scalarList TrefZv() const;
             
             //- Return the characteristic dissociation level
-            inline label charDissQuantumLevel() const;
+            inline labelList charDissQuantumLevel() const;
             
             //- Return the ionisation temperature
             inline scalar ionisationTemperature() const;
@@ -233,9 +233,6 @@ private:
 
             //- Rotational energy of the Parcel [J]
             scalar ERot_;
-	    
-            //- Vibrational energy of the Parcel [J]
-            label vibLevel_;
             
             //- Electronic energy level of the Parcel
             label ELevel_;
@@ -250,6 +247,9 @@ private:
             // of shock waves over power-law leading edges",
             // Physics of Fluids, 20, 016101, 2008.
             label classification_;
+            
+             //- Vibrational energy of the Parcel [J]
+            labelList vibLevel_;
 
  
 public:
@@ -270,14 +270,14 @@ public:
             const vector& U,
             const scalar RWF,
             const scalar ERot,
-            const label vibLevel,
             const label ELevel,
             const label cellI,
             const label tetFaceI,
             const label tetPtI,
             const label typeId,
             const label newParcel,
-            const label classification
+            const label classification,
+            const labelList vibLevel
         );
 
         //- Construct from Istream
@@ -338,9 +338,6 @@ public:
 
             //- Return const access to rotational energy
             inline scalar ERot() const;
-        
-            //- Return const access to vibrational energy
-            inline label vibLevel() const;
             
             //- Return const access to electronic energy
             inline label ELevel() const;
@@ -353,6 +350,9 @@ public:
             //- aspects of shock waves over power-law leading edges,
             //- Physics of Fluids, 20, 016101, 2008
             inline label classification() const;
+            
+            //- Return const access to vibrational energy
+            inline labelList vibLevel() const;
 
 
         // Edit
@@ -368,9 +368,6 @@ public:
 
             //- Return access to rotational energy
             inline scalar& ERot();
-        
-            //- Return access to vibrational energy
-            inline label& vibLevel();
             
             //- Return access to electronic energy
             inline label& ELevel();
@@ -383,6 +380,9 @@ public:
             //- aspects of shock waves over power-law leading edges,
             //- Physics of Fluids, 20, 016101, 2008
             inline label& classification();
+            
+            //- Return access to vibrational energy
+            inline labelList& vibLevel();
 
 
         // Main calculation loop

@@ -64,7 +64,7 @@ dsmcFixedHeatFluxWallPatch::dsmcFixedHeatFluxWallPatch
     (
         IOobject
         (
-            "wallTemperature",
+            patchName_ + word("_wallTemperature"),
             time_.time().timeName(),
             mesh_,
             IOobject::NO_READ,
@@ -91,6 +91,9 @@ dsmcFixedHeatFluxWallPatch::dsmcFixedHeatFluxWallPatch
     setProperties();
 
     newWallTemperature_ = temperature_;
+    
+    Info << "patchId_ = " << patchId_ << endl;
+   
 }
 
 
@@ -155,7 +158,7 @@ void dsmcFixedHeatFluxWallPatch::controlParticle(dsmcParcel& p, dsmcParcel::trac
 
     scalar& ERot = p.ERot();
     
-    label& vibLevel = p.vibLevel();
+    labelList& vibLevel = p.vibLevel();
     
 //     label& ELevel = p.ELevel();
 
@@ -163,9 +166,13 @@ void dsmcFixedHeatFluxWallPatch::controlParticle(dsmcParcel& p, dsmcParcel::trac
 
     scalar m = cloud_.constProps(typeId).mass();
 
-    scalar preIE = 0.5*m*(U & U) + ERot 
-        + vibLevel*physicoChemical::k.value()*cloud_.constProps(typeId).thetaV();
+    scalar preIE = 0.5*m*(U & U) + ERot;
 //         + cloud_.constProps(typeId).electronicEnergyList()[ELevel];
+    
+    forAll(vibLevel, i)
+    {
+        preIE += vibLevel[i]*physicoChemical::k.value()*cloud_.constProps(typeId).thetaV()[i];
+    }
 
     vector nw = p.normal();
     nw /= mag(nw);
@@ -232,8 +239,12 @@ void dsmcFixedHeatFluxWallPatch::controlParticle(dsmcParcel& p, dsmcParcel::trac
 
     measurePropertiesAfterControl(p, 0.0);
     
-    scalar postIE = 0.5*m*(U & U) + ERot 
-        + vibLevel*physicoChemical::k.value()*cloud_.constProps(typeId).thetaV();
+    scalar postIE = 0.5*m*(U & U) + ERot;
+        
+    forAll(vibLevel, i)
+    {
+        postIE += vibLevel[i]*physicoChemical::k.value()*cloud_.constProps(typeId).thetaV()[i];
+    }
 //         + cloud_.constProps(typeId).electronicEnergyList()[p.ELevel()] ;
     
     U += velocity_;

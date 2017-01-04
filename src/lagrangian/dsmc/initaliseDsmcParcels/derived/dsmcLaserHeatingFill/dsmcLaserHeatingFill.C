@@ -229,7 +229,7 @@ void dsmcLaserHeatingFill::setInitialConfiguration()
                             cP.rotationalDegreesOfFreedom()
                         );
             
-                        label vibLevel = cloud_.equipartitionVibrationalEnergyLevel
+                        labelList vibLevel = cloud_.equipartitionVibrationalEnergyLevel
                         (
                             cellTemperature,
                             cP.vibrationalDegreesOfFreedom(),
@@ -266,14 +266,14 @@ void dsmcLaserHeatingFill::setInitialConfiguration()
                             U,
                             RWF,
                             ERot,
-                            vibLevel,
                             ELevel,
                             cellI,
                             cellTetIs.face(),
                             cellTetIs.tetPt(),
                             typeId,
                             newParcel,
-                            classification
+                            classification,
+                            vibLevel
                         );
                     }
                 }

@@ -42,11 +42,11 @@ Foam::dsmcParcel::dsmcParcel
     U_(vector::zero),
     RWF_(1.0),
     ERot_(0.0),
-    vibLevel_(0),
     ELevel_(0),
     typeId_(-1),
     newParcel_(0),
-    classification_(0)
+    classification_(0),
+    vibLevel_(0)
 {
     if (readFields)
     {
@@ -55,11 +55,11 @@ Foam::dsmcParcel::dsmcParcel
             is >> U_;
             RWF_ = readScalar(is);
             ERot_ = readScalar(is);
-            vibLevel_ = readLabel(is);
             ELevel_ = readLabel(is);
             typeId_ = readLabel(is);
             newParcel_ = readLabel(is);
             classification_ = readLabel(is);
+            is >> vibLevel_;
         }
         else
         {
@@ -69,12 +69,12 @@ Foam::dsmcParcel::dsmcParcel
                 sizeof(U_)
                 + sizeof(RWF_)
                 + sizeof(ERot_)
-                + sizeof(vibLevel_)
                 + sizeof(ELevel_)
                 + sizeof(typeId_)
                 + sizeof(newParcel_)
                 + sizeof(classification_)
             );
+            is >> vibLevel_;
         }
     }
 
@@ -106,9 +106,6 @@ void Foam::dsmcParcel::readFields(Cloud<dsmcParcel>& c)
     IOField<scalar> ERot(c.fieldIOobject("ERot", IOobject::MUST_READ));
     c.checkFieldIOobject(c, ERot);
     
-    IOField<label> vibLevel(c.fieldIOobject("vibLevel", IOobject::MUST_READ));
-    c.checkFieldIOobject(c, vibLevel);
-    
     IOField<label> ELevel(c.fieldIOobject("ELevel", IOobject::MUST_READ));
     c.checkFieldIOobject(c, ELevel);
 
@@ -120,6 +117,9 @@ void Foam::dsmcParcel::readFields(Cloud<dsmcParcel>& c)
     
     IOField<label> classification(c.fieldIOobject("classification", IOobject::MUST_READ));
     c.checkFieldIOobject(c, classification);
+    
+    IOField<labelField> vibLevel(c.fieldIOobject("vibLevel", IOobject::MUST_READ));
+    c.checkFieldIOobject(c, vibLevel);
 
     label i = 0;
     forAllIter(dsmcCloud, c, iter)
@@ -129,11 +129,11 @@ void Foam::dsmcParcel::readFields(Cloud<dsmcParcel>& c)
         p.U_ = U[i];
         p.RWF_ = RWF[i];
         p.ERot_ = ERot[i];
-        p.vibLevel_ = vibLevel[i];
         p.ELevel_ = ELevel[i];
         p.typeId_ = typeId[i];
         p.newParcel_ = newParcel[i];
         p.classification_ = classification[i];
+        p.vibLevel_ = vibLevel[i];
         i++;
     }
 }
@@ -149,11 +149,11 @@ void Foam::dsmcParcel::writeFields(const Cloud<dsmcParcel>& c)
     IOField<vector> U(c.fieldIOobject("U", IOobject::NO_READ), np);
     IOField<scalar> RWF(c.fieldIOobject("radialWeight", IOobject::NO_READ), np);
     IOField<scalar> ERot(c.fieldIOobject("ERot", IOobject::NO_READ), np);
-    IOField<label> vibLevel(c.fieldIOobject("vibLevel", IOobject::NO_READ), np);
     IOField<label> ELevel(c.fieldIOobject("ELevel", IOobject::NO_READ), np);
     IOField<label> typeId(c.fieldIOobject("typeId", IOobject::NO_READ), np);
     IOField<label> newParcel(c.fieldIOobject("newParcel", IOobject::NO_READ), np);
     IOField<label> classification(c.fieldIOobject("classification", IOobject::NO_READ), np);
+    IOField<labelField> vibLevel(c.fieldIOobject("vibLevel", IOobject::NO_READ), np);
 
     label i = 0;
     forAllConstIter(dsmcCloud, c, iter)
@@ -163,11 +163,11 @@ void Foam::dsmcParcel::writeFields(const Cloud<dsmcParcel>& c)
         U[i] = p.U();
         RWF[i] = p.RWF();
         ERot[i] = p.ERot();
-        vibLevel[i] = p.vibLevel();
         ELevel[i] = p.ELevel();
         typeId[i] = p.typeId();
         newParcel[i] = p.newParcel();
         classification[i] = p.classification();
+        vibLevel[i] = p.vibLevel();
         i++;
     }
 
@@ -179,6 +179,7 @@ void Foam::dsmcParcel::writeFields(const Cloud<dsmcParcel>& c)
     typeId.write();
     newParcel.write();
     classification.write();
+    vibLevel.write();
 }
 
 
@@ -197,11 +198,11 @@ Foam::Ostream& Foam::operator<<
             << token::SPACE << p.U()
             << token::SPACE << p.RWF()
             << token::SPACE << p.ERot()
-            << token::SPACE << p.vibLevel()
             << token::SPACE << p.ELevel()
             << token::SPACE << p.typeId()
             << token::SPACE << p.newParcel()
-            << token::SPACE << p.classification();
+            << token::SPACE << p.classification()
+            << token::SPACE << p.vibLevel();
     }
     else
     {
@@ -212,12 +213,12 @@ Foam::Ostream& Foam::operator<<
             sizeof(p.U())
             + sizeof(p.RWF())
             + sizeof(p.ERot())
-            + sizeof(p.vibLevel())
             + sizeof(p.ELevel())
             + sizeof(p.typeId())
             + sizeof(p.newParcel())
             + sizeof(p.classification())
         );
+        os << p.vibLevel();
     }
 
     // Check state of Ostream

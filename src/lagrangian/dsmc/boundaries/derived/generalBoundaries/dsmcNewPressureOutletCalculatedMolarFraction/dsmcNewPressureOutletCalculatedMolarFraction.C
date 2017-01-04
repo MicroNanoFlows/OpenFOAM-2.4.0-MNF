@@ -307,7 +307,7 @@ void dsmcNewPressureOutletCalculatedMolarFraction::controlParcelsBeforeMove()
                     cloud_.constProps(typeId).rotationalDegreesOfFreedom()
                 );
                 
-                label vibLevel = cloud_.equipartitionVibrationalEnergyLevel
+                labelList vibLevel = cloud_.equipartitionVibrationalEnergyLevel
                 (
                     faceVibrationalTemperature,
                     cloud_.constProps(typeId).vibrationalDegreesOfFreedom(),
@@ -334,14 +334,14 @@ void dsmcNewPressureOutletCalculatedMolarFraction::controlParcelsBeforeMove()
                     U,
                     RWF,
                     ERot,
-                    vibLevel,
                     ELevel,
                     cellI,
                     faces_[f],
                     faceTetIs.tetPt(),
                     typeId,
                     newParcel,
-                    0
+                    0,
+                    vibLevel
                 );
 
                 nTotalParcelsAdded++;
@@ -492,42 +492,42 @@ void dsmcNewPressureOutletCalculatedMolarFraction::controlParcelsAfterCollisions
                 rotationalTemperature[c] = 0.0;
             }
 
-            forAll(totalVibrationalEnergy_, iD)
-            {
-                const List<dsmcParcel*>& parcelsInCell = cellOccupancy[cells_[c]];
-
-                forAll(parcelsInCell, pIC)
-                {
-                    dsmcParcel* p = parcelsInCell[pIC];
-
-                    if(p->typeId() == typeIds_[iD])
-                    {
-                        totalVibrationalEnergy_[iD][c] += p->vibLevel()*physicoChemical::k.value()*cloud_.constProps(p->typeId()).thetaV();
-                        nTotalParcelsSpecies_[iD][c] += 1.0;
-                    }
-                }
-            }
-            
-            
-            forAll(totalVibrationalEnergy_, iD)
-            {
-                if(totalVibrationalEnergy_[iD][c] > VSMALL)
-                {
-                    const scalar& thetaV = cloud_.constProps(typeIds_[iD]).thetaV();
-                    
-                    scalar vibrationalEMean = (totalVibrationalEnergy_[iD][c]/nTotalParcelsSpecies_[iD][c]);
-                    scalar iMean = vibrationalEMean/(physicoChemical::k.value()*thetaV);
-                    
-                    vibT_[iD][c] = thetaV / log(1.0 + (1.0/iMean));
-                    vDof_[iD][c] = (2.0*thetaV/vibT_[iD][c]) / (exp(thetaV/vibT_[iD][c]) - 1.0);
-                    
-                    scalar fraction = nTotalParcelsSpecies_[iD][c]/nTotalParcelsInt_[c];
-                    
-                    vDoF[c] += fraction*vDof_[iD][c];
-                    
-                    vibrationalTemperature[c] += fraction*vibT_[iD][c];
-                }      
-            }
+//             forAll(totalVibrationalEnergy_, iD)
+//             {
+//                 const List<dsmcParcel*>& parcelsInCell = cellOccupancy[cells_[c]];
+// 
+//                 forAll(parcelsInCell, pIC)
+//                 {
+//                     dsmcParcel* p = parcelsInCell[pIC];
+// 
+//                     if(p->typeId() == typeIds_[iD])
+//                     {
+//                         totalVibrationalEnergy_[iD][c] += p->vibLevel()*physicoChemical::k.value()*cloud_.constProps(p->typeId()).thetaV();
+//                         nTotalParcelsSpecies_[iD][c] += 1.0;
+//                     }
+//                 }
+//             }
+//             
+//             
+//             forAll(totalVibrationalEnergy_, iD)
+//             {
+//                 if(totalVibrationalEnergy_[iD][c] > VSMALL)
+//                 {
+//                     const scalar& thetaV = cloud_.constProps(typeIds_[iD]).thetaV();
+//                     
+//                     scalar vibrationalEMean = (totalVibrationalEnergy_[iD][c]/nTotalParcelsSpecies_[iD][c]);
+//                     scalar iMean = vibrationalEMean/(physicoChemical::k.value()*thetaV);
+//                     
+//                     vibT_[iD][c] = thetaV / log(1.0 + (1.0/iMean));
+//                     vDof_[iD][c] = (2.0*thetaV/vibT_[iD][c]) / (exp(thetaV/vibT_[iD][c]) - 1.0);
+//                     
+//                     scalar fraction = nTotalParcelsSpecies_[iD][c]/nTotalParcelsInt_[c];
+//                     
+//                     vDoF[c] += fraction*vDof_[iD][c];
+//                     
+//                     vibrationalTemperature[c] += fraction*vibT_[iD][c];
+//                 }      
+//             }
             
             pressure[c] = numberDensity[c]*physicoChemical::k.value()*translationalTemperature[c];
                             

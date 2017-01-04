@@ -62,12 +62,12 @@ moleculeProperties
         vibrationalModes            			1;
         omega                               		0.74;
         alpha						1.0;
-        characteristicVibrationalTemperature		3371;
-        dissociationTemperature            		113500;
+        characteristicVibrationalTemperature		(3371);
+        dissociationTemperature            		(113500);
         ionisationTemperature            		1135000000; //set very high to stop ionisation taking place
-        charDissQuantumLevel				33;
-        Zref 						52560;
-        referenceTempForZref				3371;
+        charDissQuantumLevel				(33);
+        Zref 						(52560);
+        referenceTempForZref				(3371);
         charge                                  0;
         numberOfElectronicLevels                1;
         electronicEnergyList                    (0);
@@ -82,12 +82,12 @@ moleculeProperties
         vibrationalModes            			1;
         omega                           	    	0.77;
         alpha						1.0;
-        characteristicVibrationalTemperature		2256;
-        dissociationTemperature            		59500;
+        characteristicVibrationalTemperature		(2256);
+        dissociationTemperature            		(59500);
         ionisationTemperature            		1135000000; //set very high to stop ionisation taking place
-        charDissQuantumLevel				26;
-        Zref 						17900;
-        referenceTempForZref				2256;
+        charDissQuantumLevel				(26);
+        Zref 						(17900);
+        referenceTempForZref				(2256);
         charge                                  0;
         numberOfElectronicLevels                1;
         electronicEnergyList                    (0);
@@ -103,12 +103,12 @@ moleculeProperties
         viscosityCoefficient           			1.774e-5;
         omega                           	    	0.79;
         alpha						1.0;
-        characteristicVibrationalTemperature    	2719;
-        dissociationTemperature            		75500;
+        characteristicVibrationalTemperature    	(2719);
+        dissociationTemperature            		(75500);
         ionisationTemperature            		1135000000; //set very high to stop ionisation taking place
-        charDissQuantumLevel				27;
-        Zref 						14000;
-        referenceTempForZref				2719;
+        charDissQuantumLevel				(27);
+        Zref 						(14000);
+        referenceTempForZref				(2719);
         charge                                  0;
         numberOfElectronicLevels                1;
         electronicEnergyList                    (0);
@@ -123,12 +123,12 @@ moleculeProperties
         vibrationalModes            			0;
         omega                           	    	0.8;
         alpha						1.0;
-        characteristicVibrationalTemperature		0;
-        dissociationTemperature            		0;
+        characteristicVibrationalTemperature		();
+        dissociationTemperature            		();
         ionisationTemperature            		1135000000; //set very high to stop ionisation taking place
-        charDissQuantumLevel				0;
-        Zref 						0;
-        referenceTempForZref				0;
+        charDissQuantumLevel				();
+        Zref 						();
+        referenceTempForZref				();
         charge                                  0;
         numberOfElectronicLevels                1;
         electronicEnergyList                    (0);
@@ -143,12 +143,12 @@ moleculeProperties
         vibrationalModes            			0;
         omega                           	    	0.8;
         alpha						1.0;
-        characteristicVibrationalTemperature		0;
-        dissociationTemperature            		0;
+        characteristicVibrationalTemperature		();
+        dissociationTemperature            		();
         ionisationTemperature            		1135000000; //set very high to stop ionisation taking place
-        charDissQuantumLevel				0;
-        Zref 						0;
-        referenceTempForZref				0;
+        charDissQuantumLevel				();
+        Zref 						();
+        referenceTempForZref				();
         charge                                  0;
         numberOfElectronicLevels                1;
         electronicEnergyList                    (0);

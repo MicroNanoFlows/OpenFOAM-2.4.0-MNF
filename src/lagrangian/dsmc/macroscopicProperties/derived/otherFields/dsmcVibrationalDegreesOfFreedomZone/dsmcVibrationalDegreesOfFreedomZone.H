@@ -78,13 +78,13 @@ private:
         word regionName_;
         label regionId_;
 
-		scalarField vibrationalETotal_;
-		scalarField nParcels_;
-		scalarField vibT_;
-		scalarField vDof_;
-		scalar vibTxvDof_;
-		scalar vDoF_;
-		scalarField vDoFField_;
+        List< scalarField > vibrationalETotal_;
+        scalarField nParcels_;
+        scalarField vibT_;
+        scalarField vDof_;
+        scalar vibTxvDof_;
+        scalar vDoF_;
+        scalarField vDoFField_;
 
     // Private Member Functions
 

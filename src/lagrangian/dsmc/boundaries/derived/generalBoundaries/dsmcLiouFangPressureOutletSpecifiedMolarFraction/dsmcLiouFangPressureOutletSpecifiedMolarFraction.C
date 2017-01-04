@@ -58,6 +58,7 @@ dsmcLiouFangPressureOutletSpecifiedMolarFraction::dsmcLiouFangPressureOutletSpec
     propsDict_(dict.subDict(typeName + "Properties")),
     outletPressure_(),
     nTimeSteps_(scalar(0.0)),
+    infoCounter_(0),
     typeIds_(),
     UMean_(faces_.size(), vector::zero),
     outletVelocity_(faces_.size(), vector::zero),
@@ -296,7 +297,7 @@ void dsmcLiouFangPressureOutletSpecifiedMolarFraction::controlParcelsBeforeMove(
                     cloud_.constProps(typeId).rotationalDegreesOfFreedom()
                 );
                 
-                label vibLevel = cloud_.equipartitionVibrationalEnergyLevel
+                labelList vibLevel = cloud_.equipartitionVibrationalEnergyLevel
                 (
                     faceTemperature,
                     cloud_.constProps(typeId).vibrationalDegreesOfFreedom(),
@@ -329,14 +330,14 @@ void dsmcLiouFangPressureOutletSpecifiedMolarFraction::controlParcelsBeforeMove(
                     U,
                     RWF,
                     ERot,
-                    vibLevel,
                     ELevel,
                     cellI,
                     faces_[f],
                     faceTetIs.tetPt(),
                     typeId,
                     newParcel,
-                    0
+                    0,
+                    vibLevel
                 );
 
                 nTotalParcelsAdded++;
@@ -344,20 +345,28 @@ void dsmcLiouFangPressureOutletSpecifiedMolarFraction::controlParcelsBeforeMove(
             }
         }
         
-        if (Pstream::parRun())
+        infoCounter_++;
+        
+        if(infoCounter_ >= cloud_.nTerminalOutputs())
         {
-            reduce(parcelsInserted[iD], sumOp<scalar>());
+            if (Pstream::parRun())
+            {
+                reduce(parcelsInserted[iD], sumOp<scalar>());
 
-            Info<< "dsmcLiouFangPressureOutletSpecifiedMolarFraction specie: " << typeIds_[iD]
-                <<", inserted parcels: " << parcelsInserted[iD]
-                << endl;
+                Info<< "dsmcLiouFangPressureOutletSpecifiedMolarFraction specie: " << typeIds_[iD]
+                    <<", inserted parcels: " << parcelsInserted[iD]
+                    << endl;
+            }
+            else
+            {
+                Info<< "dsmcLiouFangPressureOutletSpecifiedMolarFraction specie: " << typeIds_[iD]
+                    <<", inserted parcels: " << parcelsInserted[iD]
+                    << endl;
+            }
+            
+            infoCounter_ = 0;
         }
-        else
-        {
-            Info<< "dsmcLiouFangPressureOutletSpecifiedMolarFraction specie: " << typeIds_[iD]
-                <<", inserted parcels: " << parcelsInserted[iD]
-                << endl;
-        }
+       
     }
 }
 
@@ -502,6 +511,8 @@ void dsmcLiouFangPressureOutletSpecifiedMolarFraction::controlParcelsAfterCollis
                                                         (mass[c]/(nTotalParcels_[c]*cloud_.nParticle())
                                                       )*mag(UMean_[c])*mag(UMean_[c]))
                                                 );
+                                                
+//             Info << "translationalTemperature[c] = "  << translationalTemperature << endl;
 
              
             if(translationalTemperature[c] < VSMALL)
@@ -518,41 +529,41 @@ void dsmcLiouFangPressureOutletSpecifiedMolarFraction::controlParcelsAfterCollis
                 rotationalTemperature[c] = 0.0;
             }
             
-            forAll(totalVibrationalEnergy_, iD)
-            {
-                const List<dsmcParcel*>& parcelsInCell = cellOccupancy[cells_[c]];
-
-                forAll(parcelsInCell, pIC)
-                {
-                    dsmcParcel* p = parcelsInCell[pIC];
+//             forAll(totalVibrationalEnergy_, iD)
+//             {
+//                 const List<dsmcParcel*>& parcelsInCell = cellOccupancy[cells_[c]];
+// 
+//                 forAll(parcelsInCell, pIC)
+//                 {
+//                     dsmcParcel* p = parcelsInCell[pIC];
+//             
+//                     if(p->typeId() == typeIds_[iD])
+//                     {
+//                         totalVibrationalEnergy_[iD][c] += p->vibLevel()*physicoChemical::k.value()*cloud_.constProps(p->typeId()).thetaV();
+//                         nTotalParcelsSpecies_[iD][c] += 1.0;
+//                     }
+//                 } 
+//             } 
             
-                    if(p->typeId() == typeIds_[iD])
-                    {
-                        totalVibrationalEnergy_[iD][c] += p->vibLevel()*physicoChemical::k.value()*cloud_.constProps(p->typeId()).thetaV();
-                        nTotalParcelsSpecies_[iD][c] += 1.0;
-                    }
-                } 
-            } 
-            
-            forAll(totalVibrationalEnergy_, iD)
-            {
-                if(totalVibrationalEnergy_[iD][c] > VSMALL)
-                {
-                    const scalar& thetaV = cloud_.constProps(typeIds_[iD]).thetaV();
-                    
-                    scalar vibrationalEMean = (totalVibrationalEnergy_[iD][c]/nTotalParcelsSpecies_[iD][c]);
-                    scalar iMean = vibrationalEMean/(physicoChemical::k.value()*thetaV);
-                    
-                    vibT_[iD][c] = thetaV / log(1.0 + (1.0/iMean));
-                    vDof_[iD][c] = (2.0*thetaV/vibT_[iD][c]) / (exp(thetaV/vibT_[iD][c]) - 1.0);
-                    
-                    scalar fraction = nTotalParcelsSpecies_[iD][c]/nTotalParcelsInt_[c];
-                    
-                    vDoF[c] += fraction*vDof_[iD][c];
-                    
-                    vibrationalTemperature[c] += fraction*vibT_[iD][c];
-                }
-            }
+//             forAll(totalVibrationalEnergy_, iD)
+//             {
+//                 if(totalVibrationalEnergy_[iD][c] > VSMALL)
+//                 {
+//                     const scalar& thetaV = cloud_.constProps(typeIds_[iD]).thetaV();
+//                     
+//                     scalar vibrationalEMean = (totalVibrationalEnergy_[iD][c]/nTotalParcelsSpecies_[iD][c]);
+//                     scalar iMean = vibrationalEMean/(physicoChemical::k.value()*thetaV);
+//                     
+//                     vibT_[iD][c] = thetaV / log(1.0 + (1.0/iMean));
+//                     vDof_[iD][c] = (2.0*thetaV/vibT_[iD][c]) / (exp(thetaV/vibT_[iD][c]) - 1.0);
+//                     
+//                     scalar fraction = nTotalParcelsSpecies_[iD][c]/nTotalParcelsInt_[c];
+//                     
+//                     vDoF[c] += fraction*vDof_[iD][c];
+//                     
+//                     vibrationalTemperature[c] += fraction*vibT_[iD][c];
+//                 }
+//             }
             
             scalar nRotDof = 0.0;
                 
@@ -601,6 +612,8 @@ void dsmcLiouFangPressureOutletSpecifiedMolarFraction::controlParcelsAfterCollis
             outletNumberDensity_[c] = outletMassDensity_[c] / molecularMass; 
             
             outletTemperature_[c] = outletPressure_ / (gasConstant*outletMassDensity_[c]);
+            
+            Info << "outletTemperature_[c] = " << outletTemperature_[c] << endl;
             
             outletVelocity_[c] = totalMomentum_[c]/totalMass_[c];
             
@@ -816,12 +829,12 @@ void dsmcLiouFangPressureOutletSpecifiedMolarFraction::setProperties()
         vDof_[m].setSize(nFaces_, 0.0);
     }
 
-    totalVibrationalEnergy_.setSize(typeIds_.size());
-
-    forAll(totalVibrationalEnergy_, m)
-    {
-        totalVibrationalEnergy_[m].setSize(nFaces_, 0.0);
-    }
+//     totalVibrationalEnergy_.setSize(typeIds_.size());
+// 
+//     forAll(totalVibrationalEnergy_, m)
+//     {
+//         totalVibrationalEnergy_[m].setSize(nFaces_, 0.0);
+//     }
 
     nTotalParcelsSpecies_.setSize(typeIds_.size());
 

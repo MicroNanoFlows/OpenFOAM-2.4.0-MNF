@@ -112,8 +112,9 @@ private:
         
         List<scalarField> speciesMols_;
         List<scalarField> mccSpecies_;
-        List<scalarField> vibrationalETotal_;
         List<scalarField> electronicETotal_;
+        List<scalarField> nParticlesGroundElectronicState_;
+        List<scalarField> nParticlesFirstElectronicState_;
         List<scalarField> vDof_;
         List<scalarField> mfp_;
         
@@ -138,6 +139,8 @@ private:
         vectorField qTranslationalField_;  
         scalarField meanFreePath_;
         scalarField Ma_;
+        
+        List < List<scalarField> > vibrationalETotal_;
        
         List<bool> outputField_;
         

@@ -58,6 +58,7 @@ dsmcWangPressureInlet::dsmcWangPressureInlet
     propsDict_(dict.subDict(typeName + "Properties")),
     typeIds_(),
     moleFractions_(),
+    infoCounter_(0),
     inletPressure_(),
     inletTemperature_(),
     n_(),
@@ -313,7 +314,7 @@ void dsmcWangPressureInlet::controlParcelsBeforeMove()
                     cloud_.constProps(typeId).rotationalDegreesOfFreedom()
                 );
                 
-                label vibLevel = cloud_.equipartitionVibrationalEnergyLevel
+                labelList vibLevel = cloud_.equipartitionVibrationalEnergyLevel
                 (
                     faceTemperature,
                     cloud_.constProps(typeId).vibrationalDegreesOfFreedom(),
@@ -346,14 +347,14 @@ void dsmcWangPressureInlet::controlParcelsBeforeMove()
                     U,
                     RWF,
                     ERot,
-                    vibLevel,
                     ELevel,
                     cellI,
                     faces_[f],
                     faceTetIs.tetPt(),
                     typeId,
                     newParcel,
-                    0
+                    0,
+                    vibLevel
                 );
 
                 nTotalParcelsAdded++;
@@ -361,20 +362,28 @@ void dsmcWangPressureInlet::controlParcelsBeforeMove()
             }
         }
         
-        if (Pstream::parRun())
+        infoCounter_++;
+        
+        if(infoCounter_ >= cloud_.nTerminalOutputs())
         {
-            reduce(parcelsInserted[iD], sumOp<scalar>());
+            if (Pstream::parRun())
+            {
+                reduce(parcelsInserted[iD], sumOp<scalar>());
 
-            Info<< "dsmcWangPressureInlet specie: " << typeIds_[iD]
-                <<", inserted parcels: " << parcelsInserted[iD]
-                << endl;
+                Info<< "dsmcWangPressureInlet specie: " << typeIds_[iD]
+                    <<", inserted parcels: " << parcelsInserted[iD]
+                    << endl;
+            }
+            else
+            {
+                Info<< "dsmcWangPressureInlet specie: " << typeIds_[iD]
+                    <<", inserted parcels: " << parcelsInserted[iD]
+                    << endl;
+            }
+            
+            infoCounter_ = 0;
         }
-        else
-        {
-            Info<< "dsmcWangPressureInlet specie: " << typeIds_[iD]
-                <<", inserted parcels: " << parcelsInserted[iD]
-                << endl;
-        }
+        
     }
     
 //     if(faces_.size() > VSMALL)

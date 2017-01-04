@@ -54,21 +54,6 @@ dsmcMixedDiffuseSpecularWallRotationPatch::dsmcMixedDiffuseSpecularWallRotationP
 :
     dsmcPatchBoundary(t, mesh, cloud, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
-//     boundaryT_
-//     (
-//         volScalarField
-//         (
-//             IOobject
-//             (
-//                 "boundaryT",
-//                 mesh_.time().timeName(),
-//                 mesh_,
-//                 IOobject::MUST_READ,
-//                 IOobject::AUTO_WRITE
-//             ),
-//             mesh_
-//         )
-//     ),
     diffuseFraction_(readScalar(propsDict_.lookup("diffuseFraction")))
 
 {
@@ -110,15 +95,9 @@ void dsmcMixedDiffuseSpecularWallRotationPatch::controlParticle(dsmcParcel& p, d
 
     scalar& ERot = p.ERot();
     
-    label& vibLevel = p.vibLevel();
+    labelList& vibLevel = p.vibLevel();
 
     label typeId = p.typeId();
-
-//     label wppIndex = p.patch(p.face());
-
-//     const polyPatch& patch = mesh_.boundaryMesh()[wppIndex];
-
-//     label wppLocalFace = patch.whichFace(p.face());
 
     vector nw = p.normal();
     nw /= mag(nw);
@@ -158,8 +137,6 @@ void dsmcMixedDiffuseSpecularWallRotationPatch::controlParticle(dsmcParcel& p, d
 
         // Other tangential unit vector
         vector tw2 = nw^tw1;
-
-//         scalar T = boundaryT_.boundaryField()[wppIndex][wppLocalFace];
         
         scalar T = wallTemperature_;
 

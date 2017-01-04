@@ -214,11 +214,19 @@ void dsmcPatchBoundary::measurePropertiesBeforeControl(dsmcParcel& p)
         cloud_.boundaryFluxMeasurements().momentumBF()[p.typeId()][wppIndex][wppLocalFace] += m*Ut*invMagUnfA;
         cloud_.boundaryFluxMeasurements().rotationalEBF()[p.typeId()][wppIndex][wppLocalFace] += p.ERot()*invMagUnfA;
         cloud_.boundaryFluxMeasurements().rotationalDofBF()[p.typeId()][wppIndex][wppLocalFace] += constProps.rotationalDegreesOfFreedom()*invMagUnfA;
-        cloud_.boundaryFluxMeasurements().vibrationalEBF()[p.typeId()][wppIndex][wppLocalFace] += p.vibLevel()*constProps.thetaV()*physicoChemical::k.value()*invMagUnfA;
+        forAll(p.vibLevel(), i)
+        {
+            cloud_.boundaryFluxMeasurements().vibrationalEBF()[p.typeId()][wppIndex][wppLocalFace] += p.vibLevel()[i]*constProps.thetaV()[i]*physicoChemical::k.value()*invMagUnfA;
+        }
         cloud_.boundaryFluxMeasurements().electronicEBF()[p.typeId()][wppIndex][wppLocalFace] += constProps.electronicEnergyList()[p.ELevel()]*invMagUnfA;
         
         // pre-interaction energy
-        preIE_ = 0.5*m*(p.U() & p.U()) + p.ERot() + p.vibLevel()*constProps.thetaV()*physicoChemical::k.value() + constProps.electronicEnergyList()[p.ELevel()];
+        preIE_ = 0.5*m*(p.U() & p.U()) + p.ERot() + constProps.electronicEnergyList()[p.ELevel()];
+        
+        forAll(p.vibLevel(), i)
+        {
+           preIE_ +=  p.vibLevel()[i]*constProps.thetaV()[i]*physicoChemical::k.value();
+        }
         
         // pre-interaction momentum
         preIMom_ = m*p.U();
@@ -266,11 +274,19 @@ void dsmcPatchBoundary::measurePropertiesAfterControl(dsmcParcel& p, scalar heat
         cloud_.boundaryFluxMeasurements().momentumBF()[p.typeId()][wppIndex][wppLocalFace] += m*Ut*invMagUnfA;
         cloud_.boundaryFluxMeasurements().rotationalEBF()[p.typeId()][wppIndex][wppLocalFace] += p.ERot()*invMagUnfA;
         cloud_.boundaryFluxMeasurements().rotationalDofBF()[p.typeId()][wppIndex][wppLocalFace] += constProps.rotationalDegreesOfFreedom()*invMagUnfA;
-        cloud_.boundaryFluxMeasurements().vibrationalEBF()[p.typeId()][wppIndex][wppLocalFace] += p.vibLevel()*constProps.thetaV()*physicoChemical::k.value()*invMagUnfA;
+        forAll(p.vibLevel(), i)
+        {
+            cloud_.boundaryFluxMeasurements().vibrationalEBF()[p.typeId()][wppIndex][wppLocalFace] += p.vibLevel()[i]*constProps.thetaV()[i]*physicoChemical::k.value()*invMagUnfA;
+        }
         cloud_.boundaryFluxMeasurements().electronicEBF()[p.typeId()][wppIndex][wppLocalFace] += constProps.electronicEnergyList()[p.ELevel()]*invMagUnfA;
         
         // post-interaction energy
-        scalar postIE = 0.5*m*(p.U() & p.U()) + p.ERot() + p.vibLevel()*constProps.thetaV()*physicoChemical::k.value() + constProps.electronicEnergyList()[p.ELevel()];
+        scalar postIE = 0.5*m*(p.U() & p.U()) + p.ERot() + constProps.electronicEnergyList()[p.ELevel()];
+        
+        forAll(p.vibLevel(), i)
+        {
+           postIE +=  p.vibLevel()[i]*constProps.thetaV()[i]*physicoChemical::k.value();
+        }
         
         // post-interaction momentum
         vector postIMom = m*p.U();

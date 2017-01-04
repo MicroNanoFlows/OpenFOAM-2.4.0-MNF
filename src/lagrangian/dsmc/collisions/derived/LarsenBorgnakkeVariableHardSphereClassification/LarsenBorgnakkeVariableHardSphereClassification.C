@@ -132,10 +132,30 @@ void Foam::LarsenBorgnakkeVariableHardSphereClassification::collide
     vector& UQ = pQ.U();
     scalar& ERotP = pP.ERot();
     scalar& ERotQ = pQ.ERot();
-    scalar EVibP = pP.vibLevel()*cloud_.constProps(typeIdP).thetaV()*physicoChemical::k.value();
-    scalar EVibQ = pQ.vibLevel()*cloud_.constProps(typeIdQ).thetaV()*physicoChemical::k.value();
-    label& vibLevelP = pP.vibLevel();
-    label& vibLevelQ = pQ.vibLevel();
+    scalarList EVibP(pP.vibLevel().size(), 0.0);
+    scalarList EVibQ(pQ.vibLevel().size(), 0.0);
+    label& ELevelP = pP.ELevel();
+    label& ELevelQ = pQ.ELevel();
+    labelList& vibLevelP = pP.vibLevel();
+    labelList& vibLevelQ = pQ.vibLevel();
+    
+    forAll(EVibP, i)
+    {
+        EVibP[i] = pP.vibLevel()[i]*cloud_.constProps(typeIdP).thetaV()[i]*physicoChemical::k.value();
+    }
+    
+    forAll(EVibQ, i)
+    {
+        EVibQ[i] = pQ.vibLevel()[i]*cloud_.constProps(typeIdQ).thetaV()[i]*physicoChemical::k.value();
+    }
+    
+    scalar collisionSeparation = sqrt(
+            sqr(pP.position().x() - pQ.position().x()) +
+            sqr(pP.position().y() - pQ.position().y())
+    );
+    
+    cloud_.cellPropMeasurements().collisionSeparation()[cellI] += collisionSeparation;
+    cloud_.cellPropMeasurements().nColls()[cellI]++;
 
     Random& rndGen(cloud_.rndGen());
     
@@ -143,36 +163,40 @@ void Foam::LarsenBorgnakkeVariableHardSphereClassification::collide
   //   VIBRATIONAL ENERGY EXCHANGE - QUANTUM-KINETIC MODEL
     
     scalar preCollisionERotP = ERotP;
-
     scalar preCollisionERotQ = ERotQ;
     
-    scalar preCollisionEVibP = EVibP;
-
-    scalar preCollisionEVibQ = EVibQ;
+    scalarList preCollisionEVibP = EVibP;
+    scalarList preCollisionEVibQ = EVibQ;
+    
+//     scalar preCollisionEEleP = cloud_.constProps(typeIdP).electronicEnergyList()[ELevelP];
+//     scalar preCollisionEEleQ = cloud_.constProps(typeIdQ).electronicEnergyList()[ELevelQ];
 
     scalar rotationalDofP = cloud_.constProps(typeIdP).rotationalDegreesOfFreedom();
-
     scalar rotationalDofQ = cloud_.constProps(typeIdQ).rotationalDegreesOfFreedom();
     
     scalar vibrationalDofP = cloud_.constProps(typeIdP).vibrationalDegreesOfFreedom();
-
     scalar vibrationalDofQ = cloud_.constProps(typeIdQ).vibrationalDegreesOfFreedom();
     
-    scalar thetaVP = cloud_.constProps(typeIdP).thetaV();
+    label jMaxP = cloud_.constProps(typeIdP).numberOfElectronicLevels();    
+    label jMaxQ = cloud_.constProps(typeIdQ).numberOfElectronicLevels();
     
-    scalar thetaVQ = cloud_.constProps(typeIdQ).thetaV();
+//     List<scalar> EElistP = cloud_.constProps(typeIdP).electronicEnergyList();    
+//     List<scalar> EElistQ = cloud_.constProps(typeIdQ).electronicEnergyList();
+   
+    List<label> gListP = cloud_.constProps(typeIdP).degeneracyList();    
+    List<label> gListQ = cloud_.constProps(typeIdQ).degeneracyList();  
     
-    scalar thetaDP = cloud_.constProps(typeIdP).thetaD();
+    scalarList thetaVP = cloud_.constProps(typeIdP).thetaV();  
+    scalarList thetaVQ = cloud_.constProps(typeIdQ).thetaV();
     
-    scalar thetaDQ = cloud_.constProps(typeIdQ).thetaD();
+    scalarList thetaDP = cloud_.constProps(typeIdP).thetaD();
+    scalarList thetaDQ = cloud_.constProps(typeIdQ).thetaD();
     
-    scalar ZrefP = cloud_.constProps(typeIdP).Zref();
+    scalarList ZrefP = cloud_.constProps(typeIdP).Zref();
+    scalarList ZrefQ = cloud_.constProps(typeIdQ).Zref();
     
-    scalar ZrefQ = cloud_.constProps(typeIdQ).Zref();
-    
-    scalar refTempZvP = cloud_.constProps(typeIdP).TrefZv();
-    
-    scalar refTempZvQ = cloud_.constProps(typeIdQ).TrefZv();
+    scalarList refTempZvP = cloud_.constProps(typeIdP).TrefZv();
+    scalarList refTempZvQ = cloud_.constProps(typeIdQ).TrefZv();
 
     scalar omegaPQ =
         0.5
@@ -203,72 +227,53 @@ void Foam::LarsenBorgnakkeVariableHardSphereClassification::collide
             
     if(vibrationalDofP > VSMALL)
     {
-        // collision energy of particle P = relative translational energy + pre-collision vibrational energy
-        scalar EcP = translationalEnergy + preCollisionEVibP; 
-
-        // - maximum possible quantum level (equation 3, Bird 2010)
-        label iMaxP = (EcP / (physicoChemical::k.value()*thetaVP)); 
-
-        if(iMaxP > SMALL)
+        forAll(EVibP, i)
         {
-            // - "quantised collision temperature" (equation 3, Bird 2010), denominator from Bird 5.42
+            // collision energy of particle P = relative translational energy + pre-collision vibrational energy
+            scalar EcP = translationalEnergy + preCollisionEVibP[i]; 
 
-            scalar TCollP = (iMaxP*thetaVP) / (3.5 - omegaPQ);
-            
-            scalar pow1 = pow((thetaDP/TCollP),0.33333) - 1.0;
+            // - maximum possible quantum level (equation 3, Bird 2010)
+            label iMaxP = (EcP / (physicoChemical::k.value()*thetaVP[i])); 
 
-            scalar pow2 = pow ((thetaDP/refTempZvP),0.33333) -1.0;
-
-            // - vibrational collision number (equation 2, Bird 2010)
-            scalar ZvP1 = pow((thetaDP/TCollP),omegaPQ); 
-            
-            scalar ZvP2 = pow(ZrefP*(pow((thetaDP/refTempZvP),(-1.0*omegaPQ))),(pow1/pow2));
-            
-            scalar ZvP = ZvP1*ZvP2;
-//              scalar ZvP = 50.0;
-            
-            scalar inverseVibrationalCollisionNumberP = 1.0/ZvP;
-        
-            if(inverseVibrationalCollisionNumberP > rndGen.scalar01())
-            {
-                // post-collision quantum number
-//                 label iDashP = 0; 
-                scalar func = 0.0;
-        
-                do // acceptance - rejection 
-                {
-                    vibLevelP = rndGen.integer(0,iMaxP);
-                    EVibP = vibLevelP*physicoChemical::k.value()*thetaVP;
-                    
-                    // - equation 5.61, Bird
-                    func = pow((1.0 - (EVibP / EcP)),(1.5 - omegaPQ));
-
-                } while( !(func > rndGen.scalar01()) );
-
-                // relative translational energy after vibrational exchange
-                translationalEnergy = EcP - EVibP;
+            if(iMaxP > SMALL)
+            {       
+                vibLevelP[i] = cloud_.postCollisionVibrationalEnergyLevel
+                        (
+                            false,
+                            vibLevelP[i],
+                            iMaxP,
+                            thetaVP[i],
+                            thetaDP[i],
+                            refTempZvP[i],
+                            omegaPQ,
+                            ZrefP[i],
+                            EcP
+                        );
+                        
+                translationalEnergy = EcP - (vibLevelP[i]*cloud_.constProps(typeIdP).thetaV()[i]*physicoChemical::k.value());
             }
         }
     }
         
     if (rotationalDofP > VSMALL)
     {
-        if (inverseRotationalCollisionNumber > rndGen.scalar01())
+//         scalar particleProbabilityP = 
+//             ((zeta_T + 2.0*rotationalDofP)/(2.0*rotationalDofP))
+//             *(
+//                 1.0 - sqrt(
+//                             1.0 - (rotationalDofP/zeta_T)
+//                             *((zeta_T+rotationalDofP)/(zeta_T+2.0*rotationalDofP))
+//                             *(4.0/rotationalRelaxationCollisionNumber_)
+//                           )
+//              );
+            
+//         Info << "particleProbabilityP = " << particleProbabilityP << endl;
+        
+        if (inverseRotationalCollisionNumber /*particleProbabilityP*/ > rndGen.scalar01())
         {
             scalar EcP = translationalEnergy + preCollisionERotP;
             
-            scalar energyRatio = 0.0;
-            
-            if(rotationalDofP == 2.0)
-            {
-                energyRatio = 1.0 - pow(rndGen.scalar01(),(1.0/ChiB));
-            }
-            else
-            {
-                scalar ChiA = 0.5*rotationalDofP;
-                
-                energyRatio = cloud_.energyRatio(ChiA, ChiB);
-            }
+            scalar energyRatio = cloud_.postCollisionRotationalEnergy(rotationalDofP,ChiB);
 
             ERotP = energyRatio*EcP;
         
@@ -279,64 +284,53 @@ void Foam::LarsenBorgnakkeVariableHardSphereClassification::collide
       
     if(vibrationalDofQ > VSMALL)
     {
-        scalar EcQ = translationalEnergy + preCollisionEVibQ;
-        label iMaxQ = (EcQ /(physicoChemical::k.value()*thetaVQ));
-
-        if(iMaxQ > SMALL)
+        forAll(EVibQ, i)
         {
-            // - Bird equations 5.42 and 11.34 gave this denominator
-            scalar TCollQ = (iMaxQ*thetaVQ) / (3.5 - omegaPQ); 
-            
-            scalar pow1 = pow((thetaDQ/TCollQ),0.333) - 1.0;
+            // collision energy of particle Q = relative translational energy + pre-collision vibrational energy
+            scalar EcQ = translationalEnergy + preCollisionEVibQ[i]; 
 
-            scalar pow2 = pow ((thetaDQ/refTempZvQ),0.333) -1.0;
-            
-            // - vibrational collision number (equation 2, Bird 2010)
-            scalar ZvQ1 = pow((thetaDQ/TCollQ),omegaPQ); 
-            
-            scalar ZvQ2 = pow(ZrefQ*(pow((thetaDQ/refTempZvQ),(-1.0*omegaPQ))),(pow1/pow2));
-            
-            scalar ZvQ = ZvQ1*ZvQ2;
-//             scalar ZvQ = 50.0;
-                
-            scalar inverseVibrationalCollisionNumberQ = 1.0/ZvQ;
-        
-            if(inverseVibrationalCollisionNumberQ > rndGen.scalar01())
-            {
-//                 label iDashQ = 0; // post-collision quantum number
-                scalar func = 0.0;
+            // - maximum possible quantum level (equation 3, Bird 2010)
+            label iMaxQ = (EcQ / (physicoChemical::k.value()*thetaVQ[i])); 
 
-                do // acceptance - rejection 
-                {
-                    vibLevelQ = rndGen.integer(0,iMaxQ);
-                    EVibQ = vibLevelQ*physicoChemical::k.value()*thetaVQ;
-                    func = pow((1.0 - (EVibQ / EcQ)),(1.5 - omegaPQ));
-            
-                } while( !(func > rndGen.scalar01()) );
-        
-                translationalEnergy = EcQ - EVibQ;
+            if(iMaxQ > SMALL)
+            {       
+                vibLevelQ[i] = cloud_.postCollisionVibrationalEnergyLevel
+                        (
+                            false,
+                            vibLevelQ[i],
+                            iMaxQ,
+                            thetaVQ[i],
+                            thetaDQ[i],
+                            refTempZvQ[i],
+                            omegaPQ,
+                            ZrefQ[i],
+                            EcQ
+                        );
+                        
+                translationalEnergy = EcQ - (vibLevelQ[i]*cloud_.constProps(typeIdQ).thetaV()[i]*physicoChemical::k.value());
             }
         }
     }
         
     if (rotationalDofQ > VSMALL)
     {
-        if (inverseRotationalCollisionNumber > rndGen.scalar01())
+//         scalar particleProbabilityQ = 
+//             ((zeta_T + 2.0*rotationalDofQ)/(2.0*rotationalDofQ))
+//             *(
+//                 1.0 - sqrt(
+//                             1.0 - (rotationalDofQ/zeta_T)
+//                             *((zeta_T+rotationalDofQ)/(zeta_T+2.0*rotationalDofQ))
+//                             *(4.0/rotationalRelaxationCollisionNumber_)
+//                           )
+//              );
+            
+//         Info << "particleProbabilityQ = " << particleProbabilityQ << endl;
+        
+        if (inverseRotationalCollisionNumber /*particleProbabilityQ*/ > rndGen.scalar01())
         {
             scalar EcQ = translationalEnergy + preCollisionERotQ;
             
-            scalar energyRatio = 0.0;
-            
-            if(rotationalDofQ == 2.0)
-            {
-                energyRatio = 1.0 - pow(rndGen.scalar01(),(1.0/ChiB));   
-            }
-            else
-            {
-                scalar ChiA = 0.5*rotationalDofQ;
-                
-                energyRatio = cloud_.energyRatio(ChiA, ChiB);
-            }
+            scalar energyRatio = cloud_.postCollisionRotationalEnergy(rotationalDofQ,ChiB);
 
             ERotQ = energyRatio*EcQ;
         

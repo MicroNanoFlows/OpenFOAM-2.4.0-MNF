@@ -122,12 +122,23 @@ void atomElectronIonisation::setProperties()
     
     // check that reactant one is an 'ATOM' 
 
-    const scalar& rDof1 = cloud_.constProps(reactantIds_[0]).rotationalDegreesOfFreedom();
+    const label& rDof1 = cloud_.constProps(reactantIds_[0]).rotationalDegreesOfFreedom();
 
-    if(rDof1 > 1)
+    if(rDof1 > VSMALL)
     {
         FatalErrorIn("atomElectronIonisation::setProperties()")
             << "First reactant must be an atom (not a molecule or an electron): " << reactantMolecules[0] 
+            << nl 
+            << exit(FatalError);
+    }
+    
+    const label& vDof1 = cloud_.constProps(reactantIds_[0]).vibrationalDegreesOfFreedom();
+
+    if(vDof1 > VSMALL)
+    {
+         FatalErrorIn("atomIonIonisation::setProperties()")
+            << "Reactions are currently only implemented for monatomic and diatomic species"
+            << " This is a polyatomic:" << reactantMolecules[0] 
             << nl 
             << exit(FatalError);
     }
@@ -270,7 +281,7 @@ void atomElectronIonisation::reaction
         vector UP = p.U();
         vector UQ = q.U();
         scalar ERotP = p.ERot();
-        scalar EVibP = p.vibLevel()*cloud_.constProps(typeIdP).thetaV()*physicoChemical::k.value();
+        scalar EVibP = p.vibLevel()[0]*cloud_.constProps(typeIdP).thetaV()[0]*physicoChemical::k.value();
         scalar EEleP = cloud_.constProps(typeIdP).electronicEnergyList()[p.ELevel()];
 
         scalar mP = cloud_.constProps(typeIdP).mass();
@@ -371,7 +382,7 @@ void atomElectronIonisation::reaction
                 q.U() = UQ;
                 q.ELevel() = 0; //electron
 
-                // Molecule P will dissociate into 2 atoms.
+                // Atom P will ionise
                 vector position = p.position();
                 
                 label cell = -1;
@@ -388,12 +399,13 @@ void atomElectronIonisation::reaction
                 
                 p.typeId() = typeId1;
                 p.U() = uP1;
-                p.vibLevel() = 0;
+                p.vibLevel().setSize(0,0);
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
                 
                 label classificationP = p.classification();
                 scalar RWF = p.RWF();
+                labelList vibLevel(0,0);
                 
                 // insert new product 2
                 cloud_.addNewParcel
@@ -403,13 +415,13 @@ void atomElectronIonisation::reaction
                     RWF,
                     0.0,
                     0,
-                    0,
                     cell,
                     tetFace,
                     tetPt,
                     typeId2,
                     0,
-                    classificationP
+                    classificationP,
+                    vibLevel
                 );
             }
         } 
@@ -422,7 +434,7 @@ void atomElectronIonisation::reaction
         vector UP = p.U();
         vector UQ = q.U();
         scalar ERotQ = q.ERot();
-        scalar EVibQ = q.vibLevel()*cloud_.constProps(typeIdQ).thetaV()*physicoChemical::k.value();
+        scalar EVibQ = q.vibLevel()[0]*cloud_.constProps(typeIdQ).thetaV()[0]*physicoChemical::k.value();
         scalar EEleQ = cloud_.constProps(typeIdQ).electronicEnergyList()[q.ELevel()];
 
         scalar mP = cloud_.constProps(typeIdP).mass();
@@ -540,12 +552,13 @@ void atomElectronIonisation::reaction
                 
                 q.typeId() = typeId1;
                 q.U() = uP1;
-                q.vibLevel() = 0;
+                q.vibLevel().setSize(0,0);
                 q.ERot() = 0.0;
                 q.ELevel() = 0;
                 
                 label classificationP = q.classification();
                 scalar RWF = q.RWF();
+                labelList vibLevel(0,0);
                 
                 // insert new product 2
                 cloud_.addNewParcel
@@ -555,13 +568,13 @@ void atomElectronIonisation::reaction
                     RWF,
                     0.0,
                     0,
-                    0,
                     cell,
                     tetFace,
                     tetPt,
                     typeId2,
                     0,
-                    classificationP
+                    classificationP,
+                    vibLevel
                 );
             }
         }

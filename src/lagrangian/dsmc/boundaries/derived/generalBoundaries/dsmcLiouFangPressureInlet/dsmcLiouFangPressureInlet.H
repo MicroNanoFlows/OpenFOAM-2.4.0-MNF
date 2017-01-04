@@ -72,10 +72,12 @@ private:
     vectorField inletVelocity_;
     vectorField previousInletVelocity_;
     List <scalarField> accumulatedParcelsToInsert_;
+    label infoCounter_;
     scalar inletPressure_;
     scalar inletTemperature_;
     scalar theta_;
     scalar n_; // inlet number density
+    
 
     void setProperties();
 

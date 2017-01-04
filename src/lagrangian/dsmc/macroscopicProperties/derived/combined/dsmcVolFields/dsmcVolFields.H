@@ -135,7 +135,7 @@ private:
         vectorField momentumMean_;
         vectorField momentumMeanXnParticle_;
         List<labelList> boundaryCells_;
-        List<scalarField> vibrationalETotal_;
+        List< List < scalarField > > vibrationalETotal_;
         List<scalarField> electronicETotal_;
         List<scalarField> nParcels_;
         List<scalarField> nParcelsXnParticle_;

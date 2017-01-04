@@ -549,7 +549,7 @@ void densityZoneController::insertParcels(const label& nMols, const label& c)
             cP.rotationalDegreesOfFreedom()
         );
 
-        label vibLevel = cloud_.equipartitionVibrationalEnergyLevel
+        labelList vibLevel = cloud_.equipartitionVibrationalEnergyLevel
         (
             temperature_,
             cP.vibrationalDegreesOfFreedom(),
@@ -595,14 +595,14 @@ void densityZoneController::insertParcels(const label& nMols, const label& c)
             U,
             RWF,
             ERot,
-            vibLevel,
             ELevel,
             cellI,
             tetFace,
             tetPt,
             typeId_,
             0,
-            0
+            0,
+            vibLevel
         );
    // if parcel is inserted before the move function, the cell occupnacy need not be updated
     // only if the parcel is inserted after the buildCellOccupancy step, should the the 

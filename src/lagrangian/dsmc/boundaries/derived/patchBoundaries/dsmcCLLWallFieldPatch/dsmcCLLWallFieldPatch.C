@@ -128,7 +128,7 @@ void dsmcCLLWallFieldPatch::controlParticle(dsmcParcel& p, dsmcParcel::trackingD
 
     scalar& ERot = p.ERot();
     
-    label& vibLevel = p.vibLevel();
+    labelList& vibLevel = p.vibLevel();
     
     label wppIndex = p.patch(p.face());
 
@@ -176,59 +176,59 @@ void dsmcCLLWallFieldPatch::controlParticle(dsmcParcel& p, dsmcParcel::trackingD
     scalar mass = cloud_.constProps(typeId).mass();
 
     scalar rotationalDof = cloud_.constProps(typeId).rotationalDegreesOfFreedom();
-	
-	scalar vibrationalDof = cloud_.constProps(typeId).vibrationalDegreesOfFreedom();
-	
-	const scalar& alphaT = tangentialAccommodationCoefficient_*(2.0 - tangentialAccommodationCoefficient_);
-	
-	const scalar& alphaN = normalAccommodationCoefficient_;
-	
-	scalar mostProbableVelocity = sqrt(2.0*physicoChemical::k.value()*T/mass);
-	
-	 //normalising the incident velocities
+    
+    scalar vibrationalDof = cloud_.constProps(typeId).vibrationalDegreesOfFreedom();
+    
+    const scalar& alphaT = tangentialAccommodationCoefficient_*(2.0 - tangentialAccommodationCoefficient_);
+    
+    const scalar& alphaN = normalAccommodationCoefficient_;
+    
+    scalar mostProbableVelocity = sqrt(2.0*physicoChemical::k.value()*T/mass);
+    
+        //normalising the incident velocities
     
     vector normalisedTangentialVelocity = Ut/mostProbableVelocity;
     
     scalar normalisedNormalVelocity = U_dot_nw/mostProbableVelocity;
-	
+    
     
     //normal random number components
     
     scalar thetaNormal = 2.0*pi*rndGen.scalar01();
     
     scalar rNormal = sqrt(-alphaN*log(rndGen.scalar01()));
-	
     
-	//tangential random number components
+    
+    //tangential random number components
     
     scalar thetaTangential1 = 2.0*pi*rndGen.scalar01();
     
     scalar rTangential1 = sqrt(-alphaT*log(rndGen.scalar01()));
-	
-	scalar thetaTangential2 = 2.0*pi*rndGen.scalar01();
+    
+    scalar thetaTangential2 = 2.0*pi*rndGen.scalar01();
     
     scalar rTangential2 = sqrt(-alphaT*log(rndGen.scalar01()));
-	
-	scalar normalisedIncidentTangentialVelocity1 = mag(normalisedTangentialVelocity);
+    
+    scalar normalisedIncidentTangentialVelocity1 = mag(normalisedTangentialVelocity);
     
     //selecting post-collision velocity components
     
     scalar um = sqrt(1.0-alphaN)*normalisedNormalVelocity;
     
     vector normalVelocity = sqrt( 
-									(rNormal*rNormal) 
-									+ (um*um) 
-									+ 2.0*rNormal*um*cos(thetaNormal)
-								)*nw;
+                                    (rNormal*rNormal) 
+                                    + (um*um) 
+                                    + 2.0*rNormal*um*cos(thetaNormal)
+                                )*nw;
     
     vector tangentialVelocity1 = (sqrt(1.0 - alphaT)*mag(normalisedIncidentTangentialVelocity1)
-				+ rTangential1*cos(thetaTangential1))*tw1;
+                                + rTangential1*cos(thetaTangential1))*tw1;
     
     vector tangentialVelocity2 = (rTangential2*cos(thetaTangential2))*tw2;
    
 
     //setting the post interaction velocity
-	
+    
     U =
         mostProbableVelocity
        *(
@@ -247,41 +247,18 @@ void dsmcCLLWallFieldPatch::controlParticle(dsmcParcel& p, dsmcParcel::trackingD
     
     U = UNormal + UTangential1 + UTangential2;
 
-// 	if(wppLocalFace == 0)
-// 	{		
-// 		if(Pstream::parRun())
-//         {
-// 			Pout << "Scattering angle, 0 mm = " << atan(U.y()/U.x()) << endl;
-// 		}
-// 		else
-// 		{
-// 			Info << "Scattering angle, 0 mm = " << atan(U.y()/U.x()) << endl;
-// 		}
-// 	}
-// 	
-// 	if(wppLocalFace == 26)
-// 	{
-// 		if(Pstream::parRun())
-//         {
-// 			Pout << "Scattering angle, 5 mm = " << atan(U.y()/U.x()) << endl;
-// 		}
-// 		else
-// 		{
-// 			Info << "Scattering angle, 5 mm = " << atan(U.y()/U.x()) << endl;
-// 		}
-// 	}
 
-if( (p.position().x() > 0.002) && ( p.position().x() < 0.0022) )
-{
-    if(Pstream::parRun())
+    if( (p.position().x() > 0.002) && ( p.position().x() < 0.0022) )
     {
-        Pout << "Scattering angle, 0 mm = " << atan(U.y()/U.x()) << endl;
+        if(Pstream::parRun())
+        {
+            Pout << "Scattering angle, 0 mm = " << atan(U.y()/U.x()) << endl;
+        }
+        else
+        {
+            Info << "Scattering angle, 0 mm = " << atan(U.y()/U.x()) << endl;
+        }
     }
-    else
-    {
-        Info << "Scattering angle, 0 mm = " << atan(U.y()/U.x()) << endl;
-    }
-}
 
     if( (p.position().x() > 0.0068) && ( p.position().x() < 0.0072 ) )
     {
@@ -295,13 +272,13 @@ if( (p.position().x() > 0.002) && ( p.position().x() < 0.0022) )
         }
     }
 
-scalar om = sqrt( (ERot*(1.0 - rotationalEnergyAccommodationCoefficient_)) / (physicoChemical::k.value()*T));
+    scalar om = sqrt( (ERot*(1.0 - rotationalEnergyAccommodationCoefficient_)) / (physicoChemical::k.value()*T));
 
-scalar rRot = sqrt(-rotationalEnergyAccommodationCoefficient_*(log(max(1.0 - rndGen.scalar01(), VSMALL))));
+    scalar rRot = sqrt(-rotationalEnergyAccommodationCoefficient_*(log(max(1.0 - rndGen.scalar01(), VSMALL))));
 
-scalar cosThetaRot = cos(2.0*pi*rndGen.scalar01());
+    scalar cosThetaRot = cos(2.0*pi*rndGen.scalar01());
 
-ERot = physicoChemical::k.value()*T*(pow(rRot,2.0) + pow(om,2.0) + (2.0*rRot*om*cosThetaRot));
+    ERot = physicoChemical::k.value()*T*(pow(rRot,2.0) + pow(om,2.0) + (2.0*rRot*om*cosThetaRot));
     
 //     Info << "U after wall addition = " << U << endl;
 

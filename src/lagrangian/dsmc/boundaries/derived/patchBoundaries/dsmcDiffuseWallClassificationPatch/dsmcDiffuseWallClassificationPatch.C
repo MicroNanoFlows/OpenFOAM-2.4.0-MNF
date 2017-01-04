@@ -89,7 +89,7 @@ void dsmcDiffuseWallClassificationPatch::controlParticle(dsmcParcel& p, dsmcParc
 
     scalar& ERot = p.ERot();
     
-    label& vibLevel = p.vibLevel();
+    labelList& vibLevel = p.vibLevel();
 
     label typeId = p.typeId();
 

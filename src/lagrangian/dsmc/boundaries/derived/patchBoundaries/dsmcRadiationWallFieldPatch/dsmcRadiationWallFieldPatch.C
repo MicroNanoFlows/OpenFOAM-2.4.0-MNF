@@ -128,24 +128,6 @@ void dsmcRadiationWallFieldPatch::calculateProperties()
             );
         }                                    
     }
-
-//     forAll(TwallRadCumul_, f)
-//     {
-//         const label& faceI = faces_[f];
-//         scalar sA = mag(mesh_.faceAreas()[faceI]);
-// 
-//         TwallRadCumul_[f] += TwallRad_[f]
-//                         + (1/thermalCapacity_)*deltaT*((cloud_.nParticle()*EcTot_[f]/deltaT) 
-//                         - (sA*epsilonSigma_*(pow(TwallRad_[f], 4.0))));
-//             
-//         TwallRad_[f] = TwallRadCumul_[f]/stepCounter_;
-//     }
-
-
-//     forAll(EcTot_, f)
-//     {
-//         EcTot_[f] = 0.0;
-//     }
     
     if(time_.time().outputTime())
     {
@@ -173,13 +155,18 @@ void dsmcRadiationWallFieldPatch::controlParticle(dsmcParcel& p, dsmcParcel::tra
 
     scalar& ERot = p.ERot();
     
-    label& vibLevel = p.vibLevel();
+    labelList& vibLevel = p.vibLevel();
 
     label typeId = p.typeId();
     
     scalar m = cloud_.constProps(typeId).mass();
 
-    scalar preIE = 0.5*m*(U & U) + ERot + vibLevel*physicoChemical::k.value()*cloud_.constProps(typeId).thetaV();
+    scalar preIE = 0.5*m*(U & U) + ERot;
+    
+    forAll(vibLevel, i)
+    {
+        preIE += vibLevel[i]*physicoChemical::k.value()*cloud_.constProps(typeId).thetaV()[i];
+    }
     
     label faceId = findIndex(faces_, p.face());
 
@@ -218,7 +205,6 @@ void dsmcRadiationWallFieldPatch::controlParticle(dsmcParcel& p, dsmcParcel::tra
     // Other tangential unit vector
     vector tw2 = nw^tw1;
 
-//     label faceId = findIndex(faces_, p.face());
     const scalar& T = TwallRad_[faceId];
 
     scalar mass = cloud_.constProps(typeId).mass();
@@ -243,7 +229,12 @@ void dsmcRadiationWallFieldPatch::controlParticle(dsmcParcel& p, dsmcParcel::tra
 
     measurePropertiesAfterControl(p, 0.0);
     
-    scalar postIE = 0.5*m*(U & U) + ERot + vibLevel*physicoChemical::k.value()*cloud_.constProps(typeId).thetaV();
+    scalar postIE = 0.5*m*(U & U) + ERot;
+    
+    forAll(vibLevel, i)
+    {
+        postIE += vibLevel[i]*physicoChemical::k.value()*cloud_.constProps(typeId).thetaV()[i];
+    }
     
     EcTot_[faceId] += (preIE - postIE);
 }

@@ -303,7 +303,7 @@ void dsmcMassFlowRateInlet::controlParcelsBeforeMove()
                     cloud_.constProps(typeId).rotationalDegreesOfFreedom()
                 );
                 
-                label vibLevel = cloud_.equipartitionVibrationalEnergyLevel
+                labelList vibLevel = cloud_.equipartitionVibrationalEnergyLevel
                 (
                     faceTemperature,
                     cloud_.constProps(typeId).vibrationalDegreesOfFreedom(),
@@ -336,14 +336,14 @@ void dsmcMassFlowRateInlet::controlParcelsBeforeMove()
                     U,
                     RWF,
                     ERot,
-                    vibLevel,
                     ELevel,
                     cellI,
                     faces_[f],
                     faceTetIs.tetPt(),
                     typeId,
                     newParcel,
-                    0
+                    0,
+                    vibLevel
                 );
 
                 nTotalParcelsAdded++;

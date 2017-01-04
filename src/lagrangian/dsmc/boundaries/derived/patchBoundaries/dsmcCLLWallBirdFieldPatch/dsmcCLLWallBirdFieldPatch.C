@@ -108,8 +108,7 @@ void dsmcCLLWallBirdFieldPatch::initialConfiguration()
 {
     if((normalAccommodationCoefficient_ < VSMALL) && (tangentialAccommodationCoefficient_ < VSMALL))
     {
-	measurePropertiesAtWall_ = false;
-	//reduces to a specular wall, so no need to measure properties
+        measurePropertiesAtWall_ = false;
     }
 }
 
@@ -128,7 +127,7 @@ void dsmcCLLWallBirdFieldPatch::controlParticle(dsmcParcel& p, dsmcParcel::track
 
     scalar& ERot = p.ERot();
     
-    label& vibLevel = p.vibLevel();
+    labelList& vibLevel = p.vibLevel();
     
     label wppIndex = p.patch(p.face());
 
@@ -175,54 +174,54 @@ void dsmcCLLWallBirdFieldPatch::controlParticle(dsmcParcel& p, dsmcParcel::track
 
     scalar mass = cloud_.constProps(typeId).mass();
 
-    scalar rotationalDof = cloud_.constProps(typeId).rotationalDegreesOfFreedom();
-	
-	scalar vibrationalDof = cloud_.constProps(typeId).vibrationalDegreesOfFreedom();
-	
-	const scalar& alphaT = tangentialAccommodationCoefficient_*(2.0 - tangentialAccommodationCoefficient_);
-	
-	const scalar& alphaN = normalAccommodationCoefficient_;
-	
-	scalar mostProbableVelocity = sqrt(2.0*physicoChemical::k.value()*T/mass);
-	
-	 //normalising the incident velocities
+//     scalar rotationalDof = cloud_.constProps(typeId).rotationalDegreesOfFreedom();
+        
+        scalar vibrationalDof = cloud_.constProps(typeId).vibrationalDegreesOfFreedom();
+        
+        const scalar& alphaT = tangentialAccommodationCoefficient_*(2.0 - tangentialAccommodationCoefficient_);
+        
+        const scalar& alphaN = normalAccommodationCoefficient_;
+        
+        scalar mostProbableVelocity = sqrt(2.0*physicoChemical::k.value()*T/mass);
+        
+            //normalising the incident velocities
     
     vector normalisedTangentialVelocity = Ut/mostProbableVelocity;
     
     scalar normalisedNormalVelocity = U_dot_nw/mostProbableVelocity;
-	
+    
     
     //normal random number components
     
     scalar thetaNormal = 2.0*pi*rndGen.scalar01();
     
     scalar rNormal = sqrt(-alphaN*log(rndGen.scalar01()));
-	
     
-	//tangential random number components
+    
+    //tangential random number components
     
     scalar thetaTangential = 2.0*pi*rndGen.scalar01();
     
     scalar rTangential = sqrt(-alphaT*log(rndGen.scalar01()));
-	 
+        
     //selecting post-collision velocity components
     
     scalar um = sqrt(1.0-alphaN)*normalisedNormalVelocity;
     
     scalar normalVelocity = sqrt( 
-									(rNormal*rNormal) 
-									+ (um*um) 
-									+ 2.0*rNormal*um*cos(thetaNormal)
-								);
+                                    (rNormal*rNormal) 
+                                    + (um*um) 
+                                    + 2.0*rNormal*um*cos(thetaNormal)
+                                );
     
     scalar tangentialVelocity1 = sqrt(1.0 - alphaT)*mag(normalisedTangentialVelocity)
-				+ rTangential*cos(thetaTangential);
+                                + rTangential*cos(thetaTangential);
     
     scalar tangentialVelocity2 = rTangential*sin(thetaTangential);
    
 
     //setting the post interaction velocity
-	
+    
     U =
         mostProbableVelocity
        *(

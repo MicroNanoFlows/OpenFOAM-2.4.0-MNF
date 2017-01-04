@@ -123,7 +123,10 @@ void dsmcVibrationalQuantumLevelDistribution::calculateField()
 
                 if(p->typeId() == typeId_)
                 {
-                    distr_.add(p->vibLevel());
+                    forAll(p->vibLevel(), v)
+                    {
+                        distr_.add(p->vibLevel()[v]);
+                    }
                 }
             }
         }
@@ -146,24 +149,24 @@ void dsmcVibrationalQuantumLevelDistribution::writeField()
 
         List< Pair<scalar> > normalisedDistribution = distr_.normalised();
     
-		if(Pstream::master())
-		{
-			scalarField xAxis (normalisedDistribution.size(), 0.0);
-			scalarField yAxis (normalisedDistribution.size(), 0.0);
-		
-			forAll(normalisedDistribution, i)
-			{
-				xAxis[i] = normalisedDistribution[i].first() - (0.5*binWidth_);
-				yAxis[i] = normalisedDistribution[i].second();
-			}
-		
-			writeTimeData(timePath, "dsmcVibrationalQuantumLevelDistribution_"+fieldName_+"_"+regionName_, xAxis, yAxis);
-			
-			if(time_.resetFieldsAtOutput())
-			{
-				distr_.clear();
-			}
-		}
+        if(Pstream::master())
+        {
+            scalarField xAxis (normalisedDistribution.size(), 0.0);
+            scalarField yAxis (normalisedDistribution.size(), 0.0);
+
+            forAll(normalisedDistribution, i)
+            {
+                    xAxis[i] = normalisedDistribution[i].first() - (0.5*binWidth_);
+                    yAxis[i] = normalisedDistribution[i].second();
+            }
+
+            writeTimeData(timePath, "dsmcVibrationalQuantumLevelDistribution_"+fieldName_+"_"+regionName_, xAxis, yAxis);
+            
+            if(time_.resetFieldsAtOutput())
+            {
+                    distr_.clear();
+            }
+        }
     }
 }
 

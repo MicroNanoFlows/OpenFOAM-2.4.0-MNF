@@ -640,11 +640,11 @@ dsmcVolFields::dsmcVolFields
     
     vibrationalETotal_.setSize(typeIds_.size());
     
-    forAll(vibrationalETotal_, i)
-    {
-        vibrationalETotal_[i].setSize(mesh_.nCells());
-    }
-    
+//     forAll(vibrationalETotal_, i)
+//     {
+//         vibrationalETotal_[i].setSize(mesh_.nCells());
+//     }
+//     
     electronicETotal_.setSize(typeIds_.size());
     
     forAll(electronicETotal_, i)
@@ -888,6 +888,16 @@ void dsmcVolFields::writeOut()
 void dsmcVolFields::createField()
 {
     Info << "Initialising dsmcVolFields field" << endl;
+    
+    forAll(vibrationalETotal_, i)
+    {
+        vibrationalETotal_[i].setSize(cloud_.constProps(typeIds_[i]).vibrationalDegreesOfFreedom());
+        
+        forAll(vibrationalETotal_[i], j)
+        {
+            vibrationalETotal_[i][j].setSize(mesh_.nCells(),0.0);
+        }
+    }
 }
 
 
@@ -949,8 +959,20 @@ void dsmcVolFields::calculateField()
                 const scalar& mass = cloud_.constProps(p.typeId()).mass();
                 const scalarList& electronicEnergies = cloud_.constProps(typeIds_[iD]).electronicEnergyList();
                 const scalar& rotationalDof = cloud_.constProps(p.typeId()).rotationalDegreesOfFreedom();
-                const scalar& EVib = p.vibLevel()*physicoChemical::k.value()*cloud_.constProps(p.typeId()).thetaV();
+//                 const scalar& EVib = p.vibLevel()*physicoChemical::k.value()*cloud_.constProps(p.typeId()).thetaV();
 
+                scalarList EVib(cloud_.constProps(typeIds_[iD]).vibrationalDegreesOfFreedom());
+                
+                forAll(EVib, i)
+                {
+                    EVib[i] = 0.0;
+                }
+                    
+                forAll(vibrationalETotal_[iD], v)
+                {
+                    vibrationalETotal_[iD][v][cell] += p.vibLevel()[v]*physicoChemical::k.value()*cloud_.constProps(p.typeId()).thetaV()[v];
+                }
+                
                 rhoNMean_[cell] += 1.0;
                 rhoNInstantaneous_[cell] += 1.0;
                 rhoMMean_[cell] += mass;
@@ -958,7 +980,7 @@ void dsmcVolFields::calculateField()
                 momentumMean_[cell] += mass*p.U();
                 rotationalEMean_[cell] += p.ERot();
                 rotationalDofMean_[cell] += rotationalDof; 
-                vibrationalETotal_[iD][cell] += EVib;
+//                 vibrationalETotal_[iD][cell] += EVib;
                 electronicETotal_[iD][cell] += electronicEnergies[p.ELevel()];
                 nParcels_[iD][cell] += 1.0;
                 mccSpecies_[iD][cell] += mass*mag(p.U())*mag(p.U());
@@ -1003,10 +1025,17 @@ void dsmcVolFields::calculateField()
                 mccv_[cell] += mass*mag(p.U())*mag(p.U())*(p.U().y());
                 mccw_[cell] += mass*mag(p.U())*mag(p.U())*(p.U().z());
                 
-                eu_[cell] += ( p.ERot() + EVib )*(p.U().x());
-                ev_[cell] += ( p.ERot() + EVib )*(p.U().y());
-                ew_[cell] += ( p.ERot() + EVib )*(p.U().z());
-                e_[cell] += ( p.ERot() + EVib );
+                scalar vibEn = 0.0;
+                
+                forAll(EVib, v)
+                {
+                    vibEn += EVib[v];
+                }
+                
+                eu_[cell] += ( p.ERot() + vibEn )*(p.U().x());
+                ev_[cell] += ( p.ERot() + vibEn )*(p.U().y());
+                ew_[cell] += ( p.ERot() + vibEn )*(p.U().z());
+                e_[cell] += ( p.ERot() + vibEn );
                  
                 if(rotationalDof > VSMALL)
                 {
@@ -1141,6 +1170,8 @@ void dsmcVolFields::calculateField()
             scalarField molarconstantVolumeSpecificHeat(mesh_.nCells(), scalar(0.0));
             scalarField molecularMass(mesh_.nCells(), scalar(0.0));
             scalarField particleConstantVolumeSpecificHeat(mesh_.nCells(), scalar(0.0));
+            scalarField totalvDof(mesh_.nCells(), scalar(0.0));
+            scalarField totalvDofOverall(mesh_.nCells(), scalar(0.0));
             
             forAll(rhoNMean_, cell)
             {                
@@ -1201,30 +1232,92 @@ void dsmcVolFields::calculateField()
                     rotationalT_[cell] = 0.0;
                 }
                
+               scalarList degreesOfFreedomSpecies(typeIds_.size(),0.0);
+                scalarList vibTID(vibrationalETotal_.size(), 0.0);
+                
+                List<scalarList> degreesOfFreedomMode;
+                List<scalarList> vibTMode;
+                
+                degreesOfFreedomMode.setSize(typeIds_.size());
+                vibTMode.setSize(typeIds_.size());
+                
+                forAll(degreesOfFreedomMode, iD)
+                {
+                    degreesOfFreedomMode[iD].setSize(cloud_.constProps(typeIds_[iD]).vibrationalDegreesOfFreedom(), 0.0);
+                    vibTMode[iD].setSize(cloud_.constProps(typeIds_[iD]).vibrationalDegreesOfFreedom(), 0.0);
+                }
                 
                 forAll(vibrationalETotal_, iD)
                 {
-                    if(vibrationalETotal_[iD][cell] > VSMALL && nParcels_[iD][cell] > VSMALL)
-                    {        
-                        const scalar& thetaV = cloud_.constProps(typeIds_[iD]).thetaV();
-                        
-                        scalar vibrationalEMean = (vibrationalETotal_[iD][cell]/nParcels_[iD][cell]);
-                        
-                        scalar iMean = vibrationalEMean/(physicoChemical::k.value()*thetaV);
-                        
-                        vibT_[iD][cell] = thetaV / log(1.0 + (1.0/iMean));
-                        
+                    forAll(vibrationalETotal_[iD], v)
+                    {
+                        if(vibrationalETotal_[iD][v][cell] > VSMALL && nParcels_[iD][cell] > VSMALL)
+                        {        
+                            scalar thetaV = cloud_.constProps(typeIds_[iD]).thetaV()[v];
+                            
+                            scalar vibrationalEMean = (vibrationalETotal_[iD][v][cell]/nParcels_[iD][cell]);
+                            
+                            scalar iMean = vibrationalEMean/(physicoChemical::k.value()*thetaV);
+                            
+                            vibTMode[iD][v] = thetaV / log(1.0 + (1.0/iMean));
+
+                            degreesOfFreedomMode[iD][v] = (2.0*thetaV/vibTMode[iD][v]) / (exp(thetaV/vibTMode[iD][v]) - 1.0);
+                        }
+                    }
+                    
+                    forAll(degreesOfFreedomMode[iD], v)
+                    {
+                        degreesOfFreedomSpecies[iD] += degreesOfFreedomMode[iD][v];
+                    }
+                    
+                    forAll(degreesOfFreedomMode[iD], v)
+                    {
+                        if(degreesOfFreedomSpecies[iD] > VSMALL)
+                        {
+                            vibTID[iD] += vibTMode[iD][v]*(degreesOfFreedomMode[iD][v]/degreesOfFreedomSpecies[iD]);
+                        }
+                    }
+
+                    
+                    totalvDof[cell] += degreesOfFreedomSpecies[iD];
+                      
+                    if(rhoNMeanInt_[cell] > VSMALL && rhoNMean_[cell] > VSMALL && nParcels_[iD][cell] > VSMALL)
+                    {
                         scalar fraction = nParcels_[iD][cell]/rhoNMeanInt_[cell];
                         
-                        vibT[cell] += vibT_[iD][cell]*fraction;
+                        scalar fractionOverall = nParcels_[iD][cell]/rhoNMean_[cell];
                         
-                        vDof_[iD][cell] = fraction*(2.0*thetaV/vibT_[iD][cell]) / (exp(thetaV/vibT_[iD][cell]) - 1.0);
+                        totalvDofOverall[cell] += totalvDof[cell]*(fractionOverall/fraction);
                         
-                        totalvDof_[cell] += vDof_[iD][cell];
+                        vibT[cell] += vibTID[iD]*fraction;
                     }
                 }
 
                 vibrationalT_[cell] = vibT[cell];
+                
+//                 forAll(vibrationalETotal_, iD)
+//                 {
+//                     if(vibrationalETotal_[iD][cell] > VSMALL && nParcels_[iD][cell] > VSMALL)
+//                     {        
+//                         const scalar& thetaV = cloud_.constProps(typeIds_[iD]).thetaV();
+//                         
+//                         scalar vibrationalEMean = (vibrationalETotal_[iD][cell]/nParcels_[iD][cell]);
+//                         
+//                         scalar iMean = vibrationalEMean/(physicoChemical::k.value()*thetaV);
+//                         
+//                         vibT_[iD][cell] = thetaV / log(1.0 + (1.0/iMean));
+//                         
+//                         scalar fraction = nParcels_[iD][cell]/rhoNMeanInt_[cell];
+//                         
+//                         vibT[cell] += vibT_[iD][cell]*fraction;
+//                         
+//                         vDof_[iD][cell] = fraction*(2.0*thetaV/vibT_[iD][cell]) / (exp(thetaV/vibT_[iD][cell]) - 1.0);
+//                         
+//                         totalvDof_[cell] += vDof_[iD][cell];
+//                     }
+//                 }
+// 
+//                 vibrationalT_[cell] = vibT[cell];
                 
                 // electronic temperature
                 scalar totalEDof = 0.0;
@@ -1753,49 +1846,49 @@ void dsmcVolFields::calculateField()
                         
                         /**************************************************************************************************************/
                         
-                        forAll(vibrationalEBF_, i)
-                        {
-                            if(rhoNBF_[j][k] > VSMALL)
-                            {                       
-                                molecularMassBoundary[j][k] +=  cloud_.constProps(typeIds_[i]).mass()
-                                            *(speciesRhoNBF_[i][j][k]/rhoNBF_[j][k]);
-                                            
-                                molarconstantPressureSpecificHeatBoundary[j][k] += (5.0 + cloud_.constProps(typeIds_[i]).rotationalDegreesOfFreedom())
-                                            *(speciesRhoNBF_[i][j][k]/rhoNBF_[j][k]);
-                                            
-                                molarconstantVolumeSpecificHeatBoundary[j][k] += (3.0 + cloud_.constProps(typeIds_[i]).rotationalDegreesOfFreedom())
-                                            *(speciesRhoNBF_[i][j][k]/rhoNBF_[j][k]);
-                            }
-                            
-                            if(vibrationalEBF_[i][j][k] > VSMALL && speciesRhoNBF_[i][j][k] > VSMALL && speciesRhoNIntBF_[j][k] > VSMALL)
-                            {        
-                                const scalar& thetaV = cloud_.constProps(typeIds_[i]).thetaV();
-                                
-                                scalar vibrationalEMean = (vibrationalEBF_[i][j][k]/speciesRhoNBF_[i][j][k]);
-                                
-                                scalar iMean = vibrationalEMean/(physicoChemical::k.value()*thetaV);
-                                
-                                vibTBF_[i][j][k] = thetaV / log(1.0 + (1.0/iMean));
-                                
-                                scalar fraction = speciesRhoNBF_[i][j][k]/speciesRhoNIntBF_[j][k];
-                                
-                                vDofBF_[i][j][k] = fraction*(2.0*thetaV/vibTBF_[i][j][k]) / (exp(thetaV/vibTBF_[i][j][k]) - 1.0);
-                                
-                                vibTBF[j][k] += fraction*vibTBF_[i][j][k];
-                                
-                                totalvDofBF_[j][k] += vDofBF_[i][j][k];
-                            }
-
-                        }
-                        
-                        if(totalvDofBF_[j][k] > VSMALL)
-                        {
-                            vibrationalT_.boundaryField()[j][k] = vibTBF[j][k];
-                        }
-                        else
-                        {
-                            vibrationalT_.boundaryField()[j][k] = 0.0;
-                        }
+//                         forAll(vibrationalEBF_, i)
+//                         {
+//                             if(rhoNBF_[j][k] > VSMALL)
+//                             {                       
+//                                 molecularMassBoundary[j][k] +=  cloud_.constProps(typeIds_[i]).mass()
+//                                             *(speciesRhoNBF_[i][j][k]/rhoNBF_[j][k]);
+//                                             
+//                                 molarconstantPressureSpecificHeatBoundary[j][k] += (5.0 + cloud_.constProps(typeIds_[i]).rotationalDegreesOfFreedom())
+//                                             *(speciesRhoNBF_[i][j][k]/rhoNBF_[j][k]);
+//                                             
+//                                 molarconstantVolumeSpecificHeatBoundary[j][k] += (3.0 + cloud_.constProps(typeIds_[i]).rotationalDegreesOfFreedom())
+//                                             *(speciesRhoNBF_[i][j][k]/rhoNBF_[j][k]);
+//                             }
+//                             
+//                             if(vibrationalEBF_[i][j][k] > VSMALL && speciesRhoNBF_[i][j][k] > VSMALL && speciesRhoNIntBF_[j][k] > VSMALL)
+//                             {        
+//                                 const scalar& thetaV = cloud_.constProps(typeIds_[i]).thetaV();
+//                                 
+//                                 scalar vibrationalEMean = (vibrationalEBF_[i][j][k]/speciesRhoNBF_[i][j][k]);
+//                                 
+//                                 scalar iMean = vibrationalEMean/(physicoChemical::k.value()*thetaV);
+//                                 
+//                                 vibTBF_[i][j][k] = thetaV / log(1.0 + (1.0/iMean));
+//                                 
+//                                 scalar fraction = speciesRhoNBF_[i][j][k]/speciesRhoNIntBF_[j][k];
+//                                 
+//                                 vDofBF_[i][j][k] = fraction*(2.0*thetaV/vibTBF_[i][j][k]) / (exp(thetaV/vibTBF_[i][j][k]) - 1.0);
+//                                 
+//                                 vibTBF[j][k] += fraction*vibTBF_[i][j][k];
+//                                 
+//                                 totalvDofBF_[j][k] += vDofBF_[i][j][k];
+//                             }
+// 
+//                         }
+//                         
+//                         if(totalvDofBF_[j][k] > VSMALL)
+//                         {
+//                             vibrationalT_.boundaryField()[j][k] = vibTBF[j][k];
+//                         }
+//                         else
+//                         {
+//                             vibrationalT_.boundaryField()[j][k] = 0.0;
+//                         }
                         
                         // electronic temperature
                         scalar totalEDof = 0.0;
@@ -2009,6 +2102,11 @@ void dsmcVolFields::calculateField()
                     nGroundElectronicLevel_[iD][cell] = 0.0;
                     nFirstElectronicLevel_[iD][cell] = 0.0;
                     nParcelsXnParticle_[iD][cell] = 0.0;
+                    
+                    forAll(vibrationalETotal_[iD], v)
+                    {
+                       vibrationalETotal_[iD][v][cell] = 0.0; 
+                    }
                 }
             }
             

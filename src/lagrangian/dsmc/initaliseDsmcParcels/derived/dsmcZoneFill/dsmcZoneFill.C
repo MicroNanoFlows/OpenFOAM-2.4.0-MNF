@@ -210,7 +210,7 @@ void dsmcZoneFill::setInitialConfiguration()
                             cP.rotationalDegreesOfFreedom()
                         );
             
-                        label vibLevel = cloud_.equipartitionVibrationalEnergyLevel
+                        labelList vibLevel = cloud_.equipartitionVibrationalEnergyLevel
                         (
                             vibrationalTemperature,
                             cP.vibrationalDegreesOfFreedom(),
@@ -247,14 +247,14 @@ void dsmcZoneFill::setInitialConfiguration()
                             U,
                             RWF,
                             ERot,
-                            vibLevel,
                             ELevel,
                             cellI,
                             cellTetIs.face(),
                             cellTetIs.tetPt(),
                             typeId,
                             newParcel,
-                            classification
+                            classification,
+                            vibLevel
                         );
                     }
                 }

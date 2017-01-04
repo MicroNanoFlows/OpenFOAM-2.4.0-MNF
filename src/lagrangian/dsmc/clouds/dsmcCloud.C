@@ -180,11 +180,11 @@ void Foam::dsmcCloud::addElectrons()
             
             if(electronTemperature_[cellI] < VSMALL)
             {
-                electronTemperature_[cellI] = 1000.0;
+                electronTemperature_[cellI] = 6000.0;
             }
             if(electronTemperature_[cellI] > 8.0e4)
             {
-                electronTemperature_[cellI] = 10000.0;
+                electronTemperature_[cellI] = 30000.0;
             }
                 
 
@@ -198,6 +198,8 @@ void Foam::dsmcCloud::addElectrons()
             {
                 cellVelocity_[cellI] = momentumMean_[cellI]/rhoMMean_[cellI];
             }
+            
+            labelList vibLevel(0,0);
                 
             electronVelocity += cellVelocity_[cellI];
 
@@ -210,13 +212,13 @@ void Foam::dsmcCloud::addElectrons()
                 RWF,
                 0.0,
                 0,
-                0,
                 cellI,
                 tetFaceI,
                 tetPtI,
                 electronTypeId,
                 0,
-                0
+                0,
+                vibLevel
             );
             
             electronIndex++;
@@ -357,14 +359,14 @@ void Foam::dsmcCloud::addNewParcel
     const vector& U,
     const scalar RWF,
     const scalar ERot,
-    const label vibLevel,
     const label ELevel,
     const label cellI,
     const label tetFaceI,
     const label tetPtI,
     const label typeId,
     const label newParcel,
-    const label classification
+    const label classification,
+    const labelList vibLevel
 )
 {
     dsmcParcel* pPtr = new dsmcParcel
@@ -374,14 +376,14 @@ void Foam::dsmcCloud::addNewParcel
         U,
         RWF,
         ERot,
-        vibLevel,
         ELevel,
         cellI,
         tetFaceI,
         tetPtI,
         typeId,
         newParcel,
-        classification
+        classification,
+        vibLevel
     );
 
     addParticle(pPtr);
@@ -751,7 +753,7 @@ void Foam::dsmcCloud::evolve()
     boundaries_.controlBeforeMove();//****
     
     //Remove electrons
-    removeElectrons();
+//     removeElectrons();
     
     // Move the particles ballistically with their current velocities
     Cloud<dsmcParcel>::move(td, mesh_.time().deltaTValue());
@@ -766,7 +768,7 @@ void Foam::dsmcCloud::evolve()
     }
 
     //Add electrons back after the move function
-    addElectrons();
+//     addElectrons();
     
     // Update cell occupancy
     buildCellOccupancy();
@@ -781,7 +783,7 @@ void Foam::dsmcCloud::evolve()
     controllers_.controlAfterCollisions();//****
     boundaries_.controlAfterCollisions();//****
 
-//     reactions_.outputData();
+    reactions_.outputData();
 
     fields_.calculateFields();//****
     fields_.writeFields();//****
@@ -930,14 +932,14 @@ Foam::scalar Foam::dsmcCloud::equipartitionRotationalEnergy
     return ERot;
 }
 
-Foam::label Foam::dsmcCloud::equipartitionVibrationalEnergyLevel
+Foam::labelList Foam::dsmcCloud::equipartitionVibrationalEnergyLevel
 (
     scalar temperature,
     scalar vibrationalDof,
     label typeId
 )
 {
-    label vibLevel = 0;
+    labelList vibLevel(vibrationalDof, 0);
 
     if (vibrationalDof < SMALL)
     {
@@ -945,8 +947,11 @@ Foam::label Foam::dsmcCloud::equipartitionVibrationalEnergyLevel
     }
     else
     {  
-        label i = -log(rndGen_.scalar01())*temperature/constProps(typeId).thetaV();
-        vibLevel = i;
+        forAll(vibLevel, i)
+        {
+            label j = -log(rndGen_.scalar01())*temperature/constProps(typeId).thetaV()[i];
+            vibLevel[i] = j;
+        }
     }
 
     return vibLevel;
@@ -961,6 +966,7 @@ Foam::label Foam::dsmcCloud::equipartitionElectronicLevel
 )
 
 {
+    
     scalar EMax = physicoChemical::k.value()*temperature;
     label jMax = constProps(typeId).numberOfElectronicLevels();
 
@@ -1362,14 +1368,14 @@ void Foam::dsmcCloud::axisymmetricWeighting()
                         U,
                         p->RWF(),
                         p->ERot(),
-                        p->vibLevel(),
                         p->ELevel(),
                         cellI,
                         tetFaceI,
                         tetPtI,
                         p->typeId(),
                         p->newParcel(),
-                        p->classification()
+                        p->classification(),
+                        p->vibLevel()
                     );
                     
                     prob -= 1.0;
@@ -1392,14 +1398,14 @@ void Foam::dsmcCloud::axisymmetricWeighting()
                         U,
                         p->RWF(),
                         p->ERot(),
-                        p->vibLevel(),
                         p->ELevel(),
                         cellI,
                         tetFaceI,
                         tetPtI,
                         p->typeId(),
                         p->newParcel(),
-                        p->classification()
+                        p->classification(),
+                        p->vibLevel()
                     );
                 }
             }

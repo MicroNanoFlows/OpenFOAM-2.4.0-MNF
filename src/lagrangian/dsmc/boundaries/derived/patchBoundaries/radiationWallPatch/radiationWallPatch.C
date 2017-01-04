@@ -146,7 +146,7 @@ void radiationWallPatch::controlParticle(dsmcParcel& p, dsmcParcel::trackingData
 
     scalar& ERot = p.ERot();
     
-    label& vibLevel = p.vibLevel();
+    labelList& vibLevel = p.vibLevel();
 
     label typeId = p.typeId();
 
@@ -154,8 +154,13 @@ void radiationWallPatch::controlParticle(dsmcParcel& p, dsmcParcel::trackingData
 
     scalar Etrans = 0.5*magSqr(U)*cloud_.constProps(typeId).mass();
 
-    scalar EcTot = Etrans + ERot + vibLevel*physicoChemical::k.value()*cloud_.constProps(typeId).thetaV();
+    scalar EcTot = Etrans + ERot;
 
+    forAll(vibLevel, i)
+    {
+        EcTot += vibLevel[i]*physicoChemical::k.value()*cloud_.constProps(typeId).thetaV()[i];
+    }
+    
     EcTot_ += EcTot;
 
     //

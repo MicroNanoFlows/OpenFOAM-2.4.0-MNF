@@ -136,12 +136,22 @@ void Foam::LarsenBorgnakkeVariableHardSphere::collide
     vector& UQ = pQ.U();
     scalar& ERotP = pP.ERot();
     scalar& ERotQ = pQ.ERot();
-    scalar EVibP = pP.vibLevel()*cloud_.constProps(typeIdP).thetaV()*physicoChemical::k.value();
-    scalar EVibQ = pQ.vibLevel()*cloud_.constProps(typeIdQ).thetaV()*physicoChemical::k.value();
-    label& vibLevelP = pP.vibLevel();
-    label& vibLevelQ = pQ.vibLevel();
+//     scalarList EVibP(pP.vibLevel().size(),0.0);
+//     scalarList EVibQ(pQ.vibLevel().size(),0.0);
     label& ELevelP = pP.ELevel();
     label& ELevelQ = pQ.ELevel();
+    labelList& vibLevelP = pP.vibLevel();
+    labelList& vibLevelQ = pQ.vibLevel();
+    
+//     forAll(EVibP, i)
+//     {
+//         EVibP[i] = pP.vibLevel()[i]*cloud_.constProps(typeIdP).thetaV()[i]*physicoChemical::k.value();
+//     }
+//     
+//     forAll(EVibQ, i)
+//     {
+//         EVibQ[i] = pQ.vibLevel()[i]*cloud_.constProps(typeIdQ).thetaV()[i]*physicoChemical::k.value();
+//     }
     
     scalar collisionSeparation = sqrt(
             sqr(pP.position().x() - pQ.position().x()) +
@@ -159,8 +169,19 @@ void Foam::LarsenBorgnakkeVariableHardSphere::collide
     scalar preCollisionERotP = ERotP;
     scalar preCollisionERotQ = ERotQ;
     
-    scalar preCollisionEVibP = EVibP;
-    scalar preCollisionEVibQ = EVibQ;
+    scalarList preCollisionEVibP(vibLevelP.size(),0.0);
+    scalarList preCollisionEVibQ(vibLevelQ.size(),0.0);
+   
+    forAll(vibLevelP, i)
+    {
+        preCollisionEVibP[i] =  vibLevelP[i]*cloud_.constProps(typeIdP).thetaV()[i]*physicoChemical::k.value();
+    }
+
+    forAll(vibLevelQ, i)
+    {
+        preCollisionEVibQ[i] =  vibLevelQ[i]*cloud_.constProps(typeIdQ).thetaV()[i]*physicoChemical::k.value();
+    }
+
     
     scalar preCollisionEEleP = cloud_.constProps(typeIdP).electronicEnergyList()[ELevelP];
     scalar preCollisionEEleQ = cloud_.constProps(typeIdQ).electronicEnergyList()[ELevelQ];
@@ -180,17 +201,17 @@ void Foam::LarsenBorgnakkeVariableHardSphere::collide
     List<label> gListP = cloud_.constProps(typeIdP).degeneracyList();    
     List<label> gListQ = cloud_.constProps(typeIdQ).degeneracyList();  
     
-    scalar thetaVP = cloud_.constProps(typeIdP).thetaV();  
-    scalar thetaVQ = cloud_.constProps(typeIdQ).thetaV();
+    scalarList thetaVP = cloud_.constProps(typeIdP).thetaV();  
+    scalarList thetaVQ = cloud_.constProps(typeIdQ).thetaV();
     
-    scalar thetaDP = cloud_.constProps(typeIdP).thetaD();
-    scalar thetaDQ = cloud_.constProps(typeIdQ).thetaD();
+    scalarList thetaDP = cloud_.constProps(typeIdP).thetaD();
+    scalarList thetaDQ = cloud_.constProps(typeIdQ).thetaD();
     
-    scalar ZrefP = cloud_.constProps(typeIdP).Zref();
-    scalar ZrefQ = cloud_.constProps(typeIdQ).Zref();
+    scalarList ZrefP = cloud_.constProps(typeIdP).Zref();
+    scalarList ZrefQ = cloud_.constProps(typeIdQ).Zref();
     
-    scalar refTempZvP = cloud_.constProps(typeIdP).TrefZv();
-    scalar refTempZvQ = cloud_.constProps(typeIdQ).TrefZv();
+    scalarList refTempZvP = cloud_.constProps(typeIdP).TrefZv();
+    scalarList refTempZvQ = cloud_.constProps(typeIdQ).TrefZv();
 
     scalar omegaPQ =
         0.5
@@ -214,15 +235,15 @@ void Foam::LarsenBorgnakkeVariableHardSphere::collide
     scalar inverseElectronicCollisionNumber = 1.0/electronicRelaxationCollisionNumber_;
     
 //     scalar alphaPQ = 2.0/(omegaPQ-0.5);
-    
+//     
 //     scalar zeta_T = 4.0 - (4.0/alphaPQ);
-    
+//     
 //     Info << "alphaPQ = " << alphaPQ << endl;
 //     Info << "zeta_T = " << zeta_T << endl;
             
-    // Larsen Borgnakke rotational energy redistribution part.  Using the serial
-    // application of the LB method, as per the INELRS subroutine in Bird's
-    // DSMC0R.FOR
+//     Larsen Borgnakke rotational energy redistribution part.  Using the serial
+//     application of the LB method, as per the INELRS subroutine in Bird's
+//     DSMC0R.FOR
     
     if(inverseElectronicCollisionNumber > rndGen.scalar01())
     { 
@@ -250,28 +271,31 @@ void Foam::LarsenBorgnakkeVariableHardSphere::collide
             
     if(vibrationalDofP > VSMALL)
     {
-        // collision energy of particle P = relative translational energy + pre-collision vibrational energy
-        scalar EcP = translationalEnergy + preCollisionEVibP; 
+        forAll(vibLevelP, i)
+        {
+            // collision energy of particle P = relative translational energy + pre-collision vibrational energy
+            scalar EcP = translationalEnergy + preCollisionEVibP[i]; 
 
-        // - maximum possible quantum level (equation 3, Bird 2010)
-        label iMaxP = (EcP / (physicoChemical::k.value()*thetaVP)); 
+            // - maximum possible quantum level (equation 3, Bird 2010)
+            label iMaxP = (EcP / (physicoChemical::k.value()*thetaVP[i])); 
 
-        if(iMaxP > SMALL)
-        {       
-            vibLevelP = cloud_.postCollisionVibrationalEnergyLevel
-                    (
-                        false,
-                        vibLevelP,
-                        iMaxP,
-                        thetaVP,
-                        thetaDP,
-                        refTempZvP,
-                        omegaPQ,
-                        ZrefP,
-                        EcP
-                     );
-                    
-            translationalEnergy = EcP - (vibLevelP*cloud_.constProps(typeIdP).thetaV()*physicoChemical::k.value());
+            if(iMaxP > SMALL)
+            {       
+                vibLevelP[i] = cloud_.postCollisionVibrationalEnergyLevel
+                        (
+                            false,
+                            vibLevelP[i],
+                            iMaxP,
+                            thetaVP[i],
+                            thetaDP[i],
+                            refTempZvP[i],
+                            omegaPQ,
+                            ZrefP[i],
+                            EcP
+                        );
+                        
+                translationalEnergy = EcP - (vibLevelP[i]*cloud_.constProps(typeIdP).thetaV()[i]*physicoChemical::k.value());
+            }
         }
     }
     
@@ -327,29 +351,31 @@ void Foam::LarsenBorgnakkeVariableHardSphere::collide
               
     if(vibrationalDofQ > VSMALL)
     {
-        
-         // collision energy of particle Q = relative translational energy + pre-collision vibrational energy
-        scalar EcQ = translationalEnergy + preCollisionEVibQ; 
+        forAll(vibLevelQ, i)
+        {
+            // collision energy of particle Q = relative translational energy + pre-collision vibrational energy
+            scalar EcQ = translationalEnergy + preCollisionEVibQ[i]; 
 
-        // - maximum possible quantum level (equation 3, Bird 2010)
-        label iMaxQ = (EcQ / (physicoChemical::k.value()*thetaVQ)); 
+            // - maximum possible quantum level (equation 3, Bird 2010)
+            label iMaxQ = (EcQ / (physicoChemical::k.value()*thetaVQ[i])); 
 
-        if(iMaxQ > SMALL)
-        {       
-            vibLevelQ = cloud_.postCollisionVibrationalEnergyLevel
-                    (
-                        false,
-                        vibLevelQ,
-                        iMaxQ,
-                        thetaVQ,
-                        thetaDQ,
-                        refTempZvQ,
-                        omegaPQ,
-                        ZrefQ,
-                        EcQ
-                     );
-                    
-            translationalEnergy = EcQ - (vibLevelQ*cloud_.constProps(typeIdQ).thetaV()*physicoChemical::k.value());
+            if(iMaxQ > SMALL)
+            {       
+                vibLevelQ[i] = cloud_.postCollisionVibrationalEnergyLevel
+                        (
+                            false,
+                            vibLevelQ[i],
+                            iMaxQ,
+                            thetaVQ[i],
+                            thetaDQ[i],
+                            refTempZvQ[i],
+                            omegaPQ,
+                            ZrefQ[i],
+                            EcQ
+                        );
+                        
+                translationalEnergy = EcQ - (vibLevelQ[i]*cloud_.constProps(typeIdQ).thetaV()[i]*physicoChemical::k.value());
+            }
         }
     }
         

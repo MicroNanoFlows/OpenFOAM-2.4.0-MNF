@@ -88,6 +88,8 @@ private:
         
         label nSamples_;
         
+        label nSamplesAverage_;
+        
         scalar referenceCp_;
         
         scalar referenceRho_;
@@ -95,6 +97,8 @@ private:
         scalar referenceU_;
         
         scalar referenceTemperature_;
+        
+        bool resetAtOutput_;
 
         void setProperties();
         

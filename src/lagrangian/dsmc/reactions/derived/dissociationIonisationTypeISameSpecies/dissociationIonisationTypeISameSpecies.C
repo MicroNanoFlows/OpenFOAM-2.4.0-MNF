@@ -127,12 +127,23 @@ void dissociationIonisationTypeISameSpecies::setProperties()
 
         // check that reactants are 'MOLECULES' (not 'ATOMS') 
 
-        const scalar& rDof = cloud_.constProps(reactantIds_[r]).rotationalDegreesOfFreedom();
+        const label& rDof = cloud_.constProps(reactantIds_[r]).rotationalDegreesOfFreedom();
     
         if(rDof < 1)
         {
             FatalErrorIn("dissociationIonisationTypeISameSpecies::setProperties()")
                 << "Reactant must be a molecule (not an atom): " << reactantMolecules[r] 
+                << nl 
+                << exit(FatalError);
+        }
+        
+        const label& vDof = cloud_.constProps(reactantIds_[r]).vibrationalDegreesOfFreedom();
+        
+        if(vDof > 1)
+        {
+            FatalErrorIn("dissociationIonisationTypeISameSpecies::setProperties()")
+                << "Reactions are currently only implemented for monatomic and diatomic species"
+                << " This is a polyatomic:" << reactantMolecules[r] 
                 << nl 
                 << exit(FatalError);
         }
@@ -292,24 +303,24 @@ void dissociationIonisationTypeISameSpecies::reaction
         
         scalar ERotP = p.ERot();
         scalar ERotQ = q.ERot();
-        scalar EVibP = p.vibLevel()*cloud_.constProps(typeIdP).thetaV()*physicoChemical::k.value();
-        scalar EVibQ = q.vibLevel()*cloud_.constProps(typeIdQ).thetaV()*physicoChemical::k.value();
+        scalar EVibP = p.vibLevel()[0]*cloud_.constProps(typeIdP).thetaV()[0]*physicoChemical::k.value();
+        scalar EVibQ = q.vibLevel()[0]*cloud_.constProps(typeIdQ).thetaV()[0]*physicoChemical::k.value();
         scalar EEleP = cloud_.constProps(typeIdP).electronicEnergyList()[p.ELevel()];
         scalar EEleQ = cloud_.constProps(typeIdQ).electronicEnergyList()[q.ELevel()];
 
         scalar mP = cloud_.constProps(typeIdP).mass();
         scalar mQ = cloud_.constProps(typeIdQ).mass();
         
-        scalar thetaVP = cloud_.constProps(typeIdP).thetaV();
-        scalar thetaVQ = cloud_.constProps(typeIdQ).thetaV();
+        scalar thetaVP = cloud_.constProps(typeIdP).thetaV()[0];
+        scalar thetaVQ = cloud_.constProps(typeIdQ).thetaV()[0];
         
-        scalar thetaDQ = cloud_.constProps(typeIdQ).thetaD();
+        scalar thetaDQ = cloud_.constProps(typeIdQ).thetaD()[0];
         
-        label idP = cloud_.constProps(typeIdP).charDissQuantumLevel();
+        label idP = cloud_.constProps(typeIdP).charDissQuantumLevel()[0];
 
-        scalar ZrefQ = cloud_.constProps(typeIdQ).Zref();
+        scalar ZrefQ = cloud_.constProps(typeIdQ).Zref()[0];
 
-        scalar refTempZvQ = cloud_.constProps(typeIdQ).TrefZv();
+        scalar refTempZvQ = cloud_.constProps(typeIdQ).TrefZv()[0];
         
         scalar rotationalDofQ = cloud_.constProps(typeIdQ).rotationalDegreesOfFreedom();
         
@@ -437,7 +448,7 @@ void dissociationIonisationTypeISameSpecies::reaction
                 label vibLevelQ = cloud_.postCollisionVibrationalEnergyLevel
                                 (
                                         true,
-                                        q.vibLevel(),
+                                        q.vibLevel()[0],
                                         iMax,
                                         thetaVQ,
                                         thetaDQ,
@@ -515,7 +526,7 @@ void dissociationIonisationTypeISameSpecies::reaction
                 // Q remains NON-DISSOCIATED.
                 q.U() = UQ;
                 q.ERot() = ERotQ;
-                q.vibLevel() = vibLevelQ;
+                q.vibLevel()[0] = vibLevelQ;
                 q.ELevel() = ELevelQ;
 
                 // Molecule P will dissociation.
@@ -535,12 +546,13 @@ void dissociationIonisationTypeISameSpecies::reaction
                 
                 p.typeId() = typeId1;
                 p.U() = uP1;
-                p.vibLevel() = 0;
+                p.vibLevel().setSize(0,0);
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
                 
                 label classificationP = p.classification();
                 scalar RWF = p.RWF();
+                labelList vibLevel(0,0);
                 
                 // insert new product 2
                 cloud_.addNewParcel
@@ -550,13 +562,13 @@ void dissociationIonisationTypeISameSpecies::reaction
                     RWF,
                     0.0,
                     0,
-                    0,
                     cell,
                     tetFace,
                     tetPt,
                     typeId2,
                     0,
-                    classificationP
+                    classificationP,
+                    vibLevel
                 );
             }
         }
@@ -592,7 +604,7 @@ void dissociationIonisationTypeISameSpecies::reaction
                 label vibLevelQ = cloud_.postCollisionVibrationalEnergyLevel
                                 (
                                         true,
-                                        q.vibLevel(),
+                                        q.vibLevel()[0],
                                         iMax,
                                         thetaVQ,
                                         thetaDQ,
@@ -670,10 +682,10 @@ void dissociationIonisationTypeISameSpecies::reaction
                 // Q remains NON-DISSOCIATED.
                 q.U() = UQ;
                 q.ERot() = ERotQ;
-                q.vibLevel() = vibLevelQ;
+                q.vibLevel()[0] = vibLevelQ;
                 q.ELevel() = ELevelQ;
 
-                // Molecule P will dissociation.
+                // Molecule P will ionise
                 vector position = p.position();
                 
                 label cell = -1;
@@ -690,12 +702,13 @@ void dissociationIonisationTypeISameSpecies::reaction
                 
                 p.typeId() = typeId1;
                 p.U() = uP1;
-                p.vibLevel() = 0;
+                p.vibLevel().setSize(1,0);
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
                 
                 label classificationP = p.classification();
                 scalar RWF = p.RWF();
+                labelList vibLevel(0,0);
                 
                 // insert new product 2
                 cloud_.addNewParcel
@@ -705,13 +718,13 @@ void dissociationIonisationTypeISameSpecies::reaction
                     RWF,
                     0.0,
                     0,
-                    0,
                     cell,
                     tetFace,
                     tetPt,
                     typeId2,
                     0,
-                    classificationP
+                    classificationP,
+                    vibLevel
                 );
             }
         }

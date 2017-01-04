@@ -64,7 +64,7 @@ dsmcFixedHeatFluxFieldPatch::dsmcFixedHeatFluxFieldPatch
     (
         IOobject
         (
-            "wallTemperature",
+            patchName_ + word("_wallTemperature"),
             time_.time().timeName(),
             mesh_,
             IOobject::NO_READ,
@@ -79,11 +79,13 @@ dsmcFixedHeatFluxFieldPatch::dsmcFixedHeatFluxFieldPatch
     desiredHeatFlux_(),
     relaxationFactor_(),
     stepCounter_(0),
-    nSamples_(),
+    nSamples_(0),
+    nSamplesAverage_(0),
     referenceCp_(),
     referenceRho_(),
     referenceU_(),
-    referenceTemperature_()
+    referenceTemperature_(),
+    resetAtOutput_()
 {
     writeInTimeDir_ = false;
     writeInCase_ = false;
@@ -114,6 +116,7 @@ void dsmcFixedHeatFluxFieldPatch::initialConfiguration()
 void dsmcFixedHeatFluxFieldPatch::calculateProperties()
 {
     stepCounter_++;
+    nSamplesAverage_++;
 
     const scalar deltaT = mesh_.time().deltaTValue();
     
@@ -132,9 +135,7 @@ void dsmcFixedHeatFluxFieldPatch::calculateProperties()
                 const label& faceI = faces_[f];
                 scalar fA = mag(mesh_.faceAreas()[faceI]);
 
-                scalar heatFlux = EcTotSum_[f]/(deltaT*nSamples_*fA);
-                
-//                 Pout << "heatFlux = " << heatFlux << endl;
+                scalar heatFlux = EcTotSum_[f]/(deltaT*nSamplesAverage_*fA);
                 
                 scalar normalisedDesiredHeatFlux = desiredHeatFlux_ / (referenceCp_*referenceRho_*referenceU_*referenceTemperature_);
                 
@@ -145,16 +146,11 @@ void dsmcFixedHeatFluxFieldPatch::calculateProperties()
                 scalar deltaWallTemperature = relaxationFactor_*(normalisedHeatFlux - normalisedDesiredHeatFlux)*oldWallTemperature;
                 
                 newWallTemperature_[f] = oldWallTemperature + deltaWallTemperature;
-                
-//                 newWallTemperature_[f] = oldWallTemperature
-//                     *(1.0 + relaxationFactor_*((heatFlux - desiredHeatFlux_)/(fabs(desiredHeatFlux_) + 100.0)));
                     
                 if(newWallTemperature_[f] < VSMALL)
                 {
                     newWallTemperature_[f] = temperature_;
                 }
-                
-                Pout << "newWallTemperature_[f] = " << newWallTemperature_[f] << endl;
             }                                    
         }
         
@@ -168,8 +164,46 @@ void dsmcFixedHeatFluxFieldPatch::calculateProperties()
             }
         }
         
+        IOdictionary newBoundariesDict
+        (
+            IOobject
+            (
+                "boundariesDict",
+                time_.system(),
+                mesh_,
+                IOobject::MUST_READ_IF_MODIFIED,
+                IOobject::NO_WRITE
+            )
+        );
+        
+        PtrList<entry> patchBoundaryList(newBoundariesDict.lookup("dsmcPatchBoundaries"));
+        
+        List< autoPtr<dsmcPatchBoundary> > patchBoundaryModels;
+        
+        patchBoundaryModels.setSize(patchBoundaryList.size());
+        
+        forAll(patchBoundaryModels, p)
+        {
+            const entry& boundaryI = patchBoundaryList[p];
+            const dictionary& boundaryIDict = boundaryI.dict();
+                        
+            const dictionary& patchNameDict = boundaryIDict.subDict("patchBoundaryProperties");
+            
+            const word& patchName = patchNameDict.lookup("patchName");
+          
+            if(patchName == patchName_)
+            {               
+                updateProperties(boundaryIDict);
+            }
+        }
+        
         stepCounter_ = 0.0;
-        EcTotSum_ = 0.0;
+        
+        if(resetAtOutput_)
+        {
+            EcTotSum_ = 0.0;
+            nSamplesAverage_ = 0;
+        }
     }
 }
 
@@ -181,7 +215,7 @@ void dsmcFixedHeatFluxFieldPatch::controlParticle(dsmcParcel& p, dsmcParcel::tra
 
     scalar& ERot = p.ERot();
     
-    label& vibLevel = p.vibLevel();
+    labelList& vibLevel = p.vibLevel();
     
 //     label& ELevel = p.ELevel();
 
@@ -189,9 +223,13 @@ void dsmcFixedHeatFluxFieldPatch::controlParticle(dsmcParcel& p, dsmcParcel::tra
     
     scalar m = cloud_.constProps(typeId).mass();
 
-    scalar preIE = 0.5*m*(U & U) + ERot 
-        + vibLevel*physicoChemical::k.value()*cloud_.constProps(typeId).thetaV();
+    scalar preIE = 0.5*m*(U & U) + ERot;
 //         + cloud_.constProps(typeId).electronicEnergyList()[ELevel];
+        
+    forAll(vibLevel, i)
+    {
+        preIE += vibLevel[i]*physicoChemical::k.value()*cloud_.constProps(typeId).thetaV()[i];
+    }
     
     label faceId = findIndex(faces_, p.face());
 
@@ -255,9 +293,13 @@ void dsmcFixedHeatFluxFieldPatch::controlParticle(dsmcParcel& p, dsmcParcel::tra
 
     measurePropertiesAfterControl(p, 0.0);
     
-    scalar postIE = 0.5*m*(U & U) + ERot 
-        + vibLevel*physicoChemical::k.value()*cloud_.constProps(typeId).thetaV();
+    scalar postIE = 0.5*m*(U & U) + ERot;
 //         + cloud_.constProps(typeId).electronicEnergyList()[p.ELevel()] ;
+        
+    forAll(vibLevel, i)
+    {
+        postIE += vibLevel[i]*physicoChemical::k.value()*cloud_.constProps(typeId).thetaV()[i];
+    }
     
 //     ELevel = cloud_.equipartitionElectronicLevel
 //                     (
@@ -287,7 +329,6 @@ void dsmcFixedHeatFluxFieldPatch::updateProperties(const dictionary& newDict)
     propsDict_ = newDict.subDict(typeName + "Properties");
     
     setProperties();
-
 }
 
 void dsmcFixedHeatFluxFieldPatch::setProperties()
@@ -296,11 +337,12 @@ void dsmcFixedHeatFluxFieldPatch::setProperties()
     temperature_ = readScalar(propsDict_.lookup("initialTemperature"));
     desiredHeatFlux_ = readScalar(propsDict_.lookup("desiredHeatFlux"));
     relaxationFactor_ = readScalar(propsDict_.lookup("relaxationFactor"));
-    nSamples_ = readScalar(propsDict_.lookup("nSamples"));
+    nSamples_ = readScalar(propsDict_.lookup("nWallSamples"));
     referenceCp_ = readScalar(propsDict_.lookup("referenceSpecificHeat"));
     referenceRho_ = readScalar(propsDict_.lookup("referenceDensity"));
     referenceU_ = readScalar(propsDict_.lookup("referenceVelocity"));
-    referenceTemperature_ = readScalar(propsDict_.lookup("referenceTemperature"));   
+    referenceTemperature_ = readScalar(propsDict_.lookup("referenceTemperature"));
+    resetAtOutput_ = Switch(propsDict_.lookup("resetWallSamples"));
 }
 
 } // End namespace Foam

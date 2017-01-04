@@ -329,7 +329,7 @@ void dsmcPlumeInflowPatch::controlParcelsBeforeMove()
                     cloud_.constProps(typeId).rotationalDegreesOfFreedom()
                 );
                 
-                label vibLevel = cloud_.equipartitionVibrationalEnergyLevel
+                labelList vibLevel = cloud_.equipartitionVibrationalEnergyLevel
                 (
                     vibrationalTemperatures_[i],
                     cloud_.constProps(typeId).vibrationalDegreesOfFreedom(),
@@ -354,14 +354,14 @@ void dsmcPlumeInflowPatch::controlParcelsBeforeMove()
                     U,
                     1.0,
                     ERot,
-                    vibLevel,
                     ELevel,
                     cellI,
                     faces_[f],
                     faceTetIs.tetPt(),
                     typeId,
                     newParcel,
-                    0  
+                    0 ,
+                    vibLevel
                 );
 
                 parcelsInserted[m] += 1.0;

@@ -109,7 +109,7 @@ void dsmcMixedDiffuseSpecularWallRotationFieldPatch::controlParticle(dsmcParcel&
 
     scalar& ERot = p.ERot();
     
-    label& vibLevel = p.vibLevel();
+    labelList& vibLevel = p.vibLevel();
 
     label typeId = p.typeId();
 

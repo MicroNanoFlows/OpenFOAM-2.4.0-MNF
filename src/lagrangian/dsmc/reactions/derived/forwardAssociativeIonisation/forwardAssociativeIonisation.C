@@ -326,10 +326,10 @@ void forwardAssociativeIonisation::reaction
         scalar omegaIntermediate = cloud_.constProps(intermediateId_).omega();
         scalar rotationalDofIntermediate = cloud_.constProps(intermediateId_).rotationalDegreesOfFreedom();
         scalar ChiBIntermediate = 2.5 - omegaIntermediate;
-        scalar thetaVIntermediate = cloud_.constProps(intermediateId_).thetaV();
-        scalar thetaDIntermediate = cloud_.constProps(intermediateId_).thetaD();
-        scalar ZrefIntermediate = cloud_.constProps(intermediateId_).Zref();
-        scalar refTempZvIntermediate = cloud_.constProps(intermediateId_).TrefZv();
+        scalar thetaVIntermediate = cloud_.constProps(intermediateId_).thetaV()[0];
+        scalar thetaDIntermediate = cloud_.constProps(intermediateId_).thetaD()[0];
+        scalar ZrefIntermediate = cloud_.constProps(intermediateId_).Zref()[0];
+        scalar refTempZvIntermediate = cloud_.constProps(intermediateId_).TrefZv()[0];
         label ELevelIntermediate = 0;
         List<scalar> EElistIntermediate = cloud_.constProps(intermediateId_).electronicEnergyList();
         List<label> gListIntermediate = cloud_.constProps(intermediateId_).degeneracyList();
@@ -366,8 +366,8 @@ void forwardAssociativeIonisation::reaction
         if((Ec - ionisationEnergy) > VSMALL)
         {
             //Ionisation can occur
-            totalReactionProbability += 1.0;
-            reactionProbabilities[0] = 1.0;
+//             totalReactionProbability += 1.0;
+//             reactionProbabilities[0] = 1.0;
         }
         
         //collision energy is the translational energy of the two atoms, plus their electronic energies
@@ -586,7 +586,7 @@ void forwardAssociativeIonisation::reaction
                 q.U() = UQ;
                 q.ELevel() = ELevelQ;
 
-                // Molecule P will dissociation.
+                // Atom P will ionisie.
                 vector position = p.position();
                 
                 label cell = -1;
@@ -603,12 +603,13 @@ void forwardAssociativeIonisation::reaction
                 
                 p.typeId() = typeId1;
                 p.U() = uP1;
-                p.vibLevel() = 0;
+                p.vibLevel().setSize(0,0);
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
                 
                 label classificationP = p.classification();
                 scalar RWF = p.RWF();
+                labelList vibLevel(0,0);
                 
                 // insert new product 2
                 cloud_.addNewParcel
@@ -618,13 +619,13 @@ void forwardAssociativeIonisation::reaction
                     RWF,
                     0.0,
                     0,
-                    0,
                     cell,
                     tetFace,
                     tetPt,
                     typeId2,
                     0,
-                    classificationP
+                    classificationP,
+                    vibLevel
                 );
             }
         }
@@ -640,9 +641,66 @@ void forwardAssociativeIonisation::reaction
                 const scalar& heatOfReactionIonisationJoules = heatOfReactionIntermediateIonisation_*physicoChemical::k.value();
                 const scalar& heatOfReactionRecombinationJoules = heatOfReactionRecombination_*physicoChemical::k.value();
                 
-                translationalEnergy += heatOfReactionRecombinationJoules + heatOfReactionIonisationJoules;
+                translationalEnergy += (heatOfReactionRecombinationJoules + heatOfReactionIonisationJoules);
                 
-                translationalEnergy += EEleP + EEleQ;
+                translationalEnergy += (EEleP + EEleQ);
+                
+                scalar thetaVNewP = cloud_.constProps(associativeIonisationProductIds_[0]).thetaV()[0];
+                scalar thetaDNewP = cloud_.constProps(associativeIonisationProductIds_[0]).thetaD()[0];
+                scalar jMaxNewP = cloud_.constProps(associativeIonisationProductIds_[0]).numberOfElectronicLevels();
+                scalar rotationalDofNewP = cloud_.constProps(associativeIonisationProductIds_[0]).rotationalDegreesOfFreedom();
+                scalar ZrefNewP = cloud_.constProps(associativeIonisationProductIds_[0]).Zref()[0];
+                scalar refTempZvNewP = cloud_.constProps(associativeIonisationProductIds_[0]).TrefZv()[0];
+                scalarList EElistNewP = cloud_.constProps(associativeIonisationProductIds_[0]).electronicEnergyList();
+                labelList gListNewP = cloud_.constProps(associativeIonisationProductIds_[0]).degeneracyList();
+                
+                scalar omegaNewPQ =
+                    0.5
+                    *(
+                        cloud_.constProps(associativeIonisationProductIds_[0]).omega()
+                        + cloud_.constProps(associativeIonisationProductIds_[1]).omega()
+                    );
+                
+                scalar ChiB = 2.5 - omegaNewPQ;
+                
+                label ELevelNewP = cloud_.postCollisionElectronicEnergyLevel
+                                (
+                                    translationalEnergy,
+                                    jMaxNewP,
+                                    omegaNewPQ,
+                                    EElistNewP,
+                                    gListNewP
+                                );
+                                
+                translationalEnergy -= EElistNewP[ELevelNewP];
+                
+                label vibLevelNewP = 0;
+                
+                scalar ERotNewP = 0.0;
+
+                if(rotationalDofNewP > VSMALL)
+                {                    
+                    label iMax = (translationalEnergy / (physicoChemical::k.value()*thetaVNewP));
+                    
+                    vibLevelNewP = cloud_.postCollisionVibrationalEnergyLevel
+                                    (
+                                            true,
+                                            0,
+                                            iMax,
+                                            thetaVNewP,
+                                            thetaDNewP,
+                                            refTempZvNewP,
+                                            omegaNewPQ,
+                                            ZrefNewP,
+                                            translationalEnergy
+                                        );
+                                    
+                    translationalEnergy -= vibLevelNewP*thetaVNewP*physicoChemical::k.value();
+                    
+                    ERotNewP = translationalEnergy*cloud_.postCollisionRotationalEnergy(rotationalDofNewP,ChiB);
+                            
+                    translationalEnergy -= ERotNewP;
+                }
                 
                 // centre of mass velocity of molecules (pre-split)
                 vector Ucm = (mP*UP + mQ*UQ)/(mP + mQ);
@@ -675,14 +733,14 @@ void forwardAssociativeIonisation::reaction
                 
                 p.typeId() = associativeIonisationProductIds_[0];
                 p.U() = UP;
-                p.ERot() = 0.0;
-                p.vibLevel() = 0;
-                p.ELevel() = 0;
+                p.ERot() = ERotNewP;
+                p.vibLevel().setSize(1, vibLevelNewP);
+                p.ELevel() = ELevelNewP;
                 
                 q.typeId() = associativeIonisationProductIds_[1];
                 q.U() = UQ;
                 q.ERot() = 0.0;
-                q.vibLevel() = 0;
+                q.vibLevel().setSize(0,0);
                 q.ELevel() = 0;
             }
         }

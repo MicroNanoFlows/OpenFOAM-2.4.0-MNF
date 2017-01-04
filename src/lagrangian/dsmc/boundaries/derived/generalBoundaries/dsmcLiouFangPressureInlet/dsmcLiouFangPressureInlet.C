@@ -61,10 +61,11 @@ dsmcLiouFangPressureInlet::dsmcLiouFangPressureInlet
     inletVelocity_(faces_.size(), vector::zero),
     previousInletVelocity_(faces_.size(), vector::zero),
     accumulatedParcelsToInsert_(),
+    infoCounter_(0),
     inletPressure_(),
     inletTemperature_(),
     theta_(),
-    n_()    
+    n_()
 {
     writeInTimeDir_ = false;
     writeInCase_ = true;
@@ -297,7 +298,7 @@ void dsmcLiouFangPressureInlet::controlParcelsBeforeMove()
                     cloud_.constProps(typeId).rotationalDegreesOfFreedom()
                 );
                 
-                label vibLevel = cloud_.equipartitionVibrationalEnergyLevel
+                labelList vibLevel = cloud_.equipartitionVibrationalEnergyLevel
                 (
                     faceTemperature,
                     cloud_.constProps(typeId).vibrationalDegreesOfFreedom(),
@@ -330,14 +331,14 @@ void dsmcLiouFangPressureInlet::controlParcelsBeforeMove()
                     U,
                     RWF,
                     ERot,
-                    vibLevel,
                     ELevel,
                     cellI,
                     faces_[f],
                     faceTetIs.tetPt(),
                     typeId,
                     newParcel,
-                    0
+                    0,
+                    vibLevel
                 );
 
                 nTotalParcelsAdded++;
@@ -345,11 +346,18 @@ void dsmcLiouFangPressureInlet::controlParcelsBeforeMove()
         }
     }
     
-    if(faces_.size() > VSMALL)
-    {    
-        Pout<< "dsmcLiouFangPressureInlet target parcels to insert: " << nTotalParcelsToBeAdded 
-            <<", number of of inserted parcels: " << nTotalParcelsAdded
-            << endl;
+    infoCounter_++;
+        
+    if(infoCounter_ >= cloud_.nTerminalOutputs())
+    {
+        if(faces_.size() > VSMALL)
+        {    
+            Pout<< "dsmcLiouFangPressureInlet target parcels to insert: " << nTotalParcelsToBeAdded 
+                <<", number of of inserted parcels: " << nTotalParcelsAdded
+                << endl;
+        }
+        
+        infoCounter_ = 0;
     }
     
     previousInletVelocity_ = inletVelocity_;

@@ -85,6 +85,7 @@ private:
         scalar mols_;
         scalar dsmcMols_;
         scalar molsInt_;
+        scalar molsElec_;
         scalar mass_;
         scalar mcc_;
         vector mom_;
@@ -117,7 +118,10 @@ private:
         
         label stepIndex_;
         scalarField speciesMols_;
-        scalarField vibrationalETotal_;
+        scalarField mccSpecies_;
+        scalarField electronicETotal_;
+        scalarField nParticlesGroundElectronicState_;
+        scalarField nParticlesFirstElectronicState_;
         scalarField vDof_;
         scalarField mfp_;
         label nSteps_;
@@ -130,6 +134,7 @@ private:
         scalarField translationalTemperature_;
         scalarField rotationalTemperature_;
         scalarField vibrationalTemperature_;
+        scalarField electronicTemperature_;
         scalarField overallTemperature_;
         scalarField scalarPressure_;
         tensorField pField_;
@@ -137,6 +142,8 @@ private:
         vectorField qField_;  
         scalarField meanFreePath_;
         scalarField Ma_;
+        
+        List<scalarField> vibrationalETotal_;
        
         List<bool> outputField_;
 

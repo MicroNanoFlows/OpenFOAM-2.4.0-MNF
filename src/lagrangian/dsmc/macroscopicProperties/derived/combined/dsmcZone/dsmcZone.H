@@ -116,10 +116,9 @@ private:
         label stepIndex_;
         scalarField speciesMols_;
         scalarField mccSpecies_;
-        scalarField vibrationalETotal_;
         scalarField electronicETotal_;
-        scalarField  nParticlesGroundElectronicState_;
-        scalarField  nParticlesFirstElectronicState_;
+        scalarField nParticlesGroundElectronicState_;
+        scalarField nParticlesFirstElectronicState_;
         scalarField vDof_;
         scalarField mfp_;
         scalarField mcr_; // mean collision rate
@@ -141,11 +140,14 @@ private:
         vectorField qField_;
         vectorField qInternalField_;
         vectorField qTranslationalField_;
+        vectorField vibrationalModeTemperatures_;
         scalarField meanFreePath_;
         scalarField meanCollisionRate_;
         scalarField meanCollisionTime_;
         scalarField meanCollisionTimeTimeStepRatio_;
         scalarField Ma_;
+        
+        List<scalarField> vibrationalETotal_;
        
         List<bool> outputField_;
 
@@ -167,36 +169,36 @@ public:
 
     // Constructors
 
-        //- Construct from components
-        dsmcZone
-		(
-            Time& t,
-            const polyMesh& mesh,
-            dsmcCloud& cloud,
-            const dictionary& dict
-		);
+    //- Construct from components
+    dsmcZone
+    (
+        Time& t,
+        const polyMesh& mesh,
+        dsmcCloud& cloud,
+        const dictionary& dict
+    );
 
     // Destructor
 
- 		~dsmcZone();
+    ~dsmcZone();
 
 
     // Member Functions
 
-        //- create initial field
-        void createField();
+    //- create initial field
+    void createField();
 
-        //- calculate field
-        void calculateField();
+    //- calculate field
+    void calculateField();
 
         //- return field
 //         const volScalarField& densityField() const;
 //         const propertyField& fields() const;
         //- write field
-        void writeField();
+    void writeField();
 
-        void updateProperties(const dictionary& dict);
-}; 		
+    void updateProperties(const dictionary& dict);
+};
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

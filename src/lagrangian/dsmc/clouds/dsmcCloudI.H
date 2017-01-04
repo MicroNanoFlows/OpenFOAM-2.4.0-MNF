@@ -136,7 +136,6 @@ inline const Foam::dsmcParcel::constantProperties& Foam::dsmcCloud::constProps
     return constProps_[typeId];
 }
 
-
 //template <class dsmcParcel>
 inline Foam::Random& Foam::dsmcCloud::rndGen()
 {
@@ -236,7 +235,10 @@ inline Foam::scalarList Foam::dsmcCloud::infoMeasurements() const
         infoMeasurements[0] += cP.mass(); //massInSystem
         infoMeasurements[1] += 0.5*cP.mass()*(p.U() & p.U()); //linearKineticEnergy
         infoMeasurements[2] += p.ERot(); //rotationalEnergy
-        infoMeasurements[3] += physicoChemical::k.value()*p.vibLevel()*cP.thetaV(); //vibrationalEnergy
+        forAll(p.vibLevel(), i)
+        {
+            infoMeasurements[3] += physicoChemical::k.value()*p.vibLevel()[i]*cP.thetaV()[i]; //vibrationalEnergy
+        }
         infoMeasurements[4] += cP.electronicEnergyList()[p.ELevel()]; //electronicEnergy
     }
     
@@ -320,7 +322,10 @@ inline Foam::scalarList Foam::dsmcCloud::infoMeasurements() const
 //             p.typeId()
 //         ); 
 // 
-//         vibrationalEnergy += nParticle_*physicoChemical::k.value()*p.vibLevel()*cP.thetaV();
+//         forAll(p.vibLevel(), i)
+//         {
+//             vibrationalEnergy += nParticle_*physicoChemical::k.value()*p.vibLevel()[i]*cP.thetaV()[i];
+//         }
 //     }
 // 
 //     return vibrationalEnergy;

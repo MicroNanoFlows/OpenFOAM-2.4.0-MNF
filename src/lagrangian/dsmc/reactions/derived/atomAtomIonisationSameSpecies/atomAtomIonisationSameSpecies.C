@@ -116,9 +116,9 @@ void atomAtomIonisationSameSpecies::setProperties()
     
     // check that reactant one is an 'ATOM' 
 
-    const scalar& rDof1 = cloud_.constProps(reactantIds_[0]).rotationalDegreesOfFreedom();
+    const label& rDof1 = cloud_.constProps(reactantIds_[0]).rotationalDegreesOfFreedom();
 
-    if(rDof1 > 1)
+    if(rDof1 > VSMALL)
     {
         FatalErrorIn("atomAtomIonisationSameSpecies::setProperties()")
             << "First reactant must be an atom (not a molecule or an electron): " << reactantMolecules[0] 
@@ -128,9 +128,55 @@ void atomAtomIonisationSameSpecies::setProperties()
     
     // check that reactant two is an 'ATOM'
 
-    const scalar& rDof2 = cloud_.constProps(reactantIds_[1]).mass();
+    const label& rDof2 = cloud_.constProps(reactantIds_[1]).rotationalDegreesOfFreedom();
 
-    if(rDof2 > 1)
+    if(rDof2 > VSMALL)
+    {
+        FatalErrorIn("atomAtomIonisationSameSpecies::setProperties()")
+            << "Second reactant must be an atom (not a molecule or an electron): " << reactantMolecules[1] 
+            << nl 
+            << exit(FatalError);
+    }
+    
+    const label& vDof1 = cloud_.constProps(reactantIds_[0]).vibrationalDegreesOfFreedom();
+
+    if(vDof1 > VSMALL)
+    {
+         FatalErrorIn("atomIonIonisation::setProperties()")
+            << "Reactions are currently only implemented for monatomic and diatomic species"
+            << " This is a polyatomic:" << reactantMolecules[0] 
+            << nl 
+            << exit(FatalError);
+    }
+    
+    // check that reactant two is an 'ATOM'
+
+    const label& vDof2 = cloud_.constProps(reactantIds_[1]).vibrationalDegreesOfFreedom();
+
+    if(vDof2 > VSMALL)
+    {
+         FatalErrorIn("atomIonIonisation::setProperties()")
+            << "Reactions are currently only implemented for monatomic and diatomic species"
+            << " This is a polyatomic:" << reactantMolecules[1] 
+            << nl 
+            << exit(FatalError);
+    }
+    
+     const label& charge1 = cloud_.constProps(reactantIds_[0]).charge();
+
+    if(charge1 == -1)
+    {
+        FatalErrorIn("atomAtomIonisationSameSpecies::setProperties()")
+            << "First reactant must be an atom (not a molecule or an electron): " << reactantMolecules[0] 
+            << nl 
+            << exit(FatalError);
+    }
+    
+    // check that reactant two is an 'ATOM'
+
+    const label& charge2 = cloud_.constProps(reactantIds_[1]).charge();
+
+    if(charge2 == -1)
     {
         FatalErrorIn("atomAtomIonisationSameSpecies::setProperties()")
             << "Second reactant must be an atom (not a molecule or an electron): " << reactantMolecules[1] 
@@ -286,7 +332,7 @@ void atomAtomIonisationSameSpecies::reaction
         vector UP = p.U();
         vector UQ = q.U();
         scalar ERotP = p.ERot();
-        scalar EVibP = p.vibLevel()*cloud_.constProps(typeIdP).thetaV()*physicoChemical::k.value();
+        scalar EVibP = p.vibLevel()[0]*cloud_.constProps(typeIdP).thetaV()[0]*physicoChemical::k.value();
         scalar EEleP = cloud_.constProps(typeIdP).electronicEnergyList()[p.ELevel()];
         scalar EEleQ = cloud_.constProps(typeIdQ).electronicEnergyList()[q.ELevel()];
 
@@ -426,12 +472,13 @@ void atomAtomIonisationSameSpecies::reaction
                 
                 p.typeId() = typeId1;
                 p.U() = uP1;
-                p.vibLevel() = 0;
+                p.vibLevel().setSize(0,0);
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
                 
                 label classificationP = p.classification();
                 scalar RWF = p.RWF();
+                labelList vibLevel(0,0);
                 
                 // insert new product 2
                 cloud_.addNewParcel
@@ -441,13 +488,13 @@ void atomAtomIonisationSameSpecies::reaction
                     RWF,
                     0.0,
                     0,
-                    0,
                     cell,
                     tetFace,
                     tetPt,
                     typeId2,
                     0,
-                    classificationP
+                    classificationP,
+                    vibLevel
                 );
             }
         } 

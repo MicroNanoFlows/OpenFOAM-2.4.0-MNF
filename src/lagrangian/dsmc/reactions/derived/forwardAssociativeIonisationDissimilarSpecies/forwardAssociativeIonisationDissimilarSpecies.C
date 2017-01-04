@@ -372,10 +372,10 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
         scalar omegaIntermediate = cloud_.constProps(intermediateId_).omega();
         scalar rotationalDofIntermediate = cloud_.constProps(intermediateId_).rotationalDegreesOfFreedom();
         scalar ChiBIntermediate = 2.5 - omegaIntermediate;
-        scalar thetaVIntermediate = cloud_.constProps(intermediateId_).thetaV();
-        scalar thetaDIntermediate = cloud_.constProps(intermediateId_).thetaD();
-        scalar ZrefIntermediate = cloud_.constProps(intermediateId_).Zref();
-        scalar refTempZvIntermediate = cloud_.constProps(intermediateId_).TrefZv();
+        scalar thetaVIntermediate = cloud_.constProps(intermediateId_).thetaV()[0];
+        scalar thetaDIntermediate = cloud_.constProps(intermediateId_).thetaD()[0];
+        scalar ZrefIntermediate = cloud_.constProps(intermediateId_).Zref()[0];
+        scalar refTempZvIntermediate = cloud_.constProps(intermediateId_).TrefZv()[0];
         label ELevelIntermediate = 0;
         List<scalar> EElistIntermediate = cloud_.constProps(intermediateId_).electronicEnergyList();
         List<label> gListIntermediate = cloud_.constProps(intermediateId_).degeneracyList();
@@ -675,12 +675,13 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
                 
                 p.typeId() = typeId1;
                 p.U() = uP1;
-                p.vibLevel() = 0;
+                p.vibLevel().setSize(0,0);
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
                 
                 label classificationP = p.classification();
                 scalar RWF = p.RWF();
+                labelList vibLevel(0,0);
                 
                 // insert new product 2
                 cloud_.addNewParcel
@@ -690,13 +691,13 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
                     RWF,
                     0.0,
                     0,
-                    0,
                     cell,
                     tetFace,
                     tetPt,
                     typeId2,
                     0,
-                    classificationP
+                    classificationP,
+                    vibLevel
                 );
             }
         }
@@ -805,12 +806,13 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
                 
                 q.typeId() = typeId1;
                 q.U() = uQ1;
-                q.vibLevel() = 0;
+                q.vibLevel().setSize(0,0);
                 q.ERot() = 0.0;
                 q.ELevel() = 0;
                 
                 label classificationQ = q.classification();
                 scalar RWF = q.RWF();
+                labelList vibLevel(0,0);
                 
                 // insert new product 2
                 cloud_.addNewParcel
@@ -820,13 +822,13 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
                     RWF,
                     0.0,
                     0,
-                    0,
                     cell,
                     tetFace,
                     tetPt,
                     typeId2,
                     0,
-                    classificationQ
+                    classificationQ,
+                    vibLevel
                 );
             }
         }
@@ -878,13 +880,13 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
                 p.typeId() = associativeIonisationProductIds_[0];
                 p.U() = UP;
                 p.ERot() = 0.0;
-                p.vibLevel() = 0;
+                p.vibLevel().setSize(1,0);
                 p.ELevel() = 0;
                 
                 q.typeId() = associativeIonisationProductIds_[1];
                 q.U() = UQ;
                 q.ERot() = 0.0;
-                q.vibLevel() = 0;
+                q.vibLevel().setSize(0,0);
                 q.ELevel() = 0;
             }
         }
@@ -909,10 +911,10 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
         scalar omegaIntermediate = cloud_.constProps(intermediateId_).omega();
         scalar rotationalDofIntermediate = cloud_.constProps(intermediateId_).rotationalDegreesOfFreedom();
         scalar ChiBIntermediate = 2.5 - omegaIntermediate;
-        scalar thetaVIntermediate = cloud_.constProps(intermediateId_).thetaV();
-        scalar thetaDIntermediate = cloud_.constProps(intermediateId_).thetaD();
-        scalar ZrefIntermediate = cloud_.constProps(intermediateId_).Zref();
-        scalar refTempZvIntermediate = cloud_.constProps(intermediateId_).TrefZv();
+        scalar thetaVIntermediate = cloud_.constProps(intermediateId_).thetaV()[0];
+        scalar thetaDIntermediate = cloud_.constProps(intermediateId_).thetaD()[0];
+        scalar ZrefIntermediate = cloud_.constProps(intermediateId_).Zref()[0];
+        scalar refTempZvIntermediate = cloud_.constProps(intermediateId_).TrefZv()[0];
         label ELevelIntermediate = 0;
         List<scalar> EElistIntermediate = cloud_.constProps(intermediateId_).electronicEnergyList();
         List<label> gListIntermediate = cloud_.constProps(intermediateId_).degeneracyList();
@@ -936,8 +938,8 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
             + cloud_.constProps(typeIdQ).omega()
         );
         
-        bool ionisationReactionP = false;
-        bool ionisationReactionQ = false;
+        bool ionisationReactionP = false; //N
+        bool ionisationReactionQ = false; //O
         bool associativeIonisation = false;
                 
         //3 reactions possible
@@ -1106,9 +1108,9 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
             }
         }
             
-        if(ionisationReactionP)
+        if(ionisationReactionP) //Q ionises, is called P here for consistency with the reaction rates
         {
-            nTotalIonisationQReactions_++;
+            nTotalIonisationPReactions_++;
             nIonisationPReactionsPerTimeStep_++;
             
             if(allowSplitting_)
@@ -1118,6 +1120,137 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
                 const scalar& heatOfReactionIonisationJoules = heatOfReactionIonisationP_*physicoChemical::k.value();
                 
                 translationalEnergy = translationalEnergy + heatOfReactionIonisationJoules + EEleQ;
+                
+                translationalEnergy += EEleP;
+                    
+                label ELevelP = cloud_.postCollisionElectronicEnergyLevel
+                                (
+                                    translationalEnergy,
+                                    jMaxP,
+                                    omegaPQ,
+                                    EElistP,
+                                    gListP
+                                );
+                                
+                translationalEnergy -= EElistP[ELevelP];
+                
+                scalar relVelNonDissoMol = sqrt(2.0*translationalEnergy/mR);
+
+                //center of mass velocity of all particles
+                vector Ucm = (mP*UP + mQ*UQ)/(mP + mQ);    
+
+                // Variable Hard Sphere collision part
+
+                scalar cosTheta = 2.0*cloud_.rndGen().scalar01() - 1.0;
+            
+                scalar sinTheta = sqrt(1.0 - cosTheta*cosTheta);
+            
+                scalar phi = twoPi*cloud_.rndGen().scalar01();
+            
+                vector postCollisionRelU =
+                    relVelNonDissoMol
+                    *vector
+                        (
+                            cosTheta,
+                            sinTheta*cos(phi),
+                            sinTheta*sin(phi)
+                        );
+
+                UP = Ucm + (postCollisionRelU*mQ/(mP + mQ)); 
+                UQ = Ucm - (postCollisionRelU*mP/(mP + mQ));
+
+                const label& typeId1 = ionisationPProductIds_[0];
+                const label& typeId2 = ionisationPProductIds_[1];
+                
+                //Mass of Product one and two
+                scalar mP1 = cloud_.constProps(typeId1).mass();
+                scalar mP2 = cloud_.constProps(typeId2).mass();
+                
+                scalar mRatoms = mP1*mP2/(mP1 + mP2);
+                
+                translationalEnergy = 0.0;
+                
+                scalar cRatoms = sqrt(2.0*translationalEnergy/mRatoms);
+
+                // Variable Hard Sphere collision part
+                scalar cosTheta2 = 2.0*cloud_.rndGen().scalar01() - 1.0;
+            
+                scalar sinTheta2 = sqrt(1.0 - cosTheta2*cosTheta2);
+            
+                scalar phi2 = twoPi*cloud_.rndGen().scalar01();
+            
+                vector postCollisionRelU2 = cRatoms
+                *vector
+                    (
+                        cosTheta2,
+                        sinTheta2*cos(phi2),
+                        sinTheta2*sin(phi2)
+                    );
+
+
+                vector uQ1 = UQ + postCollisionRelU2*mP2/(mP1 + mP2);
+                vector uQ2 = UQ - postCollisionRelU2*mP1/(mP1 + mP2);
+
+                // P remains NON-IONISED.
+                p.U() = UP;
+                p.ELevel() = ELevelP;
+
+                // Molecule P will ionise.
+                vector position = p.position();
+                
+                label cell = -1;
+                label tetFace = -1;
+                label tetPt = -1;
+
+                mesh_.findCellFacePt
+                (
+                    position,
+                    cell,
+                    tetFace,
+                    tetPt
+                );
+                
+                q.typeId() = typeId1;
+                q.U() = uQ1;
+                q.vibLevel().setSize(0,0);
+                q.ERot() = 0.0;
+                q.ELevel() = 0;
+                
+                label classificationQ = q.classification();
+                scalar RWF = q.RWF();
+                labelList vibLevel(0,0);
+                
+                // insert new product 2
+                cloud_.addNewParcel
+                (
+                    position,
+                    uQ2,
+                    RWF,
+                    0.0,
+                    0,
+                    cell,
+                    tetFace,
+                    tetPt,
+                    typeId2,
+                    0,
+                    classificationQ,
+                    vibLevel
+                );
+            }
+        }
+        
+        if(ionisationReactionQ) //P ionises, is called Q here for consistency with the reaction rates
+        {
+            nTotalIonisationQReactions_++;
+            nIonisationQReactionsPerTimeStep_++;
+            
+            if(allowSplitting_)
+            {
+                relax_ = false;
+                
+                const scalar& heatOfReactionIonisationJoules = heatOfReactionIonisationQ_*physicoChemical::k.value();
+                
+                translationalEnergy = translationalEnergy + heatOfReactionIonisationJoules + EEleP;
                 
                 translationalEnergy += EEleQ;
                     
@@ -1130,7 +1263,7 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
                                     gListQ
                                 );
                                 
-                translationalEnergy -= EElistQ[ELevelQ];
+                translationalEnergy -= EElistP[ELevelQ];
                 
                 scalar relVelNonDissoMol = sqrt(2.0*translationalEnergy/mR);
 
@@ -1210,12 +1343,13 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
                 
                 p.typeId() = typeId1;
                 p.U() = uP1;
-                p.vibLevel() = 0;
+                p.vibLevel().setSize(0,0);
                 p.ERot() = 0.0;
                 p.ELevel() = 0;
                 
                 label classificationP = p.classification();
                 scalar RWF = p.RWF();
+                labelList vibLevel(0,0);
                 
                 // insert new product 2
                 cloud_.addNewParcel
@@ -1225,143 +1359,13 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
                     RWF,
                     0.0,
                     0,
-                    0,
                     cell,
                     tetFace,
                     tetPt,
                     typeId2,
                     0,
-                    classificationP
-                );
-            }
-        }
-        
-        if(ionisationReactionQ)
-        {
-            nTotalIonisationPReactions_++;
-            nIonisationQReactionsPerTimeStep_++;
-            
-            if(allowSplitting_)
-            {
-                relax_ = false;
-                
-                const scalar& heatOfReactionIonisationJoules = heatOfReactionIonisationQ_*physicoChemical::k.value();
-                
-                translationalEnergy = translationalEnergy + heatOfReactionIonisationJoules + EEleP;
-                
-                translationalEnergy += EEleP;
-                    
-                label ELevelP = cloud_.postCollisionElectronicEnergyLevel
-                                (
-                                    translationalEnergy,
-                                    jMaxP,
-                                    omegaPQ,
-                                    EElistP,
-                                    gListP
-                                );
-                                
-                translationalEnergy -= EElistP[ELevelP];
-                
-                scalar relVelNonDissoMol = sqrt(2.0*translationalEnergy/mR);
-
-                //center of mass velocity of all particles
-                vector Ucm = (mP*UP + mQ*UQ)/(mP + mQ);    
-
-                // Variable Hard Sphere collision part
-
-                scalar cosTheta = 2.0*cloud_.rndGen().scalar01() - 1.0;
-            
-                scalar sinTheta = sqrt(1.0 - cosTheta*cosTheta);
-            
-                scalar phi = twoPi*cloud_.rndGen().scalar01();
-            
-                vector postCollisionRelU =
-                    relVelNonDissoMol
-                    *vector
-                        (
-                            cosTheta,
-                            sinTheta*cos(phi),
-                            sinTheta*sin(phi)
-                        );
-
-                UP = Ucm + (postCollisionRelU*mQ/(mP + mQ)); 
-                UQ = Ucm - (postCollisionRelU*mP/(mP + mQ));
-
-                const label& typeId1 = ionisationPProductIds_[0];
-                const label& typeId2 = ionisationPProductIds_[1];
-                
-                //Mass of Product one and two
-                scalar mP1 = cloud_.constProps(typeId1).mass();
-                scalar mP2 = cloud_.constProps(typeId2).mass();
-                
-                scalar mRatoms = mP1*mP2/(mP1 + mP2);
-                
-                translationalEnergy = 0.0;
-                
-                scalar cRatoms = sqrt(2.0*translationalEnergy/mRatoms);
-
-                // Variable Hard Sphere collision part
-                scalar cosTheta2 = 2.0*cloud_.rndGen().scalar01() - 1.0;
-            
-                scalar sinTheta2 = sqrt(1.0 - cosTheta2*cosTheta2);
-            
-                scalar phi2 = twoPi*cloud_.rndGen().scalar01();
-            
-                vector postCollisionRelU2 = cRatoms
-                *vector
-                    (
-                        cosTheta2,
-                        sinTheta2*cos(phi2),
-                        sinTheta2*sin(phi2)
-                    );
-
-
-                vector uQ1 = UQ + postCollisionRelU2*mP2/(mP1 + mP2);
-                vector uQ2 = UQ - postCollisionRelU2*mP1/(mP1 + mP2);
-
-                // P remains NON-IONISED.
-                p.U() = UP;
-                p.ELevel() = ELevelP;
-
-                // Molecule Q will ionise.
-                vector position = q.position();
-                
-                label cell = -1;
-                label tetFace = -1;
-                label tetPt = -1;
-
-                mesh_.findCellFacePt
-                (
-                    position,
-                    cell,
-                    tetFace,
-                    tetPt
-                );
-                
-                q.typeId() = typeId1;
-                q.U() = uQ1;
-                q.vibLevel() = 0;
-                q.ERot() = 0.0;
-                q.ELevel() = 0;
-                
-                label classificationQ = q.classification();
-                scalar RWF = q.RWF();
-                
-                // insert new product 2
-                cloud_.addNewParcel
-                (
-                    position,
-                    uQ2,
-                    RWF,
-                    0.0,
-                    0,
-                    0,
-                    cell,
-                    tetFace,
-                    tetPt,
-                    typeId2,
-                    0,
-                    classificationQ
+                    classificationP,
+                    vibLevel
                 );
             }
         }
@@ -1412,13 +1416,13 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
                 p.typeId() = associativeIonisationProductIds_[0];
                 p.U() = UP;
                 p.ERot() = 0.0;
-                p.vibLevel() = 0;
+                p.vibLevel().setSize(1,0);
                 p.ELevel() = 0;
                 
                 q.typeId() = associativeIonisationProductIds_[1];
                 q.U() = UQ;
                 q.ERot() = 0.0;
-                q.vibLevel() = 0;
+                q.vibLevel().setSize(0,0);
                 q.ELevel() = 0;
             }
         }

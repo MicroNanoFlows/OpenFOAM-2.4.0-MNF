@@ -115,14 +115,34 @@ void reverseAssociativeIonisation::setProperties()
         }
     }
     
-    // check that first reactant is a molecule
+    // check that first reactant is a charged molecule
 
-    const scalar& rDofReactant1 = cloud_.constProps(reactantIds_[0]).rotationalDegreesOfFreedom();
-
-    if(rDofReactant1 < 2)
+    const label& rDofReactant1 = cloud_.constProps(reactantIds_[0]).rotationalDegreesOfFreedom();
+    const label& chargeReactant1 = cloud_.constProps(reactantIds_[0]).charge();
+    
+    if(rDofReactant1 < VSMALL )
     {
         FatalErrorIn("reverseAssociativeIonisation::setProperties()")
             << "First reactant must be an ionised molecule: " << reactantMolecules[0] 
+            << nl 
+            << exit(FatalError);
+    }
+    
+    if(chargeReactant1 != 1 )
+    {
+        FatalErrorIn("reverseAssociativeIonisation::setProperties()")
+            << "First reactant must be an ionised molecule: " << reactantMolecules[0] 
+            << nl 
+            << exit(FatalError);
+    }
+    
+    const scalar& vDofReactant1 = cloud_.constProps(reactantIds_[0]).vibrationalDegreesOfFreedom();
+
+    if(vDofReactant1 > 1)
+    {
+        FatalErrorIn("reverseAssociativeIonisation::setProperties()")
+            << "Reactions are currently only implemented for monatomic and diatomic species"
+            << " This is a polyatomic:" << reactantMolecules[0] 
             << nl 
             << exit(FatalError);
     }
@@ -269,15 +289,15 @@ void reverseAssociativeIonisation::reaction
         scalar translationalEnergy = 0.5*mR*cRsqr;
         
         scalar ERotP = p.ERot();
-        scalar EVibP = p.vibLevel()*cloud_.constProps(p.typeId()).thetaV()*physicoChemical::k.value();
+        scalar EVibP = p.vibLevel()[0]*cloud_.constProps(p.typeId()).thetaV()[0]*physicoChemical::k.value();
         
         scalar omegaIntermediate = cloud_.constProps(intermediateId_).omega();
         scalar rotationalDofIntermediate = cloud_.constProps(intermediateId_).rotationalDegreesOfFreedom();
         scalar ChiBIntermediate = 2.5 - omegaIntermediate;
-        scalar thetaVIntermediate = cloud_.constProps(intermediateId_).thetaV();
-        scalar thetaDIntermediate = cloud_.constProps(intermediateId_).thetaD();
-        scalar ZrefIntermediate = cloud_.constProps(intermediateId_).Zref();
-        scalar refTempZvIntermediate = cloud_.constProps(intermediateId_).TrefZv();
+        scalar thetaVIntermediate = cloud_.constProps(intermediateId_).thetaV()[0];
+        scalar thetaDIntermediate = cloud_.constProps(intermediateId_).thetaD()[0];
+        scalar ZrefIntermediate = cloud_.constProps(intermediateId_).Zref()[0];
+        scalar refTempZvIntermediate = cloud_.constProps(intermediateId_).TrefZv()[0];
         label ELevelIntermediate = -1;
         List<scalar> EElistIntermediate = cloud_.constProps(intermediateId_).electronicEnergyList();
         List<label> gListIntermediate = cloud_.constProps(intermediateId_).degeneracyList();
@@ -357,7 +377,7 @@ void reverseAssociativeIonisation::reaction
             
             scalar EcDiss = 0.0;
             label iMax = 0;
-            label id = cloud_.constProps(typeIdP).charDissQuantumLevel();
+            label id = cloud_.constProps(intermediateId_).charDissQuantumLevel()[0];
             
             // calculate if a dissociation is possible
             scalar EVib = eVibLevel*physicoChemical::k.value()*thetaVIntermediate;
@@ -411,13 +431,13 @@ void reverseAssociativeIonisation::reaction
                     p.typeId() = productIds_[1];
                     p.U() = UP;
                     p.ERot() = 0.0;
-                    p.vibLevel() = 0;
+                    p.vibLevel().setSize(0,0);
                     p.ELevel() = 0;
                     
                     q.typeId() = productIds_[0];
                     q.U() = UQ;
                     q.ERot() = 0.0;
-                    q.vibLevel() = 0;
+                    q.vibLevel().setSize(0,0);
                     q.ELevel() = 0;
                 }
             }  
@@ -440,15 +460,15 @@ void reverseAssociativeIonisation::reaction
         scalar translationalEnergy = 0.5*mR*cRsqr;
 
         scalar ERotQ = q.ERot();
-        scalar EVibQ = q.vibLevel()*cloud_.constProps(q.typeId()).thetaV()*physicoChemical::k.value();
+        scalar EVibQ = q.vibLevel()[0]*cloud_.constProps(q.typeId()).thetaV()[0]*physicoChemical::k.value();
         
         scalar omegaIntermediate = cloud_.constProps(intermediateId_).omega();
         scalar rotationalDofIntermediate = cloud_.constProps(intermediateId_).rotationalDegreesOfFreedom();
         scalar ChiBIntermediate = 2.5 - omegaIntermediate;
-        scalar thetaVIntermediate = cloud_.constProps(intermediateId_).thetaV();
-        scalar thetaDIntermediate = cloud_.constProps(intermediateId_).thetaD();
-        scalar ZrefIntermediate = cloud_.constProps(intermediateId_).Zref();
-        scalar refTempZvIntermediate = cloud_.constProps(intermediateId_).TrefZv();
+        scalar thetaVIntermediate = cloud_.constProps(intermediateId_).thetaV()[0];
+        scalar thetaDIntermediate = cloud_.constProps(intermediateId_).thetaD()[0];
+        scalar ZrefIntermediate = cloud_.constProps(intermediateId_).Zref()[0];
+        scalar refTempZvIntermediate = cloud_.constProps(intermediateId_).TrefZv()[0];
         label ELevelIntermediate = -1;
         List<scalar> EElistIntermediate = cloud_.constProps(intermediateId_).electronicEnergyList();
         List<label> gListIntermediate = cloud_.constProps(intermediateId_).degeneracyList();
@@ -528,7 +548,7 @@ void reverseAssociativeIonisation::reaction
             
             scalar EcDiss = 0.0;
             label iMax = 0;
-            label id = cloud_.constProps(typeIdP).charDissQuantumLevel();
+            label id = cloud_.constProps(intermediateId_).charDissQuantumLevel()[0];
             
             // calculate if a dissociation is possible
             scalar EVib = eVibLevel*physicoChemical::k.value()*thetaVIntermediate;
@@ -582,13 +602,13 @@ void reverseAssociativeIonisation::reaction
                     p.typeId() = productIds_[0];
                     p.U() = UP;
                     p.ERot() = 0.0;
-                    p.vibLevel() = 0;
+                    p.vibLevel().setSize(0,0);
                     p.ELevel() = 0;
                     
                     q.typeId() = productIds_[1];
                     q.U() = UQ;
                     q.ERot() = 0.0;
-                    q.vibLevel() = 0;
+                    q.vibLevel().setSize(0,0);
                     q.ELevel() = 0;
                 }
             }  

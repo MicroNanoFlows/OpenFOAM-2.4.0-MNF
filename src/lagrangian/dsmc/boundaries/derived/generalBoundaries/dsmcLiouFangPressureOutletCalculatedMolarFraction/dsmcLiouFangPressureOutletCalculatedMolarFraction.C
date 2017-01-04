@@ -308,7 +308,7 @@ void dsmcLiouFangPressureOutletCalculatedMolarFraction::controlParcelsBeforeMove
                         cloud_.constProps(typeId).rotationalDegreesOfFreedom()
                     );
                     
-                    label vibLevel = cloud_.equipartitionVibrationalEnergyLevel
+                    labelList vibLevel = cloud_.equipartitionVibrationalEnergyLevel
                     (
                         faceTemperature,
                         cloud_.constProps(typeId).vibrationalDegreesOfFreedom(),
@@ -341,14 +341,14 @@ void dsmcLiouFangPressureOutletCalculatedMolarFraction::controlParcelsBeforeMove
                         U,
                         RWF,
                         ERot,
-                        vibLevel,
                         ELevel,
                         cellI,
                         faces_[f],
                         faceTetIs.tetPt(),
                         typeId,
                         newParcel,
-                        0
+                        0,
+                        vibLevel
                     );
 
                     nTotalParcelsAdded++;
@@ -476,7 +476,7 @@ void dsmcLiouFangPressureOutletCalculatedMolarFraction::controlParcelsAfterColli
                     nParcelsInt[c] += 1.0;
                 }
                 
-                totalVibrationalEnergy_[iD][c] += p->vibLevel()*physicoChemical::k.value()*cloud_.constProps(p->typeId()).thetaV();
+//                 totalVibrationalEnergy_[iD][c] += p->vibLevel()*physicoChemical::k.value()*cloud_.constProps(p->typeId()).thetaV();
                 nTotalParcelsSpecies_[iD][c] += 1.0;
             }
         } 
@@ -748,12 +748,12 @@ void dsmcLiouFangPressureOutletCalculatedMolarFraction::setProperties()
         vDof_[m].setSize(nFaces_, 0.0);
     }
    
-    totalVibrationalEnergy_.setSize(typeIds_.size());
-
-    forAll(totalVibrationalEnergy_, m)
-    {
-        totalVibrationalEnergy_[m].setSize(nFaces_, 0.0);
-    }
+//     totalVibrationalEnergy_.setSize(typeIds_.size());
+// 
+//     forAll(totalVibrationalEnergy_, m)
+//     {
+//         totalVibrationalEnergy_[m].setSize(nFaces_, 0.0);
+//     }
     
     nTotalParcelsSpecies_.setSize(typeIds_.size());
 

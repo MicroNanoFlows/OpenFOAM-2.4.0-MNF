@@ -348,7 +348,7 @@ void densityControlZone::controlParcelsAfterCollisions()
                     cloud_.constProps(typeId).rotationalDegreesOfFreedom()
                 );
                 
-                label vibLevel = cloud_.equipartitionVibrationalEnergyLevel
+                labelList vibLevel = cloud_.equipartitionVibrationalEnergyLevel
                 (
                     temperature_,
                     cloud_.constProps(typeId).vibrationalDegreesOfFreedom(),
@@ -381,14 +381,14 @@ void densityControlZone::controlParcelsAfterCollisions()
                     U,
                     RWF,
                     ERot,
-                    vibLevel,
                     ELevel,
                     cell,
                     tetFace,
                     tetPt,
                     typeId,
                     0,
-                    0
+                    0,
+                    vibLevel
                 );
                 
                 nParcelsAdded++;
