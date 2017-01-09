@@ -294,9 +294,16 @@ void polyPlaceMoleculesFromFile::fixedPropertiesFromFile()
             << exit(FatalError);
     }
 
-//         const scalar T(readScalar(mdInitialiseDict_.lookup("temperature")));
-    const vector U(mdInitialiseDict_.lookup("velocity"));
+    const scalar temperature(readScalar(mdInitialiseDict_.lookup("temperature")));
+    const vector velocity(mdInitialiseDict_.lookup("velocity"));
 
+    bool fixedVelocity = false;
+
+    if (mdInitialiseDict_.found("fixedVelocity"))
+    {
+        fixedVelocity = Switch(mdInitialiseDict_.lookup("fixedVelocity"));
+    }    
+    
     bool frozen = false;
 
     if (mdInitialiseDict_.found("frozen"))
@@ -338,6 +345,19 @@ void polyPlaceMoleculesFromFile::fixedPropertiesFromFile()
         tetheredMols[i] = tethered;
         frozenMols[i] = frozen;
 //             temperatureMols[i] = T;
+        
+        vector U = vector::zero;
+        
+        if(fixedVelocity)
+        {    
+            U = velocity;
+        }
+        else
+        {
+            U = equipartitionLinearVelocity(temperature, molCloud_.cP().mass(molId));
+            U += velocity;
+        }
+        
         velocityMols[i] = U;
 
         phiMols[i] = phi*constant::mathematical::pi/180.0;
@@ -360,6 +380,8 @@ void polyPlaceMoleculesFromFile::fixedPropertiesFromFile()
             tetFace,
             tetPt
         );
+        
+      
         
         if(cell != -1)
         {

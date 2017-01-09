@@ -179,7 +179,8 @@ public:
             void expand(const scalar s);
             
             void expandII(const scalar s);
-
+            void contractII(const scalar s);
+            
         // Query
 
             //- Overlaps/touches boundingBox?

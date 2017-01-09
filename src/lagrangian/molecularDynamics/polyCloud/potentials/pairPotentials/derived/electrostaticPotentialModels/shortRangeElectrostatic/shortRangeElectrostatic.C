@@ -115,14 +115,15 @@ void  shortRangeElectrostatic::write(const fileName& pathName)
     Info<< "Writing energy and force to file for potential "
             << name_ << endl;
             
-    label nBins = 100000;
-    scalar dr = (rCut_-rMin_)/nBins;
+    label nBins = label((rCut_ - rMin_)/dr_) + 1;   
+    
+//     scalar dr = (rCut_-rMin_)/nBins;
     scalarField U(nBins, 0.0);
     scalarField f(nBins, 0.0);
     
     for (label i=0; i<nBins; ++i)
     {
-        scalar r = rMin_+dr*i;
+        scalar r = rMin_+dr_*i;
         
         U[i] = energy(r);
         f[i] = force(r);
@@ -135,7 +136,7 @@ void  shortRangeElectrostatic::write(const fileName& pathName)
             forAll(U, i)
             {
                 file 
-                    << dr*i << "\t"
+                    << dr_*i << "\t"
                     << U[i] << "\t"
                     << f[i]
                     << endl;
@@ -157,7 +158,7 @@ void  shortRangeElectrostatic::write(const fileName& pathName)
             forAll(U, i)
             {
                 file 
-                    << dr*i*rU_.refLength() << "\t"
+                    << dr_*i*rU_.refLength() << "\t"
                     << U[i]*rU_.refEnergy() << "\t"
                     << f[i]*rU_.refForce()
                     << endl;

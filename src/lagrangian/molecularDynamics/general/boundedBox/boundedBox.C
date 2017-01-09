@@ -198,6 +198,23 @@ void Foam::boundedBox::expandII(const scalar s)
 
 }
 
+void Foam::boundedBox::contractII(const scalar s)
+{
+//     Info << "(before) min_ " << min_ << endl;
+//     Info << "(before) max_ " << max_ << endl;
+    min_ += vector(1,0,0)*s;
+    min_ += vector(0,1,0)*s;
+    min_ += vector(0,0,1)*s;    
+    
+    max_ -= vector(1,0,0)*s;
+    max_ -= vector(0,1,0)*s;
+    max_ -= vector(0,0,1)*s;
+
+//     Info << "(after) min_ " << min_ << endl;
+//     Info << "(after) max_ " << max_ << endl;
+
+}
+
 bool Foam::boundedBox::contains(const UList<point>& points) const
 {
     if (points.empty())

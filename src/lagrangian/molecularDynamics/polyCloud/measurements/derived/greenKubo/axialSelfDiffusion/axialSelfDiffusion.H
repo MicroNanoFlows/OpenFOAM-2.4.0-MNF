@@ -73,15 +73,7 @@ private:
 
         word fieldName_;
 
-        word regionName_;
-
-        label regionId_;
-
         List<label> molIds_;        
-
-        bool useBoundBox_;
-
-        boundedBox bb_;
 
         vector unitVector_;
 
@@ -92,36 +84,39 @@ private:
         label nSteps_;
 
         // outer counter to average over all acfs
-        scalar nAveragingSteps_;          
+        scalar nBatch_;          
         
+        // just the liquid mols
+        label nLiquidMols_;
         
+        label nTNs_;
         
-        label nMols_;
+        List<label> tNaddress_;
         
-        // outer list = time (nSteps_)
-        // inner list = tracking numbers
+//         label nMols_;
+        
+        // inner list = number of liquid mols
+        // outer list = time (nSteps_)        
         List<List<scalar> > velocities_;
         
-        // outer list = nSteps_
-        // inner list accumulation of sum over all mols of v(t=0) dot v(t)
-        List<scalar> acfTime_;
+        // outer list = number of liquid mols
+        // inner list = nSteps_
+        // values = accumulation sum
+        List< List<scalar> > acf_;
         
-        List<label> mols_;
+//         List<label> mols_;
         
         // self diffusion
         scalar D_;
 
+        // mean ACF - for outputting (list = number of steps)
+        List<scalar> ACF_;
         
     // Private Member Functions
         
-        void setBoundBox
-        (
-            const dictionary& propsDict,
-            boundedBox& bb,
-            const word& name 
-        );
+        void setVelocities();
         
-        scalar getIntegral(const List<scalar>& f);
+//         scalar getIntegral();
 
         
 public:

@@ -68,6 +68,8 @@ class pairPotentials
         
         // maximum rCut
         scalar rCut_;
+        
+       
 //         scalar rCutSqr_;
         
         // these are just pair potentials

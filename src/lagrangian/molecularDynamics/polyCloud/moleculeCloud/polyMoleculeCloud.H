@@ -87,9 +87,10 @@ private:
         potentials p_;
         
         List<DynamicList<polyMolecule*> > cellOccupancy_;
-       
+        
         //- measurement fields
         polyFieldProperties fields_; 
+        
         
         //- boundaries
         polyBoundaries boundaries_;
