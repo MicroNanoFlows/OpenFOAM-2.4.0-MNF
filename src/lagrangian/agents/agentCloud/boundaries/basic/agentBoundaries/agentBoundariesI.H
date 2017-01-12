@@ -32,31 +32,31 @@ namespace Foam
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 
-// inline List< autoPtr<polyPatchBoundary> >& agentBoundaries::patchBoundaryModels()
-// {
-//     return patchBoundaryModels_;
-// }
-// 
-// inline const List< autoPtr<polyPatchBoundary> >& agentBoundaries::patchBoundaryModels() const
-// {
-//     return patchBoundaryModels_;
-// }
-// 
-// inline const List<word>& agentBoundaries::patchBoundaryNames() const
-// {
-//     return patchBoundaryNames_;
-// }
-// 
-// inline const List<label>& agentBoundaries::patchBoundaryIds() const
-// {
-//     return patchBoundaryIds_;
-// }
-// 
-// inline const List<label>& agentBoundaries::patchToModelIds() const
-// {
-//     return patchToModelId_;
-// }
-// 
+inline List< autoPtr<agentPatchBoundary> >& agentBoundaries::patchBoundaryModels()
+{
+    return patchBoundaryModels_;
+}
+
+inline const List< autoPtr<agentPatchBoundary> >& agentBoundaries::patchBoundaryModels() const
+{
+    return patchBoundaryModels_;
+}
+
+inline const List<word>& agentBoundaries::patchBoundaryNames() const
+{
+    return patchBoundaryNames_;
+}
+
+inline const List<label>& agentBoundaries::patchBoundaryIds() const
+{
+    return patchBoundaryIds_;
+}
+
+inline const List<label>& agentBoundaries::patchToModelIds() const
+{
+    return patchToModelId_;
+}
+
 
 
 

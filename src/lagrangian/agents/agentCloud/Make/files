@@ -70,11 +70,13 @@ borders/derived/reflectiveRectangularBorder/reflectiveRectangularBorder.C
 
 boundaries/basic/agentBoundaries/agentBoundaries.C
 boundaries/basic/agentCyclicBoundary/agentCyclicBoundary.C
+boundaries/basic/agentPatchBoundary/agentPatchBoundary.C
 
 boundaries/derived/cyclicBoundaries/agentStandardCyclic/agentStandardCyclic.C
 boundaries/derived/cyclicBoundaries/agentRPM/agentRPM.C
 
-
+boundaries/derived/patchBoundaries/agentDeletionPatch/agentDeletionPatch.C
+boundaries/derived/patchBoundaries/agentSpecularPatch/agentSpecularPatch.C
 /* schedule */
 
 schedule/basic/schedules/schedules.C
