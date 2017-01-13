@@ -48,7 +48,9 @@ measurements/basic/agentMeasurement/agentMeasurement.C
 measurements/derived/videoPDB/videoPDB.C
 measurements/derived/basicOutputs/basicOutputs.C
 measurements/derived/massFlowRate/massFlowRate.C
-
+measurements/derived/agentZoneProperties/agentZoneProperties.C
+measurements/derived/agentFieldProperties/agentFieldProperties.C
+measurements/derived/agent1DBins/agent1DBins.C
 
 /* controllers */
 

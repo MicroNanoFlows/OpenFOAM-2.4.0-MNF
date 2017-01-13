@@ -42,6 +42,23 @@ addToRunTimeSelectionTable(agentMeasurement, massFlowRate, dictionary);
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
+
+void massFlowRate::setBoundBox
+(
+    const dictionary& propsDict,
+    boundedBox& bb,
+    const word& name 
+)
+{
+    const dictionary& dict(propsDict.subDict(name));
+    
+    vector startPoint = dict.lookup("startPoint");
+    vector endPoint = dict.lookup("endPoint");
+
+    bb.resetBoundedBox(startPoint, endPoint);
+}
+
+
 // Construct from components
 massFlowRate::massFlowRate
 (
@@ -69,7 +86,11 @@ massFlowRate::massFlowRate
 
     agentIds_ = ids.agentIds();
     
+    massFlowRate_ = 0.0;    
     massFlux_.clear();
+        
+    agentFlowRate_ = 0.0;
+    agentFlux_.clear();
     
     boundedBox bbMesh( mesh_.bounds().min(), mesh_.bounds().max() );
     
@@ -78,14 +99,27 @@ massFlowRate::massFlowRate
     Info << "length = " << length_ << endl;
     
     nTimeSteps_ = 0.0;
-    
-    massFlowRate_ = 0.0;
+
     
     instant_ = false;
     
     if (propsDict_.found("instant"))
     {
         instant_ = Switch(propsDict_.lookup("instant"));
+    }
+    
+    useBox_ = false;
+    
+    if (propsDict_.found("useBox"))
+    {
+        useBox_ = Switch(propsDict_.lookup("useBox"));
+    }
+    
+    if(useBox_)
+    {
+        setBoundBox(propsDict_, bb_, "boundBox");
+        
+        length_ = bb_.span() & unitVector_;
     }
 }
 
@@ -106,18 +140,32 @@ void massFlowRate::calculateField()
     IDLList<agent>::iterator mol(cloud_.begin());
     
     vector mom = vector::zero;
+    vector vel = vector::zero;
     
     for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
     {
         if(findIndex(agentIds_, mol().id()) != -1)
         {
-            mom += mol().v()*mol().mass();
+            if(useBox_)
+            {
+                if(bb_.contains(mol().position()))
+                {
+                    mom += mol().v()*mol().mass();
+                    vel += mol().v();
+                }
+            }
+            else
+            {
+                mom += mol().v()*mol().mass();
+                vel += mol().v();
+            }
         }
     }
     
     if(Pstream::parRun())
     {
         reduce(mom, sumOp<vector>());
+        reduce(vel, sumOp<vector>());
     }    
 
     scalar massFlux = (mom & unitVector_)/(length_);
@@ -126,7 +174,15 @@ void massFlowRate::calculateField()
  
     massFlowRate_ += massFlux;
     
+    scalar agentFlux = (vel & unitVector_)/length_;
+    
+    agentFlux_.append(agentFlux);
+ 
+    agentFlowRate_ += agentFlux;
+    
     nTimeSteps_ += 1.0;
+
+    
 }
 
 void massFlowRate::writeField()
@@ -140,9 +196,13 @@ void massFlowRate::writeField()
             massFlux_.shrink();
             scalarField timeField (massFlux_.size(), 0.0);
             scalarField massFlux (massFlux_.size(), 0.0);
+            scalarField agentFlux (agentFlux_.size(), 0.0);
             
             massFlux.transfer(massFlux_);
             massFlux_.clear();
+            
+            agentFlux.transfer(agentFlux_);
+            agentFlux_.clear();
             
             const scalar& deltaT = time_.time().deltaT().value();
             
@@ -162,16 +222,27 @@ void massFlowRate::writeField()
                     massFlux,
                     true
                 );
+                
+                writeTimeData
+                (
+                    casePath_,
+                    "agentflowRate_"+fieldName_+"_instant.xy",
+                    timeField,
+                    agentFlux,
+                    true
+                );                
             }
 
             scalarField timeFieldII (1, 0.0);
             scalarField massFlowAv (1, 0.0);            
+            scalarField agentFlowAv (1, 0.0);
             
             timeFieldII[0] = runTime.timeOutputValue();
             
             if(nTimeSteps_ > 0)
             {
                 massFlowAv[0] = massFlowRate_/nTimeSteps_;
+                agentFlowAv[0] = agentFlowRate_/nTimeSteps_;
             }
             
             // cumulative averaging
@@ -182,8 +253,23 @@ void massFlowRate::writeField()
                 timeFieldII,
                 massFlowAv,
                 true
+            );
+            
+            writeTimeData
+            (
+                casePath_,
+                "agentflowRate_"+fieldName_+"_average.xy",
+                timeFieldII,
+                agentFlowAv,
+                true
             );            
         }
+        
+        //reset
+        
+        agentFlowRate_ = 0.0;
+        massFlowRate_ = 0.0;
+        nTimeSteps_ = 0.0;
     }    
 }
 
