@@ -127,6 +127,7 @@ label simpleBins::isPointWithinBin
     scalar rD = rSI & unitVector_;
     label n = label(rD/binWidth_);
 
+//     Info << "n = " << n << endl;
     if
     (
         (rD <= rSEMag_) && (rD >= 0.0)

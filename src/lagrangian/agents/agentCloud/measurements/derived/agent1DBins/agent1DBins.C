@@ -68,7 +68,9 @@ agent1DBins::agent1DBins
         cloud_.cP(),
         propsDict_
     );
-
+    
+    agentIds_ = ids.agentIds();
+    
     // create bin model
     binModel_ = autoPtr<binModel>
     (
