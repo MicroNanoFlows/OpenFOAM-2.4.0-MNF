@@ -23,21 +23,21 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    massFlowRate
+    agentFieldProperties
 
 
 Description
-    to write out a pdb file for creating movies
+
 
 SourceFiles
-    massFlowRateI.H
-    massFlowRate.C
-    massFlowRateIO.C
+    agentFieldPropertiesI.H
+    agentFieldProperties.C
+    agentFieldPropertiesIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef massFlowRate_H
-#define massFlowRate_H
+#ifndef agentFieldProperties_H
+#define agentFieldProperties_H
 
 #include "agentMeasurement.H"
 #include "vector.H"
@@ -53,10 +53,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class massFlowRate Declaration
+                           Class agentFieldProperties Declaration
 \*---------------------------------------------------------------------------*/
 
-class massFlowRate
+class agentFieldProperties
 :
 	public agentMeasurement
 {
@@ -71,49 +71,41 @@ private:
         List<label> agentIds_;
 
         word fieldName_;
+        
+        List<labelList> boundaryCells_;
+        
+        scalarField N_;
+        scalarField mass_;
+        vectorField mom_;
+        vectorField vel_;
+        scalarField kE_;  
+        
+        volScalarField NField_;
+        volScalarField rhoNField_;
+        volScalarField rhoMField_;
+        volVectorField UField_;
+        volVectorField momField_;
+        volScalarField kEField_;
 
-        scalar length_;
-        
-        vector unitVector_;
-
-        DynamicList<scalar> massFlux_;
-        
-        scalar massFlowRate_;
-        
-        DynamicList<scalar> agentFlux_;
-        
-        scalar agentFlowRate_;
-        
-        
+        scalar dZ_;
         
         scalar nTimeSteps_;
-        
-        bool instant_;
-        
-        bool useBox_;
-        
-        boundedBox bb_;
-        
+
+        bool resetAtOutput_;  
         
     // Private Member Functions
 
-        void setBoundBox
-        (
-            const dictionary& propsDict,
-            boundedBox& bb,
-            const word& name 
-        );
-
+//         void setBoundBoxes();
             
 public:
 
     //- Runtime type information
-    TypeName("massFlowRate");
+    TypeName("agentFieldProperties");
 
     // Constructors
 
         //- Construct from components
-        massFlowRate
+        agentFieldProperties
 		(
             Time& t,
             const polyMesh& mesh,
@@ -123,7 +115,7 @@ public:
 
     // Destructor
 
- 		~massFlowRate();
+ 		~agentFieldProperties();
 
     // Member Functions
 

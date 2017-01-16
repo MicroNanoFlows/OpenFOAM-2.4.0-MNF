@@ -31,6 +31,7 @@ initialise/basic/agentConfiguration/agentConfiguration.C
 
 /*initialise/derived/testInitialise/testInitialise.C*/
 initialise/derived/randomInitialiseBox/randomInitialiseBox.C
+initialise/derived/exactCoordinates/exactCoordinates.C
 
 /* integrator */
 
@@ -47,7 +48,9 @@ measurements/basic/agentMeasurement/agentMeasurement.C
 measurements/derived/videoPDB/videoPDB.C
 measurements/derived/basicOutputs/basicOutputs.C
 measurements/derived/massFlowRate/massFlowRate.C
-
+measurements/derived/agentZoneProperties/agentZoneProperties.C
+measurements/derived/agentFieldProperties/agentFieldProperties.C
+measurements/derived/agent1DBins/agent1DBins.C
 
 /* controllers */
 
@@ -69,11 +72,13 @@ borders/derived/reflectiveRectangularBorder/reflectiveRectangularBorder.C
 
 boundaries/basic/agentBoundaries/agentBoundaries.C
 boundaries/basic/agentCyclicBoundary/agentCyclicBoundary.C
+boundaries/basic/agentPatchBoundary/agentPatchBoundary.C
 
 boundaries/derived/cyclicBoundaries/agentStandardCyclic/agentStandardCyclic.C
 boundaries/derived/cyclicBoundaries/agentRPM/agentRPM.C
 
-
+boundaries/derived/patchBoundaries/agentDeletionPatch/agentDeletionPatch.C
+boundaries/derived/patchBoundaries/agentSpecularPatch/agentSpecularPatch.C
 /* schedule */
 
 schedule/basic/schedules/schedules.C

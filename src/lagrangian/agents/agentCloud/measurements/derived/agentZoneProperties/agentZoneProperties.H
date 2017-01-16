@@ -23,21 +23,21 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    massFlowRate
+    agentZoneProperties
 
 
 Description
-    to write out a pdb file for creating movies
+
 
 SourceFiles
-    massFlowRateI.H
-    massFlowRate.C
-    massFlowRateIO.C
+    agentZonePropertiesI.H
+    agentZoneProperties.C
+    agentZonePropertiesIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef massFlowRate_H
-#define massFlowRate_H
+#ifndef agentZoneProperties_H
+#define agentZoneProperties_H
 
 #include "agentMeasurement.H"
 #include "vector.H"
@@ -53,10 +53,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class massFlowRate Declaration
+                           Class agentZoneProperties Declaration
 \*---------------------------------------------------------------------------*/
 
-class massFlowRate
+class agentZoneProperties
 :
 	public agentMeasurement
 {
@@ -72,48 +72,43 @@ private:
 
         word fieldName_;
 
-        scalar length_;
         
-        vector unitVector_;
+        List<boundedBox> boxes_;
 
-        DynamicList<scalar> massFlux_;
+        scalar totalArea_;
         
-        scalar massFlowRate_;
+        scalar N_;
+        scalar mass_;
+        vector mom_;
+        vector vel_;
+        scalar kE_;  
         
-        DynamicList<scalar> agentFlux_;
+        label timeIndex_;
         
-        scalar agentFlowRate_;
-        
-        
+        scalarField NField_;
+        scalarField rhoNField_;
+        scalarField rhoMField_;
+        vectorField UField_;
+        vectorField momField_;
+        scalarField kEField_;
         
         scalar nTimeSteps_;
-        
-        bool instant_;
-        
-        bool useBox_;
-        
-        boundedBox bb_;
-        
+
+        bool resetAtOutput_;  
         
     // Private Member Functions
 
-        void setBoundBox
-        (
-            const dictionary& propsDict,
-            boundedBox& bb,
-            const word& name 
-        );
-
+        void setBoundBoxes();
             
 public:
 
     //- Runtime type information
-    TypeName("massFlowRate");
+    TypeName("agentZoneProperties");
 
     // Constructors
 
         //- Construct from components
-        massFlowRate
+        agentZoneProperties
 		(
             Time& t,
             const polyMesh& mesh,
@@ -123,7 +118,7 @@ public:
 
     // Destructor
 
- 		~massFlowRate();
+ 		~agentZoneProperties();
 
     // Member Functions
 

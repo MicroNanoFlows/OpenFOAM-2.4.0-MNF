@@ -23,29 +23,26 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    massFlowRate
-
+    agentSpecularPatch
 
 Description
-    to write out a pdb file for creating movies
+
 
 SourceFiles
-    massFlowRateI.H
-    massFlowRate.C
-    massFlowRateIO.C
+    agentSpecularPatch.C
+
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef massFlowRate_H
-#define massFlowRate_H
+#ifndef agentSpecularPatch_H
+#define agentSpecularPatch_H
 
-#include "agentMeasurement.H"
+#include "agentPatchBoundary.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
 #include "agentCloud.H"
 #include "distribution.H"
-#include "boundedBox.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -53,67 +50,29 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class massFlowRate Declaration
+                           Class agentSpecularPatch Declaration
 \*---------------------------------------------------------------------------*/
 
-class massFlowRate
+class agentSpecularPatch
 :
-	public agentMeasurement
+	public agentPatchBoundary
 {
 
 private:
 
     // Private data
+//         dictionary propsDict_;
 
-        //- subDictionary containing the properties
-        dictionary propsDict_;
 
-        List<label> agentIds_;
-
-        word fieldName_;
-
-        scalar length_;
-        
-        vector unitVector_;
-
-        DynamicList<scalar> massFlux_;
-        
-        scalar massFlowRate_;
-        
-        DynamicList<scalar> agentFlux_;
-        
-        scalar agentFlowRate_;
-        
-        
-        
-        scalar nTimeSteps_;
-        
-        bool instant_;
-        
-        bool useBox_;
-        
-        boundedBox bb_;
-        
-        
-    // Private Member Functions
-
-        void setBoundBox
-        (
-            const dictionary& propsDict,
-            boundedBox& bb,
-            const word& name 
-        );
-
-            
 public:
 
     //- Runtime type information
-    TypeName("massFlowRate");
+    TypeName("agentSpecularPatch");
 
     // Constructors
 
         //- Construct from components
-        massFlowRate
+        agentSpecularPatch
 		(
             Time& t,
             const polyMesh& mesh,
@@ -123,35 +82,43 @@ public:
 
     // Destructor
 
- 		~massFlowRate();
+ 		~agentSpecularPatch();
+
 
     // Member Functions
 
-        //- create initial field
-        void createField();
 
-        //- calculate field
-        void calculateField();
+        void initialConfiguration();
 
-        void measureDuringForceComputation
+        //- calculate any required properties
+        void calculateProperties();
+
+        //- control the mols
+        void controlMol
         (
-            agent* molI,
-            agent* molJ
+            agent& mol,
+            agent::trackingData& td
         );
 
-        void measureDuringForceComputationSite
+        //- output data
+        void output
         (
-            agent* molI,
-            agent* molJ,
-            label sI,
-            label sJ
+            const fileName& fixedPathName,
+            const fileName& timePath
         );
 
-//         const propertyField& fields() const;
+        //- update properties from a modified dictionary
+//         void updateProperties(const dictionary&);
 
-        //- write field
-        void writeField();
-}; 		
+
+
+        // Access
+
+
+
+
+
+};
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

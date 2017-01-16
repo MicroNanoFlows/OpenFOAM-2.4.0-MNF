@@ -23,29 +23,30 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    massFlowRate
-
+    exactCoordinates
 
 Description
-    to write out a pdb file for creating movies
+
 
 SourceFiles
-    massFlowRateI.H
-    massFlowRate.C
-    massFlowRateIO.C
+    exactCoordinatesI.H
+    exactCoordinates.C
+    exactCoordinatesIO.C
+
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef massFlowRate_H
-#define massFlowRate_H
+#ifndef exactCoordinates_H
+#define exactCoordinates_H
 
-#include "agentMeasurement.H"
+#include "agentConfiguration.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
 #include "agentCloud.H"
-#include "distribution.H"
 #include "boundedBox.H"
+#include "distributePoints.H"
+#include "distribution.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -53,48 +54,22 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class massFlowRate Declaration
+                           Class exactCoordinates Declaration
 \*---------------------------------------------------------------------------*/
 
-class massFlowRate
+class exactCoordinates
 :
-	public agentMeasurement
+	public agentConfiguration
 {
 
 private:
 
     // Private data
-
+    
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-        List<label> agentIds_;
 
-        word fieldName_;
-
-        scalar length_;
-        
-        vector unitVector_;
-
-        DynamicList<scalar> massFlux_;
-        
-        scalar massFlowRate_;
-        
-        DynamicList<scalar> agentFlux_;
-        
-        scalar agentFlowRate_;
-        
-        
-        
-        scalar nTimeSteps_;
-        
-        bool instant_;
-        
-        bool useBox_;
-        
-        boundedBox bb_;
-        
-        
     // Private Member Functions
 
         void setBoundBox
@@ -104,54 +79,30 @@ private:
             const word& name 
         );
 
-            
 public:
 
     //- Runtime type information
-    TypeName("massFlowRate");
+    TypeName("exactCoordinates");
 
     // Constructors
 
         //- Construct from components
-        massFlowRate
-		(
-            Time& t,
-            const polyMesh& mesh,
-            agentCloud& cloud,
+        exactCoordinates
+        (
+            agentCloud& molCloud,
             const dictionary& dict
-		);
+        );
 
     // Destructor
 
- 		~massFlowRate();
+        ~exactCoordinates();
+
 
     // Member Functions
 
-        //- create initial field
-        void createField();
+        void setInitialConfiguration();
 
-        //- calculate field
-        void calculateField();
-
-        void measureDuringForceComputation
-        (
-            agent* molI,
-            agent* molJ
-        );
-
-        void measureDuringForceComputationSite
-        (
-            agent* molI,
-            agent* molJ,
-            label sI,
-            label sJ
-        );
-
-//         const propertyField& fields() const;
-
-        //- write field
-        void writeField();
-}; 		
+};
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

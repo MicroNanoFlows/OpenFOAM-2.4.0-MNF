@@ -23,29 +23,27 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    massFlowRate
-
+    agentDeletionPatch
 
 Description
-    to write out a pdb file for creating movies
+
+   
 
 SourceFiles
-    massFlowRateI.H
-    massFlowRate.C
-    massFlowRateIO.C
+    agentDeletionPatch.C
+
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef massFlowRate_H
-#define massFlowRate_H
+#ifndef agentDeletionPatch_H
+#define agentDeletionPatch_H
 
-#include "agentMeasurement.H"
+#include "agentPatchBoundary.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
 #include "agentCloud.H"
 #include "distribution.H"
-#include "boundedBox.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -53,67 +51,43 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class massFlowRate Declaration
+                           Class agentDeletionPatch Declaration
 \*---------------------------------------------------------------------------*/
 
-class massFlowRate
+class agentDeletionPatch
 :
-	public agentMeasurement
+	public agentPatchBoundary
 {
 
 private:
 
     // Private data
-
-        //- subDictionary containing the properties
         dictionary propsDict_;
+
+//         scalar elapsedTime_;
+// 
+//         scalar writeInterval_;
+// 
+//         scalar startTime_;
+
 
         List<label> agentIds_;
 
-        word fieldName_;
+//         scalar molFlux_;
+//         scalar massFlux_;
+// 
+//         scalar cumulMolFlux_;
+//         scalar cumulMassFlux_;
 
-        scalar length_;
-        
-        vector unitVector_;
-
-        DynamicList<scalar> massFlux_;
-        
-        scalar massFlowRate_;
-        
-        DynamicList<scalar> agentFlux_;
-        
-        scalar agentFlowRate_;
-        
-        
-        
-        scalar nTimeSteps_;
-        
-        bool instant_;
-        
-        bool useBox_;
-        
-        boundedBox bb_;
-        
-        
-    // Private Member Functions
-
-        void setBoundBox
-        (
-            const dictionary& propsDict,
-            boundedBox& bb,
-            const word& name 
-        );
-
-            
 public:
 
     //- Runtime type information
-    TypeName("massFlowRate");
+    TypeName("agentDeletionPatch");
 
     // Constructors
 
         //- Construct from components
-        massFlowRate
+        agentDeletionPatch
 		(
             Time& t,
             const polyMesh& mesh,
@@ -123,35 +97,42 @@ public:
 
     // Destructor
 
- 		~massFlowRate();
+ 		~agentDeletionPatch();
+
 
     // Member Functions
 
-        //- create initial field
-        void createField();
+        void initialConfiguration();
 
-        //- calculate field
-        void calculateField();
+        //- calculate any required properties
+        void calculateProperties();
 
-        void measureDuringForceComputation
+        //- control the mols
+        void controlMol
         (
-            agent* molI,
-            agent* molJ
+            agent& mol,
+            agent::trackingData& td
         );
 
-        void measureDuringForceComputationSite
+        //- output data
+        void output
         (
-            agent* molI,
-            agent* molJ,
-            label sI,
-            label sJ
+            const fileName& fixedPathName,
+            const fileName& timePath
         );
 
-//         const propertyField& fields() const;
+        //- update properties from a modified dictionary
+//         void updateProperties(const dictionary&);
 
-        //- write field
-        void writeField();
-}; 		
+
+
+        // Access
+
+
+
+
+
+};
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

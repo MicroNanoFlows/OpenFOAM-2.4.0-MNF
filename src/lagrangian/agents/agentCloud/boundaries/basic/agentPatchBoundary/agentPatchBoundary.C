@@ -29,7 +29,7 @@ Description
 #include "agentPatchBoundary.H"
 #include "IFstream.H"
 #include "graph.H"
-#include "polyMoleculeCloud.H"
+#include "agentCloud.H"
 namespace Foam
 {
 
@@ -46,22 +46,19 @@ agentPatchBoundary::agentPatchBoundary
 (
     Time& t,
     const polyMesh& mesh,
-    polyMoleculeCloud& molCloud,
+    agentCloud& cloud,
     const dictionary& dict
 )
 :
     mesh_(refCast<const fvMesh>(mesh)),
     t_(t),
-    molCloud_(molCloud),
-    boundaryDict_(dict.subDict("patchBoundaryProperties")),
-    patchName_(boundaryDict_.lookup("patchName")),
+    cloud_(cloud),
+//     boundaryDict_(dict.subDict("patchBoundaryProperties")),
+    patchName_(dict.lookup("patchName")),
     patchId_(0),
     faces_(),
     nFaces_(0),
     cells_(),
-    densities_(),
-    velocities_(),
-    temperatures_(),
     writeInTimeDir_(true),
     writeInCase_(true)
 {
@@ -111,13 +108,13 @@ autoPtr<agentPatchBoundary> agentPatchBoundary::New
 (
     Time& t,
     const polyMesh& mesh,
-    polyMoleculeCloud& molCloud,
+    agentCloud& cloud,
     const dictionary& dict
 )
 {
     word agentPatchBoundaryName
     (
-        dict.lookup("boundaryModel")
+        dict.lookup("model")
     );
 
     Info<< "Selecting agentPatchBoundaryModel "
@@ -139,7 +136,7 @@ autoPtr<agentPatchBoundary> agentPatchBoundary::New
 
     return autoPtr<agentPatchBoundary>
 	(
-		cstrIter()(t, mesh, molCloud, dict)
+		cstrIter()(t, mesh, cloud, dict)
 	);
 }
 
@@ -151,17 +148,17 @@ agentPatchBoundary::~agentPatchBoundary()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-//- needs to be called after the referred interaction list is built in polyMoleculeCloud
+//- needs to be called after the referred interaction list is built in agentCloud
 void agentPatchBoundary::setBoundaryCells()
 {}
 
-void agentPatchBoundary::updateBoundaryProperties
-(
-    const dictionary& newDict
-)
-{
-    boundaryDict_ = newDict.subDict("patchBoundaryProperties");
-}
+// void agentPatchBoundary::updateBoundaryProperties
+// (
+//     const dictionary& newDict
+// )
+// {
+//     boundaryDict_ = newDict.subDict("patchBoundaryProperties");
+// }
 
 const labelList& agentPatchBoundary::controlPatch() const
 {
@@ -184,34 +181,6 @@ const label& agentPatchBoundary::patchId() const
 }
 
 
-const scalarField& agentPatchBoundary::densityField() const
-{
-    return densities_;
-}
-
-scalarField& agentPatchBoundary::densityField()
-{
-    return densities_;
-}
-
-const vectorField& agentPatchBoundary::velocityField() const
-{
-    return velocities_;
-}
-vectorField& agentPatchBoundary::velocityField()
-{
-    return velocities_;
-}
-
-const scalarField& agentPatchBoundary::temperatureField() const
-{
-    return temperatures_;
-}
-
-scalarField& agentPatchBoundary::temperatureField()
-{
-    return temperatures_;
-}
 
 const bool& agentPatchBoundary::writeInTimeDir() const
 {
@@ -221,58 +190,6 @@ const bool& agentPatchBoundary::writeInTimeDir() const
 const bool& agentPatchBoundary::writeInCase() const
 {
     return writeInCase_;
-}
-
-
-scalar agentPatchBoundary::avReqDensity()
-{
-    scalar totalDensity = 0.0;
-
-    forAll(densities_, c)
-    {
-        totalDensity += densities_[c];
-    }
-
-    if(cells_.size() > 0)
-    {
-        totalDensity /= scalar(cells_.size());
-    }
-
-    return totalDensity;
-}
-
-vector agentPatchBoundary::avReqVelocity()
-{
-    vector totalVel = vector::zero;
-
-    forAll(velocities_, c)
-    {
-        totalVel += velocities_[c];
-    }
-
-    if(cells_.size() > 0)
-    {
-        totalVel /= scalar(cells_.size());
-    }
-
-    return totalVel;
-}
-
-scalar agentPatchBoundary::avReqTemperature()
-{
-    scalar totalTemp = 0.0;
-
-    forAll(densities_, c)
-    {
-        totalTemp += temperatures_[c];
-    }
-
-    if(cells_.size() > 0)
-    {
-        totalTemp /= scalar(cells_.size());
-    }
-
-    return totalTemp;
 }
 
 

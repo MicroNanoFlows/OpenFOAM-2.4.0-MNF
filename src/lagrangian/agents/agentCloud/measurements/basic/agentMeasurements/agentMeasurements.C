@@ -203,7 +203,7 @@ void agentMeasurements::writeFields()
 {
     const Time& runTime = time_;
 
-    fileName timePath(runTime.path()/runTime.timeName()/"uniform"/"agents");
+    fileName timePath(runTime.path()/runTime.timeName()/"uniform"/"agent");
 
     if(runTime.outputTime())
     {
