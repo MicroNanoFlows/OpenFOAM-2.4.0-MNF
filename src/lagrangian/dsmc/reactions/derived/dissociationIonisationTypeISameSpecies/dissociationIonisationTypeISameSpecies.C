@@ -347,6 +347,8 @@ void dissociationIonisationTypeISameSpecies::reaction
        
         scalar ChiB = 2.5 - omegaPQ;
         
+        //Test for P reactions first
+        
         bool dissocReactionP = false;
         bool ionisationReactionP = false;
                 
@@ -724,6 +726,392 @@ void dissociationIonisationTypeISameSpecies::reaction
                     typeId2,
                     0,
                     classificationP,
+                    vibLevel
+                );
+            }
+        }
+        
+        //Now test for Q reactions
+        
+        bool dissocReactionQ = false;
+        bool ionisationReactionQ = false;
+        totalReactionProbability = 0.0;
+        reactionProbabilities = 0.0;
+                
+        //2 reactions possible
+        // 1. Dissociation of Q
+        // 2. Ionisation of Q
+
+        scalar EcQQ = 0.0;
+        
+        EcQQ = translationalEnergy + EVibQ;
+        label imaxQ = EcQQ/(physicoChemical::k.value()*thetaVP); //same species, so thetaVP=thetaVQ
+        
+        if(imaxQ-idP > 0)
+        {
+            //Dissociation can occur
+            totalReactionProbability += 1.0;
+            reactionProbabilities[0] = 1.0;
+        }
+        
+//         scalar ionisationEnergy = cloud_.constProps(typeIdP).ionisationTemperature()*physicoChemical::k.value();
+        
+        // calculate if an ionisation of species Qis possible
+        EcQQ = translationalEnergy + EEleQ;
+
+        if((EcQQ - ionisationEnergy) > VSMALL)
+        {
+            totalReactionProbability += 1.0;
+            reactionProbabilities[1] = 1.0;
+        }
+        
+        //Decide if a reaction is to occur
+        
+        if(totalReactionProbability > cloud_.rndGen().scalar01())
+        {
+            //A chemical reaction is to occur, choose which one
+            
+            scalarList normalisedProbabilities(reactionProbabilities.size(), 0.0);
+            scalar cumulativeProbability = 0.0;
+            
+            normalisedProbabilities = reactionProbabilities/totalReactionProbability;
+            
+            forAll(normalisedProbabilities, i)
+            {                
+                //If current reaction can't occur, don't check for it
+                if(normalisedProbabilities[i] > VSMALL)
+                {
+                    cumulativeProbability += normalisedProbabilities[i];
+                    
+                    if(cumulativeProbability > cloud_.rndGen().scalar01())
+                    {
+                        //Current reaction is to occur
+                        
+                        if(i == 0)
+                        {
+                            //Ionisation is to occur
+                            dissocReactionQ = true;
+                            break;
+                        }
+                        if(i == 1)
+                        {
+                            //Dissociation reaction is to occur
+                            ionisationReactionQ = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        if(dissocReactionQ)
+        {
+//             nReactionsPerTimeStep_++;
+            nTotDissociationReactions_++;
+            nDissociationReactionsPerTimeStep_++;
+            
+            if(allowSplitting_)
+            {
+                relax_ = false;
+                
+                translationalEnergy = translationalEnergy + heatOfReactionDissociationJoules + EVibQ;
+            
+                translationalEnergy += EEleP;
+                    
+                label ELevelP = cloud_.postCollisionElectronicEnergyLevel
+                                (
+                                    translationalEnergy,
+                                    jMaxQ,
+                                    omegaPQ,
+                                    EElistQ,
+                                    gListQ
+                                );
+                                
+                translationalEnergy -= EElistQ[ELevelP];
+                
+                translationalEnergy += EVibP;
+                
+                label iMax = (translationalEnergy / (physicoChemical::k.value()*thetaVQ));
+                
+                label vibLevelP = cloud_.postCollisionVibrationalEnergyLevel
+                                (
+                                        true,
+                                        p.vibLevel()[0],
+                                        iMax,
+                                        thetaVQ,
+                                        thetaDQ,
+                                        refTempZvQ,
+                                        omegaPQ,
+                                        ZrefQ,
+                                        translationalEnergy
+                                    );
+                                
+                translationalEnergy -= vibLevelP*thetaVQ*physicoChemical::k.value();
+                                
+                translationalEnergy += ERotP;
+                
+                ERotP = translationalEnergy*cloud_.postCollisionRotationalEnergy(rotationalDofQ,ChiB);
+                        
+                translationalEnergy -= ERotP;
+                
+                scalar relVelNonDissoMol = sqrt(2.0*translationalEnergy/mR);
+
+                //center of mass velocity of all particles
+                vector Ucm = (mP*UP + mQ*UQ)/(mP + mQ);    
+
+                // Variable Hard Sphere collision part
+
+                scalar cosTheta = 2.0*cloud_.rndGen().scalar01() - 1.0;
+            
+                scalar sinTheta = sqrt(1.0 - cosTheta*cosTheta);
+            
+                scalar phi = twoPi*cloud_.rndGen().scalar01();
+            
+                vector postCollisionRelU =
+                    relVelNonDissoMol
+                    *vector
+                        (
+                            cosTheta,
+                            sinTheta*cos(phi),
+                            sinTheta*sin(phi)
+                        );
+
+                UP = Ucm + (postCollisionRelU*mQ/(mP + mQ)); 
+                UQ = Ucm - (postCollisionRelU*mP/(mP + mQ));
+
+                const label& typeId1 = productIdsDissociation_[0];
+                const label& typeId2 = productIdsDissociation_[1];
+                
+                //Mass of Product one and two
+                scalar mP1 = cloud_.constProps(typeId1).mass();
+                scalar mP2 = cloud_.constProps(typeId2).mass();
+                
+                scalar mRatoms = mP1*mP2/(mP1 + mP2);
+                
+                translationalEnergy = ERotP + EEleP;
+                
+                scalar cRatoms = sqrt(2.0*translationalEnergy/mRatoms);
+
+                // Variable Hard Sphere collision part
+                scalar cosTheta2 = 2.0*cloud_.rndGen().scalar01() - 1.0;
+            
+                scalar sinTheta2 = sqrt(1.0 - cosTheta2*cosTheta2);
+            
+                scalar phi2 = twoPi*cloud_.rndGen().scalar01();
+            
+                vector postCollisionRelU2 = cRatoms
+                *vector
+                    (
+                        cosTheta2,
+                        sinTheta2*cos(phi2),
+                        sinTheta2*sin(phi2)
+                    );
+
+
+                vector uP1 = UP + postCollisionRelU2*mP2/(mP1 + mP2);
+                vector uP2 = UP - postCollisionRelU2*mP1/(mP1 + mP2);
+
+                // Premains NON-DISSOCIATED.
+                p.U() = UQ;
+                p.ERot() = ERotP;
+                p.vibLevel()[0] = vibLevelP;
+                p.ELevel() = ELevelP;
+
+                // Molecule Q will dissociate
+                vector position = q.position();
+                
+                label cell = -1;
+                label tetFace = -1;
+                label tetPt = -1;
+
+                mesh_.findCellFacePt
+                (
+                    position,
+                    cell,
+                    tetFace,
+                    tetPt
+                );
+                
+                q.typeId() = typeId1;
+                q.U() = uP1;
+                q.vibLevel().setSize(0,0);
+                q.ERot() = 0.0;
+                q.ELevel() = 0;
+                
+                label classificationQ = q.classification();
+                scalar RWF = q.RWF();
+                labelList vibLevel(0,0);
+                
+                // insert new product 2
+                cloud_.addNewParcel
+                (
+                    position,
+                    uP2,
+                    RWF,
+                    0.0,
+                    0,
+                    cell,
+                    tetFace,
+                    tetPt,
+                    typeId2,
+                    0,
+                    classificationQ,
+                    vibLevel
+                );
+            }
+        }
+        
+        if(ionisationReactionQ)
+        {
+//             nReactionsPerTimeStep_++;
+            nTotIonisationReactions_++;
+            nIonisationReactionsPerTimeStep_++;
+            
+            if(allowSplitting_)
+            {
+                relax_ = false;
+                
+                translationalEnergy = translationalEnergy + heatOfReactionIonisationJoules + EEleQ;
+                translationalEnergy += EEleP;
+                    
+                label ELevelP = cloud_.postCollisionElectronicEnergyLevel
+                                (
+                                    translationalEnergy,
+                                    jMaxQ,
+                                    omegaPQ,
+                                    EElistQ,
+                                    gListQ
+                                );
+                                
+                translationalEnergy -= EElistQ[ELevelP]; //species P = species Q here, so it doesn't matter if EElistQ is used
+                
+                translationalEnergy += EVibP;
+                
+                label iMax = (translationalEnergy / (physicoChemical::k.value()*thetaVQ));
+                
+                label vibLevelP = cloud_.postCollisionVibrationalEnergyLevel
+                                (
+                                        true,
+                                        p.vibLevel()[0],
+                                        iMax,
+                                        thetaVQ,
+                                        thetaDQ,
+                                        refTempZvQ,
+                                        omegaPQ,
+                                        ZrefQ,
+                                        translationalEnergy
+                                    );
+                                
+                translationalEnergy -= vibLevelP*thetaVQ*physicoChemical::k.value();
+                                
+                translationalEnergy += ERotP;
+                
+                ERotP = translationalEnergy*cloud_.postCollisionRotationalEnergy(rotationalDofQ,ChiB);
+                        
+                translationalEnergy -= ERotP;
+                
+                scalar relVelNonDissoMol = sqrt(2.0*translationalEnergy/mR);
+
+                //center of mass velocity of all particles
+                vector Ucm = (mP*UP + mQ*UQ)/(mP + mQ);    
+
+                // Variable Hard Sphere collision part
+
+                scalar cosTheta = 2.0*cloud_.rndGen().scalar01() - 1.0;
+            
+                scalar sinTheta = sqrt(1.0 - cosTheta*cosTheta);
+            
+                scalar phi = twoPi*cloud_.rndGen().scalar01();
+            
+                vector postCollisionRelU =
+                    relVelNonDissoMol
+                    *vector
+                        (
+                            cosTheta,
+                            sinTheta*cos(phi),
+                            sinTheta*sin(phi)
+                        );
+
+                UP = Ucm + (postCollisionRelU*mQ/(mP + mQ)); 
+                UQ = Ucm - (postCollisionRelU*mP/(mP + mQ));
+
+                const label& typeId1 = productIdsIonisation_[0];
+                const label& typeId2 = productIdsIonisation_[1];
+                
+                //Mass of Product one and two
+                scalar mP1 = cloud_.constProps(typeId1).mass();
+                scalar mP2 = cloud_.constProps(typeId2).mass();
+                
+                scalar mRatoms = mP1*mP2/(mP1 + mP2);
+                
+                translationalEnergy = ERotQ + EVibQ;
+                
+                scalar cRatoms = sqrt(2.0*translationalEnergy/mRatoms);
+
+                // Variable Hard Sphere collision part
+                scalar cosTheta2 = 2.0*cloud_.rndGen().scalar01() - 1.0;
+            
+                scalar sinTheta2 = sqrt(1.0 - cosTheta2*cosTheta2);
+            
+                scalar phi2 = twoPi*cloud_.rndGen().scalar01();
+            
+                vector postCollisionRelU2 = cRatoms
+                *vector
+                    (
+                        cosTheta2,
+                        sinTheta2*cos(phi2),
+                        sinTheta2*sin(phi2)
+                    );
+
+
+                vector uP1 = UP + postCollisionRelU2*mP2/(mP1 + mP2);
+                vector uP2 = UP - postCollisionRelU2*mP1/(mP1 + mP2);
+
+                // P remains NON-IONISED
+                p.U() = UQ;
+                p.ERot() = ERotP;
+                p.vibLevel()[0] = vibLevelP;
+                p.ELevel() = ELevelP;
+
+                // Molecule Q will ionise
+                vector position = q.position();
+                
+                label cell = -1;
+                label tetFace = -1;
+                label tetPt = -1;
+
+                mesh_.findCellFacePt
+                (
+                    position,
+                    cell,
+                    tetFace,
+                    tetPt
+                );
+                
+                q.typeId() = typeId1;
+                q.U() = uP1;
+                q.vibLevel().setSize(1,0);
+                q.ERot() = 0.0;
+                q.ELevel() = 0;
+                
+                label classificationQ = q.classification();
+                scalar RWF = q.RWF();
+                labelList vibLevel(0,0);
+                
+                // insert new product 2
+                cloud_.addNewParcel
+                (
+                    position,
+                    uP2,
+                    RWF,
+                    0.0,
+                    0,
+                    cell,
+                    tetFace,
+                    tetPt,
+                    typeId2,
+                    0,
+                    classificationQ,
                     vibLevel
                 );
             }

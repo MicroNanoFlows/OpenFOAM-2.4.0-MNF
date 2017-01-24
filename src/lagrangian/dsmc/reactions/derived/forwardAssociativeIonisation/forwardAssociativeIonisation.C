@@ -484,13 +484,13 @@ void forwardAssociativeIonisation::reaction
                         
                         if(i == 0)
                         {
-                            //Dissociation is to occur
+                            //Ionisation is to occur
                             ionisationReaction = true;
                             break;
                         }
                         if(i == 1)
                         {
-                            //Ionisation reaction is to occur
+                            //Associative ionisation reaction is to occur
                             associativeIonisation = true;
                             break;
                         }
