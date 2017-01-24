@@ -165,7 +165,7 @@ void polyForceZone::calculateField()
 {
     nAvTimeSteps_ += 1.0;
     
-    vector force = vector::zero;
+//     vector force = vector::zero;
     
     {
         IDLList<polyMolecule>::iterator mol(molCloud_.begin());
@@ -178,20 +178,21 @@ void polyForceZone::calculateField()
                 {
                     if(boxes_[b].contains(mol().position()))
                     {
-                        const scalar& massI = molCloud_.cP().mass(mol().id());
+//                         const scalar& massI = molCloud_.cP().mass(mol().id());
 
-                        force += massI*mol().a();
+                        forAll(mol().siteForces(), i)
+                        {
+                            force_ += mol().siteForces()[i];
+                            
+//                             Pout << "force = " << mol().siteForces()[i] << endl;
+                        }
                     }
                 }
             }
         }
     }
 
-    // - parallel processing
-    if(Pstream::parRun())
-    {
-        reduce(force, sumOp<vector>());
-    }
+//     force_ += force;
 
     if(time_.outputTime())
     {
