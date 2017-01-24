@@ -19,10 +19,12 @@ forceFields/derived/bodyForces/agentUniformForce/agentUniformForce.C
 forceFields/derived/bodyForces/scheduledForce/scheduledForce.C
 forceFields/derived/bodyForces/agentFluctuatingForce/agentFluctuatingForce.C    
 forceFields/derived/bodyForces/agentWillForce/agentWillForce.C     
-    
+forceFields/derived/bodyForces/agentWillForceScheduled/agentWillForceScheduled.C
 /*forceFields/derived/pairPotentials/lennardJones/lennardJones.C  */  
     
 forceFields/derived/pairPotentials/helbingExponential/helbingExponential.C    
+    
+    
     
 /* initialise */
 
@@ -81,6 +83,7 @@ schedule/basic/scheduleModel/scheduleModel.C
 
 schedule/derived/tabularSchedule/tabularSchedule.C
 schedule/derived/agentTypeSchedule/agentTypeSchedule.C
+schedule/derived/localGoalsSchedule/localGoalsSchedule.C
 
 /* multiscale */
 

@@ -1,0 +1,109 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+
+Description
+
+\*---------------------------------------------------------------------------*/
+
+#include "agentWillForceScheduled.H"
+#include "addToRunTimeSelectionTable.H"
+#include "IFstream.H"
+#include "graph.H"
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+defineTypeNameAndDebug(agentWillForceScheduled, 0);
+
+addToRunTimeSelectionTable(bodyForce, agentWillForceScheduled, dictionary);
+
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+// Construct from components
+agentWillForceScheduled::agentWillForceScheduled
+(
+    agentCloud& cloud,
+    Time& t,
+    const dictionary& dict
+)
+:
+    bodyForce(cloud, t, dict),
+    propsDict_(dict.subDict(typeName + "Properties")),
+    agentIds_(),
+//     desiredSpeed_(readScalar(propsDict_.lookup("desiredSpeed"))),
+//     desiredDirection_(propsDict_.lookup("desiredDirection")),
+    tau_(readScalar(propsDict_.lookup("tau")))
+//     stdev_(readScalar(propsDict_.lookup("stdev")))
+{
+
+    agentIds_.clear();
+
+    selectAgentIds ids
+    (
+        cloud_.cP(),
+        propsDict_
+    );
+
+    agentIds_ = ids.agentIds();
+}
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+agentWillForceScheduled::~agentWillForceScheduled()
+{}
+
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+void agentWillForceScheduled::initialConfiguration()
+{
+   
+}
+
+void agentWillForceScheduled::force(agent* p)
+{
+    if(findIndex(agentIds_, p->id()) != -1)
+    {
+        vector n = p->d() - p->position();
+        n /= mag(n);
+        p->f() += (p->desiredSpeed()*n - p->v())*p->mass() / tau_; // MAKE SURE p->d() is UNIT vector
+    }
+}
+
+void agentWillForceScheduled::newForce()
+{
+    
+}
+
+
+
+
+} // End namespace Foam
+
+// ************************************************************************* //
