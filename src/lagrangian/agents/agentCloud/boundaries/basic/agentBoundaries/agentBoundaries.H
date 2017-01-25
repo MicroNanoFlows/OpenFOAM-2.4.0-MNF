@@ -48,7 +48,7 @@ Description
 #include "List.H"
 
 #include "agentCyclicBoundary.H"
-// #include "agentPatchBoundary.H"
+#include "agentPatchBoundary.H"
 // #include "agentGeneralBoundary.H"
 
 
@@ -71,7 +71,16 @@ class agentBoundaries
         IOdictionary agentBoundariesDict_;
 
         label nCyclicBoundaryModels_;
-
+        label nPatchBoundaryModels_;
+        
+        PtrList<entry> patchBoundaryList_;
+        List<word> patchBoundaryNames_;
+        List<label> patchBoundaryIds_;
+        List<fileName> pBFixedPathNames_;
+        List< autoPtr<agentPatchBoundary> > patchBoundaryModels_;
+        List<label> patchToModelId_;
+        
+        
         //- cyclic boundary models
         PtrList<entry> cyclicBoundaryList_;
         List<word> cyclicBoundaryNames_;
@@ -81,6 +90,9 @@ class agentBoundaries
         List<label> cyclicBoundaryToModelId_;
 
         
+        
+        
+        void checkPatchBoundaryModels(const polyMesh& mesh);
                 
         void checkCyclicBoundaryModels(const polyMesh& mesh);
 
@@ -121,6 +133,12 @@ public:
 
         const label& nCyclicBoundaryModels() const;
 
+        inline List< autoPtr<agentPatchBoundary> >& patchBoundaryModels();
+        inline const List< autoPtr<agentPatchBoundary> >& patchBoundaryModels() const;
+        inline const List<word>& patchBoundaryNames() const;
+        inline const List<label>& patchBoundaryIds() const;
+        inline const List<label>& patchToModelIds() const;        
+        
         inline List< autoPtr<agentCyclicBoundary> >& cyclicBoundaryModels();
         inline const List< autoPtr<agentCyclicBoundary> >& cyclicBoundaryModels() const;
         inline const List<word>& cyclicBoundaryNames() const;

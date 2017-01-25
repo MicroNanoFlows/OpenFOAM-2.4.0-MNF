@@ -53,6 +53,16 @@ agentBoundaries::agentBoundaries
         )
     ),
     nCyclicBoundaryModels_(0),
+    nPatchBoundaryModels_(0),
+    
+    patchBoundaryList_(),
+    patchBoundaryNames_(),
+    patchBoundaryIds_(),
+    pBFixedPathNames_(),
+    patchBoundaryModels_(),
+    patchToModelId_(mesh.boundaryMesh().size(), -1),
+    
+    
     cyclicBoundaryList_(),
     cyclicBoundaryNames_(),
     cyclicBoundaryIds_(),
@@ -83,6 +93,15 @@ agentBoundaries::agentBoundaries
         )
     ),
     nCyclicBoundaryModels_(0),
+    nPatchBoundaryModels_(0),
+    
+    patchBoundaryList_(agentBoundariesDict_.lookup("patchBoundaries")),
+    patchBoundaryNames_(patchBoundaryList_.size()),
+    patchBoundaryIds_(patchBoundaryList_.size()),
+    pBFixedPathNames_(patchBoundaryList_.size()),
+    patchBoundaryModels_(patchBoundaryList_.size()),
+    patchToModelId_(mesh.boundaryMesh().size(), -1),    
+    
     cyclicBoundaryList_(agentBoundariesDict_.lookup("cyclicBoundaries")),
     cyclicBoundaryNames_(cyclicBoundaryList_.size()),
     cyclicBoundaryIds_(cyclicBoundaryList_.size()),
@@ -92,6 +111,26 @@ agentBoundaries::agentBoundaries
 {
     Info << "Creating the boundary models: " << nl << endl;
 
+    
+    if( patchBoundaryModels_.size() > 0 )
+    {
+        forAll(patchBoundaryModels_, p)
+        {
+            const entry& boundaryI = patchBoundaryList_[p];
+            const dictionary& boundaryIDict = boundaryI.dict();
+    
+            patchBoundaryModels_[p] = autoPtr<agentPatchBoundary>
+            (
+                agentPatchBoundary::New(t, mesh, cloud, boundaryIDict)
+            );
+    
+            patchBoundaryNames_[p] = patchBoundaryModels_[p]->type();
+            patchBoundaryIds_[p] = p;
+            nPatchBoundaryModels_++;
+        }
+    }
+
+    checkPatchBoundaryModels(mesh);    
     
     //- cyclic boundaries
     
@@ -115,6 +154,59 @@ agentBoundaries::agentBoundaries
     
     checkCyclicBoundaryModels(mesh);
 
+    if(nPatchBoundaryModels_ > 0) 
+    {
+        // directory: case/boundaries
+        fileName boundariesPath(time_.path()/"boundaries");
+
+        if( !isDir(boundariesPath) )
+        {
+            mkDir(boundariesPath);
+        }
+
+        // directory: case/boundaries/poly
+        fileName polyBoundariesPath(boundariesPath/"agent");
+
+        if( !isDir(polyBoundariesPath) )
+        {
+            mkDir(polyBoundariesPath);
+        }
+
+        // directory: case/boundaries/poly/patchBoundaryModels
+        fileName patchBoundaryModelsPath(polyBoundariesPath/"patchBoundaryModels");
+    
+        if (!isDir(patchBoundaryModelsPath))
+        {
+            mkDir(patchBoundaryModelsPath);    
+        }
+
+        forAll(patchBoundaryModels_, p)
+        {
+            if(patchBoundaryModels_[p]->writeInCase())
+            {
+                // directory: case/boundaries/poly/patchBoundaryModels/<patchBoundaryModel>
+                fileName patchBoundaryModelPath(patchBoundaryModelsPath/patchBoundaryNames_[p]);
+
+                if (!isDir(patchBoundaryModelPath))
+                {
+                    mkDir(patchBoundaryModelPath);    
+                }
+    
+                const word& patchName = patchBoundaryModels_[p]->patchName();
+
+                // directory: case/controllers/poly/patchBoundaryModels/<patchBoundaryModel>/<patchName>    
+                fileName patchPath(patchBoundaryModelPath/patchName);
+   
+                if (!isDir(patchPath))
+                {
+                    mkDir(patchPath);    
+                }
+    
+                pBFixedPathNames_[p] = patchPath;
+            }
+        }
+    }    
+    
     //- creating directories
     if(nCyclicBoundaryModels_ > 0) 
     {
@@ -212,9 +304,81 @@ void agentBoundaries::checkCyclicBoundaryModels(const polyMesh& mesh)
 }
 
 
+void agentBoundaries::checkPatchBoundaryModels(const polyMesh& mesh)
+{
+    //- check that all poly-patches defined within blockMeshDict,
+    //  each have one model.
+
+    label nPolyPatches = 0;
+
+    forAll(mesh.boundaryMesh(), patchi)
+    {
+        const polyPatch& patch = mesh.boundaryMesh()[patchi];
+    
+        if
+        (
+            isA<polyPatch>(patch) &&
+            !isA<cyclicPolyPatch>(patch) &&
+            !isA<processorPolyPatch>(patch) &&
+            !isA<wallPolyPatch>(patch) &&
+            !isA<emptyPolyPatch>(patch) &&
+            !isA<symmetryPolyPatch>(patch)
+        )
+        {
+            nPolyPatches++;
+
+            label patchIndex = patch.index();
+
+            label nPatches = 0;
+
+            forAll(patchBoundaryModels_, p)
+            {
+                const label& patchId = patchBoundaryModels_[p]->patchId();
+ 
+                if(patchIndex == patchId)
+                {
+                    nPatches++;
+                    patchToModelId_[patchi] = p;
+                }
+            }
+
+            if(nPatches > 1)
+            {
+                FatalErrorIn("polyBoundaries::checkPatchBoundaryModels(const polyMesh& mesh)")
+                    << nl
+                    << " Only one patch boundary model per poly-patch, [name: "
+                    << patch.name()
+                    << "]. No of models chosen for this patch are: " 
+                    << nPatches  << ", in " 
+                    << mesh.time().system()/"polyBoundariesDict"
+                    << abort(FatalError);
+            }
+        }
+    }
+
+//     Pout << "patchToModelId_: " << patchToModelId_ << endl;
+
+    if(nPolyPatches != nPatchBoundaryModels_)
+    {
+        FatalErrorIn("polyBoundaries::checkPatchBoundaryModels(const polyMesh& mesh)")
+            << nl
+            << " Number of poly-patches = "  << nPolyPatches 
+            << " in blockMeshDict, are not equal to the number of patch models = " 
+            << nPatchBoundaryModels_  << ", defined in " 
+            << mesh.time().system()/"polyBoundariesDict"
+            << abort(FatalError);
+    }
+}
+
+
 
 void agentBoundaries::initialConfig()
 {
+    forAll(patchBoundaryModels_, p)
+    {
+        patchBoundaryModels_[p]->initialConfiguration();
+    }    
+    
     forAll(cyclicBoundaryModels_, c)
     {
         cyclicBoundaryModels_[c]->initialConfiguration();
@@ -223,10 +387,10 @@ void agentBoundaries::initialConfig()
 
 void agentBoundaries::calculateProperties()
 {
-//     forAll(patchBoundaryModels_, p)
-//     {
-//         patchBoundaryModels_[p]->calculateProperties();
-//     }
+    forAll(patchBoundaryModels_, p)
+    {
+        patchBoundaryModels_[p]->calculateProperties();
+    }
 
     forAll(cyclicBoundaryModels_, c)
     {

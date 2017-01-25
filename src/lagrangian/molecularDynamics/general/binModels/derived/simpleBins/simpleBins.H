@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,28 +23,22 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    massFlowRate
 
 
 Description
-    to write out a pdb file for creating movies
 
 SourceFiles
-    massFlowRateI.H
-    massFlowRate.C
-    massFlowRateIO.C
+    simpleBinsI.H
+    simpleBins.C
+    simpleBinsIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef massFlowRate_H
-#define massFlowRate_H
+#ifndef simpleBins_H
+#define simpleBins_H
 
-#include "agentMeasurement.H"
-#include "vector.H"
-#include "polyMesh.H"
-#include "volFields.H"
-#include "agentCloud.H"
-#include "distribution.H"
+
+#include "binModel.H"
 #include "boundedBox.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -53,110 +47,110 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class massFlowRate Declaration
+                           Class simpleBins Declaration
 \*---------------------------------------------------------------------------*/
 
-class massFlowRate
+class simpleBins
 :
-	public agentMeasurement
+    public binModel
 {
 
 private:
 
     // Private data
 
-        //- subDictionary containing the properties
         dictionary propsDict_;
 
-        List<label> agentIds_;
-
-        word fieldName_;
-
-        scalar length_;
-        
         vector unitVector_;
-
-        DynamicList<scalar> massFlux_;
-        
-        scalar massFlowRate_;
-        
-        DynamicList<scalar> agentFlux_;
-        
-        scalar agentFlowRate_;
-        
-        
-        
-        scalar nTimeSteps_;
-        
-        bool instant_;
-        
-        bool useBox_;
         
         boundedBox bb_;
         
-        
-    // Private Member Functions
+        vector startPoint_;
+        vector endPoint_;
 
-        void setBoundBox
-        (
-            const dictionary& propsDict,
-            boundedBox& bb,
-            const word& name 
-        );
+        scalar rSEMag_;
 
-            
+
+        label nBins_;
+        scalar binWidth_;
+        scalar area_;
+
+
+
+
 public:
 
     //- Runtime type information
-    TypeName("massFlowRate");
+    TypeName("simpleBins");
+
+    // Static data members
 
     // Constructors
 
-        //- Construct from components
-        massFlowRate
-		(
-            Time& t,
+        //- construct from components
+        simpleBins
+        (
             const polyMesh& mesh,
-            agentCloud& cloud,
             const dictionary& dict
-		);
+        );
+
+    // Selectors
+
 
     // Destructor
 
- 		~massFlowRate();
+        ~simpleBins();
 
     // Member Functions
 
-        //- create initial field
-        void createField();
+        // Access
 
-        //- calculate field
-        void calculateField();
+        // Check
 
-        void measureDuringForceComputation
-        (
-            agent* molI,
-            agent* molJ
-        );
+        // Edit
 
-        void measureDuringForceComputationSite
-        (
-            agent* molI,
-            agent* molJ,
-            label sI,
-            label sJ
-        );
+            label isPointWithinBin
+            (
+                const vector& rI,
+                const label& cellI
+            );
 
-//         const propertyField& fields() const;
+            scalarField binPositions();
 
-        //- write field
-        void writeField();
-}; 		
+            vectorField bins();
+
+            const label& nBins() const;
+
+            scalar binVolume(const label& n);
+
+            
+
+        // Write
+
+
+
+
+
+    // Member Operators
+
+//         void operator=(const simpleBins&);
+
+    // Friend Functions
+
+    // Friend Operators
+
+    // IOstream Operators
+
+//         friend Ostream& operator<<(Ostream&, const simpleBins&);
+};
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

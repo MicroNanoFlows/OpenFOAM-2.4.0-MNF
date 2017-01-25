@@ -45,7 +45,7 @@ SourceFiles
 #include "runTimeSelectionTables.H"
 #include "vector.H"
 #include "volFields.H"
-#include "polyMolecule.H"
+#include "agent.H"
 #include "writeTimeData.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -68,10 +68,10 @@ protected:
 
         Time& t_;
 
-        polyMoleculeCloud& molCloud_;
+        agentCloud& cloud_;
 
         //- subDictionary containing the properties
-        dictionary boundaryDict_;
+//         dictionary boundaryDict_;
 
         //- name of boundary patch
         word patchName_;
@@ -84,12 +84,7 @@ protected:
         //- cells corresponding to the boundary faces
         labelList cells_;
 
-        //- set all the properties below from model if required
 
-            //- targeted fields 
-            scalarField densities_;
-            vectorField velocities_;
-            scalarField temperatures_;
 
 
             //- writing out properties
@@ -114,10 +109,10 @@ public:
             (
                 Time& t,
                 const polyMesh& mesh,
-                polyMoleculeCloud& molCloud,
+                agentCloud& cloud,
                 const dictionary& dict
             ),
-            (t, mesh, molCloud, dict)
+            (t, mesh, cloud, dict)
         );
    
     // Constructors
@@ -127,7 +122,7 @@ public:
         (
             Time& t,
             const polyMesh& mesh,
-            polyMoleculeCloud& molCloud,
+            agentCloud& cloud,
             const dictionary& dict
         );
 
@@ -138,7 +133,7 @@ public:
         (
             Time& t,
             const polyMesh& mesh,
-            polyMoleculeCloud& molCloud,
+            agentCloud& cloud,
             const dictionary& dict
         );
 
@@ -157,11 +152,11 @@ public:
 
         virtual void initialConfiguration() = 0;
 
-        //- control the polyMolecule
+        //- control the agent
         virtual void controlMol
         (
-            polyMolecule& mol,
-            polyMolecule::trackingData& td
+            agent& mol,
+            agent::trackingData& td
         ) = 0;
 
         //- output data
@@ -172,7 +167,7 @@ public:
         ) = 0;
 
         //- update properties from a modified dictionary
-        virtual void updateProperties(const dictionary&) = 0;
+//         virtual void updateProperties(const dictionary&) = 0;
 
         void updateBoundaryProperties(const dictionary&);
 
@@ -187,20 +182,6 @@ public:
             const word& patchName() const;
             const label& patchId() const;
 
-
-            //- return the targeted fields 
-            const scalarField& densityField() const;
-            scalarField& densityField();
-
-            const vectorField& velocityField() const;
-            vectorField& velocityField();
-
-            const scalarField& temperatureField() const;
-            scalarField& temperatureField();
-
-            scalar avReqDensity();
-            vector avReqVelocity();
-            scalar avReqTemperature();
 
             const bool& writeInTimeDir() const;
             const bool& writeInCase() const;

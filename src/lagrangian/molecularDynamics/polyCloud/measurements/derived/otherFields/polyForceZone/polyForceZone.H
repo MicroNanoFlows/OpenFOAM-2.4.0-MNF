@@ -23,29 +23,29 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    massFlowRate
+    polyForceZone
 
 
 Description
-    to write out a pdb file for creating movies
+
 
 SourceFiles
-    massFlowRateI.H
-    massFlowRate.C
-    massFlowRateIO.C
+    polyForceZoneI.H
+    polyForceZone.C
+    polyForceZoneIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef massFlowRate_H
-#define massFlowRate_H
+#ifndef polyForceZone_H
+#define polyForceZone_H
 
-#include "agentMeasurement.H"
+#include "polyField.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
-#include "agentCloud.H"
+#include "polyMoleculeCloud.H"
 #include "distribution.H"
-#include "boundedBox.H"
+#include "boundedBox.H" 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -53,12 +53,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class massFlowRate Declaration
+                           Class polyForceZone Declaration
 \*---------------------------------------------------------------------------*/
 
-class massFlowRate
+class polyForceZone
 :
-	public agentMeasurement
+	public polyField
 {
 
 private:
@@ -67,63 +67,57 @@ private:
 
         //- subDictionary containing the properties
         dictionary propsDict_;
+        
+        fileName pathName_;
+        fileName nameFile_;
 
-        List<label> agentIds_;
+        propertyField fields_;
 
         word fieldName_;
 
-        scalar length_;
-        
-        vector unitVector_;
+        List<boundedBox> boxes_;
 
-        DynamicList<scalar> massFlux_;
+        scalar totalVolume_;
         
-        scalar massFlowRate_;
+        vector force_;
+
+        List<label> molIds_;
+
+        label timeIndex_;
+
+        vectorField forceField_;
+
         
-        DynamicList<scalar> agentFlux_;
-        
-        scalar agentFlowRate_;
-        
-        
-        
-        scalar nTimeSteps_;
-        
-        bool instant_;
-        
-        bool useBox_;
-        
-        boundedBox bb_;
-        
+        scalar nAvTimeSteps_;
+        bool resetAtOutput_;        
         
     // Private Member Functions
 
-        void setBoundBox
-        (
-            const dictionary& propsDict,
-            boundedBox& bb,
-            const word& name 
-        );
+        void setBoundBoxes();
 
-            
+        void writeToStorage();
+
+        bool readFromStorage();
+
 public:
 
     //- Runtime type information
-    TypeName("massFlowRate");
+    TypeName("polyForceZone");
 
     // Constructors
 
         //- Construct from components
-        massFlowRate
+        polyForceZone
 		(
             Time& t,
             const polyMesh& mesh,
-            agentCloud& cloud,
+            polyMoleculeCloud& molCloud,
             const dictionary& dict
 		);
 
     // Destructor
 
- 		~massFlowRate();
+ 		~polyForceZone();
 
     // Member Functions
 
@@ -135,19 +129,19 @@ public:
 
         void measureDuringForceComputation
         (
-            agent* molI,
-            agent* molJ
-        );
-
+            polyMolecule* molI,
+            polyMolecule* molJ
+        ); 
+        
         void measureDuringForceComputationSite
         (
-            agent* molI,
-            agent* molJ,
+            polyMolecule* molI,
+            polyMolecule* molJ,
             label sI,
             label sJ
         );
-
-//         const propertyField& fields() const;
+        
+        const propertyField& fields() const;
 
         //- write field
         void writeField();

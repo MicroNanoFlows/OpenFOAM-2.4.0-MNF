@@ -23,27 +23,27 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    massFlowRate
+    polyFrictionForce
 
 
 Description
-    to write out a pdb file for creating movies
+    output every write interval folder for this to work 
 
 SourceFiles
-    massFlowRateI.H
-    massFlowRate.C
-    massFlowRateIO.C
+    polyFrictionForceI.H
+    polyFrictionForce.C
+    polyFrictionForceIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef massFlowRate_H
-#define massFlowRate_H
+#ifndef polyFrictionForce_H
+#define polyFrictionForce_H
 
-#include "agentMeasurement.H"
+#include "polyField.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
-#include "agentCloud.H"
+#include "polyMoleculeCloud.H"
 #include "distribution.H"
 #include "boundedBox.H"
 
@@ -53,12 +53,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class massFlowRate Declaration
+                           Class polyFrictionForce Declaration
 \*---------------------------------------------------------------------------*/
 
-class massFlowRate
+class polyFrictionForce
 :
-	public agentMeasurement
+	public polyField
 {
 
 private:
@@ -68,62 +68,84 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-        List<label> agentIds_;
-
+        propertyField fields_;
+        
+//         fileName pathName_;
+//         fileName nameFile_;
+        
         word fieldName_;
 
-        scalar length_;
+        List<label> molIdsFluid_;
+        List<label> molIdsWall_;
         
-        vector unitVector_;
-
-        DynamicList<scalar> massFlux_;
+        vector startPoint_;
+        vector endPoint_;
         
-        scalar massFlowRate_;
+        // choose this small enough ~0.5 nm
+        vector endPointS_;
         
-        DynamicList<scalar> agentFlux_;
+        label nMolsMin_;
         
-        scalar agentFlowRate_;
+        scalar dr_;
+        scalar radius_;
+        label nBins_;
+        scalar binWidth_;
+        
+        scalar h_;
+        scalar hS_;
+        
+        vector n_;
+        
+        DynamicList<scalar> radii_;
+        DynamicList<scalar> radii_;
         
         
         
-        scalar nTimeSteps_;
         
-        bool instant_;
         
-        bool useBox_;
         
-        boundedBox bb_;
+//         List<scalar> volume_;
+        
+        void refreshBins();
+        
+        void setCentreOfMass();
+        
+        void setRadius();
         
         
     // Private Member Functions
 
-        void setBoundBox
+//         bool readFromStorage();
+        
+//         void writeToStorage();
+        
+        List<label> isPointWithinBin
         (
-            const dictionary& propsDict,
-            boundedBox& bb,
-            const word& name 
+            const vector& rI
         );
-
-            
+        
+        void centreOfMass();
+        
 public:
 
     //- Runtime type information
-    TypeName("massFlowRate");
+    TypeName("polyFrictionForce");
 
     // Constructors
 
         //- Construct from components
-        massFlowRate
+        polyFrictionForce
 		(
             Time& t,
             const polyMesh& mesh,
-            agentCloud& cloud,
+            polyMoleculeCloud& molCloud,
             const dictionary& dict
 		);
 
     // Destructor
 
- 		~massFlowRate();
+ 		~polyFrictionForce();
+
 
     // Member Functions
 
@@ -135,19 +157,19 @@ public:
 
         void measureDuringForceComputation
         (
-            agent* molI,
-            agent* molJ
+            polyMolecule* molI,
+            polyMolecule* molJ
         );
 
         void measureDuringForceComputationSite
         (
-            agent* molI,
-            agent* molJ,
+            polyMolecule* molI,
+            polyMolecule* molJ,
             label sI,
             label sJ
         );
 
-//         const propertyField& fields() const;
+        const propertyField& fields() const;
 
         //- write field
         void writeField();

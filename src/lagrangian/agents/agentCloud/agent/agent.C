@@ -152,13 +152,13 @@ void Foam::agent::hitPatch
     trackingData& td
 )
 {
-//     //-find which patch has been hit
-//     label patchIndex = pp.index();
-// 
-//     const label& patchModelId = td.cloud().boundaries().patchToModelIds()[patchIndex];
-// 
-//     // apply a boundary model when a molecule collides with this poly patch
-//     td.cloud().boundaries().patchBoundaryModels()[patchModelId]->controlMol(*this, td);
+    //-find which patch has been hit
+    label patchIndex = pp.index();
+
+    const label& patchModelId = td.cloud().ob().patchToModelIds()[patchIndex];
+
+    // apply a boundary model when a molecule collides with this poly patch
+    td.cloud().ob().patchBoundaryModels()[patchModelId]->controlMol(*this, td);
 }
 
 void Foam::agent::hitCyclicPatch

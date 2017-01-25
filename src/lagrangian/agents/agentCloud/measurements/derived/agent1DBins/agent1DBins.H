@@ -23,21 +23,21 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    massFlowRate
+    agent1DBins
 
 
 Description
-    to write out a pdb file for creating movies
+
 
 SourceFiles
-    massFlowRateI.H
-    massFlowRate.C
-    massFlowRateIO.C
+    agent1DBinsI.H
+    agent1DBins.C
+    agent1DBinsIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef massFlowRate_H
-#define massFlowRate_H
+#ifndef agent1DBins_H
+#define agent1DBins_H
 
 #include "agentMeasurement.H"
 #include "vector.H"
@@ -46,6 +46,7 @@ SourceFiles
 #include "agentCloud.H"
 #include "distribution.H"
 #include "boundedBox.H"
+#include "binModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -53,10 +54,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class massFlowRate Declaration
+                           Class agent1DBins Declaration
 \*---------------------------------------------------------------------------*/
 
-class massFlowRate
+class agent1DBins
 :
 	public agentMeasurement
 {
@@ -72,48 +73,43 @@ private:
 
         word fieldName_;
 
-        scalar length_;
+        autoPtr<binModel> binModel_;        
         
-        vector unitVector_;
+        label nBins_;
 
-        DynamicList<scalar> massFlux_;
+//         scalar totalArea_;
         
-        scalar massFlowRate_;
+        scalarField N_;
+        scalarField mass_;
+        vectorField mom_;
+        vectorField vel_;
+        scalarField kE_;  
         
-        DynamicList<scalar> agentFlux_;
-        
-        scalar agentFlowRate_;
-        
-        
+        scalarField NField_;
+        scalarField rhoNField_;
+        scalarField rhoMField_;
+        vectorField UField_;
+        vectorField momField_;
+        scalarField kEField_;
         
         scalar nTimeSteps_;
+
+        bool resetAtOutput_;  
         
-        bool instant_;
-        
-        bool useBox_;
-        
-        boundedBox bb_;
-        
+        scalar dZ_;
         
     // Private Member Functions
-
-        void setBoundBox
-        (
-            const dictionary& propsDict,
-            boundedBox& bb,
-            const word& name 
-        );
 
             
 public:
 
     //- Runtime type information
-    TypeName("massFlowRate");
+    TypeName("agent1DBins");
 
     // Constructors
 
         //- Construct from components
-        massFlowRate
+        agent1DBins
 		(
             Time& t,
             const polyMesh& mesh,
@@ -123,7 +119,7 @@ public:
 
     // Destructor
 
- 		~massFlowRate();
+ 		~agent1DBins();
 
     // Member Functions
 
