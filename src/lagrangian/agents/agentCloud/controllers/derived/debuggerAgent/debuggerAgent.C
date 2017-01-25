@@ -26,7 +26,7 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "agentWillForce.H"
+#include "debuggerAgent.H"
 #include "addToRunTimeSelectionTable.H"
 #include "IFstream.H"
 #include "graph.H"
@@ -36,30 +36,36 @@ Description
 namespace Foam
 {
 
-defineTypeNameAndDebug(agentWillForce, 0);
+defineTypeNameAndDebug(debuggerAgent, 0);
 
-addToRunTimeSelectionTable(bodyForce, agentWillForce, dictionary);
+addToRunTimeSelectionTable(agentController, debuggerAgent, dictionary);
+
+
 
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-agentWillForce::agentWillForce
+debuggerAgent::debuggerAgent
 (
-    agentCloud& cloud,
     Time& t,
+    agentCloud& cloud,
     const dictionary& dict
 )
 :
-    bodyForce(cloud, t, dict),
+    agentController(t,  cloud, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
+//     model_(),
     agentIds_(),
-//     desiredSpeed_(readScalar(propsDict_.lookup("desiredSpeed"))),
-    desiredDirection_(propsDict_.lookup("desiredDirection")),
-    tau_(readScalar(propsDict_.lookup("tau")))
-//     stdev_(readScalar(propsDict_.lookup("stdev")))
+    bb_(mesh_.bounds().min(), mesh_.bounds().max()),
+    nTimeSteps_(0.0),
+    force_(vector::zero)
+   
 {
+//     writeInTimeDir_ = true;
+//     writeInCase_ = true;
+
 
     agentIds_.clear();
 
@@ -70,44 +76,83 @@ agentWillForce::agentWillForce
     );
 
     agentIds_ = ids.agentIds();
+
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-agentWillForce::~agentWillForce()
+debuggerAgent::~debuggerAgent()
 {}
 
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void agentWillForce::initialConfiguration()
-{
-   
-}
+void debuggerAgent::initialConfiguration()
+{}
 
-void agentWillForce::force(agent* p)
+void debuggerAgent::controlBeforeVelocityI()
+{}
+
+void debuggerAgent::controlBeforeMove()
+{}
+
+void debuggerAgent::controlBeforeForces()
+{}
+
+void debuggerAgent::controlDuringForces
+(
+    agent* molI,
+    agent* molJ
+)
+{}
+
+void debuggerAgent::controlAfterForces()
 {
-    if(findIndex(agentIds_, p->id()) != -1)
+    Info << "debuggerAgent"  << endl;
+
+    IDLList<agent>::iterator mol(cloud_.begin());
+
+    for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
     {
-        p->f() += (p->desiredSpeed()*desiredDirection_ - p->v())*p->mass() / tau_;
+        if(findIndex(agentIds_, mol().id()) != -1)
+        {
+            if(bb_.contains(mol().position()))
+            {
+                
+            }
+            else
+            {
+                FatalErrorIn("debuggerAgent") << nl
+                    << " Agent position just left the domain at : "
+                    << mol().position() 
+                    << ", tracking Number = " << mol().trackingNumber()
+                    << nl << abort(FatalError);                         
+            }
+        }
     }
-    
-    
-//     if(findIndex(agentIds_, p->id()) != -1)
-//     {
-//         vector force = (p->desiredSpeed()*desiredDirection_ - p->v())*p->mass() / tau_;
-//         vector randomForce = 
-//         p->f() += ;
-//     }
-    
 }
 
-void agentWillForce::newForce()
+
+void debuggerAgent::controlAfterVelocityII()
+{}
+
+void debuggerAgent::calculateProperties()
+{}
+
+void debuggerAgent::output
+(
+    const fileName& fixedPathName,
+    const fileName& timePath
+)
 {
-    
-}
+    const Time& runTime = time_.time();
 
+    if(runTime.outputTime())
+    {
+
+    }
+}
 
 
 
