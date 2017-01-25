@@ -23,27 +23,25 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    reflectiveRectangularBorder
+    agentWillForceScheduled
 
 Description
-    NOT PARALLISED 
 
 
 SourceFiles
-    reflectiveRectangularBorderI.H
-    reflectiveRectangularBorder.C
-    reflectiveRectangularBorderIO.C
+    agentWillForceScheduledI.H
+    agentWillForceScheduled.C
+    agentWillForceScheduledIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef reflectiveRectangularBorder_H
-#define reflectiveRectangularBorder_H
+#ifndef agentWillForceScheduled_H
+#define agentWillForceScheduled_H
 
-#include "borderModel.H"
+#include "bodyForce.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "agentCloud.H"
-
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -52,12 +50,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class reflectiveRectangularBorder Declaration
+                           Class agentWillForceScheduled Declaration
 \*---------------------------------------------------------------------------*/
 
-class reflectiveRectangularBorder
+class agentWillForceScheduled
 :
-	public borderModel
+	public bodyForce
 {
 
 private:
@@ -67,64 +65,55 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-        List<vectorList> borderList_;
+        //- ids of agents
+        List<label> agentIds_;
         
-        // border properties
+//         scalar desiredSpeed_;
         
-        // normal vectors point outwards 
-        List<vectorList> normalVectors_;
-        List<vectorList> midPoints_;
+        vector desiredDirection_;
         
-        scalar treshold_;
- 
-        // outer list = nCells on mesh
-        // inner list = index to borderList_ to interact with
-        List<DynamicList<label> > interactionList_;  
+        scalar tau_;
 
-        label scalingValue_;
+//         scalar stdev_;
+        
+        // size = number of agents
+//         List<scalar> agentVelocities_;
         
     // Private Member Functions
-        
-        void initialiseBorders();
 
-        void checkClosedEndedBorders();
-       
-        void reflect(label index, agent* a); 
 
-        bool isPointWithinBorder(label index, const vector& r);       
-        
 public:
 
     //- Runtime type information
-    TypeName("reflectiveRectangularBorder");
+    TypeName("agentWillForceScheduled");
 
     // Constructors
 
         //- Construct from components
-        reflectiveRectangularBorder
+        agentWillForceScheduled
         (
-            Time& time,
             agentCloud& cloud,
+            Time& t,
             const dictionary& dict
         );
 
     // Destructor
 
-        ~reflectiveRectangularBorder();
+        ~agentWillForceScheduled();
+
 
     // Member Functions
         
+        //- create an initial configuration
         void initialConfiguration();
         
-        void afterMove();
+        // inside loop of all agents
+        void force(agent* p);
         
-        void afterForce();
-        
-                
-        // write
-        
-        void write(const fileName& pathName);
- 
+        // new force definition; requires loop over all agents
+        void newForce();
+
+        // Access
 };
 
 

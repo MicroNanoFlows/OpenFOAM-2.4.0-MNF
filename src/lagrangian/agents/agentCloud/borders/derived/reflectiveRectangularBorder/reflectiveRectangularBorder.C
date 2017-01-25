@@ -63,6 +63,13 @@ reflectiveRectangularBorder::reflectiveRectangularBorder
     treshold_ = 0.001;
     
     checkClosedEndedBorders();
+    
+    scalingValue_ = 20;
+    
+    if (propsDict_.found("scalingValue"))
+    {
+        scalingValue_ = readLabel(propsDict_.lookup("scalingValue"));
+    }    
 
 }
 
@@ -179,11 +186,11 @@ void reflectiveRectangularBorder::checkClosedEndedBorders()
         
         if(rD > treshold_)
         {
-            FatalError
-                << "reflectiveRectangularBorder::checkClosedEndedBorders() " << endl
+            FatalErrorIn("reflectiveRectangularBorder::checkClosedEndedBorders()") 
                 << "    This border has its end points not connected: " << nl
                 << borderList_[i] << nl
-                << "    Make the start point and end points the same." << endl;
+                << "    Make the start point and end points the same." 
+                << nl << abort(FatalError);  
         }
     }
 }
@@ -319,10 +326,11 @@ void reflectiveRectangularBorder::initialiseBorders()
             
             normalVectors_[i][p] = n;
         }
-        
-        Info << "midpoints = "<<  midPoints_ << endl;
-        Info << "normal = " << normalVectors_ << endl;
+
     }
+        
+    Info << "midpoints = "<<  midPoints_ << endl;
+    Info << "normal = " << normalVectors_ << endl;
     
 //     Info << "interactionList = " << interactionList_ << endl;
 }
@@ -351,87 +359,344 @@ bool reflectiveRectangularBorder::isPointWithinBorder(label index, const vector&
     return inside;
 }
 
+// void reflectiveRectangularBorder::reflect(label index, agent* p)
+// {
+//     // find closest edge with normal in opposite direction
+//     
+//     scalar rDMin = GREAT;
+//     label edge = -1;
+//     
+//     forAll(midPoints_[index], i)
+//     {
+//         const vector& m = midPoints_[index][i];
+//         const vector& n = normalVectors_[index][i];
+//         
+//         scalar rD = mag((p->position()-m) & n);
+//         
+//         if( (rD < rDMin) && ( (p->v() & n) <= 0) )
+//         {
+//             rDMin = rD;
+//             edge = i;
+//         }
+//     }
+//     
+//     
+//     if (edge == -1)
+//     {
+//             FatalErrorIn("reflectiveRectangularBorder::reflect()") 
+//                 << "    No edge found = " << p->position()
+//                 << "; What happened here?"
+//                 << nl << abort(FatalError);   
+//     }
+//     else
+//     {
+// //         Info << "before velocity = " << p->v() << endl;
+//         
+//         const vector& n = normalVectors_[index][edge];
+// //         Info << "midpoint = " << midPoints_[index][edge] << endl;
+// //         Info << "normal = " << n << endl;
+//         
+//         scalar vN = ( p->v() & -n );
+//         
+// //         Info << "vN = " << vN << endl;
+//         
+//         p->v() += 2.0*vN*n;
+// //         Info << "after velocity = " << p->v() << endl;
+// 
+//           
+//         // move 
+//         
+//         vector oldPosition = p->position();
+// //         Info << "before position = " << p->position() << endl;        
+//         p->position() += 2.0*rDMin*n;
+// //         Info << "after position = " << p->position() << endl;        
+//         
+//         // check that you moved cell 
+//         label cell = -1;
+//         label tetFace = -1;
+//         label tetPt = -1;
+// 
+//         mesh_.findCellFacePt
+//         (
+//             p->position(),
+//             cell,
+//             tetFace,
+//             tetPt
+//         );
+//         
+//         if(cell != -1)
+//         {
+//             if(p->cell() != cell)
+//             {
+//                 p->cell() = cell;
+// //                 Info << "changed cell to = " << cell << endl;        
+//             }
+//         }
+//         else
+//         {
+//             FatalErrorIn("reflectiveRectangularBorder::reflect()") 
+//                 << "    molecule left mesh at position = " << p->position()
+//                 << ", starting from position = " << oldPosition
+//                 << "; Implement more robust algorithm!" 
+//                 << nl << abort(FatalError);  
+//         }
+//     }
+// }
+
+// void reflectiveRectangularBorder::reflect(label index, agent* p)
+// {
+//     // back track molecule 
+//     scalar deltaT = mesh_.time().deltaT().value();
+//     
+//     vector r1 = p->position() - p->v()*deltaT;
+//     vector r2 = p->position();
+//     
+//     Info << "r1 = " << r1 << endl;
+//     Info << "r2 = " << r2 << endl;
+//     
+//     scalar x1 = r1.x();
+//     scalar x2 = r2.x();
+//     scalar y1 = r1.y();
+//     scalar y2 = r2.y();
+//     
+//     vector n12 = r2 - r1;
+//     scalar r12Mag = mag(n12);
+//     n12 /= r12Mag;
+//     
+//     DynamicList<vector> midPoints;
+//     DynamicList<vector> normals;    
+//     DynamicList<vector> unitVectors;    
+//     // loop over all line segments of border
+//     
+//     for (int i = 0; i < borderList_[index].size()-1 ; i++)
+//     {
+//         vector r3 = borderList_[index][i]; // vector of point 1
+//         vector r4 = borderList_[index][i+1]; // vector of point 2
+// 
+//         Info << "r3 = " << r3 << endl;
+//         Info << "r4 = " << r4 << endl;
+//         
+//         scalar x3 = r3.x();
+//         scalar x4 = r4.x();
+//         scalar y3 = r3.y();
+//         scalar y4 = r4.y();
+//         
+//         scalar Px = ( (x1*y2-y1*x2)*(x3-x4) - (x1-x2)*(x3*y4-y3*x4) ) / 
+//                     ( (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4) );
+//                     
+//         scalar Py = ( (x1*y2-y1*x2)*(y3-y4) - (y1-y2)*(x3*y4-y3*x4) ) /
+//                     ( (x1-x2)*(y3-y4) - (y1 - y2)*(x3-x4)  );
+//         
+//         // midpoint (from Wikipedia)
+//         vector rM = vector(Px, Py, 0.0);
+//                 
+//         Info << "rM = " << rM << endl;
+//         
+//         // test if the midpoint lies on both lines
+//         
+//         scalar rD1 = n12 & (rM - r1);
+//         
+//         Info << "rD1 = " << rD1 << endl;
+//         
+//         if( (rD1 >= 0) && (rD1 <= r12Mag) )
+//         {
+//             vector n34 = r4 - r3;
+//             scalar r34Mag = mag(n34);
+//             n34 /= r34Mag;
+//             
+//             scalar rD3 = n34 & (rM - r3);
+//             Info << "rD3 = " << rD3 << endl;    
+//             
+//             if( (rD3 >= 0) && (rD3 <= r34Mag) )
+//             {
+//                 // found intersecting point
+//                 unitVectors.append(n34);
+//                 midPoints.append(rM);
+//                 normals.append(normalVectors_[index][i]);
+//             }
+//         }
+//     }
+//     
+//     Info << "midPoints = " <<  midPoints << endl;
+//     
+//     vector midPoint = vector::zero;
+//     vector normal = vector::zero;
+//     vector unitVector = vector::zero;
+//     
+//     if(midPoints.size() > 0)
+//     {
+//         scalar rDMax = GREAT;
+//         
+//         forAll(midPoints, i)
+//         {
+//             vector rM = midPoints[i];
+//             scalar rD1 = n12 & (rM - r1);
+//             
+//             if(rD1 < rDMax)
+//             {
+//                 midPoint = rM;
+//                 normal = normals[i];
+//                 unitVector = unitVectors[i];
+//                 rDMax = rD1;
+//             }
+//         }        
+//     }
+//     else
+//     {
+//         FatalErrorIn("reflectiveRectangularBorder::reflect()") 
+//                 << "    Algorithm Failure for agent at position = " << p->position()
+//                 << nl << abort(FatalError);  
+//     }
+//     
+//  
+//     // return position to midPoint - offset 
+//     
+//     vector offset = n12*r12Mag/20;
+//     
+//     // new position:
+//     
+//     Info << "old position = " << p->position() << endl;
+//     
+//     p->position() = midPoint - offset;
+//     
+//     Info << "new position = " << p->position() << endl;
+//     
+//     // new velocity:
+//     Info << "old vel = " << p->v() << endl;
+//     
+//     p->v() = (p->v() & unitVector)*unitVector;
+//     
+//     Info << "new vel = " << p->v() << endl;
+//     
+//     // check that you moved cell 
+//     label cell = -1;
+//     label tetFace = -1;
+//     label tetPt = -1;
+// 
+//     mesh_.findCellFacePt
+//     (
+//         p->position(),
+//         cell,
+//         tetFace,
+//         tetPt
+//     );
+//     
+//     if(cell != -1)
+//     {
+//         if(p->cell() != cell)
+//         {
+//             p->cell() = cell;
+// //                 Info << "changed cell to = " << cell << endl;        
+//         }
+//     }
+//     else
+//     {
+//         FatalErrorIn("reflectiveRectangularBorder::reflect()") 
+//             << "    molecule left mesh at position = " << p->position()
+//             << ", starting from position = " << r1
+//             << "; Implement more robust algorithm!" 
+//             << nl << abort(FatalError);  
+//     }
+// 
+// }
+
 void reflectiveRectangularBorder::reflect(label index, agent* p)
 {
-    // find closest edge with normal in opposite direction
+    // back track molecule 
+    scalar deltaT = mesh_.time().deltaT().value();
+    
+    vector r1 = p->position() - p->v()*deltaT;
+    vector r2 = p->position();
+    vector n12 = r2 - r1;
+    scalar r12Mag = mag(n12);
+    n12 /= r12Mag;    
+    
+
     
     scalar rDMin = GREAT;
-    label edge = -1;
+//     label edge = -1;
+    vector u = vector::zero;
     
     forAll(midPoints_[index], i)
     {
         const vector& m = midPoints_[index][i];
         const vector& n = normalVectors_[index][i];
         
+        vector unitVector = borderList_[index][i]-borderList_[index][i+1];
+        unitVector /= mag(unitVector);
+        
         scalar rD = mag((p->position()-m) & n);
         
-        if( (rD < rDMin) && ( (p->v() & n) <= 0) )
+        if( (rD < rDMin) )
         {
             rDMin = rD;
-            edge = i;
+//             edge = i;
+            u = unitVector;
         }
     }
     
+    label value = scalingValue_; 
     
-    if (edge == -1)
-    {
-            FatalError
-                << "reflectiveRectangularBorder::reflect() " << endl
-                << "    No edge found = " << p->position()
-                << "; What happened here?" << endl;  
-    }
-    else
-    {
-//         Info << "before velocity = " << p->v() << endl;
-        
-        const vector& n = normalVectors_[index][edge];
-//         Info << "midpoint = " << midPoints_[index][edge] << endl;
-//         Info << "normal = " << n << endl;
-        
-        scalar vN = ( p->v() & -n );
-        
-//         Info << "vN = " << vN << endl;
-        
-        p->v() += 2.0*vN*n;
-//         Info << "after velocity = " << p->v() << endl;
-
-          
-        // move 
-        
+    vector r = r2;    
+    scalar dR = r12Mag/scalar(value);
     
-//         Info << "before position = " << p->position() << endl;        
-        p->position() += 2.0*rDMin*n;
-//         Info << "after position = " << p->position() << endl;        
-        
-        // check that you moved cell 
-        label cell = -1;
-        label tetFace = -1;
-        label tetPt = -1;
-
-        mesh_.findCellFacePt
-        (
-            p->position(),
-            cell,
-            tetFace,
-            tetPt
-        );
-        
-        if(cell != -1)
-        {
-            if(p->cell() != cell)
-            {
-                p->cell() = cell;
-//                 Info << "changed cell to = " << cell << endl;        
-            }
+    for (int i = 0; i < value+1 ; i++)
+    {
+        if(isPointWithinBorder(index, r))
+        {     
+            r -= i*dR*n12;            
         }
         else
         {
-            FatalError
-                << "reflectiveRectangularBorder::reflect() " << endl
-                << "    molecule left mesh at position = " << p->position()
-                << "; Implement more robust algorithm!" << endl;            
+            break;
         }
     }
+    
+    // new position:
+    
+//     Info << "old position = " << p->position() << endl;
+    
+    p->position() = r;
+    
+//     Info << "new position = " << p->position() << endl;
+    
+    // new velocity:
+//     Info << "old vel = " << p->v() << endl;
+    
+    p->v() = (p->v() & u)*u;
+    
+//     Info << "new vel = " << p->v() << endl;
+    
+    // check that you moved cell 
+    label cell = -1;
+    label tetFace = -1;
+    label tetPt = -1;
+
+    mesh_.findCellFacePt
+    (
+        p->position(),
+        cell,
+        tetFace,
+        tetPt
+    );
+    
+    if(cell != -1)
+    {
+        if(p->cell() != cell)
+        {
+            p->cell() = cell;
+//                 Info << "changed cell to = " << cell << endl;        
+        }
+    }
+    else
+    {
+        FatalErrorIn("reflectiveRectangularBorder::reflect()") 
+            << "    molecule left mesh at position = " << p->position()
+            << ", starting from position = " << r1
+            << "; Implement more robust algorithm!" 
+            << nl << abort(FatalError);  
+    }
+
 }
 
 void reflectiveRectangularBorder::write(const fileName& pathName)

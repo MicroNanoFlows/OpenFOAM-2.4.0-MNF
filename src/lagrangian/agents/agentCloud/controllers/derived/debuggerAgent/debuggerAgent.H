@@ -23,28 +23,28 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    reflectiveRectangularBorder
+    debuggerAgent
 
 Description
-    NOT PARALLISED 
-
+    Model that applies a gravitational force on all molecules.
 
 SourceFiles
-    reflectiveRectangularBorderI.H
-    reflectiveRectangularBorder.C
-    reflectiveRectangularBorderIO.C
+    debuggerAgentI.H
+    debuggerAgent.C
+    debuggerAgentIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef reflectiveRectangularBorder_H
-#define reflectiveRectangularBorder_H
+#ifndef debuggerAgent_H
+#define debuggerAgent_H
 
-#include "borderModel.H"
+#include "agentController.H"
 #include "vector.H"
 #include "polyMesh.H"
+#include "volFields.H"
 #include "agentCloud.H"
 
-
+#include "boundedBox.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -52,12 +52,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class reflectiveRectangularBorder Declaration
+                           Class debuggerAgent Declaration
 \*---------------------------------------------------------------------------*/
 
-class reflectiveRectangularBorder
+class debuggerAgent
 :
-	public borderModel
+	public agentController
 {
 
 private:
@@ -67,64 +67,73 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-        List<vectorList> borderList_;
-        
-        // border properties
-        
-        // normal vectors point outwards 
-        List<vectorList> normalVectors_;
-        List<vectorList> midPoints_;
-        
-        scalar treshold_;
- 
-        // outer list = nCells on mesh
-        // inner list = index to borderList_ to interact with
-        List<DynamicList<label> > interactionList_;  
 
-        label scalingValue_;
+        //- ids of mols
+        List<label> agentIds_;
+
+        boundedBox bb_;
         
+        scalar nTimeSteps_;
+        vector force_;
+
     // Private Member Functions
-        
-        void initialiseBorders();
 
-        void checkClosedEndedBorders();
-       
-        void reflect(label index, agent* a); 
-
-        bool isPointWithinBorder(label index, const vector& r);       
+//         void readProperties();
         
+//         void setBoundBoxes();      
+
 public:
 
     //- Runtime type information
-    TypeName("reflectiveRectangularBorder");
+    TypeName("debuggerAgent");
 
     // Constructors
 
         //- Construct from components
-        reflectiveRectangularBorder
+        debuggerAgent
         (
-            Time& time,
+            Time& t,
             agentCloud& cloud,
             const dictionary& dict
         );
 
     // Destructor
 
-        ~reflectiveRectangularBorder();
+        ~debuggerAgent();
+
 
     // Member Functions
+    // Member Functions
         
+        //- create an initial configuration
         void initialConfiguration();
+
+        //- control molecules at various stages of time-step
+        void controlBeforeVelocityI();
+        void controlBeforeMove();
+        void controlBeforeForces();
+        void controlDuringForces
+        (
+            agent* molI,
+            agent* molJ
+        );        
+        void controlAfterForces();
+        void controlAfterVelocityII();
         
-        void afterMove();
+        //- calculate any required properties (end of time-step)
+        void calculateProperties(); 
         
-        void afterForce();
+        //- output data (optional)
+        void output
+        (
+            const fileName& fixedPathName, 
+            const fileName& timePath
+        );
         
-                
-        // write
-        
-        void write(const fileName& pathName);
- 
+        //- update properties from a modified dictionary (optional)
+//         void updateProperties(const dictionary&);
+
+        // Access
 };
 
 

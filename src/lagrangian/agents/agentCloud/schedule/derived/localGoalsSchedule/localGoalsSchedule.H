@@ -23,27 +23,26 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    reflectiveRectangularBorder
+    localGoalsSchedule
 
 Description
-    NOT PARALLISED 
 
 
 SourceFiles
-    reflectiveRectangularBorderI.H
-    reflectiveRectangularBorder.C
-    reflectiveRectangularBorderIO.C
+    localGoalsScheduleI.H
+    localGoalsSchedule.C
+    localGoalsScheduleIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef reflectiveRectangularBorder_H
-#define reflectiveRectangularBorder_H
+#ifndef localGoalsSchedule_H
+#define localGoalsSchedule_H
 
-#include "borderModel.H"
+#include "scheduleModel.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "agentCloud.H"
-
+#include "boundedBox.H"
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -52,12 +51,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class reflectiveRectangularBorder Declaration
+                           Class localGoalsSchedule Declaration
 \*---------------------------------------------------------------------------*/
 
-class reflectiveRectangularBorder
+class localGoalsSchedule
 :
-	public borderModel
+	public scheduleModel
 {
 
 private:
@@ -67,41 +66,29 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-        List<vectorList> borderList_;
+        //- ids of agents
+        List<label> agentIds_;
         
-        // border properties
+        vectorList destinations_;
+        scalarList regionRadii_;
+        label nScheduledDestinations_;
         
-        // normal vectors point outwards 
-        List<vectorList> normalVectors_;
-        List<vectorList> midPoints_;
-        
-        scalar treshold_;
- 
-        // outer list = nCells on mesh
-        // inner list = index to borderList_ to interact with
-        List<DynamicList<label> > interactionList_;  
-
-        label scalingValue_;
+        scalar timeIndex_;
+        label counter_;
+        scalar deltaT_;
         
     // Private Member Functions
-        
-        void initialiseBorders();
 
-        void checkClosedEndedBorders();
-       
-        void reflect(label index, agent* a); 
 
-        bool isPointWithinBorder(label index, const vector& r);       
-        
 public:
 
     //- Runtime type information
-    TypeName("reflectiveRectangularBorder");
+    TypeName("localGoalsSchedule");
 
     // Constructors
 
         //- Construct from components
-        reflectiveRectangularBorder
+        localGoalsSchedule
         (
             Time& time,
             agentCloud& cloud,
@@ -110,21 +97,18 @@ public:
 
     // Destructor
 
-        ~reflectiveRectangularBorder();
+        ~localGoalsSchedule();
 
     // Member Functions
         
         void initialConfiguration();
         
-        void afterMove();
-        
-        void afterForce();
-        
+        // is called every time-step to set new destinations of agents
+        void setSchedule();
+
                 
-        // write
-        
-        void write(const fileName& pathName);
- 
+
+        // Access
 };
 
 
