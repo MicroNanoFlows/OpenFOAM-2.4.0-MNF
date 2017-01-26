@@ -60,6 +60,8 @@ controllers/basic/agentController/agentController.C
 
 controllers/derived/agentForcing/agentForcing.C
 controllers/derived/agentNumbers/agentNumbers.C
+controllers/derived/debuggerAgent/debuggerAgent.C
+
 
 /* borders */
 
@@ -80,6 +82,7 @@ boundaries/derived/cyclicBoundaries/agentRPM/agentRPM.C
 
 boundaries/derived/patchBoundaries/agentDeletionPatch/agentDeletionPatch.C
 boundaries/derived/patchBoundaries/agentSpecularPatch/agentSpecularPatch.C
+
 /* schedule */
 
 schedule/basic/schedules/schedules.C
@@ -88,6 +91,7 @@ schedule/basic/scheduleModel/scheduleModel.C
 schedule/derived/tabularSchedule/tabularSchedule.C
 schedule/derived/agentTypeSchedule/agentTypeSchedule.C
 schedule/derived/localGoalsSchedule/localGoalsSchedule.C
+schedule/derived/localGoalsBoxSchedule/localGoalsBoxSchedule.C
 
 /* multiscale */
 

@@ -23,28 +23,29 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    reflectiveRectangularBorder
+    polyForceZone
+
 
 Description
-    NOT PARALLISED 
 
 
 SourceFiles
-    reflectiveRectangularBorderI.H
-    reflectiveRectangularBorder.C
-    reflectiveRectangularBorderIO.C
+    polyForceZoneI.H
+    polyForceZone.C
+    polyForceZoneIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef reflectiveRectangularBorder_H
-#define reflectiveRectangularBorder_H
+#ifndef polyForceZone_H
+#define polyForceZone_H
 
-#include "borderModel.H"
+#include "polyField.H"
 #include "vector.H"
 #include "polyMesh.H"
-#include "agentCloud.H"
-
-
+#include "volFields.H"
+#include "polyMoleculeCloud.H"
+#include "distribution.H"
+#include "boundedBox.H" 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -52,12 +53,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class reflectiveRectangularBorder Declaration
+                           Class polyForceZone Declaration
 \*---------------------------------------------------------------------------*/
 
-class reflectiveRectangularBorder
+class polyForceZone
 :
-	public borderModel
+	public polyField
 {
 
 private:
@@ -66,66 +67,85 @@ private:
 
         //- subDictionary containing the properties
         dictionary propsDict_;
+        
+        fileName pathName_;
+        fileName nameFile_;
 
-        List<vectorList> borderList_;
-        
-        // border properties
-        
-        // normal vectors point outwards 
-        List<vectorList> normalVectors_;
-        List<vectorList> midPoints_;
-        
-        scalar treshold_;
- 
-        // outer list = nCells on mesh
-        // inner list = index to borderList_ to interact with
-        List<DynamicList<label> > interactionList_;  
+        propertyField fields_;
 
-        label scalingValue_;
+        word fieldName_;
+
+        List<boundedBox> boxes_;
+
+        scalar totalVolume_;
+        
+        vector force_;
+
+        List<label> molIds_;
+
+        label timeIndex_;
+
+        vectorField forceField_;
+
+        
+        scalar nAvTimeSteps_;
+        bool resetAtOutput_;        
         
     // Private Member Functions
-        
-        void initialiseBorders();
 
-        void checkClosedEndedBorders();
-       
-        void reflect(label index, agent* a); 
+        void setBoundBoxes();
 
-        bool isPointWithinBorder(label index, const vector& r);       
-        
+        void writeToStorage();
+
+        bool readFromStorage();
+
 public:
 
     //- Runtime type information
-    TypeName("reflectiveRectangularBorder");
+    TypeName("polyForceZone");
 
     // Constructors
 
         //- Construct from components
-        reflectiveRectangularBorder
-        (
-            Time& time,
-            agentCloud& cloud,
+        polyForceZone
+		(
+            Time& t,
+            const polyMesh& mesh,
+            polyMoleculeCloud& molCloud,
             const dictionary& dict
-        );
+		);
 
     // Destructor
 
-        ~reflectiveRectangularBorder();
+ 		~polyForceZone();
 
     // Member Functions
+
+        //- create initial field
+        void createField();
+
+        //- calculate field
+        void calculateField();
+
+        void measureDuringForceComputation
+        (
+            polyMolecule* molI,
+            polyMolecule* molJ
+        ); 
         
-        void initialConfiguration();
+        void measureDuringForceComputationSite
+        (
+            polyMolecule* molI,
+            polyMolecule* molJ,
+            label sI,
+            label sJ
+        );
         
-        void afterMove();
-        
-        void afterForce();
-        
-                
-        // write
-        
-        void write(const fileName& pathName);
- 
-};
+        const propertyField& fields() const;
+
+        //- write field
+        void writeField();
+}; 		
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

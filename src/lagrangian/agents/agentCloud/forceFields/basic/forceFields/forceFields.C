@@ -100,6 +100,13 @@ forceFields::forceFields
     
     if(pairPotentials_.size() > 0 )
     {
+        onePotential_ = false;
+        
+        if (forceFieldsDict_.found("oneForceFieldToRuleThemAll"))
+        {
+            onePotential_ = Switch(forceFieldsDict_.lookup("oneForceFieldToRuleThemAll"));
+        }         
+        
         forAll(pairPotentials_, i)
         {
             const entry& pairPotI = pairPotList_[i];
@@ -118,7 +125,19 @@ forceFields::forceFields
     
             nPairPotentials_++;
         }
-        
+
+        if(onePotential_)
+        {
+            if(pairPotentials_.size() != 1)
+            {
+                FatalErrorIn("forceFields::testPairPotentials()") << nl
+                    << " You have selected one forceField, "
+                    << " but it seems you have " << pairPotentials_.size()
+                    << " forceField defined in system/forceFieldsDict"
+                    << nl << abort(FatalError);            
+            }
+        }
+       
         testPairPotentials();
     }
     
@@ -157,65 +176,78 @@ void forceFields::initialConfig()
 
 void forceFields::testPairPotentials()
 {
-    Info << "test for pair potentials" << endl;
+    Info << "test for pair forcefields" << endl;
     
     const List<word>& idList = cP_.agentIds();
     
     pairPotentialLookUp_.setSize(idList.size());
     
-    forAll(pairPotentialLookUp_, i)
-    {
-        pairPotentialLookUp_[i].setSize(idList.size(), -1);
-    }
-    
     //checking that all combination have been chosen
-    
-    forAll(pairPotentials_, i)
+    if(!onePotential_)
     {
-        const List<word>& pairIdList = pairPotentials_[i]->idList();
+        Info << "Multiple forcefields" << endl;
         
-        label idA = findIndex(idList, pairIdList[0]);
-        label idB = findIndex(idList, pairIdList[1]);
+        forAll(pairPotentialLookUp_, i)
+        {
+            pairPotentialLookUp_[i].setSize(idList.size(), -1);
+        }
+    
+        forAll(pairPotentials_, i)
+        {
+            const List<word>& pairIdList = pairPotentials_[i]->idList();
+            
+            label idA = findIndex(idList, pairIdList[0]);
+            label idB = findIndex(idList, pairIdList[1]);
+            
+            if(pairPotentialLookUp_[idA][idB] == -1)
+            {
+                pairPotentialLookUp_[idA][idB] = i;
+            }
+            else
+            {
+                FatalErrorIn("forceFields::testPairPotentials()") << nl
+                    << "forceFields::testPairPotentials(): " << nl
+                    << "    ids = " << pairIdList
+                    << " are already defined in system/forceFieldsDict"
+                    << nl << abort(FatalError);
+            }
+            
+            if(pairPotentialLookUp_[idB][idA] == -1)
+            {
+                pairPotentialLookUp_[idB][idA] = i;
+            }
+            else
+            {
+                FatalErrorIn("forceFields::testPairPotentials()") << nl
+                    << "forceFields::testPairPotentials(): " << nl
+                    << "    ids = " << pairIdList
+                    << " are already defined in system/forceFieldsDict"
+                    << nl << abort(FatalError); 
+            }
+        }
         
-        if(pairPotentialLookUp_[idA][idB] == -1)
+        forAll(pairPotentialLookUp_, i)
         {
-            pairPotentialLookUp_[idA][idB] = i;
-        }
-        else
-        {
-            FatalError
-                << "forceFields::testPairPotentials(): " << nl
-                << "    ids = " << pairIdList
-                << " are already defined in system/forceFieldsDict"
-                << endl;
-        }
-        
-        if(pairPotentialLookUp_[idB][idA] == -1)
-        {
-            pairPotentialLookUp_[idB][idA] = i;
-        }
-        else
-        {
-            FatalError
-                << "forceFields::testPairPotentials(): " << nl
-                << "    ids = " << pairIdList
-                << " are already defined in system/forceFieldsDict"
-                << endl;
+            forAll(pairPotentialLookUp_[i], j)
+            {
+                if(pairPotentialLookUp_[i][j] < 0)
+                {
+                    FatalErrorIn("forceFields::testPairPotentials()") << nl
+                        << "forceFields::testPairPotentials(): " << nl
+                        << "    ids = " << idList[i] << " - " << idList[j]
+                        << " have not been defined in system/forceFieldsDict"
+                        << nl << abort(FatalError);                        
+                }
+            }
         }
     }
-    
-    forAll(pairPotentialLookUp_, i)
+    else
     {
-        forAll(pairPotentialLookUp_[i], j)
+        Info << "one forcefield" << endl;
+        
+        forAll(pairPotentialLookUp_, i)
         {
-            if(pairPotentialLookUp_[i][j] == -1)
-            {
-                FatalError
-                    << "forceFields::testPairPotentials(): " << nl
-                    << "    ids = " << idList[i] << " - " << idList[j]
-                    << " have not been defined in system/forceFieldsDict"
-                    << endl;                
-            }
+            pairPotentialLookUp_[i].setSize(idList.size(), 0);
         }
     }
     
