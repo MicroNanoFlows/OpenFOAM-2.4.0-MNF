@@ -176,7 +176,7 @@ void Foam::agent::writeFields(const Cloud<agent>& mC)
 //     IOField<tensor> Q(mC.fieldIOobject("Q", IOobject::NO_READ), np);
 //     IOField<tensor> rf(mC.fieldIOobject("rf", IOobject::NO_READ), np);
     IOField<vector> v(mC.fieldIOobject("v", IOobject::NO_READ), np);
-//     IOField<vector> a(mC.fieldIOobject("a", IOobject::NO_READ), np);
+    IOField<vector> f(mC.fieldIOobject("f", IOobject::NO_READ), np);
 //     IOField<vector> pi(mC.fieldIOobject("pi", IOobject::NO_READ), np);
 //     IOField<vector> tau(mC.fieldIOobject("tau", IOobject::NO_READ), np);
     IOField<vector> specialPosition
@@ -199,6 +199,7 @@ void Foam::agent::writeFields(const Cloud<agent>& mC)
         const agent& mol = iter();
 
         v[i] = mol.v_;
+        f[i] = mol.f_;        
         mass[i] = mol.mass_;
         radius[i] = mol.radius_;
         desiredSpeed[i] = mol.desiredSpeed_;
@@ -210,6 +211,7 @@ void Foam::agent::writeFields(const Cloud<agent>& mC)
     }
 
     v.write();
+    f.write();
     mass.write();
     radius.write();
     desiredSpeed.write();
