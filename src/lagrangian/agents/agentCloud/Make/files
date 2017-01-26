@@ -12,7 +12,8 @@ constant/selectAgentIds/selectAgentIds.C
 
 forceFields/basic/forceFields/forceFields.C
 forceFields/basic/pairPotential/pairPotential.C
-forceFields/basic/bodyForce/bodyForce.C    
+forceFields/basic/bodyForce/bodyForce.C
+forceFields/basic/wallForce/agentWallForce.C
 
 
 forceFields/derived/bodyForces/agentUniformForce/agentUniformForce.C      
@@ -20,11 +21,13 @@ forceFields/derived/bodyForces/scheduledForce/scheduledForce.C
 forceFields/derived/bodyForces/agentFluctuatingForce/agentFluctuatingForce.C    
 forceFields/derived/bodyForces/agentWillForce/agentWillForce.C     
 forceFields/derived/bodyForces/agentWillForceScheduled/agentWillForceScheduled.C  
-
     
 /*forceFields/derived/pairPotentials/lennardJones/lennardJones.C  */  
     
 forceFields/derived/pairPotentials/helbingExponential/helbingExponential.C    
+
+forceFields/derived/wallForces/agentRepulsiveForce/agentRepulsiveForce.C
+
     
 /* initialise */
 

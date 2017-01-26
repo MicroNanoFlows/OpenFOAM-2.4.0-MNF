@@ -169,11 +169,11 @@ void reflectiveRectangularBorder::afterForce()
             {
                 label index = interactionList_[c][i];
                 
-                force 
+//                 applForce();
                 
             }
         }
-    }*/       
+    } */      
 }
 
 void reflectiveRectangularBorder::checkClosedEndedBorders()
@@ -663,7 +663,7 @@ void reflectiveRectangularBorder::reflect(label index, agent* p)
     // new velocity:
 //     Info << "old vel = " << p->v() << endl;
     
-    p->v() = (p->v() & u)*u;
+    p->v() = mag(p->v())*u;
     
 //     Info << "new vel = " << p->v() << endl;
     
