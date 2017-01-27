@@ -573,6 +573,7 @@ void  Foam::agentCloud::createAgent
             potentialEnergy,
             R,
             frac,
+            0.0,
             special,
             id,
             trackingNumber

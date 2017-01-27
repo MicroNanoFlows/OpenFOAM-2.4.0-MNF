@@ -48,6 +48,7 @@ Foam::agent::agent
     potentialEnergy_(0.0),
     R_(GREAT),
     frac_(1.0),
+    t_(0.0),    
     special_(0),
     id_(0),
     trackingNumber_(-1)
@@ -66,6 +67,7 @@ Foam::agent::agent
             is >> potentialEnergy_;
             is >> R_;
             is >> frac_;
+            is >> t_;
             special_ = readLabel(is);
             id_ = readLabel(is);
             trackingNumber_ = readLabel(is);
@@ -85,6 +87,7 @@ Foam::agent::agent
               + sizeof(potentialEnergy_)
               + sizeof(R_)
               + sizeof(frac_)              
+              + sizeof(t_) 
               + sizeof(special_)
               + sizeof(id_)
               + sizeof(trackingNumber_)
@@ -252,6 +255,7 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const agent& mol)
             << token::SPACE << mol.potentialEnergy_
             << token::SPACE << mol.R_
             << token::SPACE << mol.frac_
+            << token::SPACE << mol.t_
             << token::SPACE << mol.special_
             << token::SPACE << mol.id_
             << token::SPACE << mol.trackingNumber_;
@@ -272,6 +276,7 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const agent& mol)
           + sizeof(mol.potentialEnergy_)
           + sizeof(mol.R_)
           + sizeof(mol.frac_)
+          + sizeof(mol.t_)
           + sizeof(mol.special_)
 		  + sizeof(mol.id_)
           + sizeof(mol.trackingNumber_)

@@ -64,6 +64,7 @@ controllers/basic/agentController/agentController.C
 
 controllers/derived/agentForcing/agentForcing.C
 controllers/derived/agentNumbers/agentNumbers.C
+controllers/derived/agentFlux/agentFlux.C
 controllers/derived/debuggerAgent/debuggerAgent.C
 
 
