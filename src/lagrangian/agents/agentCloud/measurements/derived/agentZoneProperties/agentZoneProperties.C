@@ -48,7 +48,7 @@ void agentZoneProperties::setBoundBoxes()
     PtrList<entry> boxList(propsDict_.lookup("boxes"));
 
     boxes_.setSize(boxList.size());
-
+    
     forAll(boxList, b)
     {
         const entry& boxI = boxList[b];
@@ -56,6 +56,7 @@ void agentZoneProperties::setBoundBoxes()
 
         vector startPoint = dict.lookup("startPoint");
         vector endPoint = dict.lookup("endPoint");
+
         boxes_[b].resetBoundedBox(startPoint, endPoint);
     }
 }

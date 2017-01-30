@@ -23,26 +23,28 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    agentNumbers
+    polyFrictionForce
+
 
 Description
-    Add agents to a box 
+    output every write interval folder for this to work 
 
 SourceFiles
-    agentNumbersI.H
-    agentNumbers.C
-    agentNumbersIO.C
+    polyFrictionForceI.H
+    polyFrictionForce.C
+    polyFrictionForceIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef agentNumbers_H
-#define agentNumbers_H
+#ifndef polyFrictionForce_H
+#define polyFrictionForce_H
 
-#include "agentController.H"
+#include "polyField.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
-#include "agentCloud.H"
+#include "polyMoleculeCloud.H"
+#include "distribution.H"
 #include "boundedBox.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -51,12 +53,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class agentNumbers Declaration
+                           Class polyFrictionForce Declaration
 \*---------------------------------------------------------------------------*/
 
-class agentNumbers
+class polyFrictionForce
 :
-	public agentController
+	public polyField
 {
 
 private:
@@ -66,84 +68,112 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-        //- id of agent
-        label agentId_;
-
-        boundedBox samplingBox_;
-        boundedBox controlBox_;
+        propertyField fields_;
         
-        label N_;
+//         fileName pathName_;
+//         fileName nameFile_;
         
-        scalar mass_;
+        word fieldName_;
 
+        List<label> molIdsFluid_;
+        List<label> molIdsWall_;
+        
+        vector startPoint_;
+        vector endPoint_;
+        
+        // choose this small enough ~0.5 nm
+        vector endPointS_;
+        
+        label nMolsMin_;
+        
+        scalar dr_;
+        scalar radius_;
+        label nBins_;
+        scalar binWidth_;
+        
+        scalar h_;
+        scalar hS_;
+        
+        vector n_;
+        
+        DynamicList<scalar> radii_;
+        DynamicList<scalar> radii_;
+        
+        
+        
+        
+        
+        
+//         List<scalar> volume_;
+        
+        void refreshBins();
+        
+        void setCentreOfMass();
+        
+        void setRadius();
+        
+        
     // Private Member Functions
 
-//         void readProperties();
+//         bool readFromStorage();
         
-        void setBoundBox
+//         void writeToStorage();
+        
+        List<label> isPointWithinBin
         (
-            const dictionary& propsDict,
-            boundedBox& bb,
-            const word& name 
+            const vector& rI
         );
-     
-        void insertAgents(const label& N);
         
-        
+        void centreOfMass();
         
 public:
 
     //- Runtime type information
-    TypeName("agentNumbers");
+    TypeName("polyFrictionForce");
 
     // Constructors
 
         //- Construct from components
-        agentNumbers
-        (
+        polyFrictionForce
+		(
             Time& t,
-            agentCloud& cloud,
+            const polyMesh& mesh,
+            polyMoleculeCloud& molCloud,
             const dictionary& dict
-        );
+		);
 
     // Destructor
 
-        ~agentNumbers();
+ 		~polyFrictionForce();
 
 
     // Member Functions
-    // Member Functions
-        
-        //- create an initial configuration
-        void initialConfiguration();
 
-        //- control molecules at various stages of time-step
-        void controlBeforeVelocityI();
-        void controlBeforeMove();
-        void controlBeforeForces();
-        void controlDuringForces
+        //- create initial field
+        void createField();
+
+        //- calculate field
+        void calculateField();
+
+        void measureDuringForceComputation
         (
-            agent* molI,
-            agent* molJ
-        );        
-        void controlAfterForces();
-        void controlAfterVelocityII();
-        
-        //- calculate any required properties (end of time-step)
-        void calculateProperties(); 
-        
-        //- output data (optional)
-        void output
-        (
-            const fileName& fixedPathName, 
-            const fileName& timePath
+            polyMolecule* molI,
+            polyMolecule* molJ
         );
-        
-        //- update properties from a modified dictionary (optional)
-//         void updateProperties(const dictionary&);
 
-        // Access
-};
+        void measureDuringForceComputationSite
+        (
+            polyMolecule* molI,
+            polyMolecule* molJ,
+            label sI,
+            label sJ
+        );
+
+        const propertyField& fields() const;
+
+        //- write field
+        void writeField();
+}; 		
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

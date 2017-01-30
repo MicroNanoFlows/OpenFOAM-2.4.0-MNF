@@ -142,6 +142,9 @@ private:
 
         // - fraction of force potential contribution
         scalar frac_;    
+
+        // some timer for agents
+        scalar t_; 
         
         label special_;
 
@@ -180,6 +183,7 @@ public:
             const scalar& potentialEnergy,
             const scalar& R,
             const scalar& frac,   
+            const scalar& t,
             const label special,
             const label id,
             const label trackingNumber
@@ -285,7 +289,10 @@ public:
 
             inline const scalar& fraction() const;
             inline scalar& fraction();
-
+            
+            inline const scalar& t() const;
+            inline scalar& t();
+            
             inline label special() const;
             inline label& special();
             

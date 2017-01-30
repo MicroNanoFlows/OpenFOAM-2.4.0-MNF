@@ -23,26 +23,27 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    agentNumbers
+    debuggerAgent
 
 Description
-    Add agents to a box 
+    Model that applies a gravitational force on all molecules.
 
 SourceFiles
-    agentNumbersI.H
-    agentNumbers.C
-    agentNumbersIO.C
+    debuggerAgentI.H
+    debuggerAgent.C
+    debuggerAgentIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef agentNumbers_H
-#define agentNumbers_H
+#ifndef debuggerAgent_H
+#define debuggerAgent_H
 
 #include "agentController.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
 #include "agentCloud.H"
+
 #include "boundedBox.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -51,10 +52,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class agentNumbers Declaration
+                           Class debuggerAgent Declaration
 \*---------------------------------------------------------------------------*/
 
-class agentNumbers
+class debuggerAgent
 :
 	public agentController
 {
@@ -66,40 +67,30 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-        //- id of agent
-        label agentId_;
 
-        boundedBox samplingBox_;
-        boundedBox controlBox_;
+        //- ids of mols
+        List<label> agentIds_;
+
+        boundedBox bb_;
         
-        label N_;
-        
-        scalar mass_;
+        scalar nTimeSteps_;
+        vector force_;
 
     // Private Member Functions
 
 //         void readProperties();
         
-        void setBoundBox
-        (
-            const dictionary& propsDict,
-            boundedBox& bb,
-            const word& name 
-        );
-     
-        void insertAgents(const label& N);
-        
-        
-        
+//         void setBoundBoxes();      
+
 public:
 
     //- Runtime type information
-    TypeName("agentNumbers");
+    TypeName("debuggerAgent");
 
     // Constructors
 
         //- Construct from components
-        agentNumbers
+        debuggerAgent
         (
             Time& t,
             agentCloud& cloud,
@@ -108,7 +99,7 @@ public:
 
     // Destructor
 
-        ~agentNumbers();
+        ~debuggerAgent();
 
 
     // Member Functions

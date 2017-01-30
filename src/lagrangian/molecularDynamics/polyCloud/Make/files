@@ -171,6 +171,7 @@ measurements/derived/otherFields/poly2DBinsSites/poly2DBinsSites.C
 measurements/derived/otherFields/polyDensityRadialNew/polyDensityRadialNew.C
 measurements/derived/otherFields/polyBindingEnergyRadial/polyBindingEnergyRadial.C
 measurements/derived/otherFields/centreOfMass/centreOfMass.C
+measurements/derived/otherFields/polyForceZone/polyForceZone.C
 
 /*  - GREEN KUBO  */
 measurements/derived/greenKubo/axialSelfDiffusion/axialSelfDiffusion.C
@@ -214,6 +215,7 @@ controllers/derived/others/polyForce/polyForce.C
 controllers/derived/others/polyBoundedForce/polyBoundedForce.C
 controllers/derived/others/polyForceTwoShear/polyForceTwoShear.C
 controllers/derived/others/polyMovingWallRitos/polyMovingWallRitos.C
+controllers/derived/others/polyMovingWallBounded/polyMovingWallBounded.C
 controllers/derived/others/polyLiquidGasDistinction/polyLiquidGasDistinction.C
 controllers/derived/others/polyPressureForce/polyPressureForce.C
 controllers/derived/others/polyInternalWall/polyInternalWall.C

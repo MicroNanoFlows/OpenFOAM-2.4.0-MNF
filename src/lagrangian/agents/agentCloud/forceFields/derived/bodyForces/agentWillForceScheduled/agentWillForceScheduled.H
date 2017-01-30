@@ -23,27 +23,26 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    agentNumbers
+    agentWillForceScheduled
 
 Description
-    Add agents to a box 
+
 
 SourceFiles
-    agentNumbersI.H
-    agentNumbers.C
-    agentNumbersIO.C
+    agentWillForceScheduledI.H
+    agentWillForceScheduled.C
+    agentWillForceScheduledIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef agentNumbers_H
-#define agentNumbers_H
+#ifndef agentWillForceScheduled_H
+#define agentWillForceScheduled_H
 
-#include "agentController.H"
+#include "bodyForce.H"
 #include "vector.H"
 #include "polyMesh.H"
-#include "volFields.H"
 #include "agentCloud.H"
-#include "boundedBox.H"
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,12 +50,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class agentNumbers Declaration
+                           Class agentWillForceScheduled Declaration
 \*---------------------------------------------------------------------------*/
 
-class agentNumbers
+class agentWillForceScheduled
 :
-	public agentController
+	public bodyForce
 {
 
 private:
@@ -66,81 +65,59 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-        //- id of agent
-        label agentId_;
-
-        boundedBox samplingBox_;
-        boundedBox controlBox_;
+        //- ids of agents
+        List<label> agentIds_;
         
-        label N_;
+//         scalar desiredSpeed_;
         
-        scalar mass_;
+        vector desiredDirection_;
+        
+        scalar tau_;
 
+        scalar timeCounter_;
+        
+        scalar initialTimeDelay_;
+        
+        scalar initialTime_;
+        
+//         scalar stdev_;
+        
+        // size = number of agents
+//         List<scalar> agentVelocities_;
+        
     // Private Member Functions
 
-//         void readProperties();
-        
-        void setBoundBox
-        (
-            const dictionary& propsDict,
-            boundedBox& bb,
-            const word& name 
-        );
-     
-        void insertAgents(const label& N);
-        
-        
-        
+
 public:
 
     //- Runtime type information
-    TypeName("agentNumbers");
+    TypeName("agentWillForceScheduled");
 
     // Constructors
 
         //- Construct from components
-        agentNumbers
+        agentWillForceScheduled
         (
-            Time& t,
             agentCloud& cloud,
+            Time& t,
             const dictionary& dict
         );
 
     // Destructor
 
-        ~agentNumbers();
+        ~agentWillForceScheduled();
 
 
-    // Member Functions
     // Member Functions
         
         //- create an initial configuration
         void initialConfiguration();
-
-        //- control molecules at various stages of time-step
-        void controlBeforeVelocityI();
-        void controlBeforeMove();
-        void controlBeforeForces();
-        void controlDuringForces
-        (
-            agent* molI,
-            agent* molJ
-        );        
-        void controlAfterForces();
-        void controlAfterVelocityII();
         
-        //- calculate any required properties (end of time-step)
-        void calculateProperties(); 
+        // inside loop of all agents
+        void force(agent* p);
         
-        //- output data (optional)
-        void output
-        (
-            const fileName& fixedPathName, 
-            const fileName& timePath
-        );
-        
-        //- update properties from a modified dictionary (optional)
-//         void updateProperties(const dictionary&);
+        // new force definition; requires loop over all agents
+        void newForce();
 
         // Access
 };

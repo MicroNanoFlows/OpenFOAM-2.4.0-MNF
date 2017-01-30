@@ -23,27 +23,29 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    agentNumbers
+    polyForceZone
+
 
 Description
-    Add agents to a box 
+
 
 SourceFiles
-    agentNumbersI.H
-    agentNumbers.C
-    agentNumbersIO.C
+    polyForceZoneI.H
+    polyForceZone.C
+    polyForceZoneIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef agentNumbers_H
-#define agentNumbers_H
+#ifndef polyForceZone_H
+#define polyForceZone_H
 
-#include "agentController.H"
+#include "polyField.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
-#include "agentCloud.H"
-#include "boundedBox.H"
+#include "polyMoleculeCloud.H"
+#include "distribution.H"
+#include "boundedBox.H" 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,12 +53,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class agentNumbers Declaration
+                           Class polyForceZone Declaration
 \*---------------------------------------------------------------------------*/
 
-class agentNumbers
+class polyForceZone
 :
-	public agentController
+	public polyField
 {
 
 private:
@@ -65,85 +67,85 @@ private:
 
         //- subDictionary containing the properties
         dictionary propsDict_;
-
-        //- id of agent
-        label agentId_;
-
-        boundedBox samplingBox_;
-        boundedBox controlBox_;
         
-        label N_;
-        
-        scalar mass_;
+        fileName pathName_;
+        fileName nameFile_;
 
+        propertyField fields_;
+
+        word fieldName_;
+
+        List<boundedBox> boxes_;
+
+        scalar totalVolume_;
+        
+        vector force_;
+
+        List<label> molIds_;
+
+        label timeIndex_;
+
+        vectorField forceField_;
+
+        
+        scalar nAvTimeSteps_;
+        bool resetAtOutput_;        
+        
     // Private Member Functions
 
-//         void readProperties();
-        
-        void setBoundBox
-        (
-            const dictionary& propsDict,
-            boundedBox& bb,
-            const word& name 
-        );
-     
-        void insertAgents(const label& N);
-        
-        
-        
+        void setBoundBoxes();
+
+        void writeToStorage();
+
+        bool readFromStorage();
+
 public:
 
     //- Runtime type information
-    TypeName("agentNumbers");
+    TypeName("polyForceZone");
 
     // Constructors
 
         //- Construct from components
-        agentNumbers
-        (
+        polyForceZone
+		(
             Time& t,
-            agentCloud& cloud,
+            const polyMesh& mesh,
+            polyMoleculeCloud& molCloud,
             const dictionary& dict
-        );
+		);
 
     // Destructor
 
-        ~agentNumbers();
-
+ 		~polyForceZone();
 
     // Member Functions
-    // Member Functions
-        
-        //- create an initial configuration
-        void initialConfiguration();
 
-        //- control molecules at various stages of time-step
-        void controlBeforeVelocityI();
-        void controlBeforeMove();
-        void controlBeforeForces();
-        void controlDuringForces
+        //- create initial field
+        void createField();
+
+        //- calculate field
+        void calculateField();
+
+        void measureDuringForceComputation
         (
-            agent* molI,
-            agent* molJ
-        );        
-        void controlAfterForces();
-        void controlAfterVelocityII();
+            polyMolecule* molI,
+            polyMolecule* molJ
+        ); 
         
-        //- calculate any required properties (end of time-step)
-        void calculateProperties(); 
-        
-        //- output data (optional)
-        void output
+        void measureDuringForceComputationSite
         (
-            const fileName& fixedPathName, 
-            const fileName& timePath
+            polyMolecule* molI,
+            polyMolecule* molJ,
+            label sI,
+            label sJ
         );
         
-        //- update properties from a modified dictionary (optional)
-//         void updateProperties(const dictionary&);
+        const propertyField& fields() const;
 
-        // Access
-};
+        //- write field
+        void writeField();
+}; 		
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

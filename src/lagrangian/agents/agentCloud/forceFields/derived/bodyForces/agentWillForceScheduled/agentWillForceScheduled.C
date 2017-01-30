@@ -26,7 +26,7 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "agentWillForce.H"
+#include "agentWillForceScheduled.H"
 #include "addToRunTimeSelectionTable.H"
 #include "IFstream.H"
 #include "graph.H"
@@ -36,16 +36,16 @@ Description
 namespace Foam
 {
 
-defineTypeNameAndDebug(agentWillForce, 0);
+defineTypeNameAndDebug(agentWillForceScheduled, 0);
 
-addToRunTimeSelectionTable(bodyForce, agentWillForce, dictionary);
+addToRunTimeSelectionTable(bodyForce, agentWillForceScheduled, dictionary);
 
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-agentWillForce::agentWillForce
+agentWillForceScheduled::agentWillForceScheduled
 (
     agentCloud& cloud,
     Time& t,
@@ -56,9 +56,9 @@ agentWillForce::agentWillForce
     propsDict_(dict.subDict(typeName + "Properties")),
     agentIds_(),
 //     desiredSpeed_(readScalar(propsDict_.lookup("desiredSpeed"))),
-    desiredDirection_(propsDict_.lookup("desiredDirection")),
+//     desiredDirection_(propsDict_.lookup("desiredDirection")),
     tau_(readScalar(propsDict_.lookup("tau")))
-//     stdev_(readScalar(propsDict_.lookup("stdev")))
+    
 {
 
     agentIds_.clear();
@@ -70,40 +70,49 @@ agentWillForce::agentWillForce
     );
 
     agentIds_ = ids.agentIds();
+    
+    initialTimeDelay_ = 0.0;
+    
+    if (propsDict_.found("initialTimeDelay"))
+    {
+        initialTimeDelay_ = readScalar(propsDict_.lookup("initialTimeDelay"));
+    }
+    
+    initialTime_ = time_.timeOutputValue();
+    
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-agentWillForce::~agentWillForce()
+agentWillForceScheduled::~agentWillForceScheduled()
 {}
 
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void agentWillForce::initialConfiguration()
+void agentWillForceScheduled::initialConfiguration()
 {
    
 }
 
-void agentWillForce::force(agent* p)
+void agentWillForceScheduled::force(agent* p)
 {
-    if(findIndex(agentIds_, p->id()) != -1)
+    if((time_.timeOutputValue() - initialTime_) > initialTimeDelay_)
     {
-        p->f() += (p->desiredSpeed()*desiredDirection_ - p->v())*p->mass() / tau_;
+        if(findIndex(agentIds_, p->id()) != -1)
+        {
+            if(p->t() == 0.0)
+            {  
+                vector n = p->d() - p->position();
+                n /= mag(n);
+                p->f() += (p->desiredSpeed()*n - p->v())*p->mass() / tau_; // MAKE SURE n is UNIT vector
+            }
+        }
     }
-    
-    
-//     if(findIndex(agentIds_, p->id()) != -1)
-//     {
-//         vector force = (p->desiredSpeed()*desiredDirection_ - p->v())*p->mass() / tau_;
-//         vector randomForce = 
-//         p->f() += ;
-//     }
-    
 }
 
-void agentWillForce::newForce()
+void agentWillForceScheduled::newForce()
 {
     
 }

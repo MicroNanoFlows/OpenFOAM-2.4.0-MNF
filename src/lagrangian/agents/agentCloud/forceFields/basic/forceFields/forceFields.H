@@ -97,7 +97,7 @@ class forceFields
         List<label> pairPotIds_;
         List< autoPtr<pairPotential> > pairPotentials_;
         
-        
+        bool onePotential_;
         
         
         // use this when given two molecules to compute forces/energies

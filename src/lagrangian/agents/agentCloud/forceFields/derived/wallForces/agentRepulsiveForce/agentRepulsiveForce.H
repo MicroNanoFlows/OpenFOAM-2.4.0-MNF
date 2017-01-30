@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,28 +23,22 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    reflectiveRectangularBorder
+    
 
 Description
-    NOT PARALLISED 
-
 
 SourceFiles
-    reflectiveRectangularBorderI.H
-    reflectiveRectangularBorder.C
-    reflectiveRectangularBorderIO.C
+    agentRepulsiveForceI.H
+    agentRepulsiveForce.C
+    agentRepulsiveForceIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef reflectiveRectangularBorder_H
-#define reflectiveRectangularBorder_H
-
-#include "borderModel.H"
-#include "vector.H"
-#include "polyMesh.H"
-#include "agentCloud.H"
+#ifndef agentRepulsiveForce_H
+#define agentRepulsiveForce_H
 
 
+#include "agentWallForce.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -52,85 +46,106 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class reflectiveRectangularBorder Declaration
+                           Class agentRepulsiveForce Declaration
 \*---------------------------------------------------------------------------*/
 
-class reflectiveRectangularBorder
+class agentRepulsiveForce
 :
-	public borderModel
+    public agentWallForce
 {
 
 private:
 
     // Private data
 
-        //- subDictionary containing the properties
         dictionary propsDict_;
 
-        List<vectorList> borderList_;
-        
-        // border properties
-        
-        // normal vectors point outwards 
-        List<vectorList> normalVectors_;
-        List<vectorList> midPoints_;
-        
-        scalar treshold_;
- 
-        // outer list = nCells on mesh
-        // inner list = index to borderList_ to interact with
-        List<DynamicList<label> > interactionList_;  
+        vector force_;
 
-        label scalingValue_;
-        
-    // Private Member Functions
-        
-        void initialiseBorders();
 
-        void checkClosedEndedBorders();
-       
-        void reflect(label index, agent* a); 
-
-        bool isPointWithinBorder(label index, const vector& r);       
-        
 public:
 
     //- Runtime type information
-    TypeName("reflectiveRectangularBorder");
+    TypeName("agentRepulsiveForce");
+
+    // Static data members
 
     // Constructors
 
-        //- Construct from components
-        reflectiveRectangularBorder
+        //- construct from components
+        agentRepulsiveForce
         (
             Time& time,
-            agentCloud& cloud,
             const dictionary& dict
         );
 
+    // Selectors
+
+
     // Destructor
 
-        ~reflectiveRectangularBorder();
+        ~agentRepulsiveForce();
 
     // Member Functions
-        
-        void initialConfiguration();
-        
-        void afterMove();
-        
-        void afterForce();
-        
-                
-        // write
-        
-        void write(const fileName& pathName);
- 
+
+//         void initialConfig
+//         (
+//             const scalar& density,
+//             const radialDistribution& rdf,
+//             const moleculeCloud& mD
+//         );
+
+        //- output data
+//         void output(const Time& runTime, const polyMesh& mesh);
+
+
+        // Access
+
+        // Check
+
+        // Edit
+
+            void updateForce();
+
+            vector force(const vector& position);
+            vector force(const scalar& time);
+            vector force(const scalar& time, const vector& position);
+            
+        // Write
+
+
+            void write
+            (
+                const fileName& fixedPathName,
+                const fileName& timePath
+            );
+
+
+//             void updateProperties
+//             (
+//                 const dictionary& dict
+//             );
+
+    // Member Operators
+
+//         void operator=(const agentRepulsiveForce&);
+
+    // Friend Functions
+
+    // Friend Operators
+
+    // IOstream Operators
+
+//         friend Ostream& operator<<(Ostream&, const agentRepulsiveForce&);
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

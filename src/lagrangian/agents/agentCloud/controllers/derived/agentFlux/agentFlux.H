@@ -23,20 +23,21 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    agentNumbers
+    agentFlux
 
 Description
-    Add agents to a box 
+    Add agents to a box based on a known flux 
+    Not parallelised
 
 SourceFiles
-    agentNumbersI.H
-    agentNumbers.C
-    agentNumbersIO.C
+    agentFluxI.H
+    agentFlux.C
+    agentFluxIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef agentNumbers_H
-#define agentNumbers_H
+#ifndef agentFlux_H
+#define agentFlux_H
 
 #include "agentController.H"
 #include "vector.H"
@@ -51,10 +52,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class agentNumbers Declaration
+                           Class agentFlux Declaration
 \*---------------------------------------------------------------------------*/
 
-class agentNumbers
+class agentFlux
 :
 	public agentController
 {
@@ -74,7 +75,16 @@ private:
         
         label N_;
         
-        scalar mass_;
+        scalar meanMass_;
+        scalar massRange_;
+        scalar meanRadius_;
+        scalar radiusRange_;
+        scalar meanDesSpeed_;
+        scalar desSpeedRange_;
+        
+        
+        
+//         scalar mass_;
 
     // Private Member Functions
 
@@ -89,17 +99,22 @@ private:
      
         void insertAgents(const label& N);
         
+        scalar gaussianDistribution
+        (
+            const scalar& mean,
+            const scalar& range
+        );
         
         
 public:
 
     //- Runtime type information
-    TypeName("agentNumbers");
+    TypeName("agentFlux");
 
     // Constructors
 
         //- Construct from components
-        agentNumbers
+        agentFlux
         (
             Time& t,
             agentCloud& cloud,
@@ -108,7 +123,7 @@ public:
 
     // Destructor
 
-        ~agentNumbers();
+        ~agentFlux();
 
 
     // Member Functions
