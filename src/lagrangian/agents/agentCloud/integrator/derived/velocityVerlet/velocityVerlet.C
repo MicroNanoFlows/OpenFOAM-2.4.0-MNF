@@ -126,7 +126,8 @@ void velocityVerlet::evolve()
     cloud_.fields().writeFields();
     cloud_.controllers().calculateStateProps();
     cloud_.controllers().outputStateResults(); 
-    cloud_.ob().calculateProperties();     
+    cloud_.ob().calculateProperties();
+    cloud_.ob().outputResults();
 }
 
 
