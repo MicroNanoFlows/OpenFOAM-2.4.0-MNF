@@ -1,0 +1,85 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.6                                   |
+|   \\  /    A nd           | Web:      http://www.OpenFOAM.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      zoneDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+// EXAMPLE
+
+cellZones
+(
+	zone
+	{
+		zoneName          region1;
+		option             boundBox;
+		startPoint			(0e-6 -0.2e-6 -0.5);
+		endPoint			(4e-7 0.2e-6 0.5);
+	}
+
+	zone
+	{
+		zoneName           region2;
+		option             boundBox;         
+		startPoint		(4e-7 -0.2e-6 -0.5);
+		endPoint		(8e-7 0.2e-6 0.5);
+	}
+
+	zone
+	{
+		zoneName           region3;
+		option             boundBox;         
+		startPoint		(8e-7 -0.2e-6 -0.5);
+		endPoint		(12e-7 0.2e-6 0.5);
+	}
+
+	zone
+	{
+		zoneName           region4;
+		option             boundBox;         
+		startPoint		(12e-7 -0.2e-6 -0.5);
+		endPoint		(16e-7 0.2e-6 0.5);
+	}
+
+	zone
+	{
+		zoneName           region5;
+		option             boundBox;         
+		startPoint		(16e-7 -0.2e-6 -0.5);
+		endPoint		(20e-7 0.2e-6 0.5);
+	}	
+);
+
+
+faceZones
+(
+      zone
+      {
+         zoneName        face1;
+         option          pointToPoint;
+         startPoint      (0.499e-06 0 0 );
+         endPoint        (0.501e-06 0 0 );
+      }
+
+      zone
+      {
+         zoneName        face2;
+         option          pointToPoint;
+         startPoint      (1.499e-06 0 0 );
+         endPoint        (1.501e-06 0 0 );
+      }
+
+);
+
+
+// ************************************************************************* //

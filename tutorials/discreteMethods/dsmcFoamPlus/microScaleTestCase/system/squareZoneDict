@@ -1,0 +1,70 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.3                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+
+    class          dictionary;
+    object         squareZoneDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+squares
+(
+
+     square
+     {
+		name            region1;
+		startPoint		(0e-6 -0.2e-6 -0.5);
+		endPoint		(4e-7 0.2e-6 0.5);
+		writeCellSets	no;
+     }
+
+     square
+     {
+		name            region2;
+		startPoint		(4e-7 -0.2e-6 -0.5);
+		endPoint		(8e-7 0.2e-6 0.5);
+		writeCellSets	no;
+     }
+
+	 square
+     {
+		name            region3;
+		startPoint		(8e-7 -0.2e-6 -0.5);
+		endPoint		(12e-7 0.2e-6 0.5);
+		writeCellSets	no;
+     }
+
+	 square
+     {
+		name            region4;
+		startPoint		(12e-7 -0.2e-6 -0.5);
+		endPoint		(16e-7 0.2e-6 0.5);
+		writeCellSets	no;
+     }
+
+	 square
+     {
+		name            region5;
+		startPoint		(16e-7 -0.2e-6 -0.5);
+		endPoint		(20e-7 0.2e-6 0.5);
+		writeCellSets	no;
+     }
+);
+
+
+// ************************************************************************* //

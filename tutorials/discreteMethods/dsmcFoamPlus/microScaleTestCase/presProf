@@ -1,0 +1,37 @@
+set term post enh color eps "Times-Roman" 22
+set output "microscaleTestCasePressure.eps"
+
+set size 1.0, 1.0
+set origin 0.0, 0.0
+set multiplot
+set size 1.0, 1.0
+set origin 0.0,1.0
+
+set border 3 lw 1
+
+set style line 1 lt 1 lw 2 pt 7 lc rgb "black"
+set style line 2 lt 2 lw 2 pt 4 lc rgb "black"
+set style line 3 lt 2 lw 2 pt 4 lc rgb "black"
+
+set pointsize 1.2
+
+set size 1.0, 1.0
+set origin 0.0,0.0
+
+set xlabel "x/L" font "Times-Roman-Bold,24"
+set ylabel "p/p_{e}" font "Times-Roman-Bold,24"
+set nokey
+
+set xtics 0.25
+set ytics 0.5
+
+set mytics 5
+set mxtics 5
+
+set tics nomirror
+
+set xrange [0:1]
+set yrange [1:2.52]
+
+plot "4.02824e-07/uniform/bins_OneDim_channelRegion_N2_p.xy" u ($1/2e-06):($2/100000) w p ls 1 t "{/Times-Roman-Italic dsmcFoam}"
+

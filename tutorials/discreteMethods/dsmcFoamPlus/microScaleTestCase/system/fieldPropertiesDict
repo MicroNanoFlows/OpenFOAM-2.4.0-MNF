@@ -1,0 +1,105 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.7.1                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fieldPropertiesDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+dsmcFields
+(
+     field
+     {
+         fieldModel          	dsmcBinsMethod;
+ 
+         timeProperties
+         {
+         	timeOption          write;
+ 	    	resetAtOutput		on;
+         }
+ 
+         dsmcBinsMethodProperties
+         {
+            fieldName               N2;
+			zoneName				channelRegion;
+         	typeIds                 (N2);
+         	averagingAcrossManyRuns no;
+			binModel				uniformBins;
+         	
+         	uniformBinsProperties
+			{
+                startPoint	(0 0 0);
+			    endPoint	(2e-6 0 0);
+			    nBins		60;
+			    area		2.64e-14;
+			}
+         }
+     }
+     
+     field
+     {
+         fieldModel          	dsmcVolFields;
+ 
+         timeProperties
+         {
+         	timeOption          write;
+ 	    	resetAtOutput		on;
+         }
+         
+         dsmcVolFieldsProperties
+         {
+            fieldName               N2;
+         	typeIds                 (N2);
+         }
+     }
+
+     field
+     {
+         fieldModel          	dsmcMassFluxSurface;
+ 
+         timeProperties
+         {
+         	timeOption          write;
+ 	    	resetAtOutput		on;
+         }
+         
+         dsmcMassFluxSurfaceProperties
+         {
+            fieldName               N2;
+         	typeIds                 (N2);
+            faceZoneName            face1;
+            fluxDirection           (1 0 0);
+         }
+     }
+
+     field
+     {
+         fieldModel          	dsmcMassFluxSurface;
+ 
+         timeProperties
+         {
+         	timeOption          write;
+ 	    	resetAtOutput		on;
+         }
+         
+         dsmcMassFluxSurfaceProperties
+         {
+            fieldName               N2;
+         	typeIds                 (N2);
+            faceZoneName            face2;
+            fluxDirection           (1 0 0);
+         }
+     }
+);
+
+// ************************************************************************* //
