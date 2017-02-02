@@ -860,9 +860,9 @@ void Foam::dsmcCloud::info() const
             << vibrationalEnergy/nMol << nl
             << "    Average electronic energy       = "
             << electronicEnergy/nMol << nl
-//             << "    Total energy                    = "
-//             << (rotationalEnergy + linearKineticEnergy
-//                 + vibrationalEnergy + electronicEnergy)
+            << "    Total energy                    = "
+            << (rotationalEnergy + linearKineticEnergy
+                + vibrationalEnergy + electronicEnergy)
             << endl;
     }
 }
