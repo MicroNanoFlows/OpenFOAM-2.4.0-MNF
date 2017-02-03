@@ -53,11 +53,11 @@ agentDeletionPatch::agentDeletionPatch
 )
 :
     agentPatchBoundary(t, mesh, cloud, dict),
-    propsDict_(dict.subDict(typeName + "Properties"))
+    propsDict_(dict.subDict(typeName + "Properties")),
 //     elapsedTime_(0.0),
 //     writeInterval_(readScalar(t.controlDict().lookup("writeInterval"))),
 //     startTime_(t.startTime().value())
-
+    N_(0)
 {
     writeInTimeDir_ = false;
     writeInCase_ = true;
@@ -101,7 +101,8 @@ void agentDeletionPatch::controlMol
 //         molFlux_ += 1.0;
 //         cumulMolFlux_ += 1.0;
 //         cumulMassFlux_ += massI;
-
+        N_++;
+        
         td.keepParticle = false;
 
 //         Pout << "delete particle" << endl;
@@ -129,96 +130,26 @@ void agentDeletionPatch::output
     const fileName& timePath
 )
 {
+    label N = N_;
+    
+    if (Pstream::parRun())
+    {
+        reduce(N, sumOp<label>());
+    }
+    
+    scalarField timeField(1, t_.timeOutputValue());
+    scalarField NField(1, N);
 
-//     scalar molFluxCumul = cumulMolFlux_;
-//     scalar massFluxCumul = cumulMassFlux_;
-// 
-//     if (Pstream::parRun())
-//     {
-//         reduce(massFlux_, sumOp<scalar>());
-//         reduce(molFlux_, sumOp<scalar>());
-//         reduce(molFluxCumul, sumOp<scalar>());
-//         reduce(massFluxCumul, sumOp<scalar>());
-//     }
-// 
-// //     deletedMassFlux_
-// //     if(faces_.size() > 0)
-// //     {
-// //         deletedMassFlux_[timeIndex_] = massFlux_/writeInterval_;
-// //     }
-// 
-// //     timeIndex_++;
-// //     massFlux_ = 0.0;
-// 
-//     if(Pstream::master())
-//     {
-// 
-//         elapsedTime_ += writeInterval_;
-// //         scalarField writeTimes(writeIntSteps_+1, 0.0);
-// //     
-// //         forAll(writeTimes, tT)
-// //         {
-// //             writeTimes[tT] = startTime_ + tT*writeInterval_;
-// //         }
-// 
-//         scalarField time(1);
-//         scalarField massFlux(1);
-//         scalarField mols(1);
-//         scalarField cumulMols(1);
-//         scalarField cumulMassFlux(1);
-// 
-//         time[0] = t_.timeOutputValue();
-// 
-//         massFlux[0] = massFlux_/writeInterval_;
-//         mols[0] = molFlux_;
-// 
-//         cumulMols[0] = molFluxCumul;
-//         cumulMassFlux[0] = massFluxCumul/elapsedTime_;
-// 
-//         writeTimeData
-//         (
-//             fixedPathName,
-//             patchName_+"_deletionPatch_write_mols.xy",
-//             time,
-//             mols,
-//             true
-//         );
-// 
-//         writeTimeData
-//         (
-//             fixedPathName,
-//             patchName_+"_deletionPatch_write_massFlux.xy",
-//             time,
-//             massFlux,
-//             true
-//         );
-// 
-//         writeTimeData
-//         (
-//             fixedPathName,
-//             patchName_+"_deletionPatch_write_cumul_mols.xy",
-//             time,
-//             cumulMols,
-//             true
-//         );
-// 
-//         writeTimeData
-//         (
-//             fixedPathName,
-//             patchName_+"_deletionPatch_write_cumul_massFlux.xy",
-//             time,
-//             cumulMassFlux,
-//             true
-//         );
-// 
-// 
-// 
-// 
-// //         writeTimeData(fixedPathName, "massFluxDeleted", writeTimes, deletedMassFlux_);
-//     }
-// 
-//     massFlux_ = 0.0;
-//     molFlux_ = 0.0;
+    writeTimeData
+    (
+        fixedPathName,
+        "deletionPatch_"+patchName_+"_N.xy",
+        timeField,
+        NField,
+        true
+    );
+
+
 }
 
 // void agentDeletionPatch::updateProperties(const dictionary& newDict)

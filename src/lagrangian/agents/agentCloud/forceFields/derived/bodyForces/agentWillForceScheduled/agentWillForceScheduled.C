@@ -58,7 +58,7 @@ agentWillForceScheduled::agentWillForceScheduled
 //     desiredSpeed_(readScalar(propsDict_.lookup("desiredSpeed"))),
 //     desiredDirection_(propsDict_.lookup("desiredDirection")),
     tau_(readScalar(propsDict_.lookup("tau")))
-//     stdev_(readScalar(propsDict_.lookup("stdev")))
+    
 {
 
     agentIds_.clear();
@@ -70,6 +70,16 @@ agentWillForceScheduled::agentWillForceScheduled
     );
 
     agentIds_ = ids.agentIds();
+    
+    initialTimeDelay_ = 0.0;
+    
+    if (propsDict_.found("initialTimeDelay"))
+    {
+        initialTimeDelay_ = readScalar(propsDict_.lookup("initialTimeDelay"));
+    }
+    
+    initialTime_ = time_.timeOutputValue();
+    
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -88,11 +98,17 @@ void agentWillForceScheduled::initialConfiguration()
 
 void agentWillForceScheduled::force(agent* p)
 {
-    if(findIndex(agentIds_, p->id()) != -1)
+    if((time_.timeOutputValue() - initialTime_) > initialTimeDelay_)
     {
-        vector n = p->d() - p->position();
-        n /= mag(n);
-        p->f() += (p->desiredSpeed()*n - p->v())*p->mass() / tau_; // MAKE SURE p->d() is UNIT vector
+        if(findIndex(agentIds_, p->id()) != -1)
+        {
+            if(p->t() == 0.0)
+            {  
+                vector n = p->d() - p->position();
+                n /= mag(n);
+                p->f() += (p->desiredSpeed()*n - p->v())*p->mass() / tau_; // MAKE SURE n is UNIT vector
+            }
+        }
     }
 }
 

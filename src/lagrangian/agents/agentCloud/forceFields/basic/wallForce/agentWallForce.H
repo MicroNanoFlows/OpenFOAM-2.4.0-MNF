@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,27 +23,25 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    localGoalsBoxSchedule
+    An abstract model for applying wall forces
 
 Description
 
-
 SourceFiles
-    localGoalsBoxScheduleI.H
-    localGoalsBoxSchedule.C
-    localGoalsBoxScheduleIO.C
+    agentWallForceI.H
+    agentWallForce.C
+    agentWallForceIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef localGoalsBoxSchedule_H
-#define localGoalsBoxSchedule_H
+#ifndef agentWallForce_H
+#define agentWallForce_H
 
-#include "scheduleModel.H"
-#include "vector.H"
+#include "IOdictionary.H"
+#include "autoPtr.H"
+#include "Time.H"
 #include "polyMesh.H"
-#include "agentCloud.H"
-#include "boundedBox.H"
-
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,74 +49,121 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class localGoalsBoxSchedule Declaration
+                           Class agentWallForce Declaration
 \*---------------------------------------------------------------------------*/
 
-class localGoalsBoxSchedule
-:
-	public scheduleModel
+class agentWallForce
 {
 
+protected:
+
+        Time& time_;
+
+        bool spaceVarying_;
+        
+        bool timeVarying_;
+        
 private:
 
-    // Private data
-
-        //- subDictionary containing the properties
-        dictionary propsDict_;
-
-        //- ids of agents
-        List<label> agentIds_;
-        
-        List<boundedBox> boxes_;
-        // list of centre points of the box
-        vectorList destinations_;
-        label nScheduledDestinations_;
-        scalarList timeAtDestination_;        
-        
-        scalar timeIndex_;
-        label counter_;
-        scalar deltaT_;
-        
     // Private Member Functions
-        
-        void setBoundBoxes();
 
 
 public:
 
     //- Runtime type information
-    TypeName("localGoalsBoxSchedule");
+    TypeName("agentWallForce");
+
+    // Declare runtime constructor selection table
+        declareRunTimeSelectionTable
+        (
+            autoPtr,
+            agentWallForce,
+            dictionary,
+            (
+                Time& time,
+                const dictionary& dict
+            ),
+            (time, dict)
+        );
+
+    // Static data members
 
     // Constructors
 
         //- Construct from components
-        localGoalsBoxSchedule
+        agentWallForce
         (
             Time& time,
-            agentCloud& cloud,
+            const dictionary& dict
+        );
+
+
+    // Selectors
+
+        static autoPtr<agentWallForce> New
+        (
+            Time& time,
             const dictionary& dict
         );
 
     // Destructor
 
-        ~localGoalsBoxSchedule();
+        virtual ~agentWallForce();
 
     // Member Functions
-        
-        void initialConfiguration();
-        
-        // is called every time-step to set new destinations of agents
-        void setSchedule();
 
-                
 
         // Access
+
+            virtual vector force(const vector& position) = 0;
+            
+            virtual vector force(const scalar& time) = 0;
+ 
+            virtual vector force(const scalar& time, const vector& position) = 0;            
+            
+            virtual void updateForce() = 0;
+
+        // Check
+            bool spaceVarying();
+            
+            bool timeVarying();
+            
+        // Edit
+
+        // Write
+
+            virtual void write
+            (
+                const fileName& fixedPathName,
+                const fileName& timePath
+            ) = 0;
+
+//             virtual void updateProperties
+//             (
+//                 const dictionary& dict
+//             ) = 0;
+
+
+            //- output data
+
+    // Member Operators
+
+    // Friend Functions
+
+    // Friend Operators
+
+    // IOstream Operators
+
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "agentWallForceI.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,27 +23,22 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    localGoalsBoxSchedule
+    
 
 Description
 
-
 SourceFiles
-    localGoalsBoxScheduleI.H
-    localGoalsBoxSchedule.C
-    localGoalsBoxScheduleIO.C
+    agentRepulsiveForceI.H
+    agentRepulsiveForce.C
+    agentRepulsiveForceIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef localGoalsBoxSchedule_H
-#define localGoalsBoxSchedule_H
+#ifndef agentRepulsiveForce_H
+#define agentRepulsiveForce_H
 
-#include "scheduleModel.H"
-#include "vector.H"
-#include "polyMesh.H"
-#include "agentCloud.H"
-#include "boundedBox.H"
 
+#include "agentWallForce.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,74 +46,106 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class localGoalsBoxSchedule Declaration
+                           Class agentRepulsiveForce Declaration
 \*---------------------------------------------------------------------------*/
 
-class localGoalsBoxSchedule
+class agentRepulsiveForce
 :
-	public scheduleModel
+    public agentWallForce
 {
 
 private:
 
     // Private data
 
-        //- subDictionary containing the properties
         dictionary propsDict_;
 
-        //- ids of agents
-        List<label> agentIds_;
-        
-        List<boundedBox> boxes_;
-        // list of centre points of the box
-        vectorList destinations_;
-        label nScheduledDestinations_;
-        scalarList timeAtDestination_;        
-        
-        scalar timeIndex_;
-        label counter_;
-        scalar deltaT_;
-        
-    // Private Member Functions
-        
-        void setBoundBoxes();
+        vector force_;
 
 
 public:
 
     //- Runtime type information
-    TypeName("localGoalsBoxSchedule");
+    TypeName("agentRepulsiveForce");
+
+    // Static data members
 
     // Constructors
 
-        //- Construct from components
-        localGoalsBoxSchedule
+        //- construct from components
+        agentRepulsiveForce
         (
             Time& time,
-            agentCloud& cloud,
             const dictionary& dict
         );
 
+    // Selectors
+
+
     // Destructor
 
-        ~localGoalsBoxSchedule();
+        ~agentRepulsiveForce();
 
     // Member Functions
-        
-        void initialConfiguration();
-        
-        // is called every time-step to set new destinations of agents
-        void setSchedule();
 
-                
+//         void initialConfig
+//         (
+//             const scalar& density,
+//             const radialDistribution& rdf,
+//             const moleculeCloud& mD
+//         );
+
+        //- output data
+//         void output(const Time& runTime, const polyMesh& mesh);
+
 
         // Access
+
+        // Check
+
+        // Edit
+
+            void updateForce();
+
+            vector force(const vector& position);
+            vector force(const scalar& time);
+            vector force(const scalar& time, const vector& position);
+            
+        // Write
+
+
+            void write
+            (
+                const fileName& fixedPathName,
+                const fileName& timePath
+            );
+
+
+//             void updateProperties
+//             (
+//                 const dictionary& dict
+//             );
+
+    // Member Operators
+
+//         void operator=(const agentRepulsiveForce&);
+
+    // Friend Functions
+
+    // Friend Operators
+
+    // IOstream Operators
+
+//         friend Ostream& operator<<(Ostream&, const agentRepulsiveForce&);
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

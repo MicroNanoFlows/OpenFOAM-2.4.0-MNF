@@ -23,27 +23,28 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    localGoalsBoxSchedule
+    agentFlux
 
 Description
-
+    Add agents to a box based on a known flux 
+    Not parallelised
 
 SourceFiles
-    localGoalsBoxScheduleI.H
-    localGoalsBoxSchedule.C
-    localGoalsBoxScheduleIO.C
+    agentFluxI.H
+    agentFlux.C
+    agentFluxIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef localGoalsBoxSchedule_H
-#define localGoalsBoxSchedule_H
+#ifndef agentFlux_H
+#define agentFlux_H
 
-#include "scheduleModel.H"
+#include "agentController.H"
 #include "vector.H"
 #include "polyMesh.H"
+#include "volFields.H"
 #include "agentCloud.H"
 #include "boundedBox.H"
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,12 +52,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class localGoalsBoxSchedule Declaration
+                           Class agentFlux Declaration
 \*---------------------------------------------------------------------------*/
 
-class localGoalsBoxSchedule
+class agentFlux
 :
-	public scheduleModel
+	public agentController
 {
 
 private:
@@ -66,51 +67,95 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-        //- ids of agents
-        List<label> agentIds_;
+        //- id of agent
+        label agentId_;
+
+        boundedBox samplingBox_;
+        boundedBox controlBox_;
         
-        List<boundedBox> boxes_;
-        // list of centre points of the box
-        vectorList destinations_;
-        label nScheduledDestinations_;
-        scalarList timeAtDestination_;        
+        label N_;
         
-        scalar timeIndex_;
-        label counter_;
-        scalar deltaT_;
+        scalar meanMass_;
+        scalar massRange_;
+        scalar meanRadius_;
+        scalar radiusRange_;
+        scalar meanDesSpeed_;
+        scalar desSpeedRange_;
         
+        
+        
+//         scalar mass_;
+
     // Private Member Functions
+
+//         void readProperties();
         
-        void setBoundBoxes();
-
-
+        void setBoundBox
+        (
+            const dictionary& propsDict,
+            boundedBox& bb,
+            const word& name 
+        );
+     
+        void insertAgents(const label& N);
+        
+        scalar gaussianDistribution
+        (
+            const scalar& mean,
+            const scalar& range
+        );
+        
+        
 public:
 
     //- Runtime type information
-    TypeName("localGoalsBoxSchedule");
+    TypeName("agentFlux");
 
     // Constructors
 
         //- Construct from components
-        localGoalsBoxSchedule
+        agentFlux
         (
-            Time& time,
+            Time& t,
             agentCloud& cloud,
             const dictionary& dict
         );
 
     // Destructor
 
-        ~localGoalsBoxSchedule();
+        ~agentFlux();
+
 
     // Member Functions
+    // Member Functions
         
+        //- create an initial configuration
         void initialConfiguration();
-        
-        // is called every time-step to set new destinations of agents
-        void setSchedule();
 
-                
+        //- control molecules at various stages of time-step
+        void controlBeforeVelocityI();
+        void controlBeforeMove();
+        void controlBeforeForces();
+        void controlDuringForces
+        (
+            agent* molI,
+            agent* molJ
+        );        
+        void controlAfterForces();
+        void controlAfterVelocityII();
+        
+        //- calculate any required properties (end of time-step)
+        void calculateProperties(); 
+        
+        //- output data (optional)
+        void output
+        (
+            const fileName& fixedPathName, 
+            const fileName& timePath
+        );
+        
+        //- update properties from a modified dictionary (optional)
+//         void updateProperties(const dictionary&);
 
         // Access
 };

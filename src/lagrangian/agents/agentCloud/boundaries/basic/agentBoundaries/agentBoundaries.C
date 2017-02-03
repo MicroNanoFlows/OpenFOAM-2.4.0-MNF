@@ -427,7 +427,12 @@ void agentBoundaries::outputResults()
 
     if(runTime.outputTime())
     {
-
+        fileName uniformTimePath(runTime.path()/runTime.timeName()/"uniform");
+        
+        forAll(patchBoundaryModels_, p)
+        {
+            patchBoundaryModels_[p]->output(pBFixedPathNames_[p], uniformTimePath);
+        }
     }
 }
 

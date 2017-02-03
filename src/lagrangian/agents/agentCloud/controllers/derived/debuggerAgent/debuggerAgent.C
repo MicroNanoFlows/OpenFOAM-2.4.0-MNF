@@ -109,6 +109,36 @@ void debuggerAgent::controlDuringForces
 
 void debuggerAgent::controlAfterForces()
 {
+//     Info << "debuggerAgent"  << endl;
+// 
+//     IDLList<agent>::iterator mol(cloud_.begin());
+// 
+//     for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
+//     {
+//         if(findIndex(agentIds_, mol().id()) != -1)
+//         {
+//             if(bb_.contains(mol().position()))
+//             {
+//                 
+//             }
+//             else
+//             {
+//                 FatalErrorIn("debuggerAgent") << nl
+//                     << " Agent position just left the domain at : "
+//                     << mol().position() 
+//                     << ", tracking Number = " << mol().trackingNumber()
+//                     << nl << abort(FatalError);                         
+//             }
+//         }
+//     }
+}
+
+
+void debuggerAgent::controlAfterVelocityII()
+{}
+
+void debuggerAgent::calculateProperties()
+{
     Info << "debuggerAgent"  << endl;
 
     IDLList<agent>::iterator mol(cloud_.begin());
@@ -117,28 +147,35 @@ void debuggerAgent::controlAfterForces()
     {
         if(findIndex(agentIds_, mol().id()) != -1)
         {
-            if(bb_.contains(mol().position()))
-            {
-                
-            }
-            else
-            {
-                FatalErrorIn("debuggerAgent") << nl
-                    << " Agent position just left the domain at : "
-                    << mol().position() 
-                    << ", tracking Number = " << mol().trackingNumber()
-                    << nl << abort(FatalError);                         
-            }
+//             if(bb_.contains(mol().position()))
+//             {
+//                 
+//             }
+//             else
+//             {
+//                 FatalErrorIn("debuggerAgent") << nl
+//                     << " Agent position just left the domain at : "
+//                     << mol().position() 
+//                     << ", tracking Number = " << mol().trackingNumber()
+//                     << nl << abort(FatalError);                         
+//             }
+            scalar Vmag = mag(mol().v());
+            
+            Info << "tN = " << mol().trackingNumber() 
+                << ", pos = " << mol().position()
+                << ", F = " << mol().f()
+                << ", a = " << mol().a()
+                << ", v = " << mol().v()
+                << ", vMag = " << Vmag
+                << ", desired speed = " << mol().desiredSpeed()
+                << ", destination = " << mol().d()
+                << endl;
+            
         }
-    }
+    }   
+    
+    
 }
-
-
-void debuggerAgent::controlAfterVelocityII()
-{}
-
-void debuggerAgent::calculateProperties()
-{}
 
 void debuggerAgent::output
 (

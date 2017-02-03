@@ -106,97 +106,96 @@ localGoalsSchedule::~localGoalsSchedule()
 void localGoalsSchedule::initialConfiguration()
 {
     destinations_ = vectorList(propsDict_.lookup("destinations"));
-    regionRadii_ = scalarList(propsDict_.lookup("regionRadii"));
-    
     nScheduledDestinations_ = destinations_.size();
     
-    if( (nScheduledDestinations_ <= 0) || (nScheduledDestinations_ != regionRadii_.size())  )
+    regionRadii_ = scalarList(propsDict_.lookup("regionRadii"));
+    
+    if (propsDict_.found("timeAtDestination"))
+    {
+        timeAtDestination_ = scalarList(propsDict_.lookup("timeAtDestination"));
+    }
+    else
+    {
+        timeAtDestination_.setSize(nScheduledDestinations_, 0.0);
+    }
+
+    
+    if( (nScheduledDestinations_ <= 0) || 
+        (nScheduledDestinations_ != regionRadii_.size()) ||  
+        (nScheduledDestinations_ != timeAtDestination_.size())
+    )
     {
         FatalError
             << "Something went wrong with the localGoalsSchedule " << endl
             << " lists must match in size (n and n-1) and need to have sizes greater than zero"
             << endl << "destinations = " << destinations_
-            << endl << "regionRadii = " << regionRadii_ << endl;
+            << endl << "regionRadii = " << regionRadii_
+            << endl << "timeAtDestination = " << timeAtDestination_
+            << nl << abort(FatalError);  
         
     } 
     
     label nextDest = 0;
     
-            IDLList<agent>::iterator mol(cloud_.begin());
+    IDLList<agent>::iterator mol(cloud_.begin());
 
-            for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
-            {    
-                if(findIndex(agentIds_, mol().id()) != -1)
-                {
-                    //if(boxes_[nextDest].contains(mol().position())) //WILL THIS WORK FOR AGENTS SEPARATELY?
-                    
-                        //vector r = destinations_[nextDest] - mol().position(); // NEED AGENT'S POSITION, MAKE SURE IT'S UNIT VECTOR
-                        
-//                         Info << "Changing destinations of agents of type " << agentIds_ 
-//                         << " to destination " << r << endl; 
-                        
-                        mol().d()= destinations_[nextDest];
-                    
-                }
-            } 
+    for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
+    {    
+        if(findIndex(agentIds_, mol().id()) != -1)
+        {
+            mol().d()= destinations_[nextDest];
+        }
+    }
 }
 
 // is called every time-step to set new destinations of agents
 void localGoalsSchedule::setSchedule()
 {
-//     timeIndex_ += deltaT_;
-    
-    // next destination index
-//     label nextDest=counter_+1;
-    
-//     if(nextDest < nScheduledDestinations_)
-//     {
-//         if(regionRadii_[nextDest] >= timeIndex_)
-//         {
-            // next destination
-            
-//             vector r = destinations_[nextDest];
-    
-            //label index = 0;   // label used for storing int data     
-    
-            IDLList<agent>::iterator mol(cloud_.begin());
+    IDLList<agent>::iterator mol(cloud_.begin());
 
-            for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
-            {    
-                if(findIndex(agentIds_, mol().id()) != -1)
+    for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
+    {    
+        if(findIndex(agentIds_, mol().id()) != -1)
+        {
+            if(mol().t() > 0 )
+            {
+                mol().t() -= deltaT_;
+                
+                if(mol().t() < 0)
                 {
-                    
-                    label index = 0;
-                    //if(boxes_[nextDest].contains(mol().position())) //WILL THIS WORK FOR AGENTS SEPARATELY?
-                    
-                    // function that produces the index from the agent's d
-                    //for (label i = 0; i < nScheduledDestinations_; ++i) //CORRECT????
-                    forAll(destinations_, i)
-                    {    
-                        if (mag(mol().d() - destinations_[i]) < SMALL) //How to get magnitude of vectors?
-                        {
-                            index = i;
-                        }
-                    }
-                    
-                    // check if agent has arrived at its destination
-                    if(mag(destinations_[index]-mol().position()) < regionRadii_[index])
+                    mol().t() = 0.0;
+                }
+            }
+            else
+            {
+                label index = -1;
+                
+                // function that produces the index from the agent's d
+                forAll(destinations_, i)
+                {    
+                    if (mag(mol().d() - destinations_[i]) < SMALL) 
                     {
-//                         vector r = destinations_[nextDest] - mol().position(); // NEED AGENT'S POSITION, MAKE SURE IT'S UNIT VECTOR
-                        
-//                         Info << "Changing destinations of agents of type " << agentIds_ 
-//                         << " to destination " << r << endl; 
-                        if(index < nScheduledDestinations_-1)
-                        {
-                            mol().d()= destinations_[index+1];
-                        }
+                        index = i;
+                    }
+                }
+                
+                if(index == -1)
+                {
+                    mol().d() = destinations_[0];
+                }
+                
+                // check if agent has arrived at its destination
+                if(mag(destinations_[index]-mol().position()) < regionRadii_[index])
+                {
+                    if(index < nScheduledDestinations_-1)
+                    {
+                        mol().d()= destinations_[index+1];
+                        mol().t()=timeAtDestination_[index];
                     }
                 }
             }
-            
-//             counter_++;        
-//     }
-    
+        }
+    }
 }
 
 

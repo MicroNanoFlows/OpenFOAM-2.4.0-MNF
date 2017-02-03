@@ -26,7 +26,7 @@ Class
     agentNumbers
 
 Description
-    Model that applies a gravitational force on all molecules.
+    Add agents to a box 
 
 SourceFiles
     agentNumbersI.H

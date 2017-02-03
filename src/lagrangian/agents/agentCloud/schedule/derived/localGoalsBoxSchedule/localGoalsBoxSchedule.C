@@ -52,6 +52,15 @@ void localGoalsBoxSchedule::setBoundBoxes()
     destinations_.setSize(boxList.size());
     nScheduledDestinations_ = destinations_.size();
     
+    if (propsDict_.found("timeAtDestination"))
+    {
+        timeAtDestination_ = scalarList(propsDict_.lookup("timeAtDestination"));
+    }
+    else
+    {
+        timeAtDestination_.setSize(nScheduledDestinations_, 0.0);
+    }    
+    
     forAll(boxList, b)
     {
         const entry& boxI = boxList[b];
@@ -62,6 +71,19 @@ void localGoalsBoxSchedule::setBoundBoxes()
         boxes_[b].resetBoundedBox(startPoint, endPoint);
         destinations_[b] = boxes_[b].midpoint();        
     }
+    
+    if( (nScheduledDestinations_ <= 0) || 
+        (nScheduledDestinations_ != timeAtDestination_.size())
+    )
+    {
+        FatalError
+            << "Something went wrong with the localGoalsSchedule " << endl
+            << " lists must match in size (n and n-1) and need to have sizes greater than zero"
+            << endl << "destinations = " << destinations_
+            << endl << "timeAtDestination = " << timeAtDestination_
+            << nl << abort(FatalError);  
+        
+    }     
 }
 
 // Construct from components
@@ -128,26 +150,44 @@ void localGoalsBoxSchedule::setSchedule()
     {    
         if(findIndex(agentIds_, mol().id()) != -1)
         {
-            
-            label index = 0;
-            //if(boxes_[nextDest].contains(mol().position())) //WILL THIS WORK FOR AGENTS SEPARATELY?
-            
-            // function that produces the index from the agent's d
-            //for (label i = 0; i < nScheduledDestinations_; ++i) //CORRECT????
-            forAll(destinations_, i)
-            {    
-                if (mag(mol().d() - destinations_[i]) < SMALL) //How to get magnitude of vectors?
+            if(mol().t() > 0 )
+            {
+                mol().t() -= deltaT_;
+                
+                if(mol().t() < 0)
                 {
-                    index = i;
+                    mol().t() = 0.0;
                 }
             }
-            
-            // check if agent has arrived at its destination
-            if(boxes_[index].contains(mol().position()))
+            else
             {
-                if(index < nScheduledDestinations_-1)
+            
+                label index = -1;
+                //if(boxes_[nextDest].contains(mol().position())) //WILL THIS WORK FOR AGENTS SEPARATELY?
+                
+                // function that produces the index from the agent's d
+                //for (label i = 0; i < nScheduledDestinations_; ++i) //CORRECT????
+                forAll(destinations_, i)
+                {    
+                    if (mag(mol().d() - destinations_[i]) < SMALL) //How to get magnitude of vectors?
+                    {
+                        index = i;
+                    }
+                }
+                
+                if(index == -1)
                 {
-                    mol().d() = destinations_[index+1];
+                    mol().d() = destinations_[0];
+                }            
+                
+                // check if agent has arrived at its destination
+                if(boxes_[index].contains(mol().position()))
+                {
+                    if(index < nScheduledDestinations_-1)
+                    {
+                        mol().d() = destinations_[index+1];
+                        mol().t()=timeAtDestination_[index];
+                    }
                 }
             }
         }

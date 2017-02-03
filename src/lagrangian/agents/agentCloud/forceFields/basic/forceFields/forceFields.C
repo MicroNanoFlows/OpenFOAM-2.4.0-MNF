@@ -199,21 +199,13 @@ void forceFields::testPairPotentials()
             label idA = findIndex(idList, pairIdList[0]);
             label idB = findIndex(idList, pairIdList[1]);
             
-            if(pairPotentialLookUp_[idA][idB] == -1)
+            if
+            (
+                (pairPotentialLookUp_[idA][idB] == -1) ||
+                (pairPotentialLookUp_[idB][idA] == -1)
+            )
             {
                 pairPotentialLookUp_[idA][idB] = i;
-            }
-            else
-            {
-                FatalErrorIn("forceFields::testPairPotentials()") << nl
-                    << "forceFields::testPairPotentials(): " << nl
-                    << "    ids = " << pairIdList
-                    << " are already defined in system/forceFieldsDict"
-                    << nl << abort(FatalError);
-            }
-            
-            if(pairPotentialLookUp_[idB][idA] == -1)
-            {
                 pairPotentialLookUp_[idB][idA] = i;
             }
             else
@@ -222,8 +214,9 @@ void forceFields::testPairPotentials()
                     << "forceFields::testPairPotentials(): " << nl
                     << "    ids = " << pairIdList
                     << " are already defined in system/forceFieldsDict"
-                    << nl << abort(FatalError); 
+                    << nl << abort(FatalError);                    
             }
+
         }
         
         forAll(pairPotentialLookUp_, i)
