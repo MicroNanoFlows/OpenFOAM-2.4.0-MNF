@@ -1,3 +1,0 @@
-immAgentFOAM.C
-
-EXE = $(FOAM_APPBIN)/immAgentFOAM
