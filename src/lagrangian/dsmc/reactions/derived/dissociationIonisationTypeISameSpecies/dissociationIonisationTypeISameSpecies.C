@@ -510,6 +510,7 @@ void dissociationIonisationTypeISameSpecies::reaction
             }
         }
         
+        
         //dissociation of P only
         if(dissocReactionP && !dissocReactionQ &&!ionisationReactionP &&!ionisationReactionQ)
         {
@@ -1167,8 +1168,8 @@ void dissociationIonisationTypeISameSpecies::reaction
             }
         }
         
-        //ionisation of Q only
-        if(ionisationReactionP &&!ionisationReactionQ &&!dissocReactionP &&!dissocReactionQ)
+       // ionisation of Q only
+        if(ionisationReactionQ &&!ionisationReactionP &&!dissocReactionP &&!dissocReactionQ)
         {
 //             nReactionsPerTimeStep_++;
             nTotIonisationReactions_++;
