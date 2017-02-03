@@ -1,0 +1,54 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.6                                   |
+|   \\  /    A nd           | Web:      http://www.OpenFOAM.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controllersDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+polyStateControllers
+(
+    // thermostat
+    
+    controller
+    {
+ 	    zoneName            mdZone;
+
+        stateControllerModel       polyTemperatureBerendsenBinsNew;
+
+        polyTemperatureBerendsenBinsNewProperties
+        {
+            temperature             3.816;
+            tauT                    0.04;
+            molIds                  (water);
+            peculiar                yes;
+
+            binModel                uniformBins;
+
+            uniformBinsProperties
+            {
+                startPoint                  (0 0 0);
+                endPoint                    (16 0 0);
+                nBins                       4; 
+                area                        100; // dummy variable
+            }
+        }
+    }
+);
+
+polyFluxControllers
+(
+
+);   
+    
+
+// ************************************************************************* //

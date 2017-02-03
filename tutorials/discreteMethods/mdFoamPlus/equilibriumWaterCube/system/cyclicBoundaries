@@ -1,0 +1,134 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.4.0-MNF                             |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      cyclicBoundaries;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+
+// ************************************************************************* //
+
+cyclicBoundaries
+(
+	boundary
+	{
+		cyclicBoundaryProperties
+		{
+			patchName			periodicX_half0;
+			neighbourPatchName			periodicX_half1;
+			nFaces			25;
+			normal			(1 0 0);
+			boundaryPoints
+			(
+				(16 16 16)
+				(16 0 16)
+				(16 0 0)
+				(16 16 0)
+			);
+		}
+		cyclicBoundaryModel		standardCyclic;
+	}
+	boundary
+	{
+		cyclicBoundaryProperties
+		{
+			patchName			periodicX_half1;
+			neighbourPatchName			periodicX_half0;
+			nFaces			25;
+			normal			(-1 0 0);
+			boundaryPoints
+			(
+				(0 16 16)
+				(0 0 16)
+				(0 0 0)
+				(0 16 0)
+			);
+		}
+		cyclicBoundaryModel		standardCyclic;
+	}
+	boundary
+	{
+		cyclicBoundaryProperties
+		{
+			patchName			periodicY_half0;
+			neighbourPatchName			periodicY_half1;
+			nFaces			25;
+			normal			(0 1 0);
+			boundaryPoints
+			(
+				(16 16 16)
+				(16 16 0)
+				(0 16 0)
+				(0 16 16)
+			);
+		}
+		cyclicBoundaryModel		standardCyclic;
+	}
+	boundary
+	{
+		cyclicBoundaryProperties
+		{
+			patchName			periodicY_half1;
+			neighbourPatchName			periodicY_half0;
+			nFaces			25;
+			normal			(0 -1 0);
+			boundaryPoints
+			(
+				(16 0 16)
+				(16 0 0)
+				(0 0 0)
+				(0 0 16)
+			);
+		}
+		cyclicBoundaryModel		standardCyclic;
+	}
+	boundary
+	{
+		cyclicBoundaryProperties
+		{
+			patchName			periodicZ_half0;
+			neighbourPatchName			periodicZ_half1;
+			nFaces			25;
+			normal			(0 0 1);
+			boundaryPoints
+			(
+				(16 16 16)
+				(16 0 16)
+				(0 0 16)
+				(0 16 16)
+			);
+		}
+		cyclicBoundaryModel		standardCyclic;
+	}
+	boundary
+	{
+		cyclicBoundaryProperties
+		{
+			patchName			periodicZ_half1;
+			neighbourPatchName			periodicZ_half0;
+			nFaces			25;
+			normal			(0 0 -1);
+			boundaryPoints
+			(
+				(16 16 0)
+				(16 0 0)
+				(0 0 0)
+				(0 16 0)
+			);
+		}
+		cyclicBoundaryModel		standardCyclic;
+	}
+);
+
+// ************************************************************************* //

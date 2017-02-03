@@ -1,0 +1,90 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.6                                   |
+|   \\  /    A nd           | Web:      http://www.OpenFOAM.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fieldPropertiesDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+// POLYATOMIC FIELDS
+polyFields
+(
+    // - standard
+    field
+    {
+        fieldModel             polyOutputProperties;
+    }
+
+    
+    // REGION
+
+    field
+    {
+        fieldModel              polyPropertiesZoneBounded;
+
+        polyPropertiesZoneBoundedProperties
+        {
+            fieldName               cumul_region;
+            molIds                  (water);
+            resetAtOutput           off;
+            boxes
+            (
+                box
+                {
+                    startPoint          (0 0 0);
+                    endPoint            (16 16 16);
+                }
+            );
+        }
+    }
+
+    field
+    {
+        fieldModel              polyPropertiesZoneBounded;
+
+        polyPropertiesZoneBoundedProperties
+        {
+            fieldName               instant_region;
+            molIds                  (water);
+            resetAtOutput           on;
+            boxes
+            (
+                box
+                {
+                    startPoint          (0 0 0);
+                    endPoint            (16 16 16);
+                }
+            );
+        }
+    }
+
+    // poly PDB (videos)
+    
+    field
+    {
+        fieldModel              polyPDB;
+
+        polyPDBProperties
+        {
+            fieldName               water;
+            molIds                  (water);
+            sitesToExclude          (M);
+            numberOfOutputSteps     50;
+            molOption               water;
+        }
+    }
+    
+);
+
+
+
+// ************************************************************************* //
