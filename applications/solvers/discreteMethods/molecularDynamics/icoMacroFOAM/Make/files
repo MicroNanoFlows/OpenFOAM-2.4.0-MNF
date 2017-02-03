@@ -1,5 +1,0 @@
-
-icoMacroModel.C
-icoMacroFOAM.C
-
-EXE = $(FOAM_APPBIN)/icoMacroFOAM
