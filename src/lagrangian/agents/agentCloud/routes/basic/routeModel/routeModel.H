@@ -23,120 +23,123 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    reflectiveRectangularBorder
+    routeModel
 
 Description
-    NOT PARALLISED - massive problems here
+    Basic/abstract class of a state controller
 
 
 SourceFiles
-    reflectiveRectangularBorderI.H
-    reflectiveRectangularBorder.C
-    reflectiveRectangularBorderIO.C
+    routeModelI.H
+    routeModel.C
+    routeModelIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef reflectiveRectangularBorder_H
-#define reflectiveRectangularBorder_H
+#ifndef routeModel_H
+#define routeModel_H
 
-#include "borderModel.H"
+#include "IOdictionary.H"
+#include "autoPtr.H"
+#include "runTimeSelectionTables.H"
 #include "vector.H"
-#include "polyMesh.H"
-#include "agentCloud.H"
-// #include "agentWallForce.H"
-
-
+#include "volFields.H"
+#include "agent.H"
+#include "writeTimeData.H"
+#include "selectAgentIds.H"
+#include "reducedUnits.H"
+#include "vectorList.H"
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class reflectiveRectangularBorder Declaration
+                           Class routeModel Declaration
 \*---------------------------------------------------------------------------*/
 
-class reflectiveRectangularBorder
-:
-	public borderModel
+class routeModel
 {
 
-private:
+protected:
 
-    // Private data
+    // Protected data
 
-        //- subDictionary containing the properties
-        dictionary propsDict_;
+        const fvMesh& mesh_;
 
-        List<vectorList> borderList_;
+        Time& time_;        
         
-        // border properties
+        agentCloud& cloud_;
+
+        const reducedUnits& rU_;        
         
-        // normal vectors point outwards 
-        List<vectorList> normalVectors_;
-        List<vectorList> midPoints_;
-        
-        scalar treshold_;
- 
-        // outer list = nCells on mesh
-        // inner list = index to borderList_ to interact with
-        List<DynamicList<label> > interactionList_;  
-
-        label scalingValue_;
-
-        // adding a wall force
-
-//         autoPtr<agentWallForce> wallModel_;
-        
-//         List<vectorList> pointsOnWall_;
-//         
-//         bool addWallForce_;
-//         
-//         scalar dX_;
-
-
         
     // Private Member Functions
-        
-        void initialiseBorders();
 
-        void checkClosedEndedBorders();
-       
-        void reflect(label index, agent* a); 
 
-        bool isPointWithinBorder(label index, const vector& r);       
         
 public:
 
     //- Runtime type information
-    TypeName("reflectiveRectangularBorder");
+    TypeName("routeModel");
 
+    // Declare runtime constructor selection table
+        declareRunTimeSelectionTable
+        (
+            autoPtr,
+            routeModel,
+            dictionary,
+            (
+                Time& time,
+                agentCloud& cloud,
+                const dictionary& dict
+            ),
+            (time, cloud, dict)
+        );
+   
     // Constructors
 
         //- Construct from components
-        reflectiveRectangularBorder
+        routeModel
         (
             Time& time,
             agentCloud& cloud,
             const dictionary& dict
         );
 
+
+    // Selectors
+
+        static autoPtr<routeModel> New
+        (
+            Time& time,
+            agentCloud& cloud,
+            const dictionary& dict
+        );
+
+
     // Destructor
 
-        ~reflectiveRectangularBorder();
+        virtual ~routeModel();
+
 
     // Member Functions
+
         
-        void initialConfiguration();
         
-        void afterMove();
         
-        void afterForce();
+       virtual void initialConfiguration() = 0;
         
-                
-        // write
+       virtual void setSchedule() = 0;
         
-        void write(const fileName& pathName);
- 
+//         virtual void afterForce() = 0;
+        
+//         const List<vectorList>& borderList() const;
+//         
+//         bool isPointWithinBorder(label index, const vector& r);
+        
+//         void writeBorders(const fileName& pathName);
+        
 };
 
 
@@ -145,6 +148,7 @@ public:
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
 
 #endif
 

@@ -54,6 +54,7 @@ reflectiveRectangularBorder::reflectiveRectangularBorder
 :
     borderModel(time, cloud, dict),
     propsDict_(dict.subDict(typeName + "Properties"))
+//     wallModel()
 {
     borderList_ = List<vectorList>(propsDict_.lookup("bordersList"));
     
@@ -71,6 +72,24 @@ reflectiveRectangularBorder::reflectiveRectangularBorder
         scalingValue_ = readLabel(propsDict_.lookup("scalingValue"));
     }    
 
+    // add wall force
+//     addWallForce_ = false;
+//     
+//     if (propsDict_.found("addWallForce"))
+//     {
+//         addWallForce_ = readLabel(propsDict_.lookup("addWallForce"));
+//     }
+// 
+//     if(addWallForce_)
+//     {
+//         wallModel_ = autoPtr<agentWallForce>
+//         (
+//             agentWallForce::New(t, propsDict_)
+//         );
+//         
+//         dX_ = 0.5; // m
+//     }
+   
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -154,26 +173,28 @@ void reflectiveRectangularBorder::afterMove()
 
 void reflectiveRectangularBorder::afterForce()
 {
-/*    const List< DynamicList<agent*> >& cellOccupancy
-        = cloud_.cellOccupancy();
-
-    forAll(cellOccupancy, c)
-    {
-        const List<agent*>& molsInCell = cellOccupancy[c];
-
-        forAll(molsInCell, mIC)
-        {
-            agent* molI = molsInCell[mIC];
-            
-            forAll(interactionList_[c], i)
-            {
-                label index = interactionList_[c][i];
-                
-//                 applForce();
-                
-            }
-        }
-    } */      
+//     if(addWallForce_)
+//     {
+//         const List< DynamicList<agent*> >& cellOccupancy
+//             = cloud_.cellOccupancy();
+// 
+//         forAll(cellOccupancy, c)
+//         {
+//             const List<agent*>& molsInCell = cellOccupancy[c];
+// 
+//             forAll(molsInCell, mIC)
+//             {
+//                 agent* molI = molsInCell[mIC];
+//                 
+//                 forAll(interactionList_[c], i)
+//                 {
+//                     label index = interactionList_[c][i];
+//                     
+//                     applyBorderForce();
+//                 }
+//             }
+//         }
+//     }
 }
 
 void reflectiveRectangularBorder::checkClosedEndedBorders()
@@ -209,8 +230,10 @@ void reflectiveRectangularBorder::initialiseBorders()
     Zmin -= dZ;
     Zmax += dZ;
     
-    normalVectors_.setSize(borderList_.size());
-    midPoints_.setSize(borderList_.size());
+    label nBorders = borderList_.size();
+    
+    normalVectors_.setSize(nBorders);
+    midPoints_.setSize(nBorders);
     
     forAll(borderList_, i)
     {
@@ -333,6 +356,45 @@ void reflectiveRectangularBorder::initialiseBorders()
     Info << "normal = " << normalVectors_ << endl;
     
 //     Info << "interactionList = " << interactionList_ << endl;
+    
+    // set agents on wall
+//     if(addWallForce_)
+//     {
+//         pointsOnWall_.setSize(nBorders);
+//         
+//         forAll(borderList_, i)
+//         {
+//             label nEdges = borderList_[i].size();
+//             
+//             DynamicList<vector> pointsOnEdges;
+//             
+//             for (int p = 0; p < nEdges-1; p++)
+//             {
+//                 const vector& v1=borderList_[i][p];
+//                 const vector& v2=borderList_[i][p+1];
+//                 
+//                 vector n = v2-v1;
+//                 scalar mag21 = mag(n);
+//                 n /= mag21;
+//                 
+//                 label nPts = label(mag21/dX_);
+//                 
+//                 for (int j = 0; j < nPts - 1; j++)
+//                 {
+//                     vector point  = v1 + 0.5*n*j;
+//                     
+//                     pointsOnEdges.append(point);
+//                 }
+//             }
+//             
+//             pointsOnWall_[i].setSize(pointsOnEdges.size());
+//             pointsOnWall_[i].transfer(pointsOnEdges);
+//             
+//             
+//         }
+//         
+//         Info << " pointsOnWall_ = " << pointsOnWall_ << endl;
+//     }
 }
 
 bool reflectiveRectangularBorder::isPointWithinBorder(label index, const vector& r)
