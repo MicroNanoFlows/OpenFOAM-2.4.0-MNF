@@ -71,6 +71,8 @@ private:
         
         vectorList destinations_;
         scalarList regionRadii_;
+        scalarList timeAtDestination_;
+        
         label nScheduledDestinations_;
         
         scalar timeIndex_;

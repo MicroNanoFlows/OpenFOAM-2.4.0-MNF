@@ -74,6 +74,12 @@ private:
         
         scalar tau_;
 
+        scalar timeCounter_;
+        
+        scalar initialTimeDelay_;
+        
+        scalar initialTime_;
+        
 //         scalar stdev_;
         
         // size = number of agents

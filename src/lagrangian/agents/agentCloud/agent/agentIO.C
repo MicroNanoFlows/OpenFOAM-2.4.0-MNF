@@ -48,6 +48,7 @@ Foam::agent::agent
     potentialEnergy_(0.0),
     R_(GREAT),
     frac_(1.0),
+    t_(0.0),    
     special_(0),
     id_(0),
     trackingNumber_(-1)
@@ -66,6 +67,7 @@ Foam::agent::agent
             is >> potentialEnergy_;
             is >> R_;
             is >> frac_;
+            is >> t_;
             special_ = readLabel(is);
             id_ = readLabel(is);
             trackingNumber_ = readLabel(is);
@@ -85,6 +87,7 @@ Foam::agent::agent
               + sizeof(potentialEnergy_)
               + sizeof(R_)
               + sizeof(frac_)              
+              + sizeof(t_) 
               + sizeof(special_)
               + sizeof(id_)
               + sizeof(trackingNumber_)
@@ -176,7 +179,7 @@ void Foam::agent::writeFields(const Cloud<agent>& mC)
 //     IOField<tensor> Q(mC.fieldIOobject("Q", IOobject::NO_READ), np);
 //     IOField<tensor> rf(mC.fieldIOobject("rf", IOobject::NO_READ), np);
     IOField<vector> v(mC.fieldIOobject("v", IOobject::NO_READ), np);
-//     IOField<vector> a(mC.fieldIOobject("a", IOobject::NO_READ), np);
+    IOField<vector> f(mC.fieldIOobject("f", IOobject::NO_READ), np);
 //     IOField<vector> pi(mC.fieldIOobject("pi", IOobject::NO_READ), np);
 //     IOField<vector> tau(mC.fieldIOobject("tau", IOobject::NO_READ), np);
     IOField<vector> specialPosition
@@ -199,6 +202,7 @@ void Foam::agent::writeFields(const Cloud<agent>& mC)
         const agent& mol = iter();
 
         v[i] = mol.v_;
+        f[i] = mol.f_;        
         mass[i] = mol.mass_;
         radius[i] = mol.radius_;
         desiredSpeed[i] = mol.desiredSpeed_;
@@ -210,6 +214,7 @@ void Foam::agent::writeFields(const Cloud<agent>& mC)
     }
 
     v.write();
+    f.write();
     mass.write();
     radius.write();
     desiredSpeed.write();
@@ -250,6 +255,7 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const agent& mol)
             << token::SPACE << mol.potentialEnergy_
             << token::SPACE << mol.R_
             << token::SPACE << mol.frac_
+            << token::SPACE << mol.t_
             << token::SPACE << mol.special_
             << token::SPACE << mol.id_
             << token::SPACE << mol.trackingNumber_;
@@ -270,6 +276,7 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const agent& mol)
           + sizeof(mol.potentialEnergy_)
           + sizeof(mol.R_)
           + sizeof(mol.frac_)
+          + sizeof(mol.t_)
           + sizeof(mol.special_)
 		  + sizeof(mol.id_)
           + sizeof(mol.trackingNumber_)

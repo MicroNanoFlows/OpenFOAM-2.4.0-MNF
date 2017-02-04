@@ -72,8 +72,8 @@ private:
         List<boundedBox> boxes_;
         // list of centre points of the box
         vectorList destinations_;
-//         scalarList regionRadii_;
         label nScheduledDestinations_;
+        scalarList timeAtDestination_;        
         
         scalar timeIndex_;
         label counter_;

@@ -29,7 +29,7 @@ License
 
 inline Foam::agent::agent
 (
-    const polyMesh& mesh,            
+    const polyMesh& mesh,       
     const agentProperties& cP,
     const vector& position,
     const label cellI,
@@ -41,10 +41,11 @@ inline Foam::agent::agent
     const vector& specialPosition,
     const scalar& mass,
     const scalar& radius,
-    const scalar& desiredSpeed, 
-    const scalar& potentialEnergy, 
+    const scalar& desiredSpeed,
+    const scalar& potentialEnergy,
     const scalar& R,
-    const scalar& frac,   
+    const scalar& frac,
+    const scalar& t,
     const label special,
     const label id,
     const label trackingNumber
@@ -61,6 +62,7 @@ inline Foam::agent::agent
     potentialEnergy_(potentialEnergy),
     R_(R),    
     frac_(frac),
+    t_(t),
     special_(special),
     id_(id),
     trackingNumber_(trackingNumber)
@@ -184,6 +186,17 @@ inline Foam::scalar& Foam::agent::fraction()
 {
     return frac_;
 }
+
+inline const Foam::scalar& Foam::agent::t() const
+{
+    return t_;
+}
+
+inline Foam::scalar& Foam::agent::t()
+{
+    return t_;
+}
+
 
 
 inline Foam::label Foam::agent::special() const
