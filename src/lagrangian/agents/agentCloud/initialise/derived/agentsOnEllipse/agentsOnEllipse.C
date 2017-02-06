@@ -26,7 +26,7 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "agentsOnBorders.H"
+#include "agentsOnEllipse.H"
 #include "addToRunTimeSelectionTable.H"
 #include "IFstream.H"
 #include "graph.H"
@@ -36,16 +36,16 @@ Description
 namespace Foam
 {
 
-defineTypeNameAndDebug(agentsOnBorders, 0);
+defineTypeNameAndDebug(agentsOnEllipse, 0);
 
-addToRunTimeSelectionTable(agentConfiguration, agentsOnBorders, dictionary);
+addToRunTimeSelectionTable(agentConfiguration, agentsOnEllipse, dictionary);
 
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-agentsOnBorders::agentsOnBorders
+agentsOnEllipse::agentsOnEllipse
 (
     agentCloud& molCloud,
     const dictionary& dict
@@ -54,8 +54,6 @@ agentsOnBorders::agentsOnBorders
     agentConfiguration(molCloud, dict),
     propsDict_(dict.subDict(typeName + "Properties"))    
 {
-    borderList_ = List<vectorList>(propsDict_.lookup("bordersList"));
-
     treshold_ = 0.001;
     
     checkClosedEndedBorders();
@@ -65,44 +63,30 @@ agentsOnBorders::agentsOnBorders
     if (propsDict_.found("distanceBetweenAgents"))
     {
         dX_ = readScalar(propsDict_.lookup("distanceBetweenAgents"));
-    }     
+    }
+    
+    R1_ = readScalar(propsDict_.lookup("R1"));
+    R2_ = readScalar(propsDict_.lookup("R2"));
+    
 }
 
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-agentsOnBorders::~agentsOnBorders()
+agentsOnEllipse::~agentsOnEllipse()
 {}
 
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void agentsOnBorders::checkClosedEndedBorders()
-{
-    forAll(borderList_, i)
-    {
-        const vector& rI = borderList_[i][0];
-        const vector& rJ = borderList_[i][borderList_[i].size()-1];
-        scalar rD = mag(rI - rJ);
-        
-        if(rD > treshold_)
-        {
-            FatalErrorIn("reflectiveRectangularBorder::checkClosedEndedBorders()") 
-                << "    This border has its end points not connected: " << nl
-                << borderList_[i] << nl
-                << "    Make the start point and end points the same." 
-                << nl << abort(FatalError);  
-        }
-    }
-}
 
-void agentsOnBorders::setInitialConfiguration()
+void agentsOnEllipse::setInitialConfiguration()
 {
 //     label initialSize = cloud_.size();
 
-    Info << nl << "Initialising agentsOnBorders" << endl;
+    Info << nl << "Initialising agentsOnEllipse" << endl;
 
     const word idName(propsDict_.lookup("agentId")); 
     const List<word>& idList(cloud_.cP().agentIds());
@@ -111,7 +95,7 @@ void agentsOnBorders::setInitialConfiguration()
 
     if(id == -1)
     {
-        FatalErrorIn("agentsOnBorders::setInitialConfiguration()")
+        FatalErrorIn("agentsOnEllipse::setInitialConfiguration()")
             << "Cannot find molecule id: " << idName << nl << "in idList."
             << exit(FatalError);
     }
@@ -126,45 +110,16 @@ void agentsOnBorders::setInitialConfiguration()
     
    
     DynamicList<vector> agentPositions;
+
+
+    theta = S/(x(i-1)*x(i-1))
     
-    forAll(borderList_, i)
-    {
-        label nEdges = borderList_[i].size();
-        
-        for (int p = 0; p < nEdges-1; p++)
-        {
-            const vector& v1=borderList_[i][p];
-            const vector& v2=borderList_[i][p+1];
-            
-            vector n = v2-v1;
-            scalar mag21 = mag(n);
-            n /= mag21;
-            
-            label nPts = label(mag21/dX_)+1;
-            
-            // new DX to include round off errors
-            scalar dX = mag21/nPts;
-            
-            Info << "v1 = " << v1
-            << ", v2 = " << v2
-            << ", mag = " << mag21
-            << ", dX = "  << dX
-            << " nPts = " << nPts << endl;
-            
-            for (int j = 0; j < nPts; j++)
-            {
-                vector point  = v1 + dX*n*j;
-                
-                agentPositions.append(point);
-            }
-        }
-    }
 
     Info << "checking for overlaps... " << endl;
     
     DynamicList<vector> positions;    
 
-    scalar tolerance = dX_/100;
+    scalar tolerance = 0.05;
     
     forAll(agentPositions, i)
     {
@@ -196,7 +151,7 @@ void agentsOnBorders::setInitialConfiguration()
         
     if(positions.size() > 1e6)
     {
-        FatalErrorIn("agentsOnBorders::setInitialConfiguration()")
+        FatalErrorIn("agentsOnEllipse::setInitialConfiguration()")
             << "Too many agents to insert"
             << exit(FatalError);
     }
