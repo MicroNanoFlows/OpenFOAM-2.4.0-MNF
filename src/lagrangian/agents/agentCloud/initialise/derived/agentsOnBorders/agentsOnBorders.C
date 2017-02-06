@@ -66,6 +66,13 @@ agentsOnBorders::agentsOnBorders
     {
         dX_ = readScalar(propsDict_.lookup("distanceBetweenAgents"));
     }     
+    
+    radius_ = 0.5;
+    
+    if (propsDict_.found("radius"))
+    {
+        radius_ = readScalar(propsDict_.lookup("radius"));
+    }     
 }
 
 
@@ -222,7 +229,7 @@ void agentsOnBorders::setInitialConfiguration()
         vector v = vector::zero;
         
         scalar massI = 1;
-        scalar radius = 0.5;
+//         scalar radius = 0.5;
         scalar desiredSpeed = 0.0;
         
         v.z()=0.0;
@@ -238,7 +245,7 @@ void agentsOnBorders::setInitialConfiguration()
                 tetPt,
                 id,
                 massI,
-                radius,
+                radius_,
                 desiredSpeed,
                 frozen,
                 v

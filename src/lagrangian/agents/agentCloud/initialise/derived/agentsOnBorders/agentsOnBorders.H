@@ -75,6 +75,7 @@ private:
 
         scalar dX_;
 
+        scalar radius_;
         
     // Private Member Functions
         
