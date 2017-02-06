@@ -90,6 +90,18 @@ reflectiveRectangularBorder::reflectiveRectangularBorder
 //         dX_ = 0.5; // m
 //     }
    
+   
+    agentIds_.clear();
+
+    selectAgentIds ids
+    (
+        cloud_.cP(),
+        propsDict_
+    );
+    
+    agentIds_ = ids.agentIds();
+    
+    
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -121,13 +133,16 @@ void reflectiveRectangularBorder::initialConfiguration()
         {
             agent* molI = molsInCell[mIC];
             
-            forAll(interactionList_[c], i)
+            if(!molI->frozen())
             {
-                label index = interactionList_[c][i];
-                
-                if(isPointWithinBorder(index, molI->position()))
+                forAll(interactionList_[c], i)
                 {
-                   agentsToDel.append(molI);
+                    label index = interactionList_[c][i];
+                    
+                    if(isPointWithinBorder(index, molI->position()))
+                    {
+                        agentsToDel.append(molI);
+                    }
                 }
             }
         }
@@ -157,14 +172,16 @@ void reflectiveRectangularBorder::afterMove()
             
             forAll(interactionList_[c], i)
             {
-                
-                label index = interactionList_[c][i];
-                
-                if(isPointWithinBorder(index, molI->position()))
+                if(findIndex(agentIds_, molI->id()) != -1)
                 {
-//                     Info << "Warning: inside = " << molI->position() << endl;
+                    label index = interactionList_[c][i];
                     
-                    reflect(index, molI);
+                    if(isPointWithinBorder(index, molI->position()))
+                    {
+    //                     Info << "Warning: inside = " << molI->position() << endl;
+                        
+                        reflect(index, molI);
+                    }
                 }
             }
         }
