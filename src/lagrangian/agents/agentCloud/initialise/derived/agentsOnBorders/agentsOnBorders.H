@@ -23,28 +23,30 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    reflectiveRectangularBorder
+    agentsOnBorders
 
 Description
-    NOT PARALLISED - massive problems here
 
 
 SourceFiles
-    reflectiveRectangularBorderI.H
-    reflectiveRectangularBorder.C
-    reflectiveRectangularBorderIO.C
+    agentsOnBordersI.H
+    agentsOnBorders.C
+    agentsOnBordersIO.C
+
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef reflectiveRectangularBorder_H
-#define reflectiveRectangularBorder_H
+#ifndef agentsOnBorders_H
+#define agentsOnBorders_H
 
-#include "borderModel.H"
+#include "agentConfiguration.H"
 #include "vector.H"
 #include "polyMesh.H"
+#include "volFields.H"
 #include "agentCloud.H"
-// #include "agentWallForce.H"
-
+#include "boundedBox.H"
+#include "distributePoints.H"
+#include "distribution.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -52,91 +54,55 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class reflectiveRectangularBorder Declaration
+                           Class agentsOnBorders Declaration
 \*---------------------------------------------------------------------------*/
 
-class reflectiveRectangularBorder
+class agentsOnBorders
 :
-	public borderModel
+	public agentConfiguration
 {
 
 private:
 
     // Private data
-
+    
         //- subDictionary containing the properties
         dictionary propsDict_;
-
-        List<vectorList> borderList_;
-        
-        // border properties
-        
-        // normal vectors point outwards 
-        List<vectorList> normalVectors_;
-        List<vectorList> midPoints_;
         
         scalar treshold_;
- 
-        // outer list = nCells on mesh
-        // inner list = index to borderList_ to interact with
-        List<DynamicList<label> > interactionList_;  
 
-        label scalingValue_;
+        List<vectorList> borderList_;
 
-        // adding a wall force
-
-//         autoPtr<agentWallForce> wallModel_;
-        
-//         List<vectorList> pointsOnWall_;
-//         
-//         bool addWallForce_;
-//         
-//         scalar dX_;
-
+        scalar dX_;
 
         
     // Private Member Functions
         
-        void initialiseBorders();
-
         void checkClosedEndedBorders();
-       
-        void reflect(label index, agent* a); 
 
-        bool isPointWithinBorder(label index, const vector& r);       
-        
 public:
 
     //- Runtime type information
-    TypeName("reflectiveRectangularBorder");
+    TypeName("agentsOnBorders");
 
     // Constructors
 
         //- Construct from components
-        reflectiveRectangularBorder
+        agentsOnBorders
         (
-            Time& time,
-            agentCloud& cloud,
+            agentCloud& molCloud,
             const dictionary& dict
         );
 
     // Destructor
 
-        ~reflectiveRectangularBorder();
+        ~agentsOnBorders();
+
 
     // Member Functions
-        
-        void initialConfiguration();
-        
-        void afterMove();
-        
-        void afterForce();
-        
-                
-        // write
-        
-        void write(const fileName& pathName);
- 
+
+        void setInitialConfiguration();
+
 };
 
 

@@ -23,28 +23,26 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    reflectiveRectangularBorder
+    routes
 
 Description
-    NOT PARALLISED - massive problems here
 
 
-SourceFiles
-    reflectiveRectangularBorderI.H
-    reflectiveRectangularBorder.C
-    reflectiveRectangularBorderIO.C
+
+    
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef reflectiveRectangularBorder_H
-#define reflectiveRectangularBorder_H
+#ifndef routes_H
+#define routes_H
 
-#include "borderModel.H"
-#include "vector.H"
+#include "List.H"
+#include "IOdictionary.H"
+#include "autoPtr.H"
 #include "polyMesh.H"
-#include "agentCloud.H"
-// #include "agentWallForce.H"
-
+#include "routeModel.H"
+#include "agent.H"
+#include "fvMesh.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -52,97 +50,84 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class reflectiveRectangularBorder Declaration
+                           Class routes Declaration
 \*---------------------------------------------------------------------------*/
 
-class reflectiveRectangularBorder
-:
-	public borderModel
+class routes
 {
-
-private:
 
     // Private data
 
-        //- subDictionary containing the properties
-        dictionary propsDict_;
 
-        List<vectorList> borderList_;
+        const fvMesh& mesh_;
         
-        // border properties
+        Time& time_;
         
-        // normal vectors point outwards 
-        List<vectorList> normalVectors_;
-        List<vectorList> midPoints_;
+        agentCloud& cloud_;
+
+//         const agentProperties& cP_;
         
-        scalar treshold_;
- 
-        // outer list = nCells on mesh
-        // inner list = index to borderList_ to interact with
-        List<DynamicList<label> > interactionList_;  
-
-        label scalingValue_;
-
-        // adding a wall force
-
-//         autoPtr<agentWallForce> wallModel_;
+        //- The entire dictionary (containing multiple subDictionaries)
+        IOdictionary routesDict_;
+     
         
-//         List<vectorList> pointsOnWall_;
-//         
-//         bool addWallForce_;
-//         
-//         scalar dX_;
-
-
+        //- routes
+        PtrList<entry> routeList_;
+        List<word> routeNames_;
+        List<label> routeIds_;
+        List< autoPtr<routeModel> > routes_;
+        
         
     // Private Member Functions
-        
-        void initialiseBorders();
 
-        void checkClosedEndedBorders();
-       
-        void reflect(label index, agent* a); 
-
-        bool isPointWithinBorder(label index, const vector& r);       
         
 public:
 
-    //- Runtime type information
-    TypeName("reflectiveRectangularBorder");
-
+    friend class agent;    
+    
     // Constructors
 
-        //- Construct from components
-        reflectiveRectangularBorder
+        //- Constructor 
+        routes
         (
-            Time& time,
-            agentCloud& cloud,
-            const dictionary& dict
+            Time& t,
+            const polyMesh& mesh,
+            agentCloud& cloud
         );
 
-    // Destructor
-
-        ~reflectiveRectangularBorder();
+        ~routes();
 
     // Member Functions
+
+        //- initial configuration
+        void initialConfig();
+
+//         void setSchedules();
+//         
+//         void afterForce();
+// 
+//         
+//         void write();
         
-        void initialConfiguration();
-        
-        void afterMove();
-        
-        void afterForce();
-        
-                
-        // write
-        
-        void write(const fileName& pathName);
- 
+        // Access
+
+//             const label& nStateControllers() const;
+
+            inline List< autoPtr<routeModel> >& routeModels();
+            inline const List< autoPtr<routeModel> >& routeModels() const;
+// 
+//             inline const List<word>& stateControllersNames() const; 
+    
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "routesI.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
