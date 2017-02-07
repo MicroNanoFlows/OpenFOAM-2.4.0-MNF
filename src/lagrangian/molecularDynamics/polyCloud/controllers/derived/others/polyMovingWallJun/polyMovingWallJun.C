@@ -1,0 +1,180 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+
+Description
+
+\*---------------------------------------------------------------------------*/
+
+#include "polyMovingWallJun.H"
+#include "addToRunTimeSelectionTable.H"
+#include "IFstream.H"
+#include "graph.H"
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+defineTypeNameAndDebug(polyMovingWallJun, 0);
+addToRunTimeSelectionTable(polyStateController, polyMovingWallJun, dictionary);
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+// Construct from components
+polyMovingWallJun::polyMovingWallJun
+(
+    Time& t,
+    polyMoleculeCloud& molCloud,
+    const dictionary& dict
+)
+:
+    polyStateController(t, /*mesh,*/ molCloud, dict),
+    propsDict_(dict.subDict(typeName + "Properties")),
+    wallMotionModel_(),
+    molIds_()
+{
+	writeInTimeDir_ = false;
+    writeInCase_ = false;
+
+//     singleValueController() = true;
+
+    wallMotionModel_ = autoPtr<wallMotion>
+    (
+       wallMotion::New(t, propsDict_)
+    );
+
+    molIds_.clear();
+
+    selectIds ids
+    (
+        molCloud_.cP(),
+        propsDict_
+    );
+
+    molIds_ = ids.molIds();
+    
+    binModel_ =  autoPtr<binModel>
+    (
+        binModel::New(mesh_, propsDict_)
+    );
+
+//    const label& nBins = binModel_->nBins();
+    readProperties();
+}
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+polyMovingWallJun::~polyMovingWallJun()
+{}
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+void polyMovingWallJun::initialConfiguration()
+{}
+
+void polyMovingWallJun::controlBeforeVelocityI()
+{
+    wallMotionModel_->updateVelocity();
+    velocity_ = wallMotionModel_->velocity();
+
+    Info << "polyMovingWallJun: control velocity = " << velocity_ << endl;
+    
+    const List< DynamicList<polyMolecule*> >& cellOccupancy
+        = molCloud_.cellOccupancy();
+
+    const labelList& cells = mesh_.cellZones()[regionId_];
+    
+    forAll(cells, c)
+    {
+        const label& cell = cells[c];
+        const List<polyMolecule*>& molsInCell = cellOccupancy[cell];
+
+        forAll(molsInCell, mIC)
+        {
+            polyMolecule* molI = molsInCell[mIC];
+
+            const vector& rI = molI->position();
+
+            label n = binModel_->isPointWithinBin(rI, cell);
+
+            if(n != -1)
+            {
+                if(findIndex(molIds_, molI->id()) != -1)
+                {   
+                    molI->a() = vector::zero;
+                    molI->v() = velocity_;
+                }
+            }
+        }
+    }
+}
+
+void polyMovingWallJun::controlBeforeMove()
+{}
+
+void polyMovingWallJun::controlBeforeForces()
+{}
+
+
+void polyMovingWallJun::controlDuringForces
+(
+    polyMolecule* molI,
+    polyMolecule* molJ
+)
+{}
+
+void polyMovingWallJun::controlAfterForces()
+{}
+
+void polyMovingWallJun::controlAfterVelocityII()
+{}
+
+
+void polyMovingWallJun::calculateProperties()
+{}
+
+void polyMovingWallJun::output
+(
+    const fileName& fixedPathName,
+    const fileName& timePath
+)
+{}
+
+void polyMovingWallJun::updateProperties(const dictionary& newDict)
+{
+    //- the main controller properties should be updated first
+    updateStateControllerProperties(newDict);
+
+    propsDict_ = newDict.subDict(typeName + "Properties");
+
+    readProperties();
+}
+
+
+void polyMovingWallJun::readProperties()
+{}
+
+} // End namespace Foam
+
+// ************************************************************************* //
