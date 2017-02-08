@@ -23,30 +23,28 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    agentsOnEllipse
+    rectangularBorderWithForceField
 
 Description
+    NOT PARALLISED - massive problems here
 
 
 SourceFiles
-    agentsOnEllipseI.H
-    agentsOnEllipse.C
-    agentsOnEllipseIO.C
-
+    rectangularBorderWithForceFieldI.H
+    rectangularBorderWithForceField.C
+    rectangularBorderWithForceFieldIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef agentsOnEllipse_H
-#define agentsOnEllipse_H
+#ifndef rectangularBorderWithForceField_H
+#define rectangularBorderWithForceField_H
 
-#include "agentConfiguration.H"
+#include "borderModel.H"
 #include "vector.H"
 #include "polyMesh.H"
-#include "volFields.H"
 #include "agentCloud.H"
-#include "boundedBox.H"
-#include "distributePoints.H"
-#include "distribution.H"
+// #include "agentWallForce.H"
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -54,54 +52,93 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class agentsOnEllipse Declaration
+                           Class rectangularBorderWithForceField Declaration
 \*---------------------------------------------------------------------------*/
 
-class agentsOnEllipse
+class rectangularBorderWithForceField
 :
-	public agentConfiguration
+	public borderModel
 {
 
 private:
 
     // Private data
-    
+
         //- subDictionary containing the properties
         dictionary propsDict_;
-        
-        label N_;
 
-        scalar a_;
-        scalar b_;
+        List<vectorList> borderList_;
         
-        scalar radius_;
-        vector midPoint_;
+        // border properties
+        
+        // normal vectors point outwards 
+        List<vectorList> normalVectors_;
+        List<vectorList> midPoints_;
+        
+        scalar treshold_;
+ 
+        // outer list = nCells on mesh
+        // inner list = index to borderList_ to interact with
+        List<DynamicList<label> > interactionList_;  
+
+        label scalingValue_;
+
+        List<label> agentIds_;        
+        
+        // adding a wall force
+
+//         autoPtr<agentWallForce> wallModel_;
+        
+//         List<vectorList> pointsOnWall_;
+//         
+//         bool addWallForce_;
+//         
+//         scalar dX_;
+
+
         
     // Private Member Functions
+        
+        void initialiseBorders();
+
+        void checkClosedEndedBorders();
+       
+        void reflect(label index, agent* a); 
+
+        bool isPointWithinBorder(label index, const vector& r);       
         
 public:
 
     //- Runtime type information
-    TypeName("agentsOnEllipse");
+    TypeName("rectangularBorderWithForceField");
 
     // Constructors
 
         //- Construct from components
-        agentsOnEllipse
+        rectangularBorderWithForceField
         (
-            agentCloud& molCloud,
+            Time& time,
+            agentCloud& cloud,
             const dictionary& dict
         );
 
     // Destructor
 
-        ~agentsOnEllipse();
-
+        ~rectangularBorderWithForceField();
 
     // Member Functions
-
-        void setInitialConfiguration();
-
+        
+        void initialConfiguration();
+        
+        void afterMove();
+        
+        void afterForce();
+        
+                
+        // write
+        
+        void write(const fileName& pathName);
+ 
 };
 
 

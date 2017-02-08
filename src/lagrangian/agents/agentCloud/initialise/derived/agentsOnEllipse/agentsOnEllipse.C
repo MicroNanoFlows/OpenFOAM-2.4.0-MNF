@@ -54,20 +54,23 @@ agentsOnEllipse::agentsOnEllipse
     agentConfiguration(molCloud, dict),
     propsDict_(dict.subDict(typeName + "Properties"))    
 {
-    treshold_ = 0.001;
+//     treshold_ = 0.001;
     
-    checkClosedEndedBorders();
     
-    dX_ = 0.5;
+    N_ = readLabel(propsDict_.lookup("N"));
+
     
-    if (propsDict_.found("distanceBetweenAgents"))
+    a_ = readScalar(propsDict_.lookup("a"));
+    b_ = readScalar(propsDict_.lookup("b"));
+    
+    radius_ = 0.5;
+    
+    if (propsDict_.found("radius"))
     {
-        dX_ = readScalar(propsDict_.lookup("distanceBetweenAgents"));
-    }
+        radius_ = readScalar(propsDict_.lookup("radius"));
+    }     
     
-    R1_ = readScalar(propsDict_.lookup("R1"));
-    R2_ = readScalar(propsDict_.lookup("R2"));
-    
+    midPoint_ = propsDict_.lookup("midPoint");       
 }
 
 
@@ -107,13 +110,41 @@ void agentsOnEllipse::setInitialConfiguration()
         frozen = Switch(propsDict_.lookup("frozen"));
     }
     
-    
+//     scalar dTheta = 0.1;
    
     DynamicList<vector> agentPositions;
-
-
-    theta = S/(x(i-1)*x(i-1))
     
+//     label count = 1;
+//     
+//     vector rS = vector(R1,0,0);
+//     
+//     agentPositions.append(rS);
+//     
+//     bool stop = true;
+//     scalar totalTheta = 
+//     while(!stop)
+//     
+//     {
+//         vector& r = agentPositions[count-1];
+//         scalar theta = S/(r.x()*r.x() + r.y()*r.y());
+//         vector rNew = vector(R1*cos(theta), R2*sin(theta) , 0);
+//         agentPositions.append(rNew);
+//     }
+    
+    label nPts = N_;
+    
+    scalar dT = 2*constant::mathematical::pi/nPts;
+    
+    for (label i=0; i<nPts; i++)
+    {
+        scalar t = -constant::mathematical::pi + i*dT;
+        
+        vector rNew = vector(a_*cos(t), b_*sin(t), 0.0);
+        
+        rNew += midPoint_;
+        
+        agentPositions.append(rNew);
+    }    
 
     Info << "checking for overlaps... " << endl;
     
@@ -177,7 +208,7 @@ void agentsOnEllipse::setInitialConfiguration()
         vector v = vector::zero;
         
         scalar massI = 1;
-        scalar radius = 0.5;
+//         scalar radius = 0.5;
         scalar desiredSpeed = 0.0;
         
         v.z()=0.0;
@@ -193,7 +224,7 @@ void agentsOnEllipse::setInitialConfiguration()
                 tetPt,
                 id,
                 massI,
-                radius,
+                radius_,
                 desiredSpeed,
                 frozen,
                 v
