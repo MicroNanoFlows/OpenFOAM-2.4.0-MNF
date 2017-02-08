@@ -37,6 +37,8 @@ initialise/basic/agentConfiguration/agentConfiguration.C
 /*initialise/derived/testInitialise/testInitialise.C*/
 initialise/derived/randomInitialiseBox/randomInitialiseBox.C
 initialise/derived/exactCoordinates/exactCoordinates.C
+initialise/derived/agentsOnBorders/agentsOnBorders.C
+initialise/derived/agentsOnEllipse/agentsOnEllipse.C
 
 /* integrator */
 

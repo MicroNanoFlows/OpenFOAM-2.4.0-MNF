@@ -73,6 +73,8 @@ private:
 
         List<label> agentIds_;
 
+        label N_;
+        
 //         scalar molFlux_;
 //         scalar massFlux_;
 // 
