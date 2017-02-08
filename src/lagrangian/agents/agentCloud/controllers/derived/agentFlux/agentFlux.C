@@ -198,7 +198,7 @@ void agentFlux::insertAgents(const label& N)
                 tetFace,
                 tetPt,     
                 vector::zero, //v
-                vector::zero,
+                vector::zero, //d
                 vector::zero,
                 vector::zero,
                 massI, // mass 

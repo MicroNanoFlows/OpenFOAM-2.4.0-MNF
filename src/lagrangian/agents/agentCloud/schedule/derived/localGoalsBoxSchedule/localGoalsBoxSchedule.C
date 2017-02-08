@@ -162,7 +162,7 @@ void localGoalsBoxSchedule::setSchedule()
             else
             {
             
-                label index = 0;
+                label index = -1;
                 //if(boxes_[nextDest].contains(mol().position())) //WILL THIS WORK FOR AGENTS SEPARATELY?
                 
                 // function that produces the index from the agent's d
