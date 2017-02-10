@@ -98,9 +98,6 @@ icoMacroModel::icoMacroModel
         fAll_[i].setSize(nIter_,0.0);
     }
     
-    
-
-    
     nPts_ = 10000;
     sSmooth_.setSize(nPts_);
     phisSmooth_.setSize(nPts_);
