@@ -1,0 +1,3 @@
+reconstructXmolWithVelocity.C
+
+EXE = $(FOAM_APPBIN)/reconstructXmolWithVelocity
