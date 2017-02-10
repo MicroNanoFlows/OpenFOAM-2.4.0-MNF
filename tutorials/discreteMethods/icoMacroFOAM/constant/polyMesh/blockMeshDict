@@ -1,0 +1,107 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.6                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+
+    class           dictionary;
+    object          blockMeshDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+convertToMeters 70;//20.588
+
+vertices
+(
+    (0 0 0)
+    (1 0 0)
+    (1 1 0)
+    (0 1 0)
+    (0 0 1)
+    (1 0 1)
+    (1 1 1)
+    (0 1 1)
+);
+
+blocks
+(
+    hex (0 1 2 3 4 5 6 7) mdZone (22 22 22) simpleGrading (1 1 1)
+);
+
+boundary
+(
+    periodicX_half0
+    {
+	type cyclic;
+	faces ((1 2 6 5));
+	neighbourPatch periodicX_half1;
+    }
+
+    periodicX_half1
+    {
+        type cyclic;
+        faces ((0 4 7 3));
+        neighbourPatch periodicX_half0;
+    }
+/*
+    topWall
+    {
+        type patch;
+        faces ((2 3 7 6));
+    }
+
+    bottomWall
+    {
+        type patch;
+        faces ((0 1 5 4));
+    }*/
+
+    periodicY_half0
+    {
+	type cyclic;
+	faces ((2 3 7 6));
+	neighbourPatch periodicY_half1;
+    }
+
+    periodicY_half1
+    {
+        type cyclic;
+        faces ((0 1 5 4));
+        neighbourPatch periodicY_half0;
+    }
+
+
+    periodicZ_half0
+    {
+	type cyclic;
+      	faces ((4 5 6 7));
+      	neighbourPatch periodicZ_half1;
+    }
+
+    periodicZ_half1
+    {
+	type cyclic;
+      	faces ((0 3 2 1));
+      	neighbourPatch periodicZ_half0;
+    }
+)
+
+mergePatchPairs
+(
+);
+
+
+// ************************************************************************* //

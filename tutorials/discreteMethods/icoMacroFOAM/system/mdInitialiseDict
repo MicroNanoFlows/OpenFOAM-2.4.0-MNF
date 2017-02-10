@@ -1,0 +1,50 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.6                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+
+    class           dictionary;
+    object          mdInitialiseDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+polyConfigurations
+(
+    configuration
+    {
+        type               polyBCC;
+        temperature        3.816;
+        bulkVelocity       (0.0 0.0 0.0);
+        molId              water;
+
+        unitCellSize       1.1; // latticeConstant (3.92A) in Reduced Units
+        N                  359601;
+        
+        boundBox
+        {
+            startPoint      (0 0 0);
+            endPoint        (70 70 70);
+        }
+    }
+);
+
+
+
+
+
+// ************************************************************************* //

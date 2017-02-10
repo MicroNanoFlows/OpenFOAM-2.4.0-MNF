@@ -1,0 +1,71 @@
+# =====================================
+# argon
+# =====================================
+
+dimension		3
+units           real
+boundary        p p p
+atom_style      atomic
+
+read_data		lammps/micro_5/flow.data
+
+# =====================================================
+# define global variables
+# =====================================================
+variable		temperature equal 300
+variable		cwdd string "lammps/micro_5"
+log				${cwdd}/log.lammps_imm
+
+# =====================================================
+# define potentials
+# =====================================================
+pair_style      lj/cut 13.6
+pair_coeff		1 1 0.238576 3.4
+pair_coeff		2 2 0.0		 0.0
+pair_coeff		1 2 0.04752 2.55
+
+group			argon type 1
+group			wall type 2
+
+neighbor        2.0 bin
+neigh_modify    delay 5 exclude type 2 2
+
+fix				frozen wall setforce 0 0 0
+velocity        wall set 0 0 0
+# =====================================================
+# define variables for measurements
+# =====================================================
+compute			aT argon temp
+compute			wT wall temp
+thermo          1000
+thermo_style    custom step temp c_wT c_aT press vol etotal ke pe ebond eangle evdwl ecoul elong etail
+thermo_modify   flush yes
+timestep        2
+
+# =====================================================
+# equilibration: NVT
+# =====================================================
+compute         biastemp argon temp/profile 0 1 1 y 10 out bin
+compute_modify  biastemp dynamic yes
+fix             fTemp argon temp/berendsen ${temperature} ${temperature} 100.0
+fix_modify      fTemp temp biastemp
+fix		 	  	2 argon nve
+
+fix             fImm argon imm solv1 5 every ${NEVRYAVG} startavg ${STRAVG} streamwidth 408
+
+variable        nAvog equal 6.0221415e23 # Avogadro's number
+variable        g_mol_fs_2_kg_s equal ((1e15/1000)/${nAvog}) #
+variable		binWidth equal 3.4
+print 			${g_mol_fs_2_kg_s}
+variable		bin_massrate atom "mass*vx*v_g_mol_fs_2_kg_s/v_binWidth"
+variable        massrate atom "mass*vx*v_g_mol_fs_2_kg_s/408"
+
+compute 		fieldMassRate argon reduce sum v_massrate
+
+compute         binMeasures3 argon chunk/atom bin/1d y lower ${binWidth}
+compute         binMeasures4 argon chunk/atom bin/1d y lower ${binWidth}
+
+fix             fieldMRIns argon ave/time 1 1000 1000 c_fieldMassRate ave one start 0 file ${cwdd}/zone_middleZone_argon_instant_mr.xy
+fix             fieldMRCum argon ave/time 1 1000 1000 c_fieldMassRate ave running start 0 file ${cwdd}/zone_middleZone_argon_cumul_mr.xy
+
+run             ${NRUN}

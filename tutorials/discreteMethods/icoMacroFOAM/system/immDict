@@ -1,0 +1,42 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.6                                   |
+|   \\  /    A nd           | Web:      http://www.OpenFOAM.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      immDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+macroSolverName         icoMacro;
+noOfMicroElements       5;
+noOfMicroSteps          200000;
+nIter                   10;
+macroLength             68e-9;
+Fs                      1.33779e16;
+rhoN                    3.3445e28;
+//Fs                      0.1;
+unitVector              (1 0 0);
+
+
+
+// imm solver
+microSolverName         icoMicro;
+
+
+// inputs for creating geometrical dimensions for micro domains
+ds                      4e-9;
+dz                      2e-9;
+dx                      0.05e-9;
+hInlet                  5e-9;
+amp                     1e-9;
+wallThickness           2e-9;
+
+
+// ************************************************************************* //

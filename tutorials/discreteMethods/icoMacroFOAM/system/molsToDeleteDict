@@ -1,0 +1,432 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.6                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+
+    class           dictionary;
+    object          molConfigDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+deleteMols
+(
+/*
+   del
+   {
+       molsToDeleteModel		delFromCylinder;
+ 
+       delFromCylinderProperties
+       {
+ 	startPoint	(-4 0 0);
+ 	endPoint	(4 0 0);
+ 	radius 		1.9;
+ 	oneSpecie	yes;
+ 	molId		G;
+       }
+   }*/
+
+/*
+  del
+  {
+      molsToDeleteModel		delFromMesh;
+
+      delFromMeshProperties
+      {
+	oneSpecie	yes;
+	molId		G;
+      }
+  }
+
+  del
+  {
+      molsToDeleteModel		delFromMesh;
+
+      delFromMeshProperties
+      {
+	oneSpecie	yes;
+	molId		C;
+      }
+  }
+
+  del
+  {
+      molsToDeleteModel		delFromZone;
+
+      delFromZoneProperties
+      {
+	zoneName	reservoirZone1;
+	oneSpecie	yes;
+	molId		water;
+      }
+  }
+
+  del
+  {
+      molsToDeleteModel		delFromZone;
+
+      delFromZoneProperties
+      {
+	zoneName	reservoirZone2;
+	oneSpecie	yes;
+	molId		water;
+      }
+  }
+
+*/
+
+/*
+  del
+  {
+      molsToDeleteModel		delFromZone;
+
+      delFromZoneProperties
+      {
+	zoneName	cntZone;
+	oneSpecie	yes;
+	molId		water;
+      }
+  }
+*/
+  del
+  {
+      molsToDeleteModel		delFromMesh;
+
+      delFromMeshProperties
+      {
+	oneSpecie	yes;
+	molId		water;
+      }
+  }
+
+
+//   del
+//   {
+//       molsToDeleteModel		delFromZone;
+// 
+//       delFromZoneProperties
+//       {
+// 	zoneName	removeRegionB;
+// 	oneSpecie	yes;
+// 	molId		Ar;
+//       }
+//   }
+/*
+   del
+   {
+       molsToDeleteModel		delFromCylinder;
+ 
+       delFromCylinderProperties
+       {
+ 	startPoint	(-4 0 0);
+ 	endPoint	(4 0 0);
+ 	radius 		30;
+ 	oneSpecie	yes;
+ 	molId		water;
+       }
+   }
+*/
+
+
+/*   
+   del
+   {
+       molsToDeleteModel		delFromCylinder;
+ 
+       delFromCylinderProperties
+       {
+ 	startPoint	(-4 0 0);
+ 	endPoint	(4 0 0);
+ 	radius 		2.3;
+ 	oneSpecie	yes;
+ 	molId		water;
+       }
+   }   
+
+   del
+   {
+       molsToDeleteModel		delFromZone;
+ 
+       delFromZoneProperties
+       {
+ 	zoneName	reservoirZone1;
+ 	oneSpecie	yes;
+ 	molId		water;
+       }
+   }
+
+   del
+   {
+       molsToDeleteModel		delFromZone;
+ 
+       delFromZoneProperties
+       {
+ 	zoneName	reservoirZone2;
+ 	oneSpecie	yes;
+ 	molId		water;
+       }
+   }
+
+   del
+   {
+       molsToDeleteModel		delFromZone;
+ 
+       delFromZoneProperties
+       {
+ 	zoneName	cntZone;
+ 	oneSpecie	yes;
+ 	molId		C;
+       }
+   }
+
+   del
+   {
+       molsToDeleteModel		delFromZone;
+ 
+       delFromZoneProperties
+       {
+ 	zoneName	wallZoneLeft;
+ 	oneSpecie	yes;
+ 	molId		G;
+       }
+   }
+
+   del
+   {
+       molsToDeleteModel		delFromZone;
+ 
+       delFromZoneProperties
+       {
+ 	zoneName	wallZoneRight;
+ 	oneSpecie	yes;
+ 	molId		G;
+       }
+   }
+*/
+/*
+  del
+  {
+      molsToDeleteModel		delFromSquare;
+
+      delFromSquareProperties
+      {
+	startPoint	(-5 -8 -8);
+	endPoint	(5 8 8);
+	oneSpecie	yes;
+	molId		water;
+      }
+  }
+ */
+//   del
+//   {
+//       molsToDeleteModel		delFromCylinder;
+// 
+//       delFromCylinderProperties
+//       {
+// 	startPoint	(-10 -13 -10 );
+// 	endPoint	(-10 -13 10);
+// 	radius 		9;
+// 	oneSpecie	yes;
+// 	molId		G;
+//       }
+//   }
+
+//   del
+//   {
+//       molsToDeleteModel		delFromCylinder;
+// 
+//       delFromCylinderProperties
+//       {
+// 	startPoint	(10 13 -10 );
+// 	endPoint	(10 13 10);
+// 	radius 		9;
+// 	oneSpecie	yes;
+// 	molId		Ar;
+//       }
+//   }
+
+//   del
+//   {
+//       molsToDeleteModel		delFromCylinder;
+// 
+//       delFromCylinderProperties
+//       {
+// 	startPoint	(10 -13 -10 );
+// 	endPoint	(10 -13 10);
+// 	radius 		9;
+// 	oneSpecie	yes;
+// 	molId		Ar;
+//       }
+//   }
+
+//   del
+//   {
+//       molsToDeleteModel		delFromMesh;
+// 
+//       delFromMeshProperties
+//       {
+// 	oneSpecie	yes;
+// 	molId		C;
+//       }
+//   }
+
+
+
+//   del
+//   {
+//       molsToDeleteModel		delFromMesh;
+// 
+//       delFromMeshProperties
+//       {
+// 	oneSpecie	yes;
+// 	molId		Ar;
+//       }
+//   }
+
+
+//   del
+//   {
+//       molsToDeleteModel		delFromCylinder;
+// 
+//       delFromCylinderProperties
+//       {
+// 	startPoint	(-10 0.0 0.0 );
+// 	endPoint	(10 0.0 0.0);
+// 	radius 		1.7;
+// 	oneSpecie	yes;
+// 	molId		Ar;
+//       }
+//   }
+
+
+
+//   del
+//   {
+//       molsToDeleteModel		delFromCylindricalShell;
+// 
+//       delFromCylindricalShellProperties
+//       {
+// 	startPoint	(-10 0.0 0.0 );
+// 	endPoint	(10 0.0 0.0);
+// 	rOut 		4;
+// 	rIn		1.7;
+// 	oneSpecie	yes;
+// 	molId		Ar;
+//       }
+//   }
+// 
+// 
+//   del
+//   {
+//       molsToDeleteModel		delFromCylinder;
+// 
+//       delFromCylinderProperties
+//       {
+// 	startPoint	(-10 0.0 0.0 );
+// 	endPoint	(10 0.0 0.0);
+// 	radius 		0.63;
+// 	oneSpecie	yes;
+// 	molId		Ar;
+//       }
+//   }
+
+
+
+//   del
+//   {
+//       molsToDeleteModel		delFromSphere;
+// 
+//       delFromSphereProperties
+//       {
+// 	startPoint	(0 0 0);
+// 	radius 		10;
+// 	oneSpecie	yes;
+// 	molId		Ar;
+//       }
+//   }
+
+//   del
+//   {
+//       molsToDeleteModel		delFromCylinder;
+// 
+//       delFromCylinderProperties
+//       {
+// 	startPoint	(-10 0.0 0.0 );
+// 	endPoint	(10 0.0 0.0);
+// 	radius 		3.4;
+// 	oneSpecie	yes;
+// 	molId		ArW;
+//       }
+//   }
+
+//   del
+//   {
+//       molsToDeleteModel		delFromMesh;
+// 
+//       delFromMeshProperties
+//       {
+// 	oneSpecie	yes;
+// 	molId		Ar;
+//       }
+//   }
+
+/*
+  del
+  {
+      molsToDeleteModel		delFromCylinder;
+
+      delFromCylinderProperties
+      {
+	startPoint	(-6 -5 0);
+	endPoint	(6 -5 0);
+	radius 		1.5;
+	oneSpecie	yes;
+	molId		Ar;
+      }
+  }
+
+  del
+  {
+      molsToDeleteModel		delFromCylinder;
+
+      delFromCylinderProperties
+      {
+	startPoint	(-6 0 5);
+	endPoint	(6 0 5);
+	radius 		1.5;
+	oneSpecie	yes;
+	molId		Ar;
+      }
+  }
+
+  del
+  {
+      molsToDeleteModel		delFromCylinder;
+
+      delFromCylinderProperties
+      {
+	startPoint	(-6 0 -5);
+	endPoint	(6 0 -5);
+	radius 		1.5;
+	oneSpecie	yes;
+	molId		Ar;
+      }
+  }
+  */
+);
+
+
+// ************************************************************************* //

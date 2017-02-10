@@ -1,0 +1,149 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.6                                   |
+|   \\  /    A nd           | Web:      http://www.OpenFOAM.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      zoneDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+cellZones
+(
+
+      zone
+      {
+         name            wallRegionB_C1;
+         startPoint      (0 3 0);
+         endPoint        (2 6 2);
+      }
+
+      zone
+      {
+         name            wallRegionB_C2;
+         startPoint      (14 3 0);
+         endPoint        (16 6 2);
+      }
+
+      zone
+      {
+         name            wallRegionB_C3;
+         startPoint      (14 3 14);
+         endPoint        (16 6 16);
+      }
+
+      zone
+      {
+         name            wallRegionB_C4;
+         startPoint      (0 3 12);
+         endPoint        (4 6 16);
+      }
+
+
+      zone
+      {
+         name            wallRegionT_C1;
+         startPoint      (0 42 0);
+         endPoint        (2 45 2);
+      }
+
+      zone
+      {
+         name            wallRegionT_C2;
+         startPoint      (14 42 0);
+         endPoint        (16 45 2);
+      }
+
+      zone
+      {
+         name            wallRegionT_C3;
+         startPoint      (14 42 14);
+         endPoint        (16 45 16);
+      }
+
+      zone
+      {
+         name            wallRegionT_C4;
+         startPoint      (0 42 14);
+         endPoint        (2 45 16);
+      }
+
+      zone
+      {
+         name            wallRegionPistonTop;
+         startPoint      (0 53 0);
+         endPoint        (16 57 16);
+      }
+
+			zone
+      {
+         name            wallRegionPistonBot;
+         startPoint      (0 -4 0);
+         endPoint        (16 -9 16);
+      }
+
+
+
+/*
+      zone
+      {
+         name            bottomRegion;
+         startPoint      (0 0 0);
+         endPoint        (16 22.4 16);
+      }
+
+      zone
+      {
+         name            bottomAirRegion;
+         startPoint      (0 19.2 0);
+         endPoint        (16 22.4 16);
+      }
+
+      zone
+      {
+         name            bottomWaterRegion;
+         startPoint      (0 0 0);
+         endPoint        (16 19.2 16);
+      }
+
+      zone
+      {
+         name            wallRegion;
+         startPoint      (0 22.4 0);
+         endPoint        (16 25.6 16);
+      }
+
+      zone
+      {
+         name            topRegion;
+         startPoint      (0 25.6 0);
+         endPoint        (16 48 16);
+      }
+
+      zone
+      {
+         name            topAirRegion;
+         startPoint      (0 25.6 0);
+         endPoint        (16 28.8 16);
+      }
+
+      zone
+      {
+         name            topWaterRegion;
+         startPoint      (0 28.8 0);
+         endPoint        (16 48 16);
+      }
+*/
+);
+
+faceZones
+(
+);
+
+
+// ************************************************************************* //
