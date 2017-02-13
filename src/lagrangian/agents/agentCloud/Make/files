@@ -58,6 +58,7 @@ measurements/derived/massFlowRate/massFlowRate.C
 measurements/derived/agentZoneProperties/agentZoneProperties.C
 measurements/derived/agentFieldProperties/agentFieldProperties.C
 measurements/derived/agent1DBins/agent1DBins.C
+measurements/derived/agentCount/agentCount.C
 
 /* controllers */
 
@@ -100,9 +101,15 @@ schedule/derived/agentTypeSchedule/agentTypeSchedule.C
 schedule/derived/localGoalsSchedule/localGoalsSchedule.C
 schedule/derived/localGoalsBoxSchedule/localGoalsBoxSchedule.C
 
+
+/* primitive */
+primitive/tiltedCylinder/tiltedCylinder.C 
+
 /* multiscale */
 
 multiscale/agentMicroElements/agentMicroElements.C
+
+
 
 
 LIB = $(FOAM_LIBBIN)/libagentCloud
