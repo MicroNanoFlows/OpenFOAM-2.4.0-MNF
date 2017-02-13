@@ -127,7 +127,7 @@ void localGoalsSchedule::initialConfiguration()
     {
         FatalError
             << "Something went wrong with the localGoalsSchedule " << endl
-            << " lists must match in size (n and n-1) and need to have sizes greater than zero"
+            << " lists must match in size and need to have sizes greater than zero"
             << endl << "destinations = " << destinations_
             << endl << "regionRadii = " << regionRadii_
             << endl << "timeAtDestination = " << timeAtDestination_

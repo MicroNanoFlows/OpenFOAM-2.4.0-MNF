@@ -18,7 +18,8 @@ forceFields/basic/wallForce/agentWallForce.C
 
 forceFields/derived/bodyForces/agentUniformForce/agentUniformForce.C      
 forceFields/derived/bodyForces/scheduledForce/scheduledForce.C
-forceFields/derived/bodyForces/agentFluctuatingForce/agentFluctuatingForce.C    
+forceFields/derived/bodyForces/agentFluctuatingForce/agentFluctuatingForce.C
+forceFields/derived/bodyForces/agentFluctuatingForceOneFactor/agentFluctuatingForceOneFactor.C 
 forceFields/derived/bodyForces/agentWillForce/agentWillForce.C
 forceFields/derived/bodyForces/agentWillForceScheduled/agentWillForceScheduled.C  
     
@@ -75,6 +76,7 @@ borders/basic/borders/borders.C
 borders/basic/borderModel/borderModel.C
 
 borders/derived/reflectiveRectangularBorder/reflectiveRectangularBorder.C
+borders/derived/reflectiveRectangularBorderModified/reflectiveRectangularBorderModified.C
 
 
 /* boundaries */
