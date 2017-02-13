@@ -16,19 +16,6 @@ FoamFile
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 
-//				reaction types	
-//	   ===============================================================
-//	   name						reaction equation	keyword
-//	   ---------------------------------------------------------------
-//	   dissociation type I		 AB+CD-->A+B+CD		dissTypeI
-//	   dissociation type II		 AB+C -->A+B+C		dissTypeII
-//	   exchange reaction 		 AB+C -->AC+B		molEx
-//	   molecular recombination	 A+B+C-->AB+C		molRe
-//	   ===============================================================
-//
-// X as a reactant or product is used if there exists no third reactant or product
-//
-
 
 reactions
 (

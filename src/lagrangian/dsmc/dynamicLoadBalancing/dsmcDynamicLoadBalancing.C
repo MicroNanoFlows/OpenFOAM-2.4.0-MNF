@@ -82,7 +82,8 @@ dsmcDynamicLoadBalancing::dsmcDynamicLoadBalancing
     performBalance_(false),
     enableBalancing_(Switch(dsmcLoadBalanceDict_.lookup("enableBalancing"))),
     originalEndTime_(time_.time().endTime().value()),
-    maxImbalance_(readScalar(dsmcLoadBalanceDict_.lookup("maximumAllowableImbalance")))
+    maxImbalance_(readScalar(dsmcLoadBalanceDict_.lookup("maximumAllowableImbalance"))),
+    nProcs_(readLabel(dsmcLoadBalanceDict_.lookup("numberOfSubdomains")))
 {}
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
@@ -157,9 +158,13 @@ void dsmcDynamicLoadBalancing::perform
 )
 {    
     if(performBalance_)
-    {
+    {      
         if (Pstream::master())
-        {              
+        {   
+            //string redistributeCommand("mpirun -np " + word(nProcs_) + " redistributeParDSMCLoadBalance -parallel");
+            
+            //system("redistributeCommand");
+            
             system("reconstructPar -latestTime");
                      
             system("decomposeDSMCLoadBalancePar -force");

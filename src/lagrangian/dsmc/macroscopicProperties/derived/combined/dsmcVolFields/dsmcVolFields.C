@@ -1666,121 +1666,6 @@ void dsmcVolFields::calculateField()
                 }
             }
             
-            forAll(boundaryCells_, j)
-            {
-                const polyPatch& patch = mesh_.boundaryMesh()[j];
-                
-                if(isA<polyPatch>(patch))
-                {
-                    if(!isA<emptyPolyPatch>(patch))
-                    {
-                        if(!isA<cyclicPolyPatch>(patch))
-                        {
-                            forAll(boundaryCells_[j], k)
-                            {       
-                                translationalT_.boundaryField()[j][k] = translationalT_[boundaryCells_[j][k]];
-                                rotationalT_.boundaryField()[j][k] = rotationalT_[boundaryCells_[j][k]];
-                                vibrationalT_.boundaryField()[j][k] = vibrationalT_[boundaryCells_[j][k]];
-                                overallT_.boundaryField()[j][k] = overallT_[boundaryCells_[j][k]];
-                                dsmcRhoNMean_.boundaryField()[j][k] = dsmcRhoNMean_[boundaryCells_[j][k]];
-                                rhoN_.boundaryField()[j][k] = rhoN_[boundaryCells_[j][k]];
-                                rhoM_.boundaryField()[j][k] = rhoM_[boundaryCells_[j][k]];
-                                p_.boundaryField()[j][k] = p_[boundaryCells_[j][k]];
-                                Ma_.boundaryField()[j][k] = Ma_[boundaryCells_[j][k]];
-                                UMean_.boundaryField()[j][k] = UMean_[boundaryCells_[j][k]];
-                            }
-                        }
-                    }
-                }
-                if(measureMeanFreePath_)
-                {
-                    if(!isA<emptyPolyPatch>(patch))
-                    {
-                        if(!isA<cyclicPolyPatch>(patch))
-                        {
-                            forAll(boundaryCells_[j], k)
-                            {
-                                meanFreePath_.boundaryField()[j][k] = meanFreePath_[boundaryCells_[j][k]];
-                                SOF_.boundaryField()[j][k] = SOF_[boundaryCells_[j][k]];
-                                mfpCellRatio_.boundaryField()[j][k] = mfpCellRatio_[boundaryCells_[j][k]];
-                                meanCollisionRate_.boundaryField()[j][k] = meanCollisionRate_[boundaryCells_[j][k]];
-                                meanCollisionTime_.boundaryField()[j][k] = meanCollisionTime_[boundaryCells_[j][k]];
-                                meanCollisionTimeTimeStepRatio_.boundaryField()[j][k] = meanCollisionTimeTimeStepRatio_[boundaryCells_[j][k]];
-                            }
-                        }
-                    }
-                }
-                if(measureClassifications_)
-                {
-                    if(isA<polyPatch>(patch))
-                    {
-                        if(!isA<emptyPolyPatch>(patch))
-                        {
-                            if(!isA<cyclicPolyPatch>(patch))
-                            {
-                                forAll(boundaryCells_[j], k)
-                                {
-                                    classIDistribution_.boundaryField()[j][k] = classIDistribution_[boundaryCells_[j][k]];
-                                    classIIDistribution_.boundaryField()[j][k] = classIIDistribution_[boundaryCells_[j][k]];
-                                    classIIIDistribution_.boundaryField()[j][k] = classIIIDistribution_[boundaryCells_[j][k]];
-                                }
-                            }
-                        }
-                    }
-                }
-                if(measureHeatFluxShearStress_)
-                { 
-                    if(isA<polyPatch>(patch))
-                    {
-                        if(!isA<emptyPolyPatch>(patch))
-                        {
-                            if(!isA<cyclicPolyPatch>(patch))
-                            {
-                                forAll(boundaryCells_[j], k)
-                                {
-                                    shearStressTensor_.boundaryField()[j][k] = shearStressTensor_[boundaryCells_[j][k]];
-                                    heatFluxVector_.boundaryField()[j][k] = heatFluxVector_[boundaryCells_[j][k]];
-                                    pressureTensor_.boundaryField()[j][k] = pressureTensor_[boundaryCells_[j][k]];
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            
-            if(measureMeanFreePath_)
-            {
-                meanFreePath_.write();
-                mfpCellRatio_.write();
-                meanCollisionRate_.write();
-                meanCollisionTime_.write();
-                meanCollisionTimeTimeStepRatio_.write();
-                meanCollisionSeparation_.write();
-                SOF_.write();
-            }
-            
-            if(measureClassifications_)
-            {
-                classIDistribution_.write();
-                classIIDistribution_.write();
-                classIIIDistribution_.write();
-            }
-            
-            if(measureErrors_)
-            {
-                densityError_.write();
-                velocityError_.write();
-                temperatureError_.write();
-                pressureError_.write();
-            }
-            
-            if(measureHeatFluxShearStress_)
-            {
-                heatFluxVector_.write();
-                pressureTensor_.write();
-                shearStressTensor_.write();
-            }
-            
 //             dsmcRhoN_.boundaryField() = dsmcRhoN_.boundaryField().boundaryInternalField();
             
             
@@ -1997,8 +1882,8 @@ void dsmcVolFields::calculateField()
                         
                         fD_.boundaryField()[j][k] = fDBF_[j][k]/nAvTimeSteps;
                         
-                        rhoN_.boundaryField()[j][k] = rhoN_[boundaryCells_[j][k]];
-                        rhoM_.boundaryField()[j][k] = rhoM_[boundaryCells_[j][k]];
+//                         rhoN_.boundaryField()[j][k] = rhoN_[boundaryCells_[j][k]];
+//                         rhoM_.boundaryField()[j][k] = rhoM_[boundaryCells_[j][k]];
                     }
                     
                     p_.boundaryField()[j] =
@@ -2036,6 +1921,121 @@ void dsmcVolFields::calculateField()
                         sqr(fD_.boundaryField()[j] & t1)
                         + sqr(fD_.boundaryField()[j] & t2));
                 }
+            }
+            
+            forAll(boundaryCells_, j)
+            {
+                const polyPatch& patch = mesh_.boundaryMesh()[j];
+                
+                if(isA<polyPatch>(patch))
+                {
+                    if(!isA<emptyPolyPatch>(patch))
+                    {
+                        if(!isA<cyclicPolyPatch>(patch))
+                        {
+                            forAll(boundaryCells_[j], k)
+                            {       
+                                translationalT_.boundaryField()[j][k] = translationalT_[boundaryCells_[j][k]];
+                                rotationalT_.boundaryField()[j][k] = rotationalT_[boundaryCells_[j][k]];
+                                vibrationalT_.boundaryField()[j][k] = vibrationalT_[boundaryCells_[j][k]];
+                                overallT_.boundaryField()[j][k] = overallT_[boundaryCells_[j][k]];
+                                dsmcRhoNMean_.boundaryField()[j][k] = dsmcRhoNMean_[boundaryCells_[j][k]];
+                                rhoN_.boundaryField()[j][k] = rhoN_[boundaryCells_[j][k]];
+                                rhoM_.boundaryField()[j][k] = rhoM_[boundaryCells_[j][k]];
+                                p_.boundaryField()[j][k] = p_[boundaryCells_[j][k]];
+                                Ma_.boundaryField()[j][k] = Ma_[boundaryCells_[j][k]];
+                                UMean_.boundaryField()[j][k] = UMean_[boundaryCells_[j][k]];
+                            }
+                        }
+                    }
+                }
+                if(measureMeanFreePath_)
+                {
+                    if(!isA<emptyPolyPatch>(patch))
+                    {
+                        if(!isA<cyclicPolyPatch>(patch))
+                        {
+                            forAll(boundaryCells_[j], k)
+                            {
+                                meanFreePath_.boundaryField()[j][k] = meanFreePath_[boundaryCells_[j][k]];
+                                SOF_.boundaryField()[j][k] = SOF_[boundaryCells_[j][k]];
+                                mfpCellRatio_.boundaryField()[j][k] = mfpCellRatio_[boundaryCells_[j][k]];
+                                meanCollisionRate_.boundaryField()[j][k] = meanCollisionRate_[boundaryCells_[j][k]];
+                                meanCollisionTime_.boundaryField()[j][k] = meanCollisionTime_[boundaryCells_[j][k]];
+                                meanCollisionTimeTimeStepRatio_.boundaryField()[j][k] = meanCollisionTimeTimeStepRatio_[boundaryCells_[j][k]];
+                            }
+                        }
+                    }
+                }
+                if(measureClassifications_)
+                {
+                    if(isA<polyPatch>(patch))
+                    {
+                        if(!isA<emptyPolyPatch>(patch))
+                        {
+                            if(!isA<cyclicPolyPatch>(patch))
+                            {
+                                forAll(boundaryCells_[j], k)
+                                {
+                                    classIDistribution_.boundaryField()[j][k] = classIDistribution_[boundaryCells_[j][k]];
+                                    classIIDistribution_.boundaryField()[j][k] = classIIDistribution_[boundaryCells_[j][k]];
+                                    classIIIDistribution_.boundaryField()[j][k] = classIIIDistribution_[boundaryCells_[j][k]];
+                                }
+                            }
+                        }
+                    }
+                }
+                if(measureHeatFluxShearStress_)
+                { 
+                    if(isA<polyPatch>(patch))
+                    {
+                        if(!isA<emptyPolyPatch>(patch))
+                        {
+                            if(!isA<cyclicPolyPatch>(patch))
+                            {
+                                forAll(boundaryCells_[j], k)
+                                {
+                                    shearStressTensor_.boundaryField()[j][k] = shearStressTensor_[boundaryCells_[j][k]];
+                                    heatFluxVector_.boundaryField()[j][k] = heatFluxVector_[boundaryCells_[j][k]];
+                                    pressureTensor_.boundaryField()[j][k] = pressureTensor_[boundaryCells_[j][k]];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if(measureMeanFreePath_)
+            {
+                meanFreePath_.write();
+                mfpCellRatio_.write();
+                meanCollisionRate_.write();
+                meanCollisionTime_.write();
+                meanCollisionTimeTimeStepRatio_.write();
+                meanCollisionSeparation_.write();
+                SOF_.write();
+            }
+            
+            if(measureClassifications_)
+            {
+                classIDistribution_.write();
+                classIIDistribution_.write();
+                classIIIDistribution_.write();
+            }
+            
+            if(measureErrors_)
+            {
+                densityError_.write();
+                velocityError_.write();
+                temperatureError_.write();
+                pressureError_.write();
+            }
+            
+            if(measureHeatFluxShearStress_)
+            {
+                heatFluxVector_.write();
+                pressureTensor_.write();
+                shearStressTensor_.write();
             }
             
             p_.write();

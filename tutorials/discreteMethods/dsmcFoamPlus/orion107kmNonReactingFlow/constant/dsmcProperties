@@ -50,7 +50,7 @@ collisionPartnerSelectionModel   		 noTimeCounter;
 // Molecular species
 // ~~~~~~~~~~~~~~~~~
 
-typeIdList                      (N2 O2 NO N O);
+typeIdList                      (N2 O2);
 
 moleculeProperties
 {
@@ -94,7 +94,7 @@ moleculeProperties
         degeneracyList                          (1);
     }
 
-    NO
+    /*NO
     {
         mass                           			49.88e-27;
         diameter                        		4.2e-10;
@@ -153,7 +153,7 @@ moleculeProperties
         numberOfElectronicLevels                1;
         electronicEnergyList                    (0);
         degeneracyList                          (1);
-    }
+    }*/
 }
 
 

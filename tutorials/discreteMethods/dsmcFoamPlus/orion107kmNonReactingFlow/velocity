@@ -21,4 +21,4 @@ set mxtics 5
 set mytics 5
 
 
-plot "velocity.dat" u 1:2 axis x1y1 w l ls 1 t "{/Times-Italic dsmcFoam}"
+plot "velocity.dat" u 1:2 axis x1y1 w l ls 1 t "{/Times-Italic dsmcFoam+}"
