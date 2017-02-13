@@ -23,30 +23,29 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    agentsOnEllipse
+    agentCount
+
 
 Description
 
 
 SourceFiles
-    agentsOnEllipseI.H
-    agentsOnEllipse.C
-    agentsOnEllipseIO.C
-
+    agentCountI.H
+    agentCount.C
+    agentCountIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef agentsOnEllipse_H
-#define agentsOnEllipse_H
+#ifndef agentCount_H
+#define agentCount_H
 
-#include "agentConfiguration.H"
+#include "agentMeasurement.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
 #include "agentCloud.H"
-#include "boundedBox.H"
-#include "distributePoints.H"
 #include "distribution.H"
+#include "tiltedCylinder.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -54,55 +53,90 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class agentsOnEllipse Declaration
+                           Class agentCount Declaration
 \*---------------------------------------------------------------------------*/
 
-class agentsOnEllipse
+class agentCount
 :
-	public agentConfiguration
+	public agentMeasurement
 {
 
 private:
 
     // Private data
-    
+
         //- subDictionary containing the properties
         dictionary propsDict_;
-        
-        label N_;
 
-        scalar a_;
-        scalar b_;
+        List<label> agentIds_;
+
+        word fieldName_;
+
+        tiltedCylinder zone_;
+
+        DynamicList<label> tNs_;
+        DynamicList<scalar> times_;
         
-        scalar radius_;
-        vector midPoint_;
+//         scalar nAgentsInstant_;
+        scalar nAgentsCumul_;
+        
+        DynamicList<scalar> nAgentsCumulField_;
+        DynamicList<scalar> timeField_;
+        
+        DynamicList<scalar> nAgentsInstantField_;
+        
+        
         
     // Private Member Functions
-        
+
+            
 public:
 
     //- Runtime type information
-    TypeName("agentsOnEllipse");
+    TypeName("agentCount");
 
     // Constructors
 
         //- Construct from components
-        agentsOnEllipse
-        (
-            agentCloud& molCloud,
+        agentCount
+		(
+            Time& t,
+            const polyMesh& mesh,
+            agentCloud& cloud,
             const dictionary& dict
-        );
+		);
 
     // Destructor
 
-        ~agentsOnEllipse();
-
+ 		~agentCount();
 
     // Member Functions
 
-        void setInitialConfiguration();
+        //- create initial field
+        void createField();
 
-};
+        //- calculate field
+        void calculateField();
+
+        void measureDuringForceComputation
+        (
+            agent* molI,
+            agent* molJ
+        );
+
+        void measureDuringForceComputationSite
+        (
+            agent* molI,
+            agent* molJ,
+            label sI,
+            label sJ
+        );
+
+//         const propertyField& fields() const;
+
+        //- write field
+        void writeField();
+}; 		
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

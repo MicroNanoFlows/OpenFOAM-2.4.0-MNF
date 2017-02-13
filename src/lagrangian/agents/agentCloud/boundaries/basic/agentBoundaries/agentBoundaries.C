@@ -163,7 +163,12 @@ agentBoundaries::agentBoundaries
         {
             mkDir(boundariesPath);
         }
-
+        else 
+        {
+            rmDir(boundariesPath);
+            mkDir(boundariesPath);            
+        }
+        
         // directory: case/boundaries/poly
         fileName polyBoundariesPath(boundariesPath/"agent");
 

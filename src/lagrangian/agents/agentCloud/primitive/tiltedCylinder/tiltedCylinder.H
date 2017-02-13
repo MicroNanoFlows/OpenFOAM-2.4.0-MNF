@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 2008-2009 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,30 +23,24 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    agentsOnEllipse
+    Foam::tiltedCylinder
 
 Description
 
-
 SourceFiles
-    agentsOnEllipseI.H
-    agentsOnEllipse.C
-    agentsOnEllipseIO.C
-
+    tiltedCylinderI.H
+    tiltedCylinder.C
+    tiltedCylinderIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef agentsOnEllipse_H
-#define agentsOnEllipse_H
+#ifndef tiltedCylinder_H
+#define tiltedCylinder_H
 
-#include "agentConfiguration.H"
-#include "vector.H"
+#include "scalar.H"
+#include "IOdictionary.H"
 #include "polyMesh.H"
-#include "volFields.H"
-#include "agentCloud.H"
-#include "boundedBox.H"
-#include "distributePoints.H"
-#include "distribution.H"
+#include "Time.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -54,60 +48,94 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class agentsOnEllipse Declaration
+                         Class tiltedCylinder Declaration
 \*---------------------------------------------------------------------------*/
 
-class agentsOnEllipse
-:
-	public agentConfiguration
+class tiltedCylinder
 {
-
-private:
-
     // Private data
-    
-        //- subDictionary containing the properties
-        dictionary propsDict_;
-        
-        label N_;
 
-        scalar a_;
-        scalar b_;
+        vector startPoint_;
+        
+        vector endPoint_;
         
         scalar radius_;
-        vector midPoint_;
         
+        vector normal_;
+        
+        scalar magRSE_;
+
     // Private Member Functions
-        
+
+//         void calcRefValues();
+
+        //- Disallow default bitwise copy construct
+//         tiltedCylinder(const tiltedCylinder&);
+
+        //- Disallow default bitwise assignment
+//         void operator=(const tiltedCylinder&);
+
+
 public:
 
-    //- Runtime type information
-    TypeName("agentsOnEllipse");
+    // Static data members
+
+        //- Static data 
+//         static const scalar kb;
+//         static const scalar elementaryCharge;
+//         static const scalar vacuumPermittivity;
 
     // Constructors
 
+        //- Construct with no argument
+        tiltedCylinder();
+
         //- Construct from components
-        agentsOnEllipse
+        tiltedCylinder
         (
-            agentCloud& molCloud,
-            const dictionary& dict
+            const vector& startPoint,
+            const vector& endPoint,
+            const scalar& radius
         );
+
 
     // Destructor
 
-        ~agentsOnEllipse();
+        ~tiltedCylinder();
 
 
     // Member Functions
 
-        void setInitialConfiguration();
+            void setBox();
+            
+            void setBox
+            (
+                const vector& startPoint,
+                const vector& endPoint,
+                const scalar& radius                
+            );
+            
 
+        // Access
+
+            inline bool contains(const vector& p);
+
+ 
+
+
+    // IOstream Operators
+
+//         friend Ostream& operator<<(Ostream&, const tiltedCylinder&);
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "tiltedCylinderI.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
