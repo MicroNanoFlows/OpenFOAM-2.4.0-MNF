@@ -21,6 +21,8 @@ forceFields/derived/bodyForces/scheduledForce/scheduledForce.C
 forceFields/derived/bodyForces/agentFluctuatingForce/agentFluctuatingForce.C    
 forceFields/derived/bodyForces/agentWillForce/agentWillForce.C     
 forceFields/derived/bodyForces/agentWillForceScheduled/agentWillForceScheduled.C  
+forceFields/derived/bodyForces/agentGroupForce/agentGroupForce.C     
+    
     
 /*forceFields/derived/pairPotentials/lennardJones/lennardJones.C  */  
     
@@ -39,6 +41,9 @@ initialise/derived/randomInitialiseBox/randomInitialiseBox.C
 initialise/derived/exactCoordinates/exactCoordinates.C
 initialise/derived/agentsOnBorders/agentsOnBorders.C
 initialise/derived/agentsOnEllipse/agentsOnEllipse.C
+initialise/derived/boxInitialise/boxInitialise.C
+initialise/derived/groupBoxInitialise/groupBoxInitialise.C
+
 
 /* integrator */
 
@@ -104,6 +109,7 @@ schedule/derived/localGoalsBoxSchedule/localGoalsBoxSchedule.C
 
 /* primitive */
 primitive/tiltedCylinder/tiltedCylinder.C 
+primitive/agentTracker/agentTracker.C
 
 /* multiscale */
 

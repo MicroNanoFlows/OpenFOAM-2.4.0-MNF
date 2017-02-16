@@ -54,7 +54,7 @@ SourceFiles
 #include "agentBoundaries.H"
 #include "schedules.H"
 #include "Random.H"
-
+#include "agentTracker.H"
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -87,8 +87,8 @@ private:
         reducedUnits rU_;
         
         List<DynamicList<agent*> > cellOccupancy_;
-       
-        agentMeasurements fields_; 
+        
+        agentMeasurements fields_;
         
         agentControllers controllers_;
         
@@ -104,7 +104,7 @@ private:
         
         schedules s_;
         
-
+        agentTracker tracker_;
 
     // Private Member Functions
 
@@ -218,6 +218,9 @@ public:
             
             inline const schedules& s() const;     
             inline schedules& s();     
+
+            inline const agentTracker& tracker() const;     
+            inline agentTracker& tracker();  
             
     // Member Operators
 

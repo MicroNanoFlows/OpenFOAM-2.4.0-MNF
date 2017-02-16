@@ -784,4 +784,15 @@ inline Foam::schedules& Foam::agentCloud::s()
     return s_;
 }
 
+inline const Foam::agentTracker& Foam::agentCloud::tracker() const
+{
+    return tracker_;
+}
+
+inline Foam::agentTracker& Foam::agentCloud::tracker()
+{
+    return tracker_;
+}
+
+
 // ************************************************************************* //
