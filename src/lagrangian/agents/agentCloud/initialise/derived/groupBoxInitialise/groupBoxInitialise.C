@@ -74,7 +74,7 @@ void groupBoxInitialise::setInitialConfiguration()
 {
 //     label initialSize = cloud_.size();
 
-    Info << nl << "Box initialise " << endl;
+//     Info << nl << "Box initialise " << endl;
     
     
 //     const scalar temperature(readScalar(propsDict_.lookup("temperature")));
@@ -89,7 +89,7 @@ void groupBoxInitialise::setInitialConfiguration()
     if(id == -1)
     {
         FatalErrorIn("groupBoxInitialise::setInitialConfiguration()")
-            << "Cannot find molecule id: " << idName << nl << "in idList."
+            << "Cannot find agent id: " << idName << nl << "in idList."
             << exit(FatalError);
     }
 
@@ -155,7 +155,7 @@ void groupBoxInitialise::setInitialConfiguration()
     
 //     label N(readLabel(propsDict_.lookup("N")));
 
-    Info << "number of agents, N = " << positions.size() << endl;
+//     Info << "number of agents, N = " << positions.size() << endl;
     
     label nAgentsInserted = 0;
     
@@ -215,9 +215,27 @@ void groupBoxInitialise::setInitialConfiguration()
         }
     }
     
-    Info << "trackingNumbers = " << trackingNumbers << endl;
+//     Info << "trackingNumbers = " << trackingNumbers << endl;
     
-    Info << "number of agents inserted = " << nAgentsInserted << endl;
+//     Info << "number of agents inserted = " << nAgentsInserted << endl;
+    
+    if(trackingNumbers.size() > 0)
+    {
+        Info << "( " << trackingNumbers[0] << " ";
+        
+        for (label i = 1; i < trackingNumbers.size(); i++)
+        {
+            Info << trackingNumbers[i] << " ";
+        }
+        
+        Info << ")" << endl;
+    }
+    else
+    {
+        FatalErrorIn("groupBoxInitialise::setInitialConfiguration()")
+            << "Did not insert any agents. Check!"
+            << exit(FatalError);        
+    }
     
     List< Pair<scalar> > histogram = d.raw();
     

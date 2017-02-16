@@ -84,6 +84,8 @@ agentGroupForce::agentGroupForce
     // load tracking numbers
     
     trackingNumbers_ = List<List<label> >(propsDict_.lookup("trackingNumbers"));
+    
+    Info << "trackingNumbers = " << trackingNumbers_ << endl;
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -108,14 +110,14 @@ void agentGroupForce::force(agent* p2)
         label tN2 = p2->trackingNumber();
         label groupId = -1;
         
-        // being inefficent here 
+        // being very inefficent here - any optimisation is welcome ( won't scale up well )
         forAll(trackingNumbers_, i)
         {
             label id = findIndex(trackingNumbers_[i], tN2);
             
             if(id != -1)
             {
-               groupId = id;
+               groupId = i;
             }
         }
             
@@ -124,21 +126,23 @@ void agentGroupForce::force(agent* p2)
             // find leader of group
             label tN1 = trackingNumbers_[groupId][0];
             
-            if(cloud_.tracker().isTrackingNumberAvailable(tN1))
+            if(tN1 != tN2)
             {
-                agent* p1 = cloud_.tracker().getAgent();
-                vector r1 = p1->position();
-                
-                vector r2 = p2->position();
-                vector n = r1 - r2;
-                scalar magR12 = mag(n);
-                n /= magR12;
-                
-                if(magR12 > radius_)
+                if(cloud_.tracker().isTrackingNumberAvailable(tN1))
                 {
-                    p2->f() += (convergentSpeed_*n - p2->v())*p2->mass() / tau_; // MAKE SURE n is UNIT vector
+                    agent* p1 = cloud_.tracker().getAgent();
+                    vector r1 = p1->position();
+                    
+                    vector r2 = p2->position();
+                    vector n = r1 - r2;
+                    scalar magR12 = mag(n);
+                    n /= magR12;
+                    
+                    if(magR12 > radius_)
+                    {
+                        p2->f() += (convergentSpeed_*n - p2->v())*p2->mass() / tau_; // MAKE SURE n is UNIT vector
+                    }
                 }
-                
             }
         }
     }
