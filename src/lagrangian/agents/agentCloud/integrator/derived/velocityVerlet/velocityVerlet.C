@@ -96,6 +96,8 @@ void velocityVerlet::evolve()
     cloud_.controllers().controlBeforeMove();
     
     cloud_.move();
+
+    cloud_.tracker().track();
     
     cloud_.buildCellOccupancy();
 
