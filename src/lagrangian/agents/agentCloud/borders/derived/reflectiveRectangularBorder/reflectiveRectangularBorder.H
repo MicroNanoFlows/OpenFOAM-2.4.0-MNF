@@ -26,7 +26,7 @@ Class
     reflectiveRectangularBorder
 
 Description
-    NOT PARALLISED 
+    NOT PARALLISED - massive problems here
 
 
 SourceFiles
@@ -43,7 +43,7 @@ SourceFiles
 #include "vector.H"
 #include "polyMesh.H"
 #include "agentCloud.H"
-
+// #include "agentWallForce.H"
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -82,6 +82,20 @@ private:
         List<DynamicList<label> > interactionList_;  
 
         label scalingValue_;
+
+        List<label> agentIds_;        
+        
+        // adding a wall force
+
+//         autoPtr<agentWallForce> wallModel_;
+        
+//         List<vectorList> pointsOnWall_;
+//         
+//         bool addWallForce_;
+//         
+//         scalar dX_;
+
+
         
     // Private Member Functions
         

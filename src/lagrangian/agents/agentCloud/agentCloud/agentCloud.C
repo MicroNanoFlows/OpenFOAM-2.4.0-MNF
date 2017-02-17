@@ -367,7 +367,8 @@ Foam::agentCloud::agentCloud
     f_(t, mesh_, *this),
     b_(t, mesh_, *this),
     ob_(t, mesh_, *this),
-    s_(t, mesh_, *this)
+    s_(t, mesh_, *this),
+    tracker_(*this)
 {
     agent::readFields(*this);
 
@@ -417,7 +418,8 @@ Foam::agentCloud::agentCloud
     f_(t, mesh_, *this),
     b_(t, mesh_, *this),
     ob_(t, mesh_, *this),
-    s_(t, mesh_, *this)
+    s_(t, mesh_, *this),
+    tracker_(*this)
 {
     agent::readFields(*this);
 

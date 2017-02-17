@@ -20,8 +20,15 @@ forceFields/derived/bodyForces/agentUniformForce/agentUniformForce.C
 forceFields/derived/bodyForces/scheduledForce/scheduledForce.C
 forceFields/derived/bodyForces/agentFluctuatingForce/agentFluctuatingForce.C    
 forceFields/derived/bodyForces/agentWillForce/agentWillForce.C     
+<<<<<<< HEAD
 forceFields/derived/bodyForces/agentWillForceScheduled/agentWillForceScheduled.C
 
+=======
+forceFields/derived/bodyForces/agentWillForceScheduled/agentWillForceScheduled.C  
+forceFields/derived/bodyForces/agentGroupForce/agentGroupForce.C     
+    
+    
+>>>>>>> devel-matthew
 /*forceFields/derived/pairPotentials/lennardJones/lennardJones.C  */  
     
 forceFields/derived/pairPotentials/helbingExponential/helbingExponential.C    
@@ -39,7 +46,15 @@ initialise/basic/agentConfiguration/agentConfiguration.C
 /*initialise/derived/testInitialise/testInitialise.C*/
 initialise/derived/randomInitialiseBox/randomInitialiseBox.C
 initialise/derived/exactCoordinates/exactCoordinates.C
+<<<<<<< HEAD
 initialise/derived/boxInitialise/boxInitialise.C
+=======
+initialise/derived/agentsOnBorders/agentsOnBorders.C
+initialise/derived/agentsOnEllipse/agentsOnEllipse.C
+initialise/derived/boxInitialise/boxInitialise.C
+initialise/derived/groupBoxInitialise/groupBoxInitialise.C
+
+>>>>>>> devel-matthew
 
 /* integrator */
 
@@ -59,6 +74,7 @@ measurements/derived/massFlowRate/massFlowRate.C
 measurements/derived/agentZoneProperties/agentZoneProperties.C
 measurements/derived/agentFieldProperties/agentFieldProperties.C
 measurements/derived/agent1DBins/agent1DBins.C
+measurements/derived/agentCount/agentCount.C
 
 /* controllers */
 
@@ -101,9 +117,16 @@ schedule/derived/agentTypeSchedule/agentTypeSchedule.C
 schedule/derived/localGoalsSchedule/localGoalsSchedule.C
 schedule/derived/localGoalsBoxSchedule/localGoalsBoxSchedule.C
 
+
+/* primitive */
+primitive/tiltedCylinder/tiltedCylinder.C 
+primitive/agentTracker/agentTracker.C
+
 /* multiscale */
 
 multiscale/agentMicroElements/agentMicroElements.C
+
+
 
 
 LIB = $(FOAM_LIBBIN)/libagentCloud
