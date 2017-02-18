@@ -42,6 +42,7 @@ SourceFiles
 #include "Time.H"
 #include "polyMesh.H"
 #include "mathematicalConstants.H"
+#include "agent.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -115,15 +116,16 @@ public:
 
         // Access
 
-            virtual vector force(const vector& position) = 0;
+            virtual vector force(agent* molI, const vector& rW) = 0;
             
-            virtual vector force(const scalar& time) = 0;
- 
-            virtual vector force(const scalar& time, const vector& position) = 0;            
+            virtual vector force(agent* molI, const vector& rW, const scalar& time) = 0;
+            
+            virtual vector force(agent* molI, const scalar& time) = 0;
             
             virtual void updateForce() = 0;
 
         // Check
+            
             bool spaceVarying();
             
             bool timeVarying();

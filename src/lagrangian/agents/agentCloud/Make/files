@@ -28,7 +28,7 @@ forceFields/derived/bodyForces/agentGroupForce/agentGroupForce.C
     
 forceFields/derived/pairPotentials/helbingExponential/helbingExponential.C    
 
-forceFields/derived/wallForces/agentRepulsiveForce/agentRepulsiveForce.C
+forceFields/derived/wallForces/wallHelbingExponential/wallHelbingExponential.C
 
     
 /* initialise */
@@ -82,7 +82,7 @@ borders/basic/borders/borders.C
 borders/basic/borderModel/borderModel.C
 
 borders/derived/reflectiveRectangularBorder/reflectiveRectangularBorder.C
-
+borders/derived/rectangularBorder/rectangularBorder.C
 
 /* boundaries */
 
