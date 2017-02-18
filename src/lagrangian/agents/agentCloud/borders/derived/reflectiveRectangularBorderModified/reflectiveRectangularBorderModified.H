@@ -57,7 +57,7 @@ namespace Foam
 
 class reflectiveRectangularBorderModified
 :
-	public borderModel
+    public borderModel
 {
 
 private:
@@ -105,7 +105,7 @@ private:
        
         void reflect(label index, agent* a); 
 
-        bool isPointWithinBorder(label index, const vector& r, const scalar& agentRadius);       
+        bool isPointWithinBorder(label index, const vector& r);       
         
 public:
 

@@ -139,7 +139,7 @@ void reflectiveRectangularBorderModified::initialConfiguration()
                 {
                     label index = interactionList_[c][i];
                     
-                    if(isPointWithinBorder(index, molI->position(), molI->radius()))
+                    if(isPointWithinBorder(index, molI->position()))
                     {
                         agentsToDel.append(molI);
                     }
@@ -176,7 +176,7 @@ void reflectiveRectangularBorderModified::afterMove()
                 {
                     label index = interactionList_[c][i];
                     
-                    if(isPointWithinBorder(index, molI->position(), molI->radius()))
+                    if(isPointWithinBorder(index, molI->position()))
                     {
     //                     Info << "Warning: inside = " << molI->position() << endl;
                         
@@ -212,7 +212,131 @@ void reflectiveRectangularBorderModified::afterForce()
 //             }
 //         }
 //     }
+    
+    const List< DynamicList<agent*> >& cellOccupancy
+        = cloud_.cellOccupancy();
+
+    forAll(cellOccupancy, c)
+    {
+        const List<agent*>& molsInCell = cellOccupancy[c];
+
+        forAll(molsInCell, mIC)
+        {
+            agent* molI = molsInCell[mIC];
+            label closestCorner1 = -1;
+            label closestBorder = -1;
+            scalar dIWMin = GREAT;
+            vector point = molI->position();
+            
+            forAll(interactionList_[c], i)
+            {
+                if(findIndex(agentIds_, molI->id()) != -1)
+                {
+                    label index = interactionList_[c][i];
+//                     cout << ">>> index is equal to: " << index << " <<<\n";
+                    
+//                     if(isPointWithinBorder(index, molI->position()))
+//                     {
+//     //                     Info << "Warning: inside = " << molI->position() << endl;
+//                         
+//                         reflect(index, molI);
+//                     }
+                                    
+                    
+                    // find the closest edge to interact with                
+                    for (int corner = 0; corner < borderList_[index].size()-1; corner++)
+                    {
+                        const vector& v1 = borderList_[index][corner];             
+                        const vector& v2 = borderList_[index][corner+1];
+                        
+                        scalar edgeLength = mag(v2-v1);
+                        vector v21 = v2-v1;
+//                             cout << ">>> vector1 is equal to: (" << v21.x() <<", "<< v21.y() << " )<<<\n";
+//                             cout << ">>> point is equal to: (" << point.x() <<", "<< point.y() << " )<<<\n";
+                        
+//                             scalar tTest = ((point-v1) & v21)/edgeLength;
+//                             cout << ">>> tTest is equal to: " << tTest << " <<<\n";
+                        
+                        scalar t = max(0, min(1, ((point-v1) & v21)/(edgeLength*edgeLength)));        
+//                             cout << ">>> t is equal to: " << t << " <<<\n";
+                        
+                        vector projection = v1 + t*(v2-v1);
+                        
+                        // calculate distance to an edge
+                        scalar dIW = mag(point-projection);
+                        
+                        if (dIW < dIWMin)
+                        {
+                            dIWMin = dIW;
+                            closestBorder = index;
+                            
+//                                 closestPointOnBorder = projection;
+                            closestCorner1 = corner;
+//                                 cout << ">>> t is equal to: " << t << " <<<\n";
+                        }
+                    }
+                }
+            }
+            
+            // calcuate "normal" and "tangential" directions between agent and the closest edge
+            if (closestCorner1 == -1 || closestBorder == -1)
+            {
+                FatalErrorIn("reflectiveRectangularBorderModified::afterForce()") 
+                    << "    No closestBorder or closestCorner1 found = " << molI->position()
+                    << "; What happened here?"
+                    << nl << abort(FatalError);   
+            }
+            else
+            {
+                
+                const vector& v1 = borderList_[closestBorder][closestCorner1];
+                cout << ">>> v1 to: (" << v1.x() <<", "<< v1.y() << " )<<<\n";
+                const vector& v2 = borderList_[closestBorder][closestCorner1+1];
+                cout << ">>> v2 to: (" << v2.x() <<", "<< v2.y() << " )<<<\n";
+                
+                scalar edgeLength = mag(v2-v1);                           
+                scalar t = max(0, min(1, ((point-v1) & (v2-v1))/(edgeLength*edgeLength)));
+//                         cout << ">>> t is equal to: " << t << " <<<\n";
+                
+//                         scalar t = ((point-v1) & (v2-v1))/edgeLength;
+                cout << ">>> t is equal to: " << t << " <<<\n";
+                
+                cout << ">>> closestBorder is equal to: " << closestBorder << " <<<\n";
+                cout << ">>> closestCorner1 is equal to: " << closestCorner1 << " <<<\n";
+//                         cout << ">>> vector1 is equal to: (" << v1.x() <<", "<< v1.y() << " )<<<\n";
+                
+                vector closestPointOnBorder = v1 + t*(v2-v1);
+                cout << ">>> closestPointOnBorder to: (" << closestPointOnBorder.x() <<", "<< closestPointOnBorder.y() << " )<<<\n";
+
+                vector nij = (point - closestPointOnBorder)/mag(point - closestPointOnBorder);
+                vector tij = vector (-nij.y(), nij.x(), 0);
+                
+                // calculate repulsive force from the wall            
+                scalar rI = molI->radius();                
+                
+                scalar A = 1000;
+                scalar B = 0.005;
+                scalar k = 0;
+                scalar kappa = 0;
+                
+                if(dIWMin >= rI)
+                {
+                    vector force = A*exp((rI-dIWMin)/B)*nij;
+                    
+                    molI->f() += force;
+                } 
+                else
+                {
+                    vector force = (A*exp((rI-dIWMin)/B) + k*(rI-dIWMin))*nij - 
+                            kappa*(rI-dIWMin)*(molI->v() & tij)*tij;
+                            
+                    molI->f() += force;
+                }
+            }
+        }
+    }    
 }
+
 
 void reflectiveRectangularBorderModified::checkClosedEndedBorders()
 {
@@ -414,7 +538,7 @@ void reflectiveRectangularBorderModified::initialiseBorders()
 //     }
 }
 
-bool reflectiveRectangularBorderModified::isPointWithinBorder(label index, const vector& r, const scalar& agentRadius)
+bool reflectiveRectangularBorderModified::isPointWithinBorder(label index, const vector& r)
 {
     bool inside = true;
 
@@ -425,7 +549,7 @@ bool reflectiveRectangularBorderModified::isPointWithinBorder(label index, const
     {
         scalar rD = (r - midPoints_[index][i]) & normalVectors_[index][i];
         
-        if(rD <= agentRadius)
+        if(rD <= 0)
         {
            inside *= true;
         }
@@ -487,18 +611,8 @@ void reflectiveRectangularBorderModified::reflect(label index, agent* p)
         // move 
         
         vector oldPosition = p->position();
-//         Info << "before position = " << p->position() << endl;
-            
-        if (p->radius() > rDMin)    //Don't know how to do absolute value
-        {
-            p->position() += 2.0*(p->radius()-rDMin)*n;
-        }
-        else
-        {
-            p->position() += 2.0*(-p->radius()+rDMin)*n;
-        }
-        
-
+//         Info << "before position = " << p->position() << endl;        
+        p->position() += 2.0*rDMin*n;
 //         Info << "after position = " << p->position() << endl;        
         
         // check that you moved cell 

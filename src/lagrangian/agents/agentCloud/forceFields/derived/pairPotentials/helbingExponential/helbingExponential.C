@@ -109,7 +109,7 @@ void helbingExponential::pairPotentialFunction
     // the sum of radii
     scalar rIJ = molI->radius() + molJ->radius();
     
-    if(dIJ > rIJ)
+    if(dIJ >= rIJ)
     {
         force = A_*exp((rIJ-dIJ)/B_)*nij;
     } 
