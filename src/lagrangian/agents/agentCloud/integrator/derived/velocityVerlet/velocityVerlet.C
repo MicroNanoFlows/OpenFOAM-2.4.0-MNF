@@ -94,8 +94,12 @@ void velocityVerlet::evolve()
     checkMaxVelocity();
     
     cloud_.controllers().controlBeforeMove();
+
+    checkMaxVelocity();
     
     cloud_.move();
+
+    cloud_.tracker().track();
     
     cloud_.buildCellOccupancy();
 

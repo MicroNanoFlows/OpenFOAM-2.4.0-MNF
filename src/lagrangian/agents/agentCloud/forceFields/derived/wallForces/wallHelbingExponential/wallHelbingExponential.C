@@ -23,13 +23,13 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    agentRepulsiveForce
+    wallHelbingExponential
 
 Description
 
 \*----------------------------------------------------------------------------*/
 
-#include "agentRepulsiveForce.H"
+#include "wallHelbingExponential.H"
 #include "addToRunTimeSelectionTable.H"
 
 namespace Foam
@@ -37,9 +37,9 @@ namespace Foam
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(agentRepulsiveForce, 0);
+defineTypeNameAndDebug(wallHelbingExponential, 0);
 
-addToRunTimeSelectionTable(agentWallForce, agentRepulsiveForce, dictionary);
+addToRunTimeSelectionTable(agentWallForce, wallHelbingExponential, dictionary);
 
 
 
@@ -49,7 +49,7 @@ addToRunTimeSelectionTable(agentWallForce, agentRepulsiveForce, dictionary);
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 //- Construct from components
-agentRepulsiveForce::agentRepulsiveForce
+wallHelbingExponential::wallHelbingExponential
 (
     Time& time,
     const dictionary& dict
@@ -57,9 +57,14 @@ agentRepulsiveForce::agentRepulsiveForce
 :
     agentWallForce(time, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
-    force_(propsDict_.lookup("force"))
+//     force_(propsDict_.lookup("force")),
+    A_(readScalar(propsDict_.lookup("A"))),
+    B_(readScalar(propsDict_.lookup("B"))),
+    k_(readScalar(propsDict_.lookup("k"))),
+    kappa_(readScalar(propsDict_.lookup("kappa"))),
+    rCut_(readScalar(propsDict_.lookup("rCut")))
 {
-    timeVarying_ = true;
+    spaceVarying_ = true;
 }
 
 
@@ -69,33 +74,67 @@ agentRepulsiveForce::agentRepulsiveForce
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-agentRepulsiveForce::~agentRepulsiveForce()
+wallHelbingExponential::~wallHelbingExponential()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-vector agentRepulsiveForce::force(const vector& position)
+vector wallHelbingExponential::force(agent* agentI, const vector& rW)
+{
+    scalar rI = agentI->radius();                
+    
+    // vector between point-on-wall and agent's position
+    vector rWI = agentI->position() - rW;
+    
+    scalar dWI = mag(rWI);
+    
+    vector force = vector::zero;
+    
+    if(dWI <= rCut_)
+    {
+        vector nij = rWI/dWI;
+        vector tij = vector (-nij.y(), nij.x(), 0);
+        
+        if(dWI >= rI)
+        {
+            force = A_*exp((rI-dWI)/B_)*nij;
+            
+//             Info << "rI = " << agentI->position()
+//                 << ", rW = " << rW 
+//                 << ", rWI = " << rW
+//                 << ", dWI = " << dWI
+//                 << ", force = " << force 
+//                 << endl;
+        }
+        else
+        {
+            force = (A_*exp((rI-dWI)/B_) + k_*(rI-dWI))*nij - 
+                    kappa_*(rI-dWI)*(agentI->v() & tij)*tij;
+        }
+    }
+    
+    return force;
+}
+            
+vector wallHelbingExponential::force(agent* agentI, const vector& rW, const scalar& time)
+{
+    return vector::zero;
+}
+            
+vector wallHelbingExponential::force(agent* agentI, const scalar& time)
 {
     return vector::zero;
 }
 
-void agentRepulsiveForce::updateForce()
-{
-
-}
-
-vector agentRepulsiveForce::force(const scalar& time)
-{
-    return force_;
-}
-
-vector agentRepulsiveForce::force(const scalar& time, const vector& position)
-{
-    return force_;
-}
-
-void agentRepulsiveForce::write
+ 
+            
+            
+void wallHelbingExponential::updateForce()
+{}
+            
+            
+void wallHelbingExponential::write
 (
     const fileName& fixedPathName,
     const fileName& timePath

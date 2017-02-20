@@ -22,12 +22,14 @@ forceFields/derived/bodyForces/agentFluctuatingForce/agentFluctuatingForce.C
 forceFields/derived/bodyForces/agentFluctuatingForceOneFactor/agentFluctuatingForceOneFactor.C 
 forceFields/derived/bodyForces/agentWillForce/agentWillForce.C
 forceFields/derived/bodyForces/agentWillForceScheduled/agentWillForceScheduled.C  
+forceFields/derived/bodyForces/agentGroupForce/agentGroupForce.C     
+    
     
 /*forceFields/derived/pairPotentials/lennardJones/lennardJones.C  */  
     
 forceFields/derived/pairPotentials/helbingExponential/helbingExponential.C    
 
-forceFields/derived/wallForces/agentRepulsiveForce/agentRepulsiveForce.C
+forceFields/derived/wallForces/wallHelbingExponential/wallHelbingExponential.C
 
     
 /* initialise */
@@ -40,6 +42,9 @@ initialise/derived/randomInitialiseBox/randomInitialiseBox.C
 initialise/derived/exactCoordinates/exactCoordinates.C
 initialise/derived/agentsOnBorders/agentsOnBorders.C
 initialise/derived/agentsOnEllipse/agentsOnEllipse.C
+initialise/derived/boxInitialise/boxInitialise.C
+initialise/derived/groupBoxInitialise/groupBoxInitialise.C
+
 
 /* integrator */
 
@@ -79,7 +84,7 @@ borders/basic/borderModel/borderModel.C
 
 borders/derived/reflectiveRectangularBorder/reflectiveRectangularBorder.C
 borders/derived/reflectiveRectangularBorderModified/reflectiveRectangularBorderModified.C
-
+borders/derived/rectangularBorder/rectangularBorder.C
 
 /* boundaries */
 
@@ -106,6 +111,7 @@ schedule/derived/localGoalsBoxSchedule/localGoalsBoxSchedule.C
 
 /* primitive */
 primitive/tiltedCylinder/tiltedCylinder.C 
+primitive/agentTracker/agentTracker.C
 
 /* multiscale */
 

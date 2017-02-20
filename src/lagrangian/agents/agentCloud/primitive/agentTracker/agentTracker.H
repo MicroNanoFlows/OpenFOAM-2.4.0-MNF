@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 2008-2009 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,25 +23,26 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    An abstract model for applying wall forces
+    Foam::agentTracker
 
 Description
 
+
+
 SourceFiles
-    agentWallForceI.H
-    agentWallForce.C
-    agentWallForceIO.C
+    agentTrackerI.H
+    agentTracker.C
+    agentTrackerIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef agentWallForce_H
-#define agentWallForce_H
+#ifndef agentTracker_H
+#define agentTracker_H
 
+#include "scalar.H"
 #include "IOdictionary.H"
-#include "autoPtr.H"
-#include "Time.H"
 #include "polyMesh.H"
-#include "mathematicalConstants.H"
+#include "Time.H"
 #include "agent.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -50,112 +51,73 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class agentWallForce Declaration
+                         Class agentTracker Declaration
 \*---------------------------------------------------------------------------*/
 
-class agentWallForce
+class agentTracker
 {
+    // Private data
 
-protected:
-
-        Time& time_;
-
-        bool spaceVarying_;
+        agentCloud& cloud_;
+    
+        DynamicList<agent*> agentsOnProc_;
         
-        bool timeVarying_;
+        DynamicList<label> agentTrackingNumbers_;
         
-private:
+
+        // tool variables
+        
+//         label trackingNumber_;
+        
+        label id_;
+        
 
     // Private Member Functions
 
 
+
 public:
+    
+        friend class agent;
 
-    //- Runtime type information
-    TypeName("agentWallForce");
-
-    // Declare runtime constructor selection table
-        declareRunTimeSelectionTable
-        (
-            autoPtr,
-            agentWallForce,
-            dictionary,
-            (
-                Time& time,
-                const dictionary& dict
-            ),
-            (time, dict)
-        );
-
-    // Static data members
 
     // Constructors
 
+
         //- Construct from components
-        agentWallForce
+        agentTracker
         (
-            Time& time,
-            const dictionary& dict
+            agentCloud& cloud
         );
 
-
-    // Selectors
-
-        static autoPtr<agentWallForce> New
-        (
-            Time& time,
-            const dictionary& dict
-        );
 
     // Destructor
 
-        virtual ~agentWallForce();
+        ~agentTracker();
+
 
     // Member Functions
 
-
+            void track();
+        
         // Access
-
-            virtual vector force(agent* molI, const vector& rW) = 0;
             
-            virtual vector force(agent* molI, const vector& rW, const scalar& time) = 0;
+            // this is a two step function
             
-            virtual vector force(agent* molI, const scalar& time) = 0;
-            
-            virtual void updateForce() = 0;
-
-        // Check
-            
-            bool spaceVarying();
-            
-            bool timeVarying();
-            
-        // Edit
-
-        // Write
-
-            virtual void write
+            // call this first (to avoid errors)
+            inline bool isTrackingNumberAvailable
             (
-                const fileName& fixedPathName,
-                const fileName& timePath
-            ) = 0;
+                const label& trackingNumber
+            );
 
-//             virtual void updateProperties
-//             (
-//                 const dictionary& dict
-//             ) = 0;
+            // then call this function to get the agent
+            inline agent* getAgent();            
+            
 
-
-            //- output data
-
-    // Member Operators
-
-    // Friend Functions
-
-    // Friend Operators
 
     // IOstream Operators
 
+//         friend Ostream& operator<<(Ostream&, const agentTracker&);
 };
 
 
@@ -165,7 +127,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#include "agentWallForceI.H"
+#include "agentTrackerI.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

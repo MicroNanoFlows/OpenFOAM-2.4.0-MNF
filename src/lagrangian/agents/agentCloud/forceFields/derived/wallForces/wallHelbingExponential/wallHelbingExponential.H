@@ -28,17 +28,18 @@ Class
 Description
 
 SourceFiles
-    agentRepulsiveForceI.H
-    agentRepulsiveForce.C
-    agentRepulsiveForceIO.C
+    wallHelbingExponentialI.H
+    wallHelbingExponential.C
+    wallHelbingExponentialIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef agentRepulsiveForce_H
-#define agentRepulsiveForce_H
+#ifndef wallHelbingExponential_H
+#define wallHelbingExponential_H
 
 
 #include "agentWallForce.H"
+#include "agentCloud.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -46,10 +47,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class agentRepulsiveForce Declaration
+                           Class wallHelbingExponential Declaration
 \*---------------------------------------------------------------------------*/
 
-class agentRepulsiveForce
+class wallHelbingExponential
 :
     public agentWallForce
 {
@@ -60,20 +61,25 @@ private:
 
         dictionary propsDict_;
 
-        vector force_;
+//         vector force_;
 
-
+        scalar A_;
+        scalar B_;
+        scalar k_;
+        scalar kappa_;
+        scalar rCut_;
+        
 public:
 
     //- Runtime type information
-    TypeName("agentRepulsiveForce");
+    TypeName("wallHelbingExponential");
 
     // Static data members
 
     // Constructors
 
         //- construct from components
-        agentRepulsiveForce
+        wallHelbingExponential
         (
             Time& time,
             const dictionary& dict
@@ -84,19 +90,9 @@ public:
 
     // Destructor
 
-        ~agentRepulsiveForce();
+        ~wallHelbingExponential();
 
     // Member Functions
-
-//         void initialConfig
-//         (
-//             const scalar& density,
-//             const radialDistribution& rdf,
-//             const moleculeCloud& mD
-//         );
-
-        //- output data
-//         void output(const Time& runTime, const polyMesh& mesh);
 
 
         // Access
@@ -105,11 +101,13 @@ public:
 
         // Edit
 
+            vector force(agent* agentI, const vector& rW);
+            
+            vector force(agent* agentI, const vector& rW, const scalar& time);
+            
+            vector force(agent* agentI, const scalar& time);
+            
             void updateForce();
-
-            vector force(const vector& position);
-            vector force(const scalar& time);
-            vector force(const scalar& time, const vector& position);
             
         // Write
 
@@ -120,23 +118,13 @@ public:
                 const fileName& timePath
             );
 
-
-//             void updateProperties
-//             (
-//                 const dictionary& dict
-//             );
-
     // Member Operators
-
-//         void operator=(const agentRepulsiveForce&);
 
     // Friend Functions
 
     // Friend Operators
 
     // IOstream Operators
-
-//         friend Ostream& operator<<(Ostream&, const agentRepulsiveForce&);
 };
 
 
