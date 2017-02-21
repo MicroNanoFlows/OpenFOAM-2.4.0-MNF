@@ -73,7 +73,7 @@ private:
         
         List<label> molIds_;
 
-        
+        bool invert_;
         
     // Private Member Functions
 

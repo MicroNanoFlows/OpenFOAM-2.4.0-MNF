@@ -53,7 +53,8 @@ polyDelFromBoundBox::polyDelFromBoundBox
 :
     polyMolsToDeleteModel(molCloud, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
-    molIds_()
+    molIds_(),
+    invert_(false)
 {
     
     molIds_.clear();
@@ -71,6 +72,12 @@ polyDelFromBoundBox::polyDelFromBoundBox
 
     checkBoundBox(box_, startPoint, endPoint);
 
+
+    if (propsDict_.found("invert"))
+    {
+        invert_ = Switch(propsDict_.lookup("invert"));
+    }    
+    
     findMolsToDel();
 }
 
@@ -100,14 +107,29 @@ void polyDelFromBoundBox::findMolsToDel()
             ++mol
         )
         {
-            if(box_.contains(mol().position()))
+            if(!invert_)
             {
-                if(findIndex(molIds_, mol().id()) != -1)
+                if(box_.contains(mol().position())) // inside box
                 {
-                    polyMolecule* molI = &mol();
-                    molsToDel.append(molI);
+                    if(findIndex(molIds_, mol().id()) != -1)
+                    {
+                        polyMolecule* molI = &mol();
+                        molsToDel.append(molI);
+                    }
                 }
             }
+            else
+            {
+                if(!box_.contains(mol().position())) // outside box
+                {
+                    if(findIndex(molIds_, mol().id()) != -1)
+                    {
+                        polyMolecule* molI = &mol();
+                        molsToDel.append(molI);
+                    }
+                }                
+            } 
+
         }
     }
     

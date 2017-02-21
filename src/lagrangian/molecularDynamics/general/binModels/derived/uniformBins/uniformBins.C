@@ -64,7 +64,11 @@ uniformBins::uniformBins
     nBins_(readLabel(propsDict_.lookup("nBins"))),
     binWidth_(mag(endPoint_ - startPoint_)/(nBins_)),
     area_(readScalar(propsDict_.lookup("area")))
-{}
+{
+//     Info << "rSEMag = " << rSEMag_ << endl;
+//     Info << "startPoint = " << startPoint_ << endl;
+//     Info << "endPoint = " << endPoint_ << endl;
+}
 
 
 
@@ -94,18 +98,22 @@ label uniformBins::isPointWithinBin
     scalar rD = rSI & unitVector_;
     label n = label(rD/binWidth_);
 
+//     Info << "n = " << n << ", rD = " << rD 
+//          << endl;
+    
+    
     if
     (
-        (n >= 0) && (rD <= rSEMag_)
+        (rD <= rSEMag_) && (rD >= 0.0)
     )
     {
 
-        if(n == nBins_) 
+        if(n == nBins_)
         {
             n--;
         }
 
-        if(n < nBins_)
+        if( (n >=0) && (n < nBins_) )
         {
             binNumber = n;
         }

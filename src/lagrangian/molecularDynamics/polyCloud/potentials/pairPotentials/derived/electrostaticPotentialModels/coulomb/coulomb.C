@@ -91,6 +91,13 @@ scalar coulomb::energy(const scalar r) const
     return energyLookUpFromTable(r);
 }
 
+// void coulombEqn::interaction (const scalar r, scalar& force, scalar& energy)
+// {
+//     force = forceLookUpFromTable(r);
+//     
+//     energy = energyLookUpFromTable(r);
+// }
+
 const dictionary& coulomb::dict() const
 {
     return pairPotentialProperties_;

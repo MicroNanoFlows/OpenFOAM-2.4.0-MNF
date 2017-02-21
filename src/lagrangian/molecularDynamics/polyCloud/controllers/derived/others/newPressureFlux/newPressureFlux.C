@@ -237,6 +237,8 @@ void newPressureFlux::controlAfterForces()
     force_.append(force);
     mols_.append(mols);
     
+    vector totalForce = vector::zero;
+    
     // apply force to those molecules above the centre point of water slab 
     {
         IDLList<polyMolecule>::iterator mol(molCloud_.begin());
@@ -252,11 +254,21 @@ void newPressureFlux::controlAfterForces()
                         const scalar& massI = molCloud_.cP().mass(mol().id());
                     
                         mol().a() += force/massI;
+                        
+                        totalForce += force;
                     }
                 }
             }
         }
     }
+    
+    
+    if(Pstream::parRun())
+    {
+        reduce(totalForce, sumOp<vector>());
+    }
+    
+    totalForce_.append(totalForce);
 }
 
 
@@ -279,13 +291,16 @@ void newPressureFlux::output
         if(Pstream::master())
         {
             scalarField mols (mols_.size(), 0.0);
-            vectorField force (force_.size(), vector::zero);            
+            vectorField force (force_.size(), vector::zero);
+            vectorField totalForce (totalForce_.size(), vector::zero);                        
             vectorField centre (centre_.size(), vector::zero);
             scalarField timeField (centre_.size(), 0.0);
             
             
             mols.transfer(mols_);            
             force.transfer(force_);            
+            totalForce.transfer(totalForce_);             
+            
             centre.transfer(centre_);
             
 
@@ -308,9 +323,19 @@ void newPressureFlux::output
             writeTimeData
             (
                 fixedPathName,
-                "newPressureFlux_"+fileName_+"_force.xyz",
+                "newPressureFlux_"+fileName_+"_forcePerMol.xyz",
                 timeField,
                 force,
+                true
+            );
+
+            
+            writeTimeData
+            (
+                fixedPathName,
+                "newPressureFlux_"+fileName_+"_totalForce.xyz",
+                timeField,
+                totalForce,
                 true
             );
             
@@ -326,10 +351,9 @@ void newPressureFlux::output
         
         mols_.clear();            
         force_.clear();            
+        totalForce_.clear();           
         centre_.clear();        
     }
-    
-    
 }
 
 void newPressureFlux::updateProperties(const dictionary& newDict)

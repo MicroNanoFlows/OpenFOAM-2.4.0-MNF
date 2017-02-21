@@ -86,6 +86,7 @@ private:
         
         DynamicList<scalar> mols_;        
         DynamicList<vector> force_;
+        DynamicList<vector> totalForce_;        
         DynamicList<vector> centre_;
         
     // Private Member Functions

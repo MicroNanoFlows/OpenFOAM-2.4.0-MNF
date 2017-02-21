@@ -358,76 +358,64 @@ void pairPotentialModel::output(const fileName& pathName)
 
 void pairPotentialModel::writeEnergyAndForceTables(const fileName& pathName)
 {
-//     Info<< "ERR= Writing energy and force tables to file for potential " << name_ << endl;
-    if(useTables_)
-    {
-        Info<< "Writing energy and force tables to file for potential "
+    Info<< "Writing energy and force to file for potential "
             << name_ << endl;
-        {
-            OFstream file(pathName/name_+"-RU.xy");
-
-            if (file.good())
-            {
-                List< Pair <scalar> > eTab(energyTable());
-
-                List< Pair <scalar> > fTab(forceTable());
-
-                forAll(eTab, e)
-                {
-                    if(e > 3)
-                    {
-                        file  << eTab[e].first()
-                            << token::SPACE
-                            << eTab[e].second()
-                            << token::SPACE
-                            << fTab[e].second()
-                            << nl;
-                    }
-                }
-                
-            }
-            else
-            {
-                FatalErrorIn("pairPotentialModel::writeEnergyAndForceTables()")
-                    << "Cannot open file " << file.name()
-                    << abort(FatalError);
-            }  
-        }
+            
+    label nBins = label((rCut_ - rMin_)/dr_) + 1;            
+    
+    scalarField U(nBins, 0.0);
+    scalarField f(nBins, 0.0);
+    
+    for (label i=0; i<nBins; ++i)
+    {
+        scalar r = rMin_+dr_*i;
         
+        U[i] = energy(r);
+        f[i] = force(r);
+    }
+    {
+        OFstream file(pathName/name_+"-RU.xy");
+
+        if(file.good())
         {
-            OFstream file(pathName/name_+"-SI.xy");
-
-            if (file.good())
+            forAll(U, i)
             {
-                List< Pair <scalar> > eTab(energyTable());
-
-                List< Pair <scalar> > fTab(forceTable());
-
-                forAll(eTab, e)
-                {
-                    if(e > 3)
-                    {                    
-                        file  << eTab[e].first()*rU_.refLength()
-                            << token::SPACE
-                            << eTab[e].second()*rU_.refEnergy()
-                            << token::SPACE
-                            << fTab[e].second()*rU_.refForce()
-                            << nl;
-                    }
-                }
+                file 
+                    << dr_*i << "\t"
+                    << U[i] << "\t"
+                    << f[i]
+                    << endl;
             }
-            else
-            {
-                FatalErrorIn("pairPotentialModel::writeEnergyAndForceTables()")
-                    << "Cannot open file " << file.name()
-                    << abort(FatalError);
-            } 
         }
-        
-//         Info << "Err1 = done " << endl;
+        else
+        {
+            FatalErrorIn("void pairPotentialModel::write()")
+                << "Cannot open file " << file.name()
+                << abort(FatalError);
+        }
     }
     
-//     Info << "Err2 = done " << endl;
+    {
+        OFstream file(pathName/name_+"-SI.xy");
+
+        if(file.good())
+        {
+            forAll(U, i)
+            {
+                file 
+                    << dr_*i*rU_.refLength() << "\t"
+                    << U[i]*rU_.refEnergy() << "\t"
+                    << f[i]*rU_.refForce()
+                    << endl;
+            }
+        }
+        else
+        {
+            FatalErrorIn("void pairPotentialModel::write()")
+                << "Cannot open file " << file.name()
+                << abort(FatalError);
+        }  
+    } 
 }
 
 const dictionary& pairPotentialModel::pairPotentialProperties() const

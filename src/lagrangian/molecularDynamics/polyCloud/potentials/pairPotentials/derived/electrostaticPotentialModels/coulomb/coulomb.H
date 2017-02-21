@@ -103,6 +103,8 @@ public:
         
         scalar energy(const scalar r) const;        
         
+//         void interaction (const scalar r, scalar& force, scalar& energy);        
+        
         //- Read dictionary
 //         bool read
 //         (

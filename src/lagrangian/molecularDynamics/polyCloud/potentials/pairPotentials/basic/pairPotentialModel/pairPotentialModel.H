@@ -181,7 +181,7 @@ public:
         
         virtual scalar energy (const scalar r) const = 0;
         virtual scalar force (const scalar r) const = 0;
-        
+//         virtual scalar interaction (const scalar r, scalar& force, scalar& energy) const = 0;        
         
         
         List<Pair<scalar> > energyTable() const;

@@ -201,6 +201,10 @@ void polyTemperatureBerendsenBinsNew::initialConfiguration()
                 {
                     const scalar& massI = molCloud_.cP().mass(molI->id());
 
+//                     Info << "molI->position() "  << molI->position() 
+//                     << ", n = " << n
+//                     << endl;
+                    
                     mass[n] += massI;
                     momentum[n] += massI*molI->v();
                 }

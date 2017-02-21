@@ -68,6 +68,7 @@ binModels/derived/radialBinsNormalised/radialBinsNormalised.C
 binModels/derived/cuboidBinII/cuboidBinII.C
 binModels/derived/sphericalBins/sphericalBins.C
 binModels/derived/angularBins/angularBins.C
+binModels/derived/simpleBins/simpleBins.C
 
 /*  WALL VELOCITY MOTION*/
 
