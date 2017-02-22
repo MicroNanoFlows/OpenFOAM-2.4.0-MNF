@@ -48,6 +48,7 @@ inline Foam::agent::agent
     const scalar& t,
     const label special,
     const label id,
+    const label eventTracker,
     const label trackingNumber
 )
 :
@@ -65,6 +66,7 @@ inline Foam::agent::agent
     t_(t),
     special_(special),
     id_(id),
+    eventTracker_(eventTracker),
     trackingNumber_(trackingNumber)
 {}
 
@@ -224,6 +226,15 @@ inline Foam::label& Foam::agent::id()
     return id_;
 }
 
+inline Foam::label Foam::agent::eventTracker() const
+{
+    return eventTracker_;
+}
+
+inline Foam::label& Foam::agent::eventTracker() 
+{
+    return eventTracker_;
+}
 
 inline const Foam::label& Foam::agent::trackingNumber() const
 {
