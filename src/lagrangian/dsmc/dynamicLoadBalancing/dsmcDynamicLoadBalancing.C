@@ -82,8 +82,8 @@ dsmcDynamicLoadBalancing::dsmcDynamicLoadBalancing
     performBalance_(false),
     enableBalancing_(Switch(dsmcLoadBalanceDict_.lookup("enableBalancing"))),
     originalEndTime_(time_.time().endTime().value()),
-    maxImbalance_(readScalar(dsmcLoadBalanceDict_.lookup("maximumAllowableImbalance"))),
-    nProcs_(readLabel(dsmcLoadBalanceDict_.lookup("numberOfSubdomains")))
+    maxImbalance_(readScalar(dsmcLoadBalanceDict_.lookup("maximumAllowableImbalance")))
+//     nProcs_(readLabel(dsmcLoadBalanceDict_.lookup("numberOfSubdomains")))
 {}
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 

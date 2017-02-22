@@ -76,7 +76,7 @@ class dsmcDynamicLoadBalancing
         
         scalar maxImbalance_;
         
-        label nProcs_;
+//         label nProcs_;
 
     // Private Member Functions
 
