@@ -51,6 +51,7 @@ Foam::agent::agent
     t_(0.0),    
     special_(0),
     id_(0),
+    eventTracker_(0),    
     trackingNumber_(-1)
 {
     if (readFields)
@@ -70,6 +71,7 @@ Foam::agent::agent
             is >> t_;
             special_ = readLabel(is);
             id_ = readLabel(is);
+            eventTracker_ = readLabel(is);
             trackingNumber_ = readLabel(is);
         }
         else
@@ -90,6 +92,7 @@ Foam::agent::agent
               + sizeof(t_) 
               + sizeof(special_)
               + sizeof(id_)
+              + sizeof(eventTracker_)
               + sizeof(trackingNumber_)
             );
         }
@@ -258,6 +261,7 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const agent& mol)
             << token::SPACE << mol.t_
             << token::SPACE << mol.special_
             << token::SPACE << mol.id_
+            << token::SPACE << mol.eventTracker_
             << token::SPACE << mol.trackingNumber_;
     }
     else
@@ -279,6 +283,7 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const agent& mol)
           + sizeof(mol.t_)
           + sizeof(mol.special_)
 		  + sizeof(mol.id_)
+          + sizeof(mol.eventTracker_)
           + sizeof(mol.trackingNumber_)
         );
     }

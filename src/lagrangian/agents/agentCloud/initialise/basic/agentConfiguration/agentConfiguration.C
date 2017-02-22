@@ -201,6 +201,7 @@ void agentConfiguration::insertAgent
         1.0,
         special,
         id,
+        0,
         cloud_.getTrackingNumber()
     );
 }
