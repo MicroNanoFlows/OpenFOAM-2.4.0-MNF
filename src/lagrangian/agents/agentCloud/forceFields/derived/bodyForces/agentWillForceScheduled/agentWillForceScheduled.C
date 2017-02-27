@@ -106,9 +106,14 @@ void agentWillForceScheduled::force(agent* p)
             {  
                 vector n = p->d() - p->position();
                 n /= mag(n);
+                
                 p->f() += (p->desiredSpeed()*n - p->v())*p->mass() / tau_; // MAKE SURE n is UNIT vector
             }
         }
+    }
+    else
+    {
+        p->v() = vector::zero;
     }
 }
 
@@ -116,6 +121,8 @@ void agentWillForceScheduled::newForce()
 {
     
 }
+
+
 
 
 
