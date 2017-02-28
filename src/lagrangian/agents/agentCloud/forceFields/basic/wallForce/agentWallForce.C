@@ -33,6 +33,7 @@ Description
 #include "graph.H"
 #include "IFstream.H"
 #include "OFstream.H"
+#include "agentCloud.H"
 
 namespace Foam
 {

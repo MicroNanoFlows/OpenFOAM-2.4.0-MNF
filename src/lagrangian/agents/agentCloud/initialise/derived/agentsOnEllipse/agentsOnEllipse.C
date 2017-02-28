@@ -175,6 +175,16 @@ void agentsOnEllipse::setInitialConfiguration()
             positions.append(rI);
         }
     }
+    
+    for (int i = 0; i < positions.size(); i++)
+    {
+        Info << "(" << positions[i].x() 
+                    << " " << positions[i].y()
+                    << " " << positions[i].z()   
+                    << ") ";
+    }
+    
+    Info << endl;
  
     
     Info<< "... done. Number of agents to insert = "

@@ -552,6 +552,7 @@ void  Foam::agentCloud::createAgent
     const scalar& frac,   
     const label special,
     const label id,
+    const label eventTracker, 
     const label trackingNumber
 )
 {
@@ -578,6 +579,7 @@ void  Foam::agentCloud::createAgent
             0.0,
             special,
             id,
+            eventTracker,
             trackingNumber
         )
     );
