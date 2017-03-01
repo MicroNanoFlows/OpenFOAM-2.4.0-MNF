@@ -27,7 +27,8 @@ forceFields/derived/bodyForces/agentGroupForce/agentGroupForce.C
     
 /*forceFields/derived/pairPotentials/lennardJones/lennardJones.C  */  
     
-forceFields/derived/pairPotentials/helbingExponential/helbingExponential.C    
+forceFields/derived/pairPotentials/helbingExponential/helbingExponential.C
+forceFields/derived/pairPotentials/helbingVelocityDependentB/helbingVelocityDependentB.C 
 
 forceFields/derived/wallForces/wallHelbingExponential/wallHelbingExponential.C
 
@@ -107,6 +108,7 @@ schedule/derived/tabularSchedule/tabularSchedule.C
 schedule/derived/agentTypeSchedule/agentTypeSchedule.C
 schedule/derived/localGoalsSchedule/localGoalsSchedule.C
 schedule/derived/localGoalsBoxSchedule/localGoalsBoxSchedule.C
+schedule/derived/localBoxUniformDelay/localBoxUniformDelay.C
 
 
 /* primitive */
