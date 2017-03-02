@@ -1,0 +1,3 @@
+hacFoam.C
+
+EXE = $(FOAM_APPBIN)/hacFoam
