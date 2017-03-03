@@ -80,6 +80,10 @@ private:
         
         scalar initialTime_;
         
+        bool panic_;
+        scalar smallForce_;
+        scalar forceMag_;
+        
 //         scalar stdev_;
         
         // size = number of agents
