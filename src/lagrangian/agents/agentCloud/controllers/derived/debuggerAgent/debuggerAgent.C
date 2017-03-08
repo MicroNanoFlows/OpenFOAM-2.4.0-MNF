@@ -77,6 +77,8 @@ debuggerAgent::debuggerAgent
 
     agentIds_ = ids.agentIds();
 
+    trackingNumbers_ = List<label>(propsDict_.lookup("trackingNumbers"));
+    
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -145,7 +147,7 @@ void debuggerAgent::calculateProperties()
 
     for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
     {
-        if(findIndex(agentIds_, mol().id()) != -1)
+        if(findIndex(trackingNumbers_, mol().trackingNumber()) != -1)
         {
 //             if(bb_.contains(mol().position()))
 //             {
@@ -169,6 +171,7 @@ void debuggerAgent::calculateProperties()
                 << ", vMag = " << Vmag
                 << ", desired speed = " << mol().desiredSpeed()
                 << ", destination = " << mol().d()
+                << ", time = " << mol().t()
                 << endl;
             
         }

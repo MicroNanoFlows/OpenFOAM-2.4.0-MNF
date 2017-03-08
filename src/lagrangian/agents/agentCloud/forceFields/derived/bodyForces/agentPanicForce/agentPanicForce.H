@@ -23,28 +23,26 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    debuggerAgent
+    agentPanicForce
 
 Description
-    Model that applies a gravitational force on all molecules.
+
 
 SourceFiles
-    debuggerAgentI.H
-    debuggerAgent.C
-    debuggerAgentIO.C
+    agentPanicForceI.H
+    agentPanicForce.C
+    agentPanicForceIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef debuggerAgent_H
-#define debuggerAgent_H
+#ifndef agentPanicForce_H
+#define agentPanicForce_H
 
-#include "agentController.H"
+#include "bodyForce.H"
 #include "vector.H"
 #include "polyMesh.H"
-#include "volFields.H"
 #include "agentCloud.H"
 
-#include "boundedBox.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -52,12 +50,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class debuggerAgent Declaration
+                           Class agentPanicForce Declaration
 \*---------------------------------------------------------------------------*/
 
-class debuggerAgent
+class agentPanicForce
 :
-	public agentController
+	public bodyForce
 {
 
 private:
@@ -67,73 +65,59 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-
-        //- ids of mols
+        //- ids of agents
         List<label> agentIds_;
-
-        boundedBox bb_;
         
-        scalar nTimeSteps_;
-        vector force_;
+//         scalar desiredSpeed_;
         
-        List<label> trackingNumbers_;
+        vector desiredDirection_;
+        
+        scalar tau_;
 
+        scalar timeCounter_;
+        
+        scalar initialTimeDelay_;
+        
+        scalar initialTime_;
+        
+//         scalar stdev_;
+        
+        // size = number of agents
+//         List<scalar> agentVelocities_;
+        
     // Private Member Functions
 
-//         void readProperties();
-        
-//         void setBoundBoxes();      
 
 public:
 
     //- Runtime type information
-    TypeName("debuggerAgent");
+    TypeName("agentPanicForce");
 
     // Constructors
 
         //- Construct from components
-        debuggerAgent
+        agentPanicForce
         (
-            Time& t,
             agentCloud& cloud,
+            Time& t,
             const dictionary& dict
         );
 
     // Destructor
 
-        ~debuggerAgent();
+        ~agentPanicForce();
 
 
-    // Member Functions
     // Member Functions
         
         //- create an initial configuration
         void initialConfiguration();
-
-        //- control molecules at various stages of time-step
-        void controlBeforeVelocityI();
-        void controlBeforeMove();
-        void controlBeforeForces();
-        void controlDuringForces
-        (
-            agent* molI,
-            agent* molJ
-        );        
-        void controlAfterForces();
-        void controlAfterVelocityII();
         
-        //- calculate any required properties (end of time-step)
-        void calculateProperties(); 
+        // inside loop of all agents
+        void force(agent* p);
         
-        //- output data (optional)
-        void output
-        (
-            const fileName& fixedPathName, 
-            const fileName& timePath
-        );
-        
-        //- update properties from a modified dictionary (optional)
-//         void updateProperties(const dictionary&);
+        // new force definition; requires loop over all agents
+        void newForce();
 
         // Access
 };

@@ -26,7 +26,7 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "agentWillForceScheduled.H"
+#include "agentPanicForce.H"
 #include "addToRunTimeSelectionTable.H"
 #include "IFstream.H"
 #include "graph.H"
@@ -36,16 +36,16 @@ Description
 namespace Foam
 {
 
-defineTypeNameAndDebug(agentWillForceScheduled, 0);
+defineTypeNameAndDebug(agentPanicForce, 0);
 
-addToRunTimeSelectionTable(bodyForce, agentWillForceScheduled, dictionary);
+addToRunTimeSelectionTable(bodyForce, agentPanicForce, dictionary);
 
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-agentWillForceScheduled::agentWillForceScheduled
+agentPanicForce::agentPanicForce
 (
     agentCloud& cloud,
     Time& t,
@@ -78,71 +78,39 @@ agentWillForceScheduled::agentWillForceScheduled
         initialTimeDelay_ = readScalar(propsDict_.lookup("initialTimeDelay"));
     }
     
-/*    panic_ = false;
-    
-    if (propsDict_.found("panic"))
-    {
-        panic_ = Switch(propsDict_.lookup("panic"));
-        smallForce_= readScalar(propsDict_.lookup("smallForce"));
-        forceMag_= readScalar(propsDict_.lookup("forceMag"));
-        
-    } */   
-    
     initialTime_ = time_.timeOutputValue();
     
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-agentWillForceScheduled::~agentWillForceScheduled()
+agentPanicForce::~agentPanicForce()
 {}
 
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void agentWillForceScheduled::initialConfiguration()
+void agentPanicForce::initialConfiguration()
 {
    
 }
 
-void agentWillForceScheduled::force(agent* p)
+void agentPanicForce::force(agent* p)
 {
     if((time_.timeOutputValue() - initialTime_) > initialTimeDelay_)
     {
         if(findIndex(agentIds_, p->id()) != -1)
         {
-            
-            if(p->t() == 0.0)
+            if(mag(p->f()) < 0.01)
             {  
-                vector n = p->d() - p->position();
-                n /= mag(n);
-                
                 p->f() += (p->desiredSpeed()*n - p->v())*p->mass() / tau_; // MAKE SURE n is UNIT vector
-                
-//                 if(panic_)
-//                 {
-//                     if(mag(p->f()) < smallForce_)
-//                     {
-//                         Info << "force = " << mag(p->f()) << endl;
-//                         
-//                         p->f() = n*forceMag_;
-//                     }
-//                 }
-//                 if(p->trackingNumber() == 75 )
-//                 {
-//                     Info << "75, force = " <<  p->f() << endl;
-//                 }
             }
         }
     }
-    else
-    {
-        p->v() = vector::zero;
-    }
 }
 
-void agentWillForceScheduled::newForce()
+void agentPanicForce::newForce()
 {
     
 }
