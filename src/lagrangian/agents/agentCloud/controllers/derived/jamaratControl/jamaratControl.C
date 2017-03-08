@@ -122,9 +122,12 @@ jamaratControl::jamaratControl
     desiredDirection_ = propsDict_.lookup("desiredDirection");
     tau_ = readScalar(propsDict_.lookup("tau"));
     
-    
-    
-    // borders 
+//     frac_ = 0.1;
+//     frac2_ = 0.05;
+    frac_ = readScalar(propsDict_.lookup("fracShort"));
+    frac2_ = readScalar(propsDict_.lookup("fracLong"));
+        
+        // borders 
     
     borderList_ = List<vectorList>(propsDict_.lookup("bordersList"));
     
@@ -142,6 +145,8 @@ jamaratControl::jamaratControl
         agentWallForce::New(t, dict2)
     );    
     
+    setBoundBoxes();
+    
     initialiseBorders();
     
     
@@ -152,8 +157,7 @@ jamaratControl::jamaratControl
     searchTime_ = readScalar(propsDict_.lookup("searchTime"));    
     throwingTime_ = readScalar(propsDict_.lookup("throwingTime"));
     
-    
-    setBoundBoxes();
+
     
     
     deltaT_ = time_.deltaT().value();
@@ -213,7 +217,11 @@ void jamaratControl::controlAfterForces()
                 
                 if(findIndex(agentIds_, p().id()) != -1)
                 {
-                    p().f() += (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_;        
+                    vector force = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
+                    p().f() += force;
+                    vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
+                    R /= mag(R);
+                    p().f() += R*frac2_*mag(force);         
                 }
             }
             
@@ -271,9 +279,60 @@ void jamaratControl::controlAfterForces()
                     p().eventTracker() = 5;
                 }
                 
-                if(findIndex(agentIds_, p().id()) != -1)
+                
+                if(p().position().x() < sideTop_[0].x())
                 {
-                    p().f() += (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_;        
+                    vector n1 = sideTop_[0] - p().position();
+                    vector n2 = sideBottom_[0] - p().position();
+                    
+                    if(mag(n1) < mag(n2))
+                    {
+                        n1 /= mag(n1);
+                        vector force = (p().desiredSpeed()*n1 - p().v())*p().mass() / tau_;
+                        p().f() += force;
+                        vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
+                        R /= mag(R);
+                        
+                        p().f() += R*frac_*mag(force);
+                        
+                        if(mag(p().v())  < 0.1)
+                        {
+                            p().fraction() += 0.5;
+                        }
+                        else
+                        {
+                             p().fraction() = 1.0;
+                        }
+                        
+                    }
+                    else
+                    {
+                        n2 /= mag(n2);
+                        vector force = (p().desiredSpeed()*n2 - p().v())*p().mass() / tau_;
+                        p().f() += force;
+                        vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
+                        R /= mag(R);
+                        p().f() += R*frac_*mag(force);
+                        
+                        if(mag(p().v()) < 0.1)
+                        {
+                            p().fraction() += 0.5;
+                        }
+                        else
+                        {
+                             p().fraction() = 1.0;
+                        }                        
+                    }
+                }
+                else
+                {
+                    p().fraction() = 1.0;
+                    vector force = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
+                    p().f() += force;
+                    vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
+                    R /= mag(R);
+                    p().f() += R*frac2_*mag(force);                    
+                    
                 }
             }
             
@@ -331,7 +390,24 @@ void jamaratControl::controlAfterForces()
                     p().eventTracker() = 9;
                 }
                 
-                if(findIndex(agentIds_, p().id()) != -1)
+                if(p().position().x() < sideTop_[1].x())
+                {
+                    vector n1 = sideTop_[1] - p().position();
+                    vector n2 = sideBottom_[1] - p().position();
+                    
+                    if(mag(n1) < mag(n2))
+                    {
+                        n1 /= mag(n1);
+                        p().f() += (p().desiredSpeed()*n1 - p().v())*p().mass() / tau_;
+                    }
+                    else
+                    {
+                        n2 /= mag(n2);
+                        p().f() += (p().desiredSpeed()*n2 - p().v())*p().mass() / tau_;
+                        
+                    }
+                }
+                else
                 {
                     p().f() += (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_;        
                 }
@@ -383,7 +459,24 @@ void jamaratControl::controlAfterForces()
             // switch on will force 
             if(p().eventTracker() == 12)
             {
-                if(findIndex(agentIds_, p().id()) != -1)
+                if(p().position().x() < sideTop_[2].x())
+                {
+                    vector n1 = sideTop_[2] - p().position();
+                    vector n2 = sideBottom_[2] - p().position();
+                    
+                    if(mag(n1) < mag(n2))
+                    {
+                        n1 /= mag(n1);
+                        p().f() += (p().desiredSpeed()*n1 - p().v())*p().mass() / tau_;
+                    }
+                    else
+                    {
+                        n2 /= mag(n2);
+                        p().f() += (p().desiredSpeed()*n2 - p().v())*p().mass() / tau_;
+                        
+                    }
+                }
+                else
                 {
                     p().f() += (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_;        
                 }
@@ -588,6 +681,11 @@ void jamaratControl::initialiseBorders()
     Zmin -= dZ;
     Zmax += dZ;
     
+    
+    sideTop_.setSize(3, vector::zero);
+    sideBottom_.setSize(3, vector::zero);    
+    
+    
     forAll(borderList_, i)
     {
         const vectorList& borderI = borderList_[i];
@@ -620,6 +718,10 @@ void jamaratControl::initialiseBorders()
         }
 
         boundedBox bb (min,max);
+        
+            
+        sideTop_[i]=boxes_[i].midpoint()+vector(0,12,0);
+        sideBottom_[i]=boxes_[i].midpoint()-vector(0,12,0);
         
         // scale box
         scalar rCut = cloud_.f().rCut();
@@ -666,6 +768,9 @@ void jamaratControl::initialiseBorders()
             }
         }
     }
+    
+
+
 }
 
 void jamaratControl::setBoundBoxes()

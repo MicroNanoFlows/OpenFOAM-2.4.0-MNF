@@ -75,8 +75,8 @@ inline void forceFields::evaluatePair
             
 //             vector fIJ = f*(rIJ/rIJMag)*force;
 
-            molI->f() += force;
-            molJ->f() += -force;
+            molI->f() += f*force;
+            molJ->f() += -f*force;
 
             molI->potentialEnergy() += 0.5*f*energy;
             molJ->potentialEnergy() += 0.5*f*energy;

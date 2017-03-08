@@ -92,11 +92,16 @@ private:
         
         vector desiredDirection_;
         scalar tau_;
-        
+        scalar frac_;
+        scalar frac2_;
         // borders 
         
         List<vectorList> borderList_;
         List<DynamicList<label> > interactionList_;  
+        
+        List<vector> sideTop_;
+        List<vector> sideBottom_;
+        
         
         autoPtr<agentWallForce> attractiveForceModel_;
         autoPtr<agentWallForce> repulsiveForceModel_;
