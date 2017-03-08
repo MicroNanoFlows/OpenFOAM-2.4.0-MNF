@@ -87,6 +87,7 @@ agentZoneProperties::agentZoneProperties
     rhoNField_(1, 0.0),
     rhoMField_(1, 0.0),
     UField_(1, vector::zero),
+    UpAField_(1, vector::zero),
     momField_(1, vector::zero),
     kEField_(1, 0.0),
     nTimeSteps_(0.0),
@@ -188,6 +189,14 @@ void agentZoneProperties::calculateField()
         rhoNField_[timeIndex_] = N/(totalArea_*nTimeSteps_);
         rhoMField_[timeIndex_] = mass/(totalArea_*nTimeSteps_);
         UField_[timeIndex_] = vel/nTimeSteps_;
+        
+        UpAField_[timeIndex_] = vector::zero;
+        
+        if(mass > 0)
+        {
+            UpAField_[timeIndex_] = mom/mass;
+        }
+        
         kEField_[timeIndex_] = kE/nTimeSteps_;
         momField_[timeIndex_] = mom/nTimeSteps_;
         
@@ -243,12 +252,21 @@ void agentZoneProperties::writeField()
             writeTimeData
             (
                 casePath_,
-                "zone_bb_"+fieldName_+"_U.xyz",
+                "zone_bb_"+fieldName_+"_U_per_agent.xyz",
                 timeField,
-                UField_,
+                UpAField_,
                 true
             );
 
+            writeTimeData
+            (
+                casePath_,
+                "zone_bb_"+fieldName_+"_U_tot.xyz",
+                timeField,
+                UField_,
+                true
+            );            
+            
             writeTimeData
             (
                 casePath_,

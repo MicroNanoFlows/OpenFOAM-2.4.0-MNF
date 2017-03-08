@@ -155,8 +155,8 @@ void boxInitialise::setInitialConfiguration()
 //     label N(readLabel(propsDict_.lookup("N")));
 
 
+//     Info << "positions = " << positions << endl;
     
-
     
     Info << "number of agents, N = " << positions.size() << endl;
     

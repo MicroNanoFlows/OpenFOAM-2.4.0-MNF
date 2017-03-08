@@ -78,7 +78,7 @@ agentWillForceScheduled::agentWillForceScheduled
         initialTimeDelay_ = readScalar(propsDict_.lookup("initialTimeDelay"));
     }
     
-    panic_ = false;
+/*    panic_ = false;
     
     if (propsDict_.found("panic"))
     {
@@ -86,7 +86,7 @@ agentWillForceScheduled::agentWillForceScheduled
         smallForce_= readScalar(propsDict_.lookup("smallForce"));
         forceMag_= readScalar(propsDict_.lookup("forceMag"));
         
-    }    
+    } */   
     
     initialTime_ = time_.timeOutputValue();
     
