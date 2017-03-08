@@ -89,6 +89,7 @@ private:
         scalarField rhoNField_;
         scalarField rhoMField_;
         vectorField UField_;
+        vectorField UpAField_; // per agent
         vectorField momField_;
         scalarField kEField_;
         

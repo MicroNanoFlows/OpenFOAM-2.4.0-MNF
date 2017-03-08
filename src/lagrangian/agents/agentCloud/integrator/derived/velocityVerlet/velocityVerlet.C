@@ -181,10 +181,14 @@ void velocityVerlet::checkMaxVelocity()
     {
         scalar vMax = cloud_.cP().vMax()[mol().id()];
         
+//         Info << "vMax = " << vMax << endl;
+        
         if( mag(mol().v()) > vMax )
         {
             vector n = mol().v()/mag(mol().v());
             mol().v() = vMax*n;
+            
+//             Info << "changed velocity = " << mol().v() << endl;
         }
     }
 }

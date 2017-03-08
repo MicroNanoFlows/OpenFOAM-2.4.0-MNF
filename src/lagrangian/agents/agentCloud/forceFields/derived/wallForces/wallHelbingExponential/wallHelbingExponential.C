@@ -96,7 +96,7 @@ vector wallHelbingExponential::force(agent* agentI, const vector& rW)
         vector nij = rWI/dWI;
         vector tij = vector (-nij.y(), nij.x(), 0);
         
-        if(dWI >= rI)
+        if(dWI > rI)
         {
             force = A_*exp((rI-dWI)/B_)*nij;
             

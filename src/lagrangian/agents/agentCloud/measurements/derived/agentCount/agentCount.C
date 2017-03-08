@@ -78,8 +78,12 @@ agentCount::agentCount
     );        
     
 
-    
-   
+    nAgentsInstantField_.clear();
+    nAgentsCumulField_.clear();
+    timeField_.clear();    
+    times_.clear();
+    tNs_.clear();
+    nAgentsCumul_ = 0.0;
 }
 
 
@@ -127,6 +131,7 @@ void agentCount::calculateField()
     }
     else
     {
+        
         nAgentsCumul_ += nAgents;
         nAgentsCumulField_.append(nAgentsCumul_);
         nAgentsInstantField_.append(nAgents);
