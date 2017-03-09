@@ -96,6 +96,31 @@ inline Foam::vector& Foam::agent::d()
     return d_;
 }
 
+inline Foam::vector Foam::agent::dir()
+{
+    vector dir = vector::zero;
+    
+    if(mag(d_) >= 0)
+    {
+        dir = d_ - position();
+        
+        dir /= mag(dir);
+    }
+    
+    return dir;
+}
+
+inline Foam::vector Foam::agent::dist()
+{
+    vector dist = vector::zero;
+    
+    if(mag(d_) >= 0)
+    {
+        dist = d_ - position();
+    }
+    
+    return dist;
+}
 
 inline const Foam::vector& Foam::agent::f() const
 {

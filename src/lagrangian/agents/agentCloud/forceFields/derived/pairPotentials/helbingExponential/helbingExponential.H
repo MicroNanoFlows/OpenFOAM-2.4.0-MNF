@@ -70,8 +70,12 @@ private:
         scalar B_;
         scalar k_;
         scalar kappa_;
-
-
+        
+        label option_;
+                
+        bool injury_;
+        scalar maxForce_; // per unit length
+        label agentId_;
         
     // Private Member Functions
 

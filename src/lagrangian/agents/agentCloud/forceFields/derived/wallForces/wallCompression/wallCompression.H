@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,27 +23,23 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    lennardJones
+    
 
 Description
-    Model that applies a gravitational force on all molecules.
 
 SourceFiles
-    lennardJonesI.H
-    lennardJones.C
-    lennardJonesIO.C
+    wallCompressionI.H
+    wallCompression.C
+    wallCompressionIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef lennardJones_H
-#define lennardJones_H
+#ifndef wallCompression_H
+#define wallCompression_H
 
-#include "pairPotential.H"
-#include "vector.H"
-#include "polyMesh.H"
+
+#include "agentWallForce.H"
 #include "agentCloud.H"
-
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,82 +47,90 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class lennardJones Declaration
+                           Class wallCompression Declaration
 \*---------------------------------------------------------------------------*/
 
-class lennardJones
+class wallCompression
 :
-	public pairPotential
+    public agentWallForce
 {
 
 private:
 
     // Private data
 
-        //- subDictionary containing the properties
         dictionary propsDict_;
 
-        scalar sigma_;
-        scalar epsilon_;
-        scalar maxForce_;
-        
-        
-        scalar E_at_Rmin_;
-        scalar F_at_Rmin_;
+//         vector force_;
 
+        scalar A_;
+        scalar kappa_;
         
-    // Private Member Functions
-
- 
-
 public:
 
     //- Runtime type information
-    TypeName("lennardJones");
+    TypeName("wallCompression");
+
+    // Static data members
 
     // Constructors
 
-        //- Construct from components
-        lennardJones
+        //- construct from components
+        wallCompression
         (
-            agentCloud& cloud,
-            const word& name,
+            Time& time,
             const dictionary& dict
         );
 
+    // Selectors
+
+
     // Destructor
 
-        ~lennardJones();
-
+        ~wallCompression();
 
     // Member Functions
-    // Member Functions
-        
-        //- create an initial configuration
-        void initialConfiguration();
-        
-        scalar energy(const scalar& r);
-        
-        scalar force(const scalar& r);
-        
-        void pairPotentialFunction
-        (
-            agent* molI,
-            agent* molJ,
-            const scalar& r,
-            scalar& energy,
-            scalar& force
-        );        
-        
-//         void writeTables(const fileName& pathName);
+
 
         // Access
+
+        // Check
+
+        // Edit
+
+            vector force(agent* agentI, const vector& rW);
+            
+            vector force(agent* agentI, const vector& rW, const scalar& time);
+            
+            vector force(agent* agentI, const scalar& time);
+            
+            void updateForce();
+            
+        // Write
+
+
+            void write
+            (
+                const fileName& fixedPathName,
+                const fileName& timePath
+            );
+
+    // Member Operators
+
+    // Friend Functions
+
+    // Friend Operators
+
+    // IOstream Operators
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
