@@ -163,6 +163,18 @@ void helbingExponential::pairPotentialFunction
         {
             if( (mag(normalForce)*2*constant::mathematical::pi*molI->radius()) >= maxForce_)
             {
+/*                Info << "position = " << molI->position()
+                     <<  ", trackingNumber = " << molI->trackingNumber()
+                    << " radius I = " << molI->radius()
+                    <<  ", nij " << nij
+                    <<  ", mag(nij) " << mag(nij)
+                    <<  ", dIJ " << dIJ
+                    <<  ", rIJ " << rIJ
+                     << ", normalForce = " << mag(normalForce)
+                     << ", force per unit width = " << (mag(normalForce)*2*constant::mathematical::pi*molI->radius())
+                     << endl; */               
+
+                     
                 molI->v() = vector::zero;
                 molI->special()= -2;
                 molI->id() = agentId_;
@@ -170,9 +182,20 @@ void helbingExponential::pairPotentialFunction
             
             if( (mag(normalForce)*2*constant::mathematical::pi*molJ->radius()) >= maxForce_)
             {
+/*                Info << "position = " << molJ->position()
+                    <<  ", trackingNumber = " << molJ->trackingNumber()
+                    << " radius J = " << molJ->radius()
+                    <<  ", nij " << nij
+                    <<  ", mag(nij) " << mag(nij)
+                    <<  ", dIJ " << dIJ
+                    <<  ", rIJ " << rIJ                    
+                     << ", normalForce = " << mag(normalForce)
+                     << ", force per unit width = " << (mag(normalForce)*2*constant::mathematical::pi*molJ->radius())
+                     << endl;*/                
+                
                 molJ->v() = vector::zero;
                 molJ->special()= -2;
-                molI->id() = agentId_;
+                molJ->id() = agentId_;
             }            
         }
                 
@@ -187,7 +210,7 @@ void helbingExponential::pairPotentialFunction
     
     // apply force
     
-    if(option_ == 0)
+    if(option_ == 0) // standard
     {
         molI->f() += force;
         molJ->f() += -force;
