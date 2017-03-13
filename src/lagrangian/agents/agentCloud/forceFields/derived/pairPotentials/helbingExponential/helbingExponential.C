@@ -81,6 +81,13 @@ helbingExponential::helbingExponential
     {
         injury_ = Switch(propsDict_.lookup("injury"));
         
+        timeDelay_ = 0.0;
+        
+        if (propsDict_.found("injuryTimeDelay"))
+        {
+            timeDelay_ = readScalar(propsDict_.lookup("injuryTimeDelay"));
+        }
+        
         const word idName(propsDict_.lookup("agentIdInjured")); 
         const List<word>& idList(cloud_.cP().agentIds());
 
@@ -161,42 +168,33 @@ void helbingExponential::pairPotentialFunction
         
         if(injury_)
         {
-            if( (mag(normalForce)/(2*constant::mathematical::pi*molI->radius())) >= maxForce_)
+            if(cloud_.mesh().time().timeOutputValue() > timeDelay_)
             {
-/*                Info << "position = " << molI->position()
-                     <<  ", trackingNumber = " << molI->trackingNumber()
-                    << " radius I = " << molI->radius()
-                    <<  ", nij " << nij
-                    <<  ", mag(nij) " << mag(nij)
-                    <<  ", dIJ " << dIJ
-                    <<  ", rIJ " << rIJ
-                     << ", normalForce = " << mag(normalForce)
-                     << ", force per unit width = " << (mag(normalForce)*2*constant::mathematical::pi*molI->radius())
-                     << endl; */               
-
-                     
-                molI->v() = vector::zero;
-                molI->special()= -2;
-                molI->id() = agentId_;
-            }
-            
-            if( (mag(normalForce)/(2*constant::mathematical::pi*molJ->radius())) >= maxForce_)
-            {
-/*                Info << "position = " << molJ->position()
-                    <<  ", trackingNumber = " << molJ->trackingNumber()
-                    << " radius J = " << molJ->radius()
-                    <<  ", nij " << nij
-                    <<  ", mag(nij) " << mag(nij)
-                    <<  ", dIJ " << dIJ
-                    <<  ", rIJ " << rIJ                    
-                     << ", normalForce = " << mag(normalForce)
-                     << ", force per unit width = " << (mag(normalForce)*2*constant::mathematical::pi*molJ->radius())
-                     << endl;*/                
+                if( (mag(normalForce)/(2*constant::mathematical::pi*molI->radius())) >= maxForce_)
+                {
+                    molI->v() = vector::zero;
+                    molI->special()= -2;
+                    molI->id() = agentId_;
+                }
                 
-                molJ->v() = vector::zero;
-                molJ->special()= -2;
-                molJ->id() = agentId_;
-            }            
+                if( (mag(normalForce)/(2*constant::mathematical::pi*molJ->radius())) >= maxForce_)
+                {
+    /*                Info << "position = " << molJ->position()
+                        <<  ", trackingNumber = " << molJ->trackingNumber()
+                        << " radius J = " << molJ->radius()
+                        <<  ", nij " << nij
+                        <<  ", mag(nij) " << mag(nij)
+                        <<  ", dIJ " << dIJ
+                        <<  ", rIJ " << rIJ                    
+                        << ", normalForce = " << mag(normalForce)
+                        << ", force per unit width = " << (mag(normalForce)*2*constant::mathematical::pi*molJ->radius())
+                        << endl;*/                
+                    
+                    molJ->v() = vector::zero;
+                    molJ->special()= -2;
+                    molJ->id() = agentId_;
+                }  
+            }
         }
                 
     }
