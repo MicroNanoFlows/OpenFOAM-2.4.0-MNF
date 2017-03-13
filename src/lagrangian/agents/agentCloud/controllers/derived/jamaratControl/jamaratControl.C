@@ -124,8 +124,8 @@ jamaratControl::jamaratControl
     
 //     frac_ = 0.1;
 //     frac2_ = 0.05;
-    frac_ = readScalar(propsDict_.lookup("fracShort"));
-    frac2_ = readScalar(propsDict_.lookup("fracLong"));
+    fracP_ = readScalar(propsDict_.lookup("fracPillar"));
+    fracR_ = readScalar(propsDict_.lookup("fracRoad"));
         
         // borders 
     
@@ -182,7 +182,139 @@ void jamaratControl::controlBeforeMove()
 {}
 
 void jamaratControl::controlBeforeForces()
-{}
+{
+    const List< DynamicList<agent*> >& cellOccupancy
+        = cloud_.cellOccupancy();
+
+    forAll(cellOccupancy, c)
+    {
+        const List<agent*>& molsInCell = cellOccupancy[c];
+
+        forAll(molsInCell, mIC)
+        {
+            agent* molI = molsInCell[mIC];
+            
+            forAll(interactionList_[c], i)
+            {
+                if(findIndex(agentIds_, molI->id()) != -1)
+                {
+                    label index = interactionList_[c][i];
+                    
+                    reflect(index, molI);
+                }
+            }
+        }
+    }    
+    
+    // rebuild cell Occupancy 
+    cloud_.buildCellOccupancy();    
+    
+}
+
+
+// METHOD 1 
+void jamaratControl::reflect(label index, agent* p)
+{
+    scalar minD = GREAT;
+    vector pointOnBorder = vector::zero;
+//     label vertex = 0;
+    
+    // find the closest edge to interact with                
+    for (int corner = 0; corner < borderList_[index].size()-1; corner++)
+    {
+        const vector& v1 = borderList_[index][corner];             
+        const vector& v2 = borderList_[index][corner+1];
+        
+        scalar edgeLength = mag(v2-v1);
+        vector v21 = v2-v1;
+        
+        scalar t = max(0, min(1, ((p->position()-v1) & v21)/(edgeLength*edgeLength)));        
+        
+        vector closestPointOnBorder = v1 + t*v21;
+        
+        vector rWI = closestPointOnBorder - p->position();
+        scalar dWI = mag(rWI);
+       
+        if(dWI < minD)
+        {
+            minD = dWI;
+            pointOnBorder = closestPointOnBorder;
+//             vertex = corner;
+        }
+    }
+    
+/*        Info << " agent position  = " << p->position() 
+             << " closestPoint on border  = " << closestPointOnBorder
+             << " border points = " << v1 << " & " << v2
+             <<  " centre point = " << rC 
+             << " distance from wall = " << dWI
+             << endl;*/    
+
+    vector rC = centrePoints_[index];
+    vector rIC = rC - p->position();
+    vector rWC = rC - pointOnBorder;
+    vector rWI = pointOnBorder - p->position();
+    scalar dWI = mag(rWI);
+    
+    
+    // reflect 
+    if(mag(rIC) < mag(rWC))
+    {
+/*        Info << " agent position  = " << p->position() 
+             << " closestPoint on border  = " << pointOnBorder
+             << " border points = " << borderList_[index][vertex] << " & " << borderList_[index][vertex+1]
+             <<  " centre point = " << rC 
+             << " distance from wall = " << dWI
+             << endl; */ 
+        
+        vector newPosition = p->position() + 2.0*rWI;
+        
+        vector nij = rWI/dWI;
+        vector tij = vector (-nij.y(), nij.x(), 0);
+        vector vNew = mag(p->v())*tij;
+        p->v() = vNew;
+        
+        // move 
+        
+        vector oldPosition = p->position();
+//             Info << "before position = " << p->position() << endl;        
+        p->position() = newPosition;
+//         Info << "after position = " << p->position() << endl;        
+        
+        // check that you moved cell 
+        label cell = -1;
+        label tetFace = -1;
+        label tetPt = -1;
+
+        mesh_.findCellFacePt
+        (
+            p->position(),
+            cell,
+            tetFace,
+            tetPt
+        );
+        
+        if(cell != -1)
+        {
+            if(p->cell() != cell)
+            {
+                p->cell() = cell;
+                p->tetFace() = tetFace;
+                p->tetPt() = tetPt;
+//                 Info << "changed cell to = " << cell << endl;        
+            }
+        }
+        else
+        {
+            FatalErrorIn("rectangularBorder::reflect()") 
+                << "    molecule left mesh at position = " << p->position()
+                << ", starting from position = " << oldPosition
+                << "; Implement more robust algorithm!" 
+                << nl << abort(FatalError);  
+        }
+    }
+    
+}
 
 void jamaratControl::controlDuringForces
 (
@@ -219,9 +351,9 @@ void jamaratControl::controlAfterForces()
                 {
                     vector force = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
                     p().f() += force;
-                    vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
+                    vector R = vector(0.0, cloud_.rndGen().scalar01(), 0.0);
                     R /= mag(R);
-                    p().f() += R*frac2_*mag(force);         
+                    p().f() += R*fracR_*mag(force);         
                 }
             }
             
@@ -279,60 +411,21 @@ void jamaratControl::controlAfterForces()
                     p().eventTracker() = 5;
                 }
                 
-                
                 if(p().position().x() < sideTop_[0].x())
                 {
-                    vector n1 = sideTop_[0] - p().position();
-                    vector n2 = sideBottom_[0] - p().position();
-                    
-                    if(mag(n1) < mag(n2))
-                    {
-                        n1 /= mag(n1);
-                        vector force = (p().desiredSpeed()*n1 - p().v())*p().mass() / tau_;
-                        p().f() += force;
-                        vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
-                        R /= mag(R);
-                        
-                        p().f() += R*frac_*mag(force);
-                        
-                        if(mag(p().v())  < 0.1)
-                        {
-                            p().fraction() += 0.5;
-                        }
-                        else
-                        {
-                             p().fraction() = 1.0;
-                        }
-                        
-                    }
-                    else
-                    {
-                        n2 /= mag(n2);
-                        vector force = (p().desiredSpeed()*n2 - p().v())*p().mass() / tau_;
-                        p().f() += force;
-                        vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
-                        R /= mag(R);
-                        p().f() += R*frac_*mag(force);
-                        
-                        if(mag(p().v()) < 0.1)
-                        {
-                            p().fraction() += 0.5;
-                        }
-                        else
-                        {
-                             p().fraction() = 1.0;
-                        }                        
-                    }
+                    vector force = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
+                    p().f() += force;
+                    vector R = vector(0.0, cloud_.rndGen().scalar01(), 0.0);
+                    R /= mag(R);
+                    p().f() += R*fracP_*mag(force);                  
                 }
                 else
                 {
-                    p().fraction() = 1.0;
                     vector force = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
                     p().f() += force;
-                    vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
+                    vector R = vector(0.0, cloud_.rndGen().scalar01(), 0.0);
                     R /= mag(R);
-                    p().f() += R*frac2_*mag(force);                    
-                    
+                    p().f() += R*fracR_*mag(force);                    
                 }
             }
             
@@ -392,25 +485,21 @@ void jamaratControl::controlAfterForces()
                 
                 if(p().position().x() < sideTop_[1].x())
                 {
-                    vector n1 = sideTop_[1] - p().position();
-                    vector n2 = sideBottom_[1] - p().position();
-                    
-                    if(mag(n1) < mag(n2))
-                    {
-                        n1 /= mag(n1);
-                        p().f() += (p().desiredSpeed()*n1 - p().v())*p().mass() / tau_;
-                    }
-                    else
-                    {
-                        n2 /= mag(n2);
-                        p().f() += (p().desiredSpeed()*n2 - p().v())*p().mass() / tau_;
-                        
-                    }
+                    vector force = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
+                    p().f() += force;
+                    vector R = vector(0.0, cloud_.rndGen().scalar01(), 0.0);
+                    R /= mag(R);
+                    p().f() += R*fracP_*mag(force);                  
                 }
                 else
                 {
-                    p().f() += (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_;        
-                }
+                    vector force = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
+                    p().f() += force;
+                    vector R = vector(0.0, cloud_.rndGen().scalar01(), 0.0);
+                    R /= mag(R);
+                    p().f() += R*fracR_*mag(force);                    
+                }                
+
             }
             
             // check in throwing box 
@@ -461,24 +550,19 @@ void jamaratControl::controlAfterForces()
             {
                 if(p().position().x() < sideTop_[2].x())
                 {
-                    vector n1 = sideTop_[2] - p().position();
-                    vector n2 = sideBottom_[2] - p().position();
-                    
-                    if(mag(n1) < mag(n2))
-                    {
-                        n1 /= mag(n1);
-                        p().f() += (p().desiredSpeed()*n1 - p().v())*p().mass() / tau_;
-                    }
-                    else
-                    {
-                        n2 /= mag(n2);
-                        p().f() += (p().desiredSpeed()*n2 - p().v())*p().mass() / tau_;
-                        
-                    }
+                    vector force = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
+                    p().f() += force;
+                    vector R = vector(0.0, cloud_.rndGen().scalar01(), 0.0);
+                    R /= mag(R);
+                    p().f() += R*fracP_*mag(force);                  
                 }
                 else
                 {
-                    p().f() += (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_;        
+                    vector force = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
+                    p().f() += force;
+                    vector R = vector(0.0, cloud_.rndGen().scalar01(), 0.0);
+                    R /= mag(R);
+                    p().f() += R*fracR_*mag(force);                    
                 }
             }
             
@@ -544,6 +628,9 @@ void jamaratControl::controlAfterForces()
                     
                     if(borderNumber != -1)
                     {
+                        scalar minD = GREAT;
+                        vector pointOnBorder = vector::zero;
+                        
                         // find the closest edge to interact with                
                         for (int corner = 0; corner < borderList_[borderNumber].size()-1; corner++)
                         {
@@ -556,10 +643,18 @@ void jamaratControl::controlAfterForces()
                             scalar t = max(0, min(1, ((rI-v1) & v21)/(edgeLength*edgeLength)));        
                             
                             vector closestPointOnBorder = v1 + t*v21;
-                            
-                            // apply attractive force 
-                            agentI->f() += attractiveForceModel_->force(agentI, closestPointOnBorder);
+                            vector rWI = closestPointOnBorder - rI;
+                            scalar dWI = mag(rWI);
+                        
+                            if(dWI < minD)
+                            {
+                                minD = dWI;
+                                pointOnBorder = closestPointOnBorder;
+                            }                            
                         }
+                        
+                        // apply attractive force 
+                        agentI->f() += attractiveForceModel_->force(agentI, pointOnBorder);                        
                     }
                     
                     // repulsive force 
@@ -567,6 +662,9 @@ void jamaratControl::controlAfterForces()
                     forAll(interactionList_[c], i)
                     {
                         label index = interactionList_[c][i];
+
+                        scalar minD = GREAT;
+                        vector pointOnBorder = vector::zero;
                         
                         // find the closest edge to interact with                
                         for (int corner = 0; corner < borderList_[index].size()-1; corner++)
@@ -581,10 +679,18 @@ void jamaratControl::controlAfterForces()
                             scalar t = max(0, min(1, ((rI-v1) & v21)/(edgeLength*edgeLength)));        
                             
                             vector closestPointOnBorder = v1 + t*v21;
-                            
-                            // apply repulsive force
-                            agentI->f() += repulsiveForceModel_->force(agentI, closestPointOnBorder);
+                            vector rWI = closestPointOnBorder - rI;
+                            scalar dWI = mag(rWI);
+                        
+                            if(dWI < minD)
+                            {
+                                minD = dWI;
+                                pointOnBorder = closestPointOnBorder;
+                            }
                         }
+                        
+                        // apply repulsive force
+                        agentI->f() += repulsiveForceModel_->force(agentI, pointOnBorder);                        
                     }
                 }
             }
@@ -680,11 +786,16 @@ void jamaratControl::initialiseBorders()
     
     Zmin -= dZ;
     Zmax += dZ;
+
+    label nBorders = borderList_.size();
     
+    normalVectors_.setSize(nBorders);
+    midPoints_.setSize(nBorders);    
     
     sideTop_.setSize(3, vector::zero);
     sideBottom_.setSize(3, vector::zero);    
     
+    centrePoints_.setSize(3, vector::zero);    
     
     forAll(borderList_, i)
     {
@@ -692,6 +803,7 @@ void jamaratControl::initialiseBorders()
         
         vector min=vector(GREAT,GREAT,Zmin);
         vector max=vector(0.0,0.0,Zmax);
+        vector centrePoint = vector::zero;
         
         // produce bounded box to border
         forAll(borderI, j)
@@ -714,7 +826,9 @@ void jamaratControl::initialiseBorders()
             if(vI.y() > max.y())
             {
                 max.y() = vI.y();
-            }        
+            }
+            
+            centrePoint += vI;
         }
 
         boundedBox bb (min,max);
@@ -722,6 +836,7 @@ void jamaratControl::initialiseBorders()
             
         sideTop_[i]=boxes_[i].midpoint()+vector(0,12,0);
         sideBottom_[i]=boxes_[i].midpoint()-vector(0,12,0);
+        centrePoints_[i] = centrePoint/scalar(borderI.size());
         
         // scale box
         scalar rCut = cloud_.f().rCut();
@@ -767,8 +882,49 @@ void jamaratControl::initialiseBorders()
                 interactionList_[c].append(i);
             }
         }
+
+
+//         label sz=borderList_[i].size()-1;
+//         normalVectors_[i].setSize(sz);
+//         midPoints_[i].setSize(sz);
+//         vector centrePoint = vector::zero;
+//         
+//         // set midpoints
+//         for (int p = 0; p < sz; p++)
+//         {
+//             const vector& vI=borderList_[i][p];
+//             centrePoint += vI;
+//         }
+//         
+//         centrePoint /= scalar(sz);
+//         
+//         Info << "centrePoint = " << centrePoint << endl;
+//         
+//         // set normals
+//         for (int p = 0; p < sz; p++)
+//         {
+//             const vector& vI=borderList_[i][p];
+//             const vector& vJ=borderList_[i][p+1];
+//             vector vIJ=vJ-vI;
+//             vector midPoint = vI + vIJ*0.5;
+//             midPoints_[i][p]=midPoint;
+//             
+//             vector n = midPoint-centrePoint; // pointing outwards
+//             n /= mag(n);
+//             
+//             // deal with skewness
+//             scalar theta = acos(vIJ & n / mag(vIJ));
+// 
+//             n *= sin(theta);
+//             n /= mag(n);
+//             
+//             normalVectors_[i][p] = n;
+//         }
+
     }
-    
+        
+//     Info << "midpoints = "<<  midPoints_ << endl;
+//     Info << "normal = " << normalVectors_ << endl;    
 
 
 }

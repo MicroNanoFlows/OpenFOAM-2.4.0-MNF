@@ -213,6 +213,9 @@ void rectangularBorder::afterForce()
                     forAll(interactionList_[c], i)
                     {
                         label index = interactionList_[c][i];
+
+                        scalar minD = GREAT;
+                        vector pointOnBorder = vector::zero;
                         
                         // find the closest edge to interact with                
                         for (int corner = 0; corner < borderList_[index].size()-1; corner++)
@@ -227,10 +230,18 @@ void rectangularBorder::afterForce()
                             scalar t = max(0, min(1, ((rI-v1) & v21)/(edgeLength*edgeLength)));        
                             
                             vector closestPointOnBorder = v1 + t*v21;
-                            
-                            // apply force 
-                            agentI->f() += wallModel_->force(agentI, closestPointOnBorder);
+                            vector rWI = closestPointOnBorder - rI;
+                            scalar dWI = mag(rWI);
+                        
+                            if(dWI < minD)
+                            {
+                                minD = dWI;
+                                pointOnBorder = closestPointOnBorder;
+                            }                            
                         }
+                            
+                        // apply force 
+                        agentI->f() += wallModel_->force(agentI, pointOnBorder);                        
                     }
                 }
             }

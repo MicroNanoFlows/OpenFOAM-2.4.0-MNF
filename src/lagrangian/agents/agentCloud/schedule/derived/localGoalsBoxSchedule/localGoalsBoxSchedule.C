@@ -152,9 +152,8 @@ void localGoalsBoxSchedule::setSchedule()
         {
             if(mol().t() > 0 )
             {
+                mol().v() = vector::zero;
                 mol().t() -= deltaT_;
-                
-//                 mol().v() = vector::zero;
                 
                 if(mol().t() < 0)
                 {
