@@ -211,8 +211,6 @@ void hogmanayControl::controlAfterForces()
         
         for (p = cloud_.begin(); p != cloud_.end(); ++p)
         {
-            // will force 
-            
             if(p().eventTracker() == 0)
             {
                 if(findIndex(topAgentIds_, p().id()) != -1)
@@ -222,21 +220,21 @@ void hogmanayControl::controlAfterForces()
                         vector desDir = vector(0.0, (boxTop_.midpoint() - p().position()).y(), 0.0);
                         vector force = (p().desiredSpeed()*(desDir/mag(desDir)) - p().v())*p().mass() / tau_; 
                         p().f() += force;
-                        vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
+/*                        vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
                         R /= mag(R);
-                        p().f() += R*frac1_*mag(force);         
+                        p().f() += R*frac1_*mag(force); */        
                     }
                     else
                     {
 //                         vector force = (p().desiredSpeed()*desDir - p().v())*p().mass() / tau_; 
 //                         p().f() += force;
-                        vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
+/*                        vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
                         R /= mag(R);
-                        p().f() += R*frac2_;                          
+                        p().f() += R*frac2_; */                         
                     }
                 }
                 
-                if(findIndex(topAgentIds_, p().id()) != -1)
+                if(findIndex(bottomAgentIds_, p().id()) != -1)
                 {
                     if(!boxBottom_.contains(p().position()))
                     {
@@ -253,17 +251,17 @@ void hogmanayControl::controlAfterForces()
                         
                         vector force = (p().desiredSpeed()*(desDir/mag(desDir)) - p().v())*p().mass() / tau_; 
                         p().f() += force;
-                        vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
+/*                        vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
                         R /= mag(R);
-                        p().f() += R*frac1_*mag(force);         
+                        p().f() += R*frac1_*mag(force);  */       
                     }
                     else
                     {
 //                         vector force = (p().desiredSpeed()*desDir - p().v())*p().mass() / tau_; 
 //                         p().f() += force;
-                        vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
+/*                        vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
                         R /= mag(R);
-                        p().f() += R*frac2_;                          
+                        p().f() += R*frac2_; */                         
                     }                
                 }
             }
@@ -292,15 +290,15 @@ void hogmanayControl::controlAfterForces()
                         
                     vector force = (p().desiredSpeed()*(desDir/mag(desDir)) - p().v())*p().mass() / tau_; 
                     p().f() += force;
-                    vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
+/*                    vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
                     R /= mag(R);
-                    p().f() += R*frac1_*mag(force);         
+                    p().f() += R*frac1_*mag(force)*/;         
                 }
                 else
                 {
-                    vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
+/*                    vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
                     R /= mag(R);
-                    p().f() += R*frac2_;                          
+                    p().f() += R*frac2_;   */                       
                 }
             }
             
