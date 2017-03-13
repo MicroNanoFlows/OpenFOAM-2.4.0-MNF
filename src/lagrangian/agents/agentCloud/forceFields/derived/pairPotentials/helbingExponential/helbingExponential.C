@@ -59,7 +59,46 @@ helbingExponential::helbingExponential
     k_(readScalar(propsDict_.lookup("k"))),
     kappa_(readScalar(propsDict_.lookup("kappa")))
 {
+    option_ = 0;
+    
+    if (propsDict_.found("option"))
+    {
+        const word option = propsDict_.lookup("option");
+        
+        if(option == "default")
+        {
+            option_ = 0;
+        }
+        else if(option == "anisotropic")
+        {
+            option_ = 1;
+        }
+    }
+    
+    injury_ = false;
+    
+    if (propsDict_.found("injury"))
+    {
+        injury_ = Switch(propsDict_.lookup("injury"));
+        
+        const word idName(propsDict_.lookup("agentIdInjured")); 
+        const List<word>& idList(cloud_.cP().agentIds());
 
+        label id = findIndex(idList, idName);
+
+        if(id == -1)
+        {
+            FatalErrorIn("boxInitialise::setInitialConfiguration()")
+                << "Cannot find molecule id: " << idName << nl << "in idList."
+                << exit(FatalError);
+        }        
+        
+        agentId_ = id;
+        
+        maxForce_ = readScalar(propsDict_.lookup("maxForce"));
+    }
+
+    
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -115,8 +154,91 @@ void helbingExponential::pairPotentialFunction
     } 
     else
     {
-        force = (A_*exp((rIJ-dIJ)/B_) + k_*(rIJ-dIJ) )*nij  + 
-                kappa_*(rIJ-dIJ)*((molJ->v() - molI->v()) & tij)*tij;
+        vector socialForce = (A_*exp((rIJ-dIJ)/B_))*nij;
+        vector normalForce = k_*(rIJ-dIJ)*nij;
+        vector frictionForce = kappa_*(rIJ-dIJ)*((molJ->v() - molI->v()) & tij)*tij;
+        force = socialForce + normalForce  + frictionForce;
+        
+        if(injury_)
+        {
+            if( (mag(normalForce)/(2*constant::mathematical::pi*molI->radius())) >= maxForce_)
+            {
+/*                Info << "position = " << molI->position()
+                     <<  ", trackingNumber = " << molI->trackingNumber()
+                    << " radius I = " << molI->radius()
+                    <<  ", nij " << nij
+                    <<  ", mag(nij) " << mag(nij)
+                    <<  ", dIJ " << dIJ
+                    <<  ", rIJ " << rIJ
+                     << ", normalForce = " << mag(normalForce)
+                     << ", force per unit width = " << (mag(normalForce)*2*constant::mathematical::pi*molI->radius())
+                     << endl; */               
+
+                     
+                molI->v() = vector::zero;
+                molI->special()= -2;
+                molI->id() = agentId_;
+            }
+            
+            if( (mag(normalForce)/(2*constant::mathematical::pi*molJ->radius())) >= maxForce_)
+            {
+/*                Info << "position = " << molJ->position()
+                    <<  ", trackingNumber = " << molJ->trackingNumber()
+                    << " radius J = " << molJ->radius()
+                    <<  ", nij " << nij
+                    <<  ", mag(nij) " << mag(nij)
+                    <<  ", dIJ " << dIJ
+                    <<  ", rIJ " << rIJ                    
+                     << ", normalForce = " << mag(normalForce)
+                     << ", force per unit width = " << (mag(normalForce)*2*constant::mathematical::pi*molJ->radius())
+                     << endl;*/                
+                
+                molJ->v() = vector::zero;
+                molJ->special()= -2;
+                molJ->id() = agentId_;
+            }            
+        }
+                
+    }
+    
+/*    scalar f = molI->fraction();
+
+    if(molJ->fraction() < f)
+    {
+        f = molJ->fraction();
+    } */   
+    
+    // apply force
+    
+    if(option_ == 0) // standard
+    {
+        molI->f() += force;
+        molJ->f() += -force;
+    }
+    else if(option_ == 1) // ansitropy 
+    {
+        scalar wI = 0.0;
+        scalar rDI = molI->dir() & -rij;
+        
+        if(rDI > 0)
+        {
+            scalar theta = acos(rDI/(mag(molI->dir())*mag(-rij)));
+            
+            wI = 1.0 - (2.0*theta/constant::mathematical::pi);
+        }
+
+        scalar wJ = 0.0;
+        scalar rDJ = molJ->dir() & rij;
+        
+        if(rDJ > 0)
+        {
+            scalar theta = acos(rDJ/(mag(molJ->dir())*mag(rij)));
+            
+            wJ = 1.0 - (2.0*theta/constant::mathematical::pi);
+        }
+        
+        molI->f() += wI*force;
+        molJ->f() += -wJ*force;        
     }
 }
 

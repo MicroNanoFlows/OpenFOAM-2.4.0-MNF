@@ -23,13 +23,13 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    wallHelbingExponential
+    wallCompression
 
 Description
 
 \*----------------------------------------------------------------------------*/
 
-#include "wallHelbingExponential.H"
+#include "wallCompression.H"
 #include "addToRunTimeSelectionTable.H"
 
 namespace Foam
@@ -37,9 +37,9 @@ namespace Foam
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(wallHelbingExponential, 0);
+defineTypeNameAndDebug(wallCompression, 0);
 
-addToRunTimeSelectionTable(agentWallForce, wallHelbingExponential, dictionary);
+addToRunTimeSelectionTable(agentWallForce, wallCompression, dictionary);
 
 
 
@@ -49,7 +49,7 @@ addToRunTimeSelectionTable(agentWallForce, wallHelbingExponential, dictionary);
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 //- Construct from components
-wallHelbingExponential::wallHelbingExponential
+wallCompression::wallCompression
 (
     Time& time,
     const dictionary& dict
@@ -57,12 +57,8 @@ wallHelbingExponential::wallHelbingExponential
 :
     agentWallForce(time, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
-//     force_(propsDict_.lookup("force")),
     A_(readScalar(propsDict_.lookup("A"))),
-    B_(readScalar(propsDict_.lookup("B"))),
-    k_(readScalar(propsDict_.lookup("k"))),
-    kappa_(readScalar(propsDict_.lookup("kappa"))),
-    rCut_(readScalar(propsDict_.lookup("rCut")))
+    kappa_(readScalar(propsDict_.lookup("kappa")))
 {
     spaceVarying_ = true;
 }
@@ -74,15 +70,15 @@ wallHelbingExponential::wallHelbingExponential
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-wallHelbingExponential::~wallHelbingExponential()
+wallCompression::~wallCompression()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-vector wallHelbingExponential::force(agent* agentI, const vector& rW)
+vector wallCompression::force(agent* agentI, const vector& rW)
 {
-    scalar rI = agentI->radius();                
+    scalar Ri = agentI->radius();                
     
     // vector between point-on-wall and agent's position
     vector rWI = agentI->position() - rW;
@@ -96,33 +92,26 @@ vector wallHelbingExponential::force(agent* agentI, const vector& rW)
         vector nij = rWI/dWI;
         vector tij = vector (-nij.y(), nij.x(), 0);
         
-        if(dWI > rI)
+        if(dWI < 0.5*Ri)
         {
-            force = A_*exp((rI-dWI)/B_)*nij;
-            
-//             Info << "rI = " << agentI->position()
-//                 << ", rW = " << rW 
-//                 << ", rWI = " << rW
-//                 << ", dWI = " << dWI
-//                 << ", force = " << force 
-//                 << endl;
+            force = 0.5*A_*(2-2*dWI) - kappa_*(Ri-dWI)*(agentI->v() & tij)*tij;
         }
         else
         {
-            force = (A_*exp((rI-dWI)/B_) + k_*(rI-dWI))*nij - 
-                    kappa_*(rI-dWI)*(agentI->v() & tij)*tij;
+            force = ( - 
+                    kappa_*(Ri-dWI)*(agentI->v() & tij)*tij;
         }
     }
     
     return force;
 }
             
-vector wallHelbingExponential::force(agent* agentI, const vector& rW, const scalar& time)
+vector wallCompression::force(agent* agentI, const vector& rW, const scalar& time)
 {
     return vector::zero;
 }
             
-vector wallHelbingExponential::force(agent* agentI, const scalar& time)
+vector wallCompression::force(agent* agentI, const scalar& time)
 {
     return vector::zero;
 }
@@ -130,11 +119,11 @@ vector wallHelbingExponential::force(agent* agentI, const scalar& time)
  
             
             
-void wallHelbingExponential::updateForce()
+void wallCompression::updateForce()
 {}
             
             
-void wallHelbingExponential::write
+void wallCompression::write
 (
     const fileName& fixedPathName,
     const fileName& timePath

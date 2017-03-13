@@ -99,6 +99,10 @@ class forceFields
         
         bool onePotential_;
         
+        // pair potential option 
+        // (e.g. onePotential, table etc)
+        word option_;
+        
         
         // use this when given two molecules to compute forces/energies
         // e.g. index = pairPotentialLookUp_[idA][idB]
@@ -113,6 +117,11 @@ class forceFields
         //- interaction particle list
 //         List<DynamicList<agent*> > ipl_;        
         
+        List<vector> agentSocialForces_;
+
+        List<vector> agentBodyForces_;
+        
+        List<vector> agentWallForces_;
         
     // Private Member Functions
 
@@ -149,11 +158,19 @@ public:
         
         void calculatePairForces();
         
+        void calculateWallForces();
+        
         // Access
 
         inline List< autoPtr<bodyForce> >& bodyForces();
 
         inline const scalar& rCut() const;
+        
+        inline const List<vector>& agentSocialForces() const;
+
+        inline const List<vector>& agentBodyForces() const;
+        
+        inline const List<vector>& agentWallForces() const;
 };
 
 

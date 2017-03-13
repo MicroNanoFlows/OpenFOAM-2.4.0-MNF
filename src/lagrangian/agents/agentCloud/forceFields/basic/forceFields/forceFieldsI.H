@@ -53,12 +53,12 @@ inline void forceFields::evaluatePair
     if(!molI->frozen() || !molJ->frozen())
     {
         // fraction
-        scalar f = molI->fraction();
-    
-        if(molJ->fraction() < f)
-        {
-            f = molJ->fraction();
-        }
+//         scalar f = molI->fraction();
+//     
+//         if(molJ->fraction() < f)
+//         {
+//             f = molJ->fraction();
+//         }
 
         vector rIJ = molI->position() - molJ->position();
         scalar rIJMagSq = magSqr(rIJ);
@@ -71,15 +71,22 @@ inline void forceFields::evaluatePair
             scalar energy = 0.0;
             vector force = vector::zero;
 
-            pairPotentials_[k]->pairPotentialFunction(molI, molJ, rIJMag, energy, force);
+            pairPotentials_[k]->pairPotentialFunction
+            (
+                molI,
+                molJ,
+                rIJMag,
+                energy,
+                force
+            );
             
 //             vector fIJ = f*(rIJ/rIJMag)*force;
 
-            molI->f() += force;
-            molJ->f() += -force;
+//             molI->f() += f*force;
+//             molJ->f() += -f*force;
 
-            molI->potentialEnergy() += 0.5*f*energy;
-            molJ->potentialEnergy() += 0.5*f*energy;
+//             molI->potentialEnergy() += 0.5*f*energy;
+//             molJ->potentialEnergy() += 0.5*f*energy;
             
             
 //             Info<< molI->trackingNumber() << ", " << molJ->trackingNumber() 
@@ -116,6 +123,22 @@ inline List< autoPtr<bodyForce> >& forceFields::bodyForces()
 {
     return bodyForces_;
 }
+
+inline const List<vector>& forceFields::agentSocialForces() const
+{
+    return agentSocialForces_;
+}
+
+inline const List<vector>& forceFields::agentBodyForces() const
+{
+    return agentBodyForces_;
+}
+        
+inline const List<vector>& forceFields::agentWallForces() const
+{
+    return agentWallForces_;
+}
+
 // inline List< autoPtr<agentController> >& agentControllers::stateControllers()
 // {
 // 	return stateControllers_;

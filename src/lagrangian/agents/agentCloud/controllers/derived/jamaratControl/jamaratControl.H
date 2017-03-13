@@ -23,28 +23,29 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    debuggerAgent
+    jamaratControl
 
 Description
-    Model that applies a gravitational force on all molecules.
+    Add agents to a box based on a known flux 
+    Not parallelised
 
 SourceFiles
-    debuggerAgentI.H
-    debuggerAgent.C
-    debuggerAgentIO.C
+    jamaratControlI.H
+    jamaratControl.C
+    jamaratControlIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef debuggerAgent_H
-#define debuggerAgent_H
+#ifndef jamaratControl_H
+#define jamaratControl_H
 
 #include "agentController.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
 #include "agentCloud.H"
-
 #include "boundedBox.H"
+#include "agentWallForce.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -52,10 +53,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class debuggerAgent Declaration
+                           Class jamaratControl Declaration
 \*---------------------------------------------------------------------------*/
 
-class debuggerAgent
+class jamaratControl
 :
 	public agentController
 {
@@ -67,32 +68,99 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-
-        //- ids of mols
+        //- ids of agents
         List<label> agentIds_;
 
-        boundedBox bb_;
         
-        scalar nTimeSteps_;
-        vector force_;
-        
-        List<label> trackingNumbers_;
+        //- id of inserted agent
+        label agentId_;
 
+        boundedBox samplingBox_;
+        boundedBox controlBox_;
+        
+        label N_;
+        
+        scalar meanMass_;
+        scalar massRange_;
+        scalar meanRadius_;
+        scalar radiusRange_;
+        scalar meanDesSpeed_;
+        scalar desSpeedRange_;
+        
+        
+        // will force 
+        
+        vector desiredDirection_;
+        scalar tau_;
+        scalar fracP_;
+        scalar fracR_;
+        // borders 
+        
+        List<vectorList> borderList_;
+        List<DynamicList<label> > interactionList_;  
+        
+        List<vectorList> midPoints_;
+        List<vectorList> normalVectors_;
+        
+        vectorList centrePoints_;
+        
+        List<vector> sideTop_;
+        List<vector> sideBottom_;
+        
+        
+        autoPtr<agentWallForce> attractiveForceModel_;
+        autoPtr<agentWallForce> repulsiveForceModel_;
+        
+        // distance at which will force is on/off
+        scalar X1_;
+        scalar X2_;
+        scalar X3_;
+        
+        // searchTime 
+        scalar searchTime_;
+        scalar throwingTime_;
+        scalar deltaT_;
+        
+        // throwing boxes 
+        
+        List<boundedBox> boxes_;
+        
     // Private Member Functions
 
 //         void readProperties();
         
-//         void setBoundBoxes();      
-
+        void setBoundBox
+        (
+            const dictionary& propsDict,
+            boundedBox& bb,
+            const word& name 
+        );
+     
+        void insertAgents(const label& N);
+        
+        scalar gaussianDistribution
+        (
+            const scalar& mean,
+            const scalar& range
+        );
+        
+        void initialiseBorders();
+        
+        void setBoundBoxes();
+        
+//         bool isPointWithinBorder(label index, const vector& r);
+        
+        void reflect(label index, agent* p);
+        
 public:
 
     //- Runtime type information
-    TypeName("debuggerAgent");
+    TypeName("jamaratControl");
 
     // Constructors
 
         //- Construct from components
-        debuggerAgent
+        jamaratControl
         (
             Time& t,
             agentCloud& cloud,
@@ -101,7 +169,7 @@ public:
 
     // Destructor
 
-        ~debuggerAgent();
+        ~jamaratControl();
 
 
     // Member Functions

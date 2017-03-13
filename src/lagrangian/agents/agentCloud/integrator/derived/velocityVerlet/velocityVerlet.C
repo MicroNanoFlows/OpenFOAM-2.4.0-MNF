@@ -73,6 +73,8 @@ void velocityVerlet::init()
     cloud_.ob().initialConfig();        
     cloud_.s().initialConfig();
     
+    cloud_.tracker().track();
+    
     // initial force
     clearLagrangianFields();
     calculateForce();
@@ -91,8 +93,6 @@ void velocityVerlet::evolve()
     
     updateHalfVelocity();
     
-    checkMaxVelocity();
-    
     cloud_.controllers().controlBeforeMove();
 
     checkMaxVelocity();
@@ -108,21 +108,14 @@ void velocityVerlet::evolve()
     cloud_.controllers().controlBeforeForces();
     
     clearLagrangianFields();
-    
-   
-    calculateForce();
 
-    
-    cloud_.b().afterForce();  
+    calculateForce();
     
     cloud_.controllers().controlAfterForces();
         
     updateHalfVelocity();
     
-    checkMaxVelocity();
-    
     cloud_.controllers().controlVelocitiesII(); 
-    
 
     // after time step 
     
@@ -168,9 +161,12 @@ void velocityVerlet::clearLagrangianFields()
 
 void velocityVerlet::calculateForce()
 {
-    cloud_.f().calculateBodyForces();
+    cloud_.f().calculatePairForces(); // social forces
     
-    cloud_.f().calculatePairForces();
+    cloud_.f().calculateBodyForces(); // body forces
+    
+    cloud_.b().afterForce(); // wall forces
+    cloud_.f().calculateWallForces();
 }
 
 void velocityVerlet::checkMaxVelocity()
@@ -181,28 +177,16 @@ void velocityVerlet::checkMaxVelocity()
     {
         scalar vMax = cloud_.cP().vMax()[mol().id()];
         
-        if( mag(mol().v()) > vMax )
+        scalar magV = mag(mol().v());
+        
+        if(magV > vMax)
         {
-            vector n = mol().v()/mag(mol().v());
+            vector n = mol().v()/magV;
             mol().v() = vMax*n;
         }
     }
 }
 
-// void velocityVerlet::applyWillForce()
-// {
-//     IDLList<agent>::iterator mol(cloud_.begin());
-// 
-//     for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
-//     {
-//         vector desDir = cloud_.cP().desDir()[mol().id()];
-//         scalar desSpeed = cloud_.cP().desSpeed()[mol().id()];
-//         
-//         scalar tau = 0.5;
-//         
-//         mol().f() += (desSpeed*desDir - mol().v())*mol().mass() / tau;
-//     }
-// }
 
 
 

@@ -252,6 +252,13 @@ void pairPotential::writeTables(const fileName& pathName)
     } 
 }
 
+// void pairPotential::clearForcesList()
+// {
+//     forces_.clear();
+//     
+//     forces_.setSize(cloud_.tracker().noOfAgentsOnProc(), vector::zero);
+// }
+
 
 
 } // End namespace Foam

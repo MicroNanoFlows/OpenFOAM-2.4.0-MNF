@@ -26,8 +26,13 @@ License
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+namespace Foam
+{
+    
+    
+    
 
-inline bool Foam::agentTracker::isTrackingNumberAvailable
+inline bool agentTracker::isTrackingNumberAvailable
 (
     const label& trackingNumber
 )
@@ -47,7 +52,7 @@ inline bool Foam::agentTracker::isTrackingNumberAvailable
     // deal with parallel processing here
 }
 
-inline Foam::agent* Foam::agentTracker::getAgent()
+inline agent* agentTracker::getAgent()
 {
     agent* p = NULL;
     
@@ -61,4 +66,26 @@ inline Foam::agent* Foam::agentTracker::getAgent()
     return p;
 }
 
+inline const DynamicList<label>& agentTracker::agentTrackingNumbers() const 
+{
+    return agentTrackingNumbers_;
+}
+
+inline DynamicList<agent*>& agentTracker::agentsOnProc()
+{
+    return agentsOnProc_;
+}
+
+inline const DynamicList<agent*>& agentTracker::agentsOnProc() const
+{
+    return agentsOnProc_;
+}
+
+inline label agentTracker::noOfAgentsOnProc()
+{
+    return agentsOnProc_.size();
+}
+
+
 // ************************************************************************* //
+}

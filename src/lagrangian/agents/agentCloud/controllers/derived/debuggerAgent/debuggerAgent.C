@@ -77,6 +77,8 @@ debuggerAgent::debuggerAgent
 
     agentIds_ = ids.agentIds();
 
+    trackingNumbers_ = List<label>(propsDict_.lookup("trackingNumbers"));
+    
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -131,6 +133,15 @@ void debuggerAgent::controlAfterForces()
 //             }
 //         }
 //     }
+/*    
+    Info << "debuggerAgent"  << endl;
+
+    IDLList<agent>::iterator mol(cloud_.begin());
+
+    for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
+    {
+        Info << mol().
+    }  */  
 }
 
 
@@ -141,38 +152,49 @@ void debuggerAgent::calculateProperties()
 {
     Info << "debuggerAgent"  << endl;
 
-    IDLList<agent>::iterator mol(cloud_.begin());
-
-    for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
+//     if(time_.timeOutputValue() > 200)
     {
-        if(findIndex(agentIds_, mol().id()) != -1)
+        IDLList<agent>::iterator mol(cloud_.begin());
+        label i = 0;
+        
+        for (mol = cloud_.begin(); mol != cloud_.end(); ++mol)
         {
-//             if(bb_.contains(mol().position()))
-//             {
-//                 
-//             }
-//             else
-//             {
-//                 FatalErrorIn("debuggerAgent") << nl
-//                     << " Agent position just left the domain at : "
-//                     << mol().position() 
-//                     << ", tracking Number = " << mol().trackingNumber()
-//                     << nl << abort(FatalError);                         
-//             }
-            scalar Vmag = mag(mol().v());
+            if(findIndex(trackingNumbers_, mol().trackingNumber()) != -1)
+            {
+    //             if(bb_.contains(mol().position()))
+    //             {
+    //                 
+    //             }
+    //             else
+    //             {
+    //                 FatalErrorIn("debuggerAgent") << nl
+    //                     << " Agent position just left the domain at : "
+    //                     << mol().position() 
+    //                     << ", tracking Number = " << mol().trackingNumber()
+    //                     << nl << abort(FatalError);                         
+    //             }
+                scalar Vmag = mag(mol().v());
+                
+                Info << "tN = " << mol().trackingNumber() 
+                    << ", pos = " << mol().position()
+                    << ", F = " << mol().f()
+                    << ", a = " << mol().a()
+                    << ", v = " << mol().v()
+                    << ", vMag = " << Vmag
+                    << ", desired speed = " << mol().desiredSpeed()
+                    << ", destination = " << mol().d()
+                    << ", distance to destination = " << mol().dist()
+                    << ", destination direction = " << mol().dir() 
+                    << ", time = " << mol().t()
+                    << ", social force = " << cloud_.f().agentSocialForces()[i]
+                    << ", body force = " << cloud_.f().agentBodyForces()[i]
+                    << ", wall force = " << cloud_.f().agentWallForces()[i]
+                    << endl;
+            }
             
-            Info << "tN = " << mol().trackingNumber() 
-                << ", pos = " << mol().position()
-                << ", F = " << mol().f()
-                << ", a = " << mol().a()
-                << ", v = " << mol().v()
-                << ", vMag = " << Vmag
-                << ", desired speed = " << mol().desiredSpeed()
-                << ", destination = " << mol().d()
-                << endl;
-            
-        }
-    }   
+            i++;            
+        }   
+    }
     
     
 }

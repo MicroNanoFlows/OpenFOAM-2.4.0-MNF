@@ -149,6 +149,9 @@ private:
         label special_;
 
         label id_;
+        
+        // counter of events
+        label eventTracker_;        
 
         //- each agent will have a unique label
         label trackingNumber_;
@@ -186,6 +189,7 @@ public:
             const scalar& t,
             const label special,
             const label id,
+            const label eventTracker,
             const label trackingNumber
         );
 
@@ -260,8 +264,15 @@ public:
             inline const vector& v() const;
             inline vector& v();
 
+            //destination
             inline const vector& d() const;
             inline vector& d();            
+
+            // direction (normal unit vector)
+            inline vector dir();            
+
+            // vector distance to desination
+            inline vector dist();   
             
             inline const vector& f() const;
             inline vector& f();            
@@ -298,6 +309,10 @@ public:
             
             inline label id() const;
             inline label& id();            
+            
+            inline label eventTracker() const;
+            inline label& eventTracker();            
+            
             
             // - return tracking number
             inline const label& trackingNumber() const;

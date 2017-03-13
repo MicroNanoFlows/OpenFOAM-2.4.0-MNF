@@ -48,6 +48,7 @@ inline Foam::agent::agent
     const scalar& t,
     const label special,
     const label id,
+    const label eventTracker,
     const label trackingNumber
 )
 :
@@ -65,6 +66,7 @@ inline Foam::agent::agent
     t_(t),
     special_(special),
     id_(id),
+    eventTracker_(eventTracker),
     trackingNumber_(trackingNumber)
 {}
 
@@ -94,6 +96,31 @@ inline Foam::vector& Foam::agent::d()
     return d_;
 }
 
+inline Foam::vector Foam::agent::dir()
+{
+    vector dir = vector::zero;
+    
+    if(mag(d_) >= 0)
+    {
+        dir = d_ - position();
+        
+        dir /= mag(dir);
+    }
+    
+    return dir;
+}
+
+inline Foam::vector Foam::agent::dist()
+{
+    vector dist = vector::zero;
+    
+    if(mag(d_) >= 0)
+    {
+        dist = d_ - position();
+    }
+    
+    return dist;
+}
 
 inline const Foam::vector& Foam::agent::f() const
 {
@@ -224,6 +251,15 @@ inline Foam::label& Foam::agent::id()
     return id_;
 }
 
+inline Foam::label Foam::agent::eventTracker() const
+{
+    return eventTracker_;
+}
+
+inline Foam::label& Foam::agent::eventTracker() 
+{
+    return eventTracker_;
+}
 
 inline const Foam::label& Foam::agent::trackingNumber() const
 {

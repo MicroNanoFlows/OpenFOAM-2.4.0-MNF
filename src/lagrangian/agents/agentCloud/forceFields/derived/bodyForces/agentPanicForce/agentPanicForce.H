@@ -23,26 +23,25 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    lennardJones
+    agentPanicForce
 
 Description
-    Model that applies a gravitational force on all molecules.
+
 
 SourceFiles
-    lennardJonesI.H
-    lennardJones.C
-    lennardJonesIO.C
+    agentPanicForceI.H
+    agentPanicForce.C
+    agentPanicForceIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef lennardJones_H
-#define lennardJones_H
+#ifndef agentPanicForce_H
+#define agentPanicForce_H
 
-#include "pairPotential.H"
+#include "bodyForce.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "agentCloud.H"
-
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -51,12 +50,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class lennardJones Declaration
+                           Class agentPanicForce Declaration
 \*---------------------------------------------------------------------------*/
 
-class lennardJones
+class agentPanicForce
 :
-	public pairPotential
+	public bodyForce
 {
 
 private:
@@ -66,59 +65,59 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-        scalar sigma_;
-        scalar epsilon_;
-        scalar maxForce_;
+        //- ids of agents
+        List<label> agentIds_;
         
+//         scalar desiredSpeed_;
         
-        scalar E_at_Rmin_;
-        scalar F_at_Rmin_;
+        vector desiredDirection_;
+        
+        scalar tau_;
 
+        scalar timeCounter_;
+        
+        scalar initialTimeDelay_;
+        
+        scalar initialTime_;
+        
+//         scalar stdev_;
+        
+        // size = number of agents
+//         List<scalar> agentVelocities_;
         
     // Private Member Functions
 
- 
 
 public:
 
     //- Runtime type information
-    TypeName("lennardJones");
+    TypeName("agentPanicForce");
 
     // Constructors
 
         //- Construct from components
-        lennardJones
+        agentPanicForce
         (
             agentCloud& cloud,
-            const word& name,
+            Time& t,
             const dictionary& dict
         );
 
     // Destructor
 
-        ~lennardJones();
+        ~agentPanicForce();
 
 
-    // Member Functions
     // Member Functions
         
         //- create an initial configuration
         void initialConfiguration();
         
-        scalar energy(const scalar& r);
+        // inside loop of all agents
+        void force(agent* p);
         
-        scalar force(const scalar& r);
-        
-        void pairPotentialFunction
-        (
-            agent* molI,
-            agent* molJ,
-            const scalar& r,
-            scalar& energy,
-            scalar& force
-        );        
-        
-//         void writeTables(const fileName& pathName);
+        // new force definition; requires loop over all agents
+        void newForce();
 
         // Access
 };

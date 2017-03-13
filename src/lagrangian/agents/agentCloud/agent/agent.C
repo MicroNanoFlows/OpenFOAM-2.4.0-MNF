@@ -55,6 +55,7 @@ bool Foam::agent::move
         scalar dtMax = tEnd;
 
         vector Utracking = v_;        
+        Utracking.z() = 0.0;
         
         while (td.keepParticle && !td.switchProcessor && tEnd > ROOTVSMALL)
         {
@@ -65,8 +66,9 @@ bool Foam::agent::move
 
             // Apply correction to velocity to constrain tracking for
             // reduced-D cases
-            meshTools::constrainDirection(mesh, mesh.solutionD(), Utracking);
-        
+//             meshTools::constrainDirection(mesh, mesh.solutionD(), Utracking);
+            Utracking.z()=0.0;
+            
             // set the lagrangian time-step
             scalar dt = min(dtMax, tEnd);
 

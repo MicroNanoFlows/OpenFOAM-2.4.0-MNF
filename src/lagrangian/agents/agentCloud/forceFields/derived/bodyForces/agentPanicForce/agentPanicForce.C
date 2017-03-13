@@ -26,7 +26,7 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "lennardJones.H"
+#include "agentPanicForce.H"
 #include "addToRunTimeSelectionTable.H"
 #include "IFstream.H"
 #include "graph.H"
@@ -36,108 +36,86 @@ Description
 namespace Foam
 {
 
-defineTypeNameAndDebug(lennardJones, 0);
+defineTypeNameAndDebug(agentPanicForce, 0);
 
-addToRunTimeSelectionTable(pairPotential, lennardJones, dictionary);
+addToRunTimeSelectionTable(bodyForce, agentPanicForce, dictionary);
 
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-lennardJones::lennardJones
+agentPanicForce::agentPanicForce
 (
     agentCloud& cloud,
-    const word& name,
+    Time& t,
     const dictionary& dict
 )
 :
-    pairPotential(cloud, name, dict),
+    bodyForce(cloud, t, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
-    sigma_(readScalar(propsDict_.lookup("sigma"))),
-    epsilon_(readScalar(propsDict_.lookup("epsilon"))),      
-    maxForce_(readScalar(propsDict_.lookup("maxForce")))
-{
-    bool notFound = true;
+    agentIds_(),
+//     desiredSpeed_(readScalar(propsDict_.lookup("desiredSpeed"))),
+//     desiredDirection_(propsDict_.lookup("desiredDirection")),
+    tau_(readScalar(propsDict_.lookup("tau")))
     
-    while(notFound)
-    {
-        rMin_ += dr_;
+{
 
-        F_at_Rmin_ = force(rMin_);
-        
-        if(F_at_Rmin_ < maxForce_)
-        {
-            Info << "new rMin = " << rMin_ 
-                << ", force = " << F_at_Rmin_ <<  endl;
-            
-            notFound = false;
-        }
+    agentIds_.clear();
+
+    selectAgentIds ids
+    (
+        cloud_.cP(),
+        propsDict_
+    );
+
+    agentIds_ = ids.agentIds();
+    
+    initialTimeDelay_ = 0.0;
+    
+    if (propsDict_.found("initialTimeDelay"))
+    {
+        initialTimeDelay_ = readScalar(propsDict_.lookup("initialTimeDelay"));
     }
     
-    E_at_Rmin_ = energy(rMin_);        
-    F_at_Rmin_ = force(rMin_);
+    initialTime_ = time_.timeOutputValue();
+    
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-lennardJones::~lennardJones()
+agentPanicForce::~agentPanicForce()
 {}
 
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void lennardJones::initialConfiguration()
-{}
-
-scalar lennardJones::energy(const scalar& r)
+void agentPanicForce::initialConfiguration()
 {
-    // (rIJ/sigma)^-2
-    scalar ir2 = (sigma_/r)*(sigma_/r);
-
-    // (rIJ/sigma)^-6
-    scalar ir6 = ir2*ir2*ir2;
-
-    return 4.0*epsilon_*(ir6*(ir6 - 1.0));
-}
-        
-scalar lennardJones::force(const scalar& r)
-{
-    // (rIJ/sigma)^-2
-    scalar ir2 = (sigma_/r)*(sigma_/r);
-
-    // (rIJ/sigma)^-6
-    scalar ir6 = ir2*ir2*ir2;    
-        
-    return 24.0*epsilon_*ir6*(2.0*ir6 - 1.0)*sqrt(ir2);
+   
 }
 
-void lennardJones::pairPotentialFunction
-(
-    agent* molI,
-    agent* molJ,
-    const scalar& r,
-    scalar& energy,
-    scalar& force
-)
+void agentPanicForce::force(agent* p)
 {
-    // (rIJ/sigma)^-2
-    scalar ir2 = (sigma_/r)*(sigma_/r);
-
-    // (rIJ/sigma)^-6
-    scalar ir6 = ir2*ir2*ir2;  
-    
-    energy = E_at_Rmin_;    
-    force = F_at_Rmin_;
-
-    
-    if(r > rMin_)
+    if((time_.timeOutputValue() - initialTime_) > initialTimeDelay_)
     {
-        energy = 4.0*epsilon_*(ir6*(ir6 - 1.0));    
-        force = 24.0*epsilon_*ir6*(2.0*ir6 - 1.0)*sqrt(ir2);            
+        if(findIndex(agentIds_, p->id()) != -1)
+        {
+            if(mag(p->f()) < 0.01)
+            {  
+                p->f() += (p->desiredSpeed()*n - p->v())*p->mass() / tau_; // MAKE SURE n is UNIT vector
+            }
+        }
     }
 }
+
+void agentPanicForce::newForce()
+{
+    
+}
+
+
 
 
 

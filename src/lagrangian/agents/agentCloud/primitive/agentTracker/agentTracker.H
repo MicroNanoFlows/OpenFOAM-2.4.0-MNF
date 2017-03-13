@@ -104,6 +104,12 @@ public:
             
             // this is a two step function
             
+            inline label size() const;
+            
+            
+//             inline const DynamicList<label>& indices() const;
+            
+            
             // call this first (to avoid errors)
             inline bool isTrackingNumberAvailable
             (
@@ -111,10 +117,15 @@ public:
             );
 
             // then call this function to get the agent
-            inline agent* getAgent();            
+            inline agent* getAgent();
+
+            inline const DynamicList<label>& agentTrackingNumbers() const;            
             
+            inline DynamicList<agent*>& agentsOnProc();
+            inline const DynamicList<agent*>& agentsOnProc() const;
 
-
+            inline label noOfAgentsOnProc(); 
+            
     // IOstream Operators
 
 //         friend Ostream& operator<<(Ostream&, const agentTracker&);

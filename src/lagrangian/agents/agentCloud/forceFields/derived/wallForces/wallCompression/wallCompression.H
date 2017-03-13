@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,28 +23,23 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    debuggerAgent
+    
 
 Description
-    Model that applies a gravitational force on all molecules.
 
 SourceFiles
-    debuggerAgentI.H
-    debuggerAgent.C
-    debuggerAgentIO.C
+    wallCompressionI.H
+    wallCompression.C
+    wallCompressionIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef debuggerAgent_H
-#define debuggerAgent_H
+#ifndef wallCompression_H
+#define wallCompression_H
 
-#include "agentController.H"
-#include "vector.H"
-#include "polyMesh.H"
-#include "volFields.H"
+
+#include "agentWallForce.H"
 #include "agentCloud.H"
-
-#include "boundedBox.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -52,96 +47,90 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class debuggerAgent Declaration
+                           Class wallCompression Declaration
 \*---------------------------------------------------------------------------*/
 
-class debuggerAgent
+class wallCompression
 :
-	public agentController
+    public agentWallForce
 {
 
 private:
 
     // Private data
 
-        //- subDictionary containing the properties
         dictionary propsDict_;
 
+//         vector force_;
 
-        //- ids of mols
-        List<label> agentIds_;
-
-        boundedBox bb_;
+        scalar A_;
+        scalar kappa_;
         
-        scalar nTimeSteps_;
-        vector force_;
-        
-        List<label> trackingNumbers_;
-
-    // Private Member Functions
-
-//         void readProperties();
-        
-//         void setBoundBoxes();      
-
 public:
 
     //- Runtime type information
-    TypeName("debuggerAgent");
+    TypeName("wallCompression");
+
+    // Static data members
 
     // Constructors
 
-        //- Construct from components
-        debuggerAgent
+        //- construct from components
+        wallCompression
         (
-            Time& t,
-            agentCloud& cloud,
+            Time& time,
             const dictionary& dict
         );
 
+    // Selectors
+
+
     // Destructor
 
-        ~debuggerAgent();
-
+        ~wallCompression();
 
     // Member Functions
-    // Member Functions
-        
-        //- create an initial configuration
-        void initialConfiguration();
 
-        //- control molecules at various stages of time-step
-        void controlBeforeVelocityI();
-        void controlBeforeMove();
-        void controlBeforeForces();
-        void controlDuringForces
-        (
-            agent* molI,
-            agent* molJ
-        );        
-        void controlAfterForces();
-        void controlAfterVelocityII();
-        
-        //- calculate any required properties (end of time-step)
-        void calculateProperties(); 
-        
-        //- output data (optional)
-        void output
-        (
-            const fileName& fixedPathName, 
-            const fileName& timePath
-        );
-        
-        //- update properties from a modified dictionary (optional)
-//         void updateProperties(const dictionary&);
 
         // Access
+
+        // Check
+
+        // Edit
+
+            vector force(agent* agentI, const vector& rW);
+            
+            vector force(agent* agentI, const vector& rW, const scalar& time);
+            
+            vector force(agent* agentI, const scalar& time);
+            
+            void updateForce();
+            
+        // Write
+
+
+            void write
+            (
+                const fileName& fixedPathName,
+                const fileName& timePath
+            );
+
+    // Member Operators
+
+    // Friend Functions
+
+    // Friend Operators
+
+    // IOstream Operators
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

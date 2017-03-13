@@ -82,6 +82,8 @@ protected:
         scalar rMin_;
         scalar dr_;           
         
+        
+        
 //         bool writeTable_;
         
         //- subDictionary containing the properties
@@ -163,7 +165,7 @@ public:
         
         void writeTables(const fileName& pathName);
         
-        
+//         void clearForcesList();
 
 /*
         //- control molecules at various stages of time-step

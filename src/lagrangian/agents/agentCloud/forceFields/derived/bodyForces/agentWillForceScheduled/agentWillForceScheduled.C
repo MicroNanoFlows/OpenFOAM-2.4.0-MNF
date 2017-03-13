@@ -78,6 +78,16 @@ agentWillForceScheduled::agentWillForceScheduled
         initialTimeDelay_ = readScalar(propsDict_.lookup("initialTimeDelay"));
     }
     
+/*    panic_ = false;
+    
+    if (propsDict_.found("panic"))
+    {
+        panic_ = Switch(propsDict_.lookup("panic"));
+        smallForce_= readScalar(propsDict_.lookup("smallForce"));
+        forceMag_= readScalar(propsDict_.lookup("forceMag"));
+        
+    } */   
+    
     initialTime_ = time_.timeOutputValue();
     
 }
@@ -102,13 +112,33 @@ void agentWillForceScheduled::force(agent* p)
     {
         if(findIndex(agentIds_, p->id()) != -1)
         {
+            
             if(p->t() == 0.0)
             {  
                 vector n = p->d() - p->position();
                 n /= mag(n);
+                
                 p->f() += (p->desiredSpeed()*n - p->v())*p->mass() / tau_; // MAKE SURE n is UNIT vector
+                
+//                 if(panic_)
+//                 {
+//                     if(mag(p->f()) < smallForce_)
+//                     {
+//                         Info << "force = " << mag(p->f()) << endl;
+//                         
+//                         p->f() = n*forceMag_;
+//                     }
+//                 }
+//                 if(p->trackingNumber() == 75 )
+//                 {
+//                     Info << "75, force = " <<  p->f() << endl;
+//                 }
             }
         }
+    }
+    else
+    {
+        p->v() = vector::zero;
     }
 }
 
@@ -116,6 +146,8 @@ void agentWillForceScheduled::newForce()
 {
     
 }
+
+
 
 
 
