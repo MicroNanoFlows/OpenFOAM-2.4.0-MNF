@@ -161,7 +161,7 @@ void helbingExponential::pairPotentialFunction
         
         if(injury_)
         {
-            if( (mag(normalForce)*2*constant::mathematical::pi*molI->radius()) >= maxForce_)
+            if( (mag(normalForce)/(2*constant::mathematical::pi*molI->radius())) >= maxForce_)
             {
 /*                Info << "position = " << molI->position()
                      <<  ", trackingNumber = " << molI->trackingNumber()
@@ -180,7 +180,7 @@ void helbingExponential::pairPotentialFunction
                 molI->id() = agentId_;
             }
             
-            if( (mag(normalForce)*2*constant::mathematical::pi*molJ->radius()) >= maxForce_)
+            if( (mag(normalForce)/(2*constant::mathematical::pi*molJ->radius())) >= maxForce_)
             {
 /*                Info << "position = " << molJ->position()
                     <<  ", trackingNumber = " << molJ->trackingNumber()

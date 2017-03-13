@@ -99,6 +99,10 @@ class forceFields
         
         bool onePotential_;
         
+        // pair potential option 
+        // (e.g. onePotential, table etc)
+        word option_;
+        
         
         // use this when given two molecules to compute forces/energies
         // e.g. index = pairPotentialLookUp_[idA][idB]

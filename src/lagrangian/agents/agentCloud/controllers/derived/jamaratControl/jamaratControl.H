@@ -92,12 +92,17 @@ private:
         
         vector desiredDirection_;
         scalar tau_;
-        scalar frac_;
-        scalar frac2_;
+        scalar fracP_;
+        scalar fracR_;
         // borders 
         
         List<vectorList> borderList_;
         List<DynamicList<label> > interactionList_;  
+        
+        List<vectorList> midPoints_;
+        List<vectorList> normalVectors_;
+        
+        vectorList centrePoints_;
         
         List<vector> sideTop_;
         List<vector> sideBottom_;
@@ -142,6 +147,11 @@ private:
         void initialiseBorders();
         
         void setBoundBoxes();
+        
+//         bool isPointWithinBorder(label index, const vector& r);
+        
+        void reflect(label index, agent* p);
+        
 public:
 
     //- Runtime type information
