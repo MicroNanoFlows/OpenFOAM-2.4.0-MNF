@@ -143,101 +143,104 @@ void helbingExponential::pairPotentialFunction
     vector& force
 )
 {
+
+    
     // r is the distance between two agents 
-    
-    vector rij = molI->position()-molJ->position();
-//     scalar rijMag=mag(rij);
-    vector nij = rij/r;
-    vector tij = vector (-nij.y(), nij.x(), 0);
-    
-    scalar dIJ = r;
-    
-    // the sum of radii
-    scalar rIJ = molI->radius() + molJ->radius();
-    
-    if(dIJ > rIJ)
+    if(r > 0.0)
     {
-        force = A_*exp((rIJ-dIJ)/B_)*nij;
-    } 
-    else
-    {
-        vector socialForce = (A_*exp((rIJ-dIJ)/B_))*nij;
-        vector normalForce = k_*(rIJ-dIJ)*nij;
-        vector frictionForce = kappa_*(rIJ-dIJ)*((molJ->v() - molI->v()) & tij)*tij;
-        force = socialForce + normalForce  + frictionForce;
+        vector pairForce = vector::zero;
         
-        if(injury_)
+        vector rij = molI->position()-molJ->position();
+    //     scalar rijMag=mag(rij);
+        vector nij = rij/r;
+        vector tij = vector (-nij.y(), nij.x(), 0);
+        
+        scalar dIJ = r;
+        
+        // the sum of radii
+        scalar rIJ = molI->radius() + molJ->radius();
+        
+        if(dIJ > rIJ)
         {
-            if(cloud_.mesh().time().timeOutputValue() > timeDelay_)
+            pairForce = A_*exp((rIJ-dIJ)/B_)*nij;
+        } 
+        else
+        {
+            vector socialForce = (A_*exp((rIJ-dIJ)/B_))*nij;
+            vector normalForce = k_*(rIJ-dIJ)*nij;
+            vector frictionForce = kappa_*(rIJ-dIJ)*((molJ->v() - molI->v()) & tij)*tij;
+            pairForce = socialForce + normalForce  + frictionForce;
+            
+            if(injury_)
             {
-                if( (mag(normalForce)/(2*constant::mathematical::pi*molI->radius())) >= maxForce_)
+                if(cloud_.mesh().time().timeOutputValue() > timeDelay_)
                 {
-                    molI->v() = vector::zero;
-                    molI->special()= -2;
-                    molI->id() = agentId_;
-                }
-                
-                if( (mag(normalForce)/(2*constant::mathematical::pi*molJ->radius())) >= maxForce_)
-                {
-    /*                Info << "position = " << molJ->position()
-                        <<  ", trackingNumber = " << molJ->trackingNumber()
-                        << " radius J = " << molJ->radius()
-                        <<  ", nij " << nij
-                        <<  ", mag(nij) " << mag(nij)
-                        <<  ", dIJ " << dIJ
-                        <<  ", rIJ " << rIJ                    
-                        << ", normalForce = " << mag(normalForce)
-                        << ", force per unit width = " << (mag(normalForce)*2*constant::mathematical::pi*molJ->radius())
-                        << endl;*/                
+                    if( (mag(normalForce)/(2*constant::mathematical::pi*molI->radius())) >= maxForce_)
+                    {
+                        molI->v() = vector::zero;
+                        molI->special()= -2;
+                        molI->id() = agentId_;
+                    }
                     
-                    molJ->v() = vector::zero;
-                    molJ->special()= -2;
-                    molJ->id() = agentId_;
-                }  
+                    if( (mag(normalForce)/(2*constant::mathematical::pi*molJ->radius())) >= maxForce_)
+                    {
+        /*                Info << "position = " << molJ->position()
+                            <<  ", trackingNumber = " << molJ->trackingNumber()
+                            << " radius J = " << molJ->radius()
+                            <<  ", nij " << nij
+                            <<  ", mag(nij) " << mag(nij)
+                            <<  ", dIJ " << dIJ
+                            <<  ", rIJ " << rIJ                    
+                            << ", normalForce = " << mag(normalForce)
+                            << ", force per unit width = " << (mag(normalForce)*2*constant::mathematical::pi*molJ->radius())
+                            << endl;*/                
+                        
+                        molJ->v() = vector::zero;
+                        molJ->special()= -2;
+                        molJ->id() = agentId_;
+                    }  
+                }
             }
         }
+        
+        // apply force
+        
+        if(option_ == 0) // standard
+        {
+            molI->f() += pairForce;
+            molJ->f() += -pairForce;
+        }
+        else if(option_ == 1) // ansitropy 
+        {
+            scalar wI = 0.0;
+            scalar rDI = molI->dir() & -rij;
+            
+            if(rDI > 0)
+            {
+                scalar theta = acos(rDI/(mag(molI->dir())*mag(-rij)));
                 
-    }
-    
-/*    scalar f = molI->fraction();
+                wI = 1.0 - (2.0*theta/constant::mathematical::pi);
+            }
 
-    if(molJ->fraction() < f)
-    {
-        f = molJ->fraction();
-    } */   
-    
-    // apply force
-    
-    if(option_ == 0) // standard
-    {
-        molI->f() += force;
-        molJ->f() += -force;
-    }
-    else if(option_ == 1) // ansitropy 
-    {
-        scalar wI = 0.0;
-        scalar rDI = molI->dir() & -rij;
-        
-        if(rDI > 0)
-        {
-            scalar theta = acos(rDI/(mag(molI->dir())*mag(-rij)));
+            scalar wJ = 0.0;
+            scalar rDJ = molJ->dir() & rij;
             
-            wI = 1.0 - (2.0*theta/constant::mathematical::pi);
-        }
-
-        scalar wJ = 0.0;
-        scalar rDJ = molJ->dir() & rij;
-        
-        if(rDJ > 0)
-        {
-            scalar theta = acos(rDJ/(mag(molJ->dir())*mag(rij)));
+            if(rDJ > 0)
+            {
+                scalar theta = acos(rDJ/(mag(molJ->dir())*mag(rij)));
+                
+                wJ = 1.0 - (2.0*theta/constant::mathematical::pi);
+            }
             
-            wJ = 1.0 - (2.0*theta/constant::mathematical::pi);
-        }
-        
-        molI->f() += wI*force;
-        molJ->f() += -wJ*force;        
+            molI->f() += wI*pairForce;
+            molJ->f() += -wJ*pairForce;        
+        }        
     }
+    else
+    {
+        Info << "WARNING: two agents are overlapping, so no force will be applied" << endl;
+    }
+    
 }
 
 
