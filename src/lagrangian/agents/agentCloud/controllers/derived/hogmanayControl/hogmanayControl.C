@@ -157,7 +157,10 @@ hogmanayControl::hogmanayControl
 //     X3_ = readScalar(propsDict_.lookup("X3")); 
 //     
     
-    Y_ = readScalar(propsDict_.lookup("Y")); 
+    Y_ = readScalar(propsDict_.lookup("Y"));
+    YMax_ = readScalar(propsDict_.lookup("YMax"));
+    XRight_ = readScalar(propsDict_.lookup("XRight"));
+    XLeft_ = readScalar(propsDict_.lookup("XLeft"));
     
     fireworkTime_ = readScalar(propsDict_.lookup("fireworkTime"));    
     evacuateTime_ = readScalar(propsDict_.lookup("evacuateTime"));
@@ -279,9 +282,21 @@ void hogmanayControl::controlAfterForces()
                 {
                     vector desDir = vector::zero;
                     
-                    if(p().position().y() > Y_)
+                    if(p().position().y() > Y_ && p().position().y() < YMax_)
                     {
                         desDir = vector(0.0, (boxBottom_.midpoint() - p().position()).y(), 0.0);
+                    }
+                    else if(p().position().y() > YMax_ && p().position().x() < XRight_ && p().position().x() > XLeft_)
+                    {
+                        desDir = vector(0.0, (boxBottom_.midpoint() - p().position()).y(), 0.0);
+                    }
+                    else if(p().position().y() > YMax_ && p().position().x() > XRight_)
+                    {
+                        desDir = vector((boxBottom_.midpoint() - p().position()).x(), 0.0, 0.0);
+                    }
+                    else if(p().position().y() > YMax_ && p().position().x() < XLeft_)
+                    {
+                        desDir = vector((boxBottom_.midpoint() - p().position()).x(), 0.0, 0.0);
                     }
                     else 
                     {

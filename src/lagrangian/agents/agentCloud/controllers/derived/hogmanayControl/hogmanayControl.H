@@ -112,6 +112,9 @@ private:
 //         scalar X3_;
         
         scalar Y_;
+        scalar YMax_;
+        scalar XRight_;
+        scalar XLeft_;
         
         // searchTime 
         scalar fireworkTime_;
