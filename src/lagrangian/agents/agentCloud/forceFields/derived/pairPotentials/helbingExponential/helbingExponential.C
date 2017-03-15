@@ -212,7 +212,6 @@ void helbingExponential::pairPotentialFunction
         }
         else if(option_ == 1) // ansitropy 
         {
-
             scalar wI = 0.0;
 
             scalar magVI = mag(molI->v());
@@ -222,12 +221,19 @@ void helbingExponential::pairPotentialFunction
                 vector vI = molI->v()/magVI;
                 
                 scalar dotI = vI & -nij;
-                
+
                 if(dotI > 0)
                 {
-                    scalar theta = acos(dotI);
+                    if(dotI < 1)
+                    {
+                        scalar theta = acos(dotI);
                 
-                    wI = 1.0 - (2.0*theta/constant::mathematical::pi);
+                        wI = 1.0 - (2.0*theta/constant::mathematical::pi);
+                    }
+                    else
+                    {
+                        wI = 1.0;
+                    }
                 }
             }
             
@@ -243,11 +249,20 @@ void helbingExponential::pairPotentialFunction
                 
                 if(dotJ > 0)
                 {
-                    scalar theta = acos(dotJ);
-                
-                    wJ = 1.0 - (2.0*theta/constant::mathematical::pi);
+                    if(dotJ < 1)
+                    {
+                        scalar theta = acos(dotJ);
+                    
+                        wJ = 1.0 - (2.0*theta/constant::mathematical::pi);
+                    }
+                    else
+                    {
+                        wJ = 1.0;
+                    }
+                    
                 }
             }
+            
             molI->f() += wI*pairForce;
             molJ->f() += -wJ*pairForce;        
         }        
