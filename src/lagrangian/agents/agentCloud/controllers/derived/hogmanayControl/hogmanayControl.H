@@ -23,21 +23,21 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    jamaratControl
+    hogmanayControl
 
 Description
     Add agents to a box based on a known flux 
     Not parallelised
 
 SourceFiles
-    jamaratControlI.H
-    jamaratControl.C
-    jamaratControlIO.C
+    hogmanayControlI.H
+    hogmanayControl.C
+    hogmanayControlIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef jamaratControl_H
-#define jamaratControl_H
+#ifndef hogmanayControl_H
+#define hogmanayControl_H
 
 #include "agentController.H"
 #include "vector.H"
@@ -53,10 +53,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class jamaratControl Declaration
+                           Class hogmanayControl Declaration
 \*---------------------------------------------------------------------------*/
 
-class jamaratControl
+class hogmanayControl
 :
 	public agentController
 {
@@ -69,31 +69,30 @@ private:
         dictionary propsDict_;
 
         //- ids of agents
-        List<label> agentIds_;
+        List<label> topAgentIds_;
+        List<label> bottomAgentIds_;
 
+        List<label> rightAgentIds_;
+        List<label> leftAgentIds_;                
         
-        //- id of inserted agent
-        label agentId_;
+        boundedBox boxBottom_;
+        boundedBox boxTop_;
+        
+        scalar meanDesSpeedE_;
+        scalar desSpeedRangeE_;       
 
-        boundedBox samplingBox_;
-        boundedBox controlBox_;
-        
-        label N_;
-        
-        scalar meanMass_;
-        scalar massRange_;
-        scalar meanRadius_;
-        scalar radiusRange_;
-        scalar meanDesSpeed_;
-        scalar desSpeedRange_;
-        
+        scalar meanDesSpeedF_;
+        scalar desSpeedRangeF_;   
         
         // will force 
         
-        vector desiredDirection_;
         scalar tau_;
-        scalar fracP_;
-        scalar fracR_;
+
+        scalar frac1_;
+        scalar frac2_;
+        scalar frac3_;            
+        
+        
         // borders 
         
         List<vectorList> borderList_;
@@ -104,26 +103,24 @@ private:
         
         vectorList centrePoints_;
         
-        List<vector> sideTop_;
-        List<vector> sideBottom_;
-        
-        
         autoPtr<agentWallForce> attractiveForceModel_;
-        autoPtr<agentWallForce> repulsiveForceModel_;
+//         autoPtr<agentWallForce> repulsiveForceModel_;
         
         // distance at which will force is on/off
-        scalar X1_;
-        scalar X2_;
-        scalar X3_;
+//         scalar X1_;
+//         scalar X2_;
+//         scalar X3_;
+        
+        scalar Y_;
         
         // searchTime 
-        scalar searchTime_;
-        scalar throwingTime_;
-        scalar deltaT_;
+        scalar fireworkTime_;
+        scalar evacuateTime_;
+//         scalar deltaT_;
         
         // throwing boxes 
         
-        List<boundedBox> boxes_;
+//         List<boundedBox> boxes_;
         
     // Private Member Functions
 
@@ -136,7 +133,6 @@ private:
             const word& name 
         );
      
-        void insertAgents(const label& N);
         
         scalar gaussianDistribution
         (
@@ -145,22 +141,18 @@ private:
         );
         
         void initialiseBorders();
-        
-        void setBoundBoxes();
-        
-//         bool isPointWithinBorder(label index, const vector& r);
-        
-        void reflect(label index, agent* p);
+
+
         
 public:
 
     //- Runtime type information
-    TypeName("jamaratControl");
+    TypeName("hogmanayControl");
 
     // Constructors
 
         //- Construct from components
-        jamaratControl
+        hogmanayControl
         (
             Time& t,
             agentCloud& cloud,
@@ -169,7 +161,7 @@ public:
 
     // Destructor
 
-        ~jamaratControl();
+        ~hogmanayControl();
 
 
     // Member Functions
