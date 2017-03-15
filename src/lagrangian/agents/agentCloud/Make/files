@@ -22,8 +22,6 @@ forceFields/derived/bodyForces/agentFluctuatingForce/agentFluctuatingForce.C
 forceFields/derived/bodyForces/agentWillForce/agentWillForce.C     
 forceFields/derived/bodyForces/agentWillForceScheduled/agentWillForceScheduled.C  
 forceFields/derived/bodyForces/agentGroupForce/agentGroupForce.C     
-
-    /*forceFields/derived/pairPotentials/lennardJones/lennardJones.C  */  
     
 forceFields/derived/pairPotentials/helbingExponential/helbingExponential.C    
 

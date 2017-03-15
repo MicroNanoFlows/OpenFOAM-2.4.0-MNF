@@ -264,8 +264,15 @@ public:
             inline const vector& v() const;
             inline vector& v();
 
+            //destination
             inline const vector& d() const;
             inline vector& d();            
+
+            // direction (normal unit vector)
+            inline vector dir();            
+
+            // vector distance to desination
+            inline vector dist();   
             
             inline const vector& f() const;
             inline vector& f();            

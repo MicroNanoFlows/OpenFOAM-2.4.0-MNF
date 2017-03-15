@@ -263,7 +263,36 @@ void forceFields::calculateBodyForces()
         {
             bodyForces_[i]->force(&mol());
         }
-    } 
+    }
+    
+    agentBodyForces_.clear();
+    agentBodyForces_.setSize(cloud_.tracker().noOfAgentsOnProc(), vector::zero);
+      
+    {
+        IDLList<agent>::iterator p(cloud_.begin());
+        label i = 0;
+        for (p = cloud_.begin(); p != cloud_.end(); ++p)
+        {
+            agentBodyForces_[i] = p().f() - agentSocialForces_[i];
+            i++;
+        }
+    }    
+}
+
+void forceFields::calculateWallForces()
+{
+    agentWallForces_.clear();
+    agentWallForces_.setSize(cloud_.tracker().noOfAgentsOnProc(), vector::zero);
+      
+    {
+        IDLList<agent>::iterator p(cloud_.begin());
+        label i = 0;
+        for (p = cloud_.begin(); p != cloud_.end(); ++p)
+        {
+            agentWallForces_[i] = p().f() - agentSocialForces_[i] - agentBodyForces_[i];
+            i++;
+        }
+    }    
 }
 
 void forceFields::calculatePairForces()
@@ -328,6 +357,19 @@ void forceFields::calculatePairForces()
                     }
                 }
             }
+        }
+    }
+    
+    agentSocialForces_.clear();
+    agentSocialForces_.setSize(cloud_.tracker().noOfAgentsOnProc(), vector::zero);
+    
+    {
+        IDLList<agent>::iterator p(cloud_.begin());
+        label i = 0;
+        for (p = cloud_.begin(); p != cloud_.end(); ++p)
+        {
+            agentSocialForces_[i] = p().f();
+            i++;
         }
     }
 }
