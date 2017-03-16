@@ -171,7 +171,7 @@ void visibilityGraphAndDjikstra::initialConfiguration()
     //graphPtr = new scalarSquareMatrix(nSegments+2); // +2 because of agent position and goal position
     //scalarSquareMatrix graph_ = *graphPtr;
     
-    scalar offset = 0.4;
+    scalar offset = 0.3;
     
     forAll(borderList_, i)
     {
@@ -224,7 +224,7 @@ void visibilityGraphAndDjikstra::initialConfiguration()
 		offsetDirection /= mag(offsetDirection);
 		offsetPoints_[4*i+p] = borderList_[i][p] + offset*offsetDirection;
 		
-// 		borderList_[i][p] = borderList_[i][p] + (0.99*offset)*offsetDirection;
+// 		borderList_[i][p] = borderList_[i][p] + (1*offset)*offsetDirection;
 // 		// 0.99 multiplied to avoid a colinear scenario later
 		
 // 		borderList_[i][4] = borderList_[i][p];
@@ -235,7 +235,7 @@ void visibilityGraphAndDjikstra::initialConfiguration()
 		offsetDirection /= mag(offsetDirection);
 		offsetPoints_[4*i+p] = borderList_[i][p] + offset*offsetDirection;
 		
-// 		borderList_[i][p] = borderList_[i][p] + (0.99*offset)*offsetDirection;
+// 		borderList_[i][p] = borderList_[i][p] + (1*offset)*offsetDirection;
 		
 	    }
 	}
@@ -504,6 +504,7 @@ void visibilityGraphAndDjikstra::setSchedule()
 		}
 		else
 		{
+		    bool AtLeastOneNonZeroConnectivity = false;
 
 		    // Check visibility with other points and run dijkstra
 		    forAll(offsetPoints_, j)
@@ -552,14 +553,15 @@ void visibilityGraphAndDjikstra::setSchedule()
 			    
 			}
 			
-			if (j==0)
-			{
-// 			    Info << "intersectionYes1 = " << intersectionYes1 << endl;
-// 			    Info << "intersectionYes2 = " << intersectionYes2 << endl;
-			}
+// 			if (j==0)
+// 			{
+// // 			    Info << "intersectionYes1 = " << intersectionYes1 << endl;
+// // 			    Info << "intersectionYes2 = " << intersectionYes2 << endl;
+// 			}
 			
 			if(!intersectionYes1)
 			{
+			    AtLeastOneNonZeroConnectivity = true;
 			    graph_[0][j+1] = mag(q1-p1);
 			    graph_[j+1][0] = mag(q1-p1);
 			}
@@ -579,8 +581,12 @@ void visibilityGraphAndDjikstra::setSchedule()
 // 		    Info << "nextDestinationIndex = " << nextDestinationIndex << endl;
 // 		    Info << "nextDestination = " << offsetPoints_[nextDestinationIndex-1] << endl;
 		    
-		    mol().d() = offsetPoints_[nextDestinationIndex-1];
-
+		    // AtLeastOneNonZeroConnectivity added to deal with agents trapped
+		    // within offset borders -> no change in mol().d() if trapped
+		    if (AtLeastOneNonZeroConnectivity)
+		    {
+			mol().d() = offsetPoints_[nextDestinationIndex-1];
+		    }
 		}
 		
             }

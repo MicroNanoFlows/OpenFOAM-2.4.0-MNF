@@ -105,7 +105,10 @@ void agentFluctuatingForceOneFactor::force(agent* p)
 //         Info << "factor = " << factor 
 //             << ", force = " << f << endl;
         
-        p->f() += f;
+	if(mag(p->v()) > 0.01)
+	{
+	    p->f() += f;
+	}
     }
 }
 
