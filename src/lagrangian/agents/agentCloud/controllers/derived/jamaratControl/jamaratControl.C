@@ -126,7 +126,7 @@ jamaratControl::jamaratControl
 //     frac2_ = 0.05;
     fracP_ = readScalar(propsDict_.lookup("fracPillar"));
     fracR_ = readScalar(propsDict_.lookup("fracRoad"));
-        
+    fracV_ = readScalar(propsDict_.lookup("fracVel"));        
         // borders 
     
     borderList_ = List<vectorList>(propsDict_.lookup("bordersList"));
@@ -145,7 +145,7 @@ jamaratControl::jamaratControl
         agentWallForce::New(t, dict2)
     );    
     
-    setBoundBoxes();
+//     setBoundBoxes();
     
     initialiseBorders();
     
@@ -157,7 +157,7 @@ jamaratControl::jamaratControl
     searchTime_ = readScalar(propsDict_.lookup("searchTime"));    
     throwingTime_ = readScalar(propsDict_.lookup("throwingTime"));
     
-
+    maxThrowingDistance_ = readScalar(propsDict_.lookup("maxThrowingDistance"));
     
     
     deltaT_ = time_.deltaT().value();
@@ -324,11 +324,32 @@ void jamaratControl::controlDuringForces
 )
 {}
 
+void jamaratControl::panic
+(
+    agent* p,
+    const vector& willForce
+)
+{
+    scalar desSpeed = mag(p->desiredSpeed());
+    
+    if(mag(p->v()) < desSpeed*fracV_)
+    {
+        p->t() += deltaT_;
+        vector Fpanic = (p->t()/5.0)*willForce;
+        p->f() += Fpanic;
+//         Info << "panic force = " << Fpanic << " time = " << p->t() << endl;
+    }
+    else
+    {
+        p->t() = 0.0;
+    }
+}
+
 void jamaratControl::controlAfterForces()
 {
     if(time_.outputTime())
     {
-        Info << "jamaratControl: control" << endl;
+//         Info << "jamaratControl: control" << endl;
         
         insertAgents(N_);
     }
@@ -352,24 +373,24 @@ void jamaratControl::controlAfterForces()
                 {
                     vector force = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
                     p().f() += force;
-                    vector R = vector(0.0, cloud_.rndGen().scalar01(), 0.0);
+                    vector R = vector(0.0, 2.0*cloud_.rndGen().scalar01()-1.0, 0.0);
                     R /= mag(R);
-                    p().f() += R*fracR_*mag(force);         
+                    p().f() += R*fracR_*mag(force);
                 }
             }
             
             // check in throwing box    
-            if(p().eventTracker() == 1)            
-            {
-                if(boxes_[0].contains(p().position()))
-                {
-                    p().eventTracker() = 2;
-                    p().t() = searchTime_;
-                }
-            }
+//             if(p().eventTracker() == 1)            
+//             {
+//                 if(boxes_[0].contains(p().position()))
+//                 {
+//                     p().eventTracker() = 2;
+//                     p().t() = searchTime_;
+//                 }
+//             }
             
             // search for a nice position
-            if(p().eventTracker() == 2)            
+            if(p().eventTracker() == 2)
             {
                 if(p().t() > 0)
                 {
@@ -381,11 +402,11 @@ void jamaratControl::controlAfterForces()
                         p().eventTracker() = 3;
                         p().t() = throwingTime_;
                     }
-                }                
+                }
             }
             
             // throw stones
-            if(p().eventTracker() == 3)            
+            if(p().eventTracker() == 3)
             {
                 p().v() = vector::zero;
                 
@@ -398,7 +419,7 @@ void jamaratControl::controlAfterForces()
                         p().t() = 0.0;
                         p().eventTracker() = 4;
                     }
-                }                 
+                }
             }
             
             
@@ -409,36 +430,40 @@ void jamaratControl::controlAfterForces()
             {
                 if(p().position().x() >= X2_)
                 {
+                    p().t() = 0.0;
                     p().eventTracker() = 5;
                 }
                 
-                if(p().position().x() < sideTop_[0].x())
+                if(p().position().x() < P_[0])
                 {
+
                     vector force = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
                     p().f() += force;
-                    vector R = vector(0.0, cloud_.rndGen().scalar01(), 0.0);
+                    vector R = vector(0.0, 2.0*cloud_.rndGen().scalar01()-1.0, 0.0);
                     R /= mag(R);
                     p().f() += R*fracP_*mag(force);                  
+                    panic(&p(), force);
+                    
                 }
                 else
                 {
                     vector force = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
                     p().f() += force;
-                    vector R = vector(0.0, cloud_.rndGen().scalar01(), 0.0);
+                    vector R = vector(0.0, 2.0*cloud_.rndGen().scalar01()-1.0, 0.0);
                     R /= mag(R);
                     p().f() += R*fracR_*mag(force);                    
                 }
             }
             
             // check in throwing box 
-            if(p().eventTracker() == 5)            
-            {
-                if(boxes_[1].contains(p().position()))
-                {
-                    p().eventTracker() = 6;
-                    p().t() = searchTime_;
-                }
-            }
+//             if(p().eventTracker() == 5)            
+//             {
+//                 if(boxes_[1].contains(p().position()))
+//                 {
+//                     p().eventTracker() = 6;
+//                     p().t() = searchTime_;
+//                 }
+//             }
             
             // search for a nice position
             if(p().eventTracker() == 6)            
@@ -484,34 +509,34 @@ void jamaratControl::controlAfterForces()
                     p().eventTracker() = 9;
                 }
                 
-                if(p().position().x() < sideTop_[1].x())
+                if(p().position().x() < P_[1])
                 {
                     vector force = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
                     p().f() += force;
-                    vector R = vector(0.0, cloud_.rndGen().scalar01(), 0.0);
+                    vector R = vector(0.0, 2.0*cloud_.rndGen().scalar01()-1.0, 0.0);
                     R /= mag(R);
-                    p().f() += R*fracP_*mag(force);                  
+                    p().f() += R*fracP_*mag(force);
+                    panic(&p(), force);
                 }
                 else
                 {
                     vector force = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
                     p().f() += force;
-                    vector R = vector(0.0, cloud_.rndGen().scalar01(), 0.0);
+                    vector R = vector(0.0, 2.0*cloud_.rndGen().scalar01()-1.0, 0.0);
                     R /= mag(R);
                     p().f() += R*fracR_*mag(force);                    
-                }                
-
+                }
             }
             
             // check in throwing box 
-            if(p().eventTracker() == 9)            
-            {
-                if(boxes_[2].contains(p().position()))
-                {
-                    p().eventTracker() = 10;
-                    p().t() = searchTime_;
-                }
-            }
+//             if(p().eventTracker() == 9)            
+//             {
+//                 if(boxes_[2].contains(p().position()))
+//                 {
+//                     p().eventTracker() = 10;
+//                     p().t() = searchTime_;
+//                 }
+//             }
             
             // search for a nice position
             if(p().eventTracker() == 10)            
@@ -549,24 +574,24 @@ void jamaratControl::controlAfterForces()
             // switch on will force 
             if(p().eventTracker() == 12)
             {
-                if(p().position().x() < sideTop_[2].x())
+                if(p().position().x() < P_[2])
                 {
                     vector force = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
                     p().f() += force;
-                    vector R = vector(0.0, cloud_.rndGen().scalar01(), 0.0);
+                    vector R = vector(0.0, 2.0*cloud_.rndGen().scalar01()-1.0, 0.0);
                     R /= mag(R);
-                    p().f() += R*fracP_*mag(force);                  
+                    p().f() += R*fracP_*mag(force);           
+                    panic(&p(), force);
                 }
                 else
                 {
                     vector force = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
                     p().f() += force;
-                    vector R = vector(0.0, cloud_.rndGen().scalar01(), 0.0);
+                    vector R = vector(0.0, 2.0*cloud_.rndGen().scalar01()-1.0, 0.0);
                     R /= mag(R);
                     p().f() += R*fracR_*mag(force);                    
                 }
             }
-            
         }
     }
 
@@ -655,7 +680,35 @@ void jamaratControl::controlAfterForces()
                         }
                         
                         // apply attractive force 
-                        agentI->f() += attractiveForceModel_->force(agentI, pointOnBorder);                        
+                        agentI->f() += attractiveForceModel_->force(agentI, pointOnBorder);
+
+                        // check in throwing box
+                        if(agentI->eventTracker() == 1)
+                        {
+                            if(minD <= maxThrowingDistance_)
+                            {
+                                agentI->eventTracker() = 2;
+                                agentI->t() = searchTime_;
+                            }
+                        }
+                        
+                        if(agentI->eventTracker() == 5)
+                        {
+                            if(minD <= maxThrowingDistance_)
+                            {
+                                agentI->eventTracker() = 6;
+                                agentI->t() = searchTime_;
+                            }
+                        }
+                        
+                        if(agentI->eventTracker() == 9)
+                        {
+                            if(minD <= maxThrowingDistance_)
+                            {
+                                agentI->eventTracker() = 10;
+                                agentI->t() = searchTime_;
+                            }
+                        }
                     }
                     
                     // repulsive force 
@@ -793,10 +846,11 @@ void jamaratControl::initialiseBorders()
     normalVectors_.setSize(nBorders);
     midPoints_.setSize(nBorders);    
     
-    sideTop_.setSize(3, vector::zero);
-    sideBottom_.setSize(3, vector::zero);    
+//     sideTop_.setSize(3, vector::zero);
+//     sideBottom_.setSize(3, vector::zero);    
     
     centrePoints_.setSize(3, vector::zero);    
+    P_.setSize(3, 0.0);    
     
     forAll(borderList_, i)
     {
@@ -835,9 +889,11 @@ void jamaratControl::initialiseBorders()
         boundedBox bb (min,max);
         
             
-        sideTop_[i]=boxes_[i].midpoint()+vector(0,12,0);
-        sideBottom_[i]=boxes_[i].midpoint()-vector(0,12,0);
         centrePoints_[i] = centrePoint/scalar(borderI.size());
+//         sideTop_[i]=centrePoints_[i].midpoint()+vector(0,12,0);
+//         sideBottom_[i]=centrePoints_[i].midpoint()-vector(0,12,0);
+        
+        P_[i] = max.x();
         
         // scale box
         scalar rCut = cloud_.f().rCut();
@@ -930,30 +986,30 @@ void jamaratControl::initialiseBorders()
 
 }
 
-void jamaratControl::setBoundBoxes()
-{
-    PtrList<entry> boxList(propsDict_.lookup("throwingBoxes"));
-
-    boxes_.setSize(boxList.size());
-    
-    forAll(boxList, b)
-    {
-        const entry& boxI = boxList[b];
-        const dictionary& dict = boxI.dict();
-
-        vector startPoint = dict.lookup("startPoint");
-        vector endPoint = dict.lookup("endPoint");
-        boxes_[b].resetBoundedBox(startPoint, endPoint);
-    }
-    
-    if (boxList.size() != borderList_.size()) 
-    {
-        FatalError
-            << "Something went wrong with the jamaratControl - setBoundBoxes " << endl
-            << nl << abort(FatalError);  
-        
-    }     
-}
+// void jamaratControl::setBoundBoxes()
+// {
+//     PtrList<entry> boxList(propsDict_.lookup("throwingBoxes"));
+// 
+//     boxes_.setSize(boxList.size());
+//     
+//     forAll(boxList, b)
+//     {
+//         const entry& boxI = boxList[b];
+//         const dictionary& dict = boxI.dict();
+// 
+//         vector startPoint = dict.lookup("startPoint");
+//         vector endPoint = dict.lookup("endPoint");
+//         boxes_[b].resetBoundedBox(startPoint, endPoint);
+//     }
+//     
+//     if (boxList.size() != borderList_.size()) 
+//     {
+//         FatalError
+//             << "Something went wrong with the jamaratControl - setBoundBoxes " << endl
+//             << nl << abort(FatalError);  
+//         
+//     }     
+// }
 
 
 void jamaratControl::controlAfterVelocityII()

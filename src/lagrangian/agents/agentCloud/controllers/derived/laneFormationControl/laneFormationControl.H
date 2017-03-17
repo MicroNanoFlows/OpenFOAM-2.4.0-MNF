@@ -23,21 +23,21 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    jamaratControl
+    laneFormationControl
 
 Description
     Add agents to a box based on a known flux 
     Not parallelised
 
 SourceFiles
-    jamaratControlI.H
-    jamaratControl.C
-    jamaratControlIO.C
+    laneFormationControlI.H
+    laneFormationControl.C
+    laneFormationControlIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef jamaratControl_H
-#define jamaratControl_H
+#ifndef laneFormationControl_H
+#define laneFormationControl_H
 
 #include "agentController.H"
 #include "vector.H"
@@ -53,10 +53,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class jamaratControl Declaration
+                           Class laneFormationControl Declaration
 \*---------------------------------------------------------------------------*/
 
-class jamaratControl
+class laneFormationControl
 :
 	public agentController
 {
@@ -69,109 +69,34 @@ private:
         dictionary propsDict_;
 
         //- ids of agents
-        List<label> agentIds_;
+        List<label> leftAgentIds_;
+        List<label> rightAgentIds_;
 
-        
-        //- id of inserted agent
-        label agentId_;
 
-        boundedBox samplingBox_;
-        boundedBox controlBox_;
-        
-        label N_;
-        
-        scalar meanMass_;
-        scalar massRange_;
-        scalar meanRadius_;
-        scalar radiusRange_;
-        scalar meanDesSpeed_;
-        scalar desSpeedRange_;
-        
         
         // will force 
         
-        vector desiredDirection_;
         scalar tau_;
-        scalar fracP_;
-        scalar fracR_;
+
+        scalar frac1_;
+         
+        vector leftDir_;
+        vector rightDir_;
         
-        // panic
-        scalar fracV_;
-        
-        // borders 
-        
-        List<vectorList> borderList_;
-        List<DynamicList<label> > interactionList_;  
-        
-        List<vectorList> midPoints_;
-        List<vectorList> normalVectors_;
-        
-        vectorList centrePoints_;
-        
-//         List<vector> sideTop_;
-//         List<vector> sideBottom_;
-        
-        
-        autoPtr<agentWallForce> attractiveForceModel_;
-        autoPtr<agentWallForce> repulsiveForceModel_;
-        
-        // distance at which will force is on/off
-        scalar X1_;
-        scalar X2_;
-        scalar X3_;
-        
-        // edge of pillar
-        List<scalar> P_;
-        
-        // searchTime 
-        scalar searchTime_;
-        scalar throwingTime_;
-        scalar deltaT_;
-        
-        scalar maxThrowingDistance_;
-        
-        // throwing boxes 
-        
-//         List<boundedBox> boxes_;
         
     // Private Member Functions
 
-//         void readProperties();
-        
-        void setBoundBox
-        (
-            const dictionary& propsDict,
-            boundedBox& bb,
-            const word& name 
-        );
-     
-        void insertAgents(const label& N);
-        
-        scalar gaussianDistribution
-        (
-            const scalar& mean,
-            const scalar& range
-        );
-        
-        void initialiseBorders();
-        
-//         void setBoundBoxes();
-        
-//         bool isPointWithinBorder(label index, const vector& r);
-        
-        void reflect(label index, agent* p);
-        
-        void panic(agent* p, const vector& willForce);
+
         
 public:
 
     //- Runtime type information
-    TypeName("jamaratControl");
+    TypeName("laneFormationControl");
 
     // Constructors
 
         //- Construct from components
-        jamaratControl
+        laneFormationControl
         (
             Time& t,
             agentCloud& cloud,
@@ -180,7 +105,7 @@ public:
 
     // Destructor
 
-        ~jamaratControl();
+        ~laneFormationControl();
 
 
     // Member Functions

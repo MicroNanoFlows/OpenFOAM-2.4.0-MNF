@@ -64,6 +64,8 @@ inline void forceFields::evaluatePair
         scalar rIJMagSq = magSqr(rIJ);
         scalar rIJMag = mag(rIJ);
         
+//         Info << "rIJMag = " << rIJMag  << endl;
+        
         label k = pairPotentialLookUp_[idI][idJ];
                      
         if(rIJMagSq < pairPotentials_[k]->rCutSqr())

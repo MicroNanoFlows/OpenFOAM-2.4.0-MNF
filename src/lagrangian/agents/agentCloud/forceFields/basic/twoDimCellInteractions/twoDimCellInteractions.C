@@ -111,6 +111,8 @@ void Foam::twoDimCellInteractions<ParticleType>::buildInteractionLists()
 {
     // build direct interaction list
 
+    checkMesh(rCut_);
+    
     if(optimised_)
     {
         buildOptimisedDIL();
@@ -185,7 +187,7 @@ void Foam::twoDimCellInteractions<ParticleType>::buildComplexDIL()
     // to make sure the user sees this
     for (int j = 0; j < 50; j++)
     {
-        Info << "WARNING - YOUR MESH IS NOT OPTIMISED FOR MD..." << endl;
+        Info << "WARNING - YOUR MESH IS NOT OPTIMISED ..." << endl;
     }
     
     Info << nl << "Building direct interacion lists (arbitrary mesh version)" << endl;
@@ -1630,57 +1632,38 @@ void Foam::twoDimCellInteractions<ParticleType>::checkMesh(const scalar& rCut)
         
         if(bb.span().x() < (rCut - tolerance))
         {
-            FatalErrorIn("twoDimCellInteractions::checkMesh") << nl
-                << "WARNING: Test for bound box failed! " << nl
-                << "Cell: " << c << " cell-centre: " << mesh.cellCentres()[c]
-                << " distance of x: " << bb.span().x()
-                << nl << " Modify mesh to make cells greater or equal to rCut = " << rCut
-                << nl << " OR else use an unoptimised mesh configuration, by including:" 
-                << nl <<" optimisedMesh       no; " << nl << "in the system/potentialsDict."
-                << nl << abort(FatalError);
+            optimised_ = false;
+            
+//             FatalErrorIn("twoDimCellInteractions::checkMesh") << nl
+//                 << "WARNING: Test for bound box failed! " << nl
+//                 << "Cell: " << c << " cell-centre: " << mesh.cellCentres()[c]
+//                 << " distance of x: " << bb.span().x()
+//                 << nl << " Modify mesh to make cells greater or equal to rCut = " << rCut
+//                 << nl << " OR else use an unoptimised mesh configuration, by including:" 
+//                 << nl <<" optimisedMesh       no; " << nl << "in the system/potentialsDict."
+//                 << nl << abort(FatalError);
 
         }
 
         if(bb.span().y() < (rCut - tolerance))
         {
-            FatalErrorIn("twoDimCellInteractions::checkMesh") << nl
-                << "WARNING: Test for bound box failed! " << nl
-                << "Cell: " << c << " cell-centre: " << mesh.cellCentres()[c]
-                << " distance of y: " << bb.span().y()
-                << nl << " Modify mesh to make cells greater or equal to rCut = " << rCut
-                << nl << " OR else use an unoptimised mesh configuration, by including:" 
-                << nl <<" optimisedMesh       no; " << nl << "in the system/potentialsDict."
-                << nl << abort(FatalError);
-        }
-
-//         if(bb.span().z() < (rCut - tolerance))
-//         {
+            optimised_ = false;
+            
+            
 //             FatalErrorIn("twoDimCellInteractions::checkMesh") << nl
 //                 << "WARNING: Test for bound box failed! " << nl
 //                 << "Cell: " << c << " cell-centre: " << mesh.cellCentres()[c]
-//                 << " distance of z: " << bb.span().z()
+//                 << " distance of y: " << bb.span().y()
 //                 << nl << " Modify mesh to make cells greater or equal to rCut = " << rCut
 //                 << nl << " OR else use an unoptimised mesh configuration, by including:" 
 //                 << nl <<" optimisedMesh       no; " << nl << "in the system/potentialsDict."
 //                 << nl << abort(FatalError);
-//         }
-
-        // by volume
-//         scalar V = mesh.cellVolumes()[c];
-// 
-//         scalar r = Foam::pow(V, (1.0/3.0) );
-// 
-//         if(r < (rCut - tolerance))
-//         {
-//             FatalErrorIn("twoDimCellInteractions::checkMesh") << nl
-//                 << "WARNING: Test for volume failed! " << nl
-//                 << "Cell: " << c << " cell-centre: " << mesh.cellCentres()[c]
-//                 << " avarage r = " << r
-//                 << nl << " Modify mesh to make cells greater or equal to rCut = " << rCut
-//                 << nl << " OR else use an unoptimised mesh configuration, by including:" 
-//                 << nl <<" optimisedMesh       no; " << nl << "in the system/potentialsDict."
-//                 << nl << abort(FatalError);
-//         }
+        }
+    }
+    
+    if(!optimised_)
+    {
+        Info << "WARNING: mesh is not optimal!" << endl;
     }
 }
 
