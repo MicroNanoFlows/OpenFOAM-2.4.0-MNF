@@ -127,6 +127,7 @@ private:
         scalar searchTime_;
         scalar throwingTime_;
         scalar deltaT_;
+        scalar patienceTime_;
         
         scalar maxThrowingDistance_;
         

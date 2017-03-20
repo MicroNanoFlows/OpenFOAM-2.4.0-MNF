@@ -88,10 +88,10 @@ private:
         
         scalar tau_;
 
-        scalar frac1_;
-        scalar frac2_;
-        scalar frac3_;            
-        
+        scalar fracEvac_;
+//         scalar frac2_;
+        scalar fracV_;            
+        scalar fracW_;
         
         // borders 
         
@@ -112,12 +112,17 @@ private:
 //         scalar X3_;
         
         scalar Y_;
+        scalar YMax_;
+        scalar XRight_;
+        scalar XLeft_;
+        
         
         // searchTime 
         scalar fireworkTime_;
         scalar evacuateTime_;
-//         scalar deltaT_;
-        
+        scalar deltaT_;
+        scalar resetTime_;
+        scalar patienceTime_;
         // throwing boxes 
         
 //         List<boundedBox> boxes_;
@@ -142,7 +147,11 @@ private:
         
         void initialiseBorders();
 
-
+        void panic
+        (
+            agent* p,
+            const vector& willForce
+        );
         
 public:
 

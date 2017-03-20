@@ -132,11 +132,12 @@ hogmanayControl::hogmanayControl
     
     tau_ = readScalar(propsDict_.lookup("tau"));
     
-    frac1_ = 0.1;
-    frac1_ = readScalar(propsDict_.lookup("frac1"));
-    frac2_ = readScalar(propsDict_.lookup("frac2"));
-    frac3_ = readScalar(propsDict_.lookup("frac3"));
-        
+
+    fracEvac_ = readScalar(propsDict_.lookup("fracEvac"));
+    fracV_ = readScalar(propsDict_.lookup("fracV"));
+    fracW_ = readScalar(propsDict_.lookup("fracW"));
+    
+    
         // borders 
     
     borderList_ = List<vectorList>(propsDict_.lookup("bordersList"));
@@ -158,10 +159,14 @@ hogmanayControl::hogmanayControl
 //     
     
     Y_ = readScalar(propsDict_.lookup("Y")); 
+    YMax_ = readScalar(propsDict_.lookup("YMax"));
+    XRight_ = readScalar(propsDict_.lookup("XRight"));
+    XLeft_ = readScalar(propsDict_.lookup("XLeft"));
     
     fireworkTime_ = readScalar(propsDict_.lookup("fireworkTime"));    
     evacuateTime_ = readScalar(propsDict_.lookup("evacuateTime"));
-    
+    resetTime_ = readScalar(propsDict_.lookup("resetTime"));
+    patienceTime_= readScalar(propsDict_.lookup("patienceTime"));
     meanDesSpeedE_ = readScalar(propsDict_.lookup("meanDesiredSpeedEvac"));
     desSpeedRangeE_ = readScalar(propsDict_.lookup("desiredSpeedRangeEvac"));
 
@@ -169,7 +174,7 @@ hogmanayControl::hogmanayControl
     meanDesSpeedF_ = readScalar(propsDict_.lookup("meanDesiredSpeedFire"));
     desSpeedRangeF_ = readScalar(propsDict_.lookup("desiredSpeedRangeFire"));    
     
-//     deltaT_ = time_.deltaT().value();
+    deltaT_ = time_.deltaT().value();
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -202,6 +207,31 @@ void hogmanayControl::controlDuringForces
 )
 {}
 
+void hogmanayControl::panic
+(
+    agent* p,
+    const vector& willForce
+)
+{
+    scalar desSpeed = mag(p->desiredSpeed());
+    
+    if(mag(p->v()) < desSpeed*fracV_)
+    {
+        p->fraction() += deltaT_;
+        vector Fpanic = (p->fraction()/patienceTime_)*willForce;
+        p->f() += Fpanic;
+        
+//         Info << "position = " << p->position() 
+//              << " panic force = " << Fpanic 
+//              << " frac time = " << p->fraction()
+//              << endl;
+    }
+    else
+    {
+        p->fraction() = 0.0;
+    }
+}
+
 void hogmanayControl::controlAfterForces()
 {
 
@@ -211,106 +241,137 @@ void hogmanayControl::controlAfterForces()
         
         for (p = cloud_.begin(); p != cloud_.end(); ++p)
         {
+            // randomly pick destination points inside the box
+            
             if(p().eventTracker() == 0)
             {
                 if(findIndex(topAgentIds_, p().id()) != -1)
                 {
-                    if(!boxTop_.contains(p().position()))
-                    {
-                        vector desDir = vector(0.0, (boxTop_.midpoint() - p().position()).y(), 0.0);
-                        vector force = (p().desiredSpeed()*(desDir/mag(desDir)) - p().v())*p().mass() / tau_; 
-                        p().f() += force;
-/*                        vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
-                        R /= mag(R);
-                        p().f() += R*frac1_*mag(force); */        
-                    }
-                    else
-                    {
-//                         vector force = (p().desiredSpeed()*desDir - p().v())*p().mass() / tau_; 
-//                         p().f() += force;
-/*                        vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
-                        R /= mag(R);
-                        p().f() += R*frac2_; */                         
-                    }
+                    boundedBox& bb = boxTop_;
+                    
+                    p().d() = vector
+                    ( 
+                        (bb.max().x() - bb.min().x())*cloud_.rndGen().scalar01() + bb.min().x(), 
+                        (bb.max().y() - bb.min().y())*cloud_.rndGen().scalar01() + bb.min().y(),  
+                        0.0
+                    );
                 }
-                
+
                 if(findIndex(bottomAgentIds_, p().id()) != -1)
                 {
-                    if(!boxBottom_.contains(p().position()))
-                    {
-                        vector desDir = vector::zero;
-                        
-                        if(p().position().y() > Y_)
-                        {
-                            desDir = vector(0.0, (boxBottom_.midpoint() - p().position()).y(), 0.0);
-                        }
-                        else 
-                        {
-                            desDir = vector((boxBottom_.midpoint() - p().position()).x(), 0.0, 0.0);
-                        }
-                        
-                        vector force = (p().desiredSpeed()*(desDir/mag(desDir)) - p().v())*p().mass() / tau_; 
-                        p().f() += force;
-/*                        vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
-                        R /= mag(R);
-                        p().f() += R*frac1_*mag(force);  */       
-                    }
-                    else
-                    {
-//                         vector force = (p().desiredSpeed()*desDir - p().v())*p().mass() / tau_; 
-//                         p().f() += force;
-/*                        vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
-                        R /= mag(R);
-                        p().f() += R*frac2_; */                         
-                    }                
-                }
-            }
-            
-            
-            if( (time_.timeOutputValue() > fireworkTime_) && (p().eventTracker() == 0) )
-            {
+                    boundedBox& bb = boxBottom_;
+                    
+                    p().d() = vector
+                    ( 
+                        (bb.max().x() - bb.min().x())*cloud_.rndGen().scalar01() + bb.min().x(), 
+                        (bb.max().y() - bb.min().y())*cloud_.rndGen().scalar01() + bb.min().y(),  
+                        0.0
+                    );
+                }                
+                
+                
                 p().eventTracker() = 1;
-                p().desiredSpeed() = gaussianDistribution(meanDesSpeedF_, desSpeedRangeF_);
             }
+            
+            // walk to destination (added panic just in case)
             
             if(p().eventTracker() == 1)
             {
-                if(!boxBottom_.contains(p().position()))
+                vector willForce = (p().desiredSpeed()*p().dir() - p().v())*p().mass() / tau_; 
+                vector tang = (2.0*cloud_.rndGen().scalar01()-1.0)*vector(-p().dir().y(), p().dir().x(), 0.0);
+                tang /= mag(tang);
+                willForce += fracW_*tang*mag(willForce);                
+                p().f() += willForce;
+                
+                panic(&p(), willForce);
+                
+                if(p().t() > 0)
                 {
-                    vector desDir = vector::zero;
+                    p().t() -= deltaT_;
                     
-                    if(p().position().y() > Y_)
+                    if(p().t() < 0)
                     {
-                        desDir = vector(0.0, (boxBottom_.midpoint() - p().position()).y(), 0.0);
+                        p().t() = 0.0;
                     }
-                    else 
-                    {
-                        desDir = vector((boxBottom_.midpoint() - p().position()).x(), 0.0, 0.0);
-                    }
-                        
-                    vector force = (p().desiredSpeed()*(desDir/mag(desDir)) - p().v())*p().mass() / tau_; 
-                    p().f() += force;
-/*                    vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
-                    R /= mag(R);
-                    p().f() += R*frac1_*mag(force)*/;         
                 }
                 else
                 {
-/*                    vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
-                    R /= mag(R);
-                    p().f() += R*frac2_;   */                       
+                    p().t() = resetTime_;
+                    
+                    if(findIndex(topAgentIds_, p().id()) != -1)
+                    {
+                        boundedBox& bb = boxTop_;
+                        
+                        p().d() = vector
+                        ( 
+                            (bb.max().x() - bb.min().x())*cloud_.rndGen().scalar01() + bb.min().x(), 
+                            (bb.max().y() - bb.min().y())*cloud_.rndGen().scalar01() + bb.min().y(),  
+                            0.0
+                        );
+                    }
+
+                    if(findIndex(bottomAgentIds_, p().id()) != -1)
+                    {
+                        boundedBox& bb = boxBottom_;
+                        
+                        p().d() = vector
+                        ( 
+                            (bb.max().x() - bb.min().x())*cloud_.rndGen().scalar01() + bb.min().x(), 
+                            (bb.max().y() - bb.min().y())*cloud_.rndGen().scalar01() + bb.min().y(),  
+                            0.0
+                        );
+                    }                    
                 }
             }
             
-            if((time_.timeOutputValue() > evacuateTime_) && (p().eventTracker() == 1))
+            if( (time_.timeOutputValue() > fireworkTime_) && (p().eventTracker() == 1) )
             {
                 p().eventTracker() = 2;
+                p().desiredSpeed() = gaussianDistribution(meanDesSpeedF_, desSpeedRangeF_);
+            }
+            
+            if(p().eventTracker() == 2)
+            {
+                vector willForce = (p().desiredSpeed()*p().dir() - p().v())*p().mass() / tau_; 
+                vector tang = (2.0*cloud_.rndGen().scalar01()-1.0)*vector(-p().dir().y(), p().dir().x(), 0.0);
+                tang /= mag(tang);
+                willForce += fracW_*tang*mag(willForce);                
+                p().f() += willForce;
+                panic(&p(), willForce);
+                
+                if(p().t() > 0)
+                {
+                    p().t() -= deltaT_;
+                    
+                    if(p().t() < 0)
+                    {
+                        p().t() = 0.0;
+                    }
+                }
+                else
+                {
+                    p().t() = resetTime_;
+
+                    boundedBox& bb = boxBottom_;
+                        
+                    p().d() = vector
+                    ( 
+                        (bb.max().x() - bb.min().x())*cloud_.rndGen().scalar01() + bb.min().x(), 
+                        (bb.max().y() - bb.min().y())*cloud_.rndGen().scalar01() + bb.min().y(),  
+                        0.0
+                    );
+                }                
+            }
+            
+            if((time_.timeOutputValue() > evacuateTime_) && (p().eventTracker() == 2))
+            {
+                p().eventTracker() = 3;
                 p().desiredSpeed() = gaussianDistribution(meanDesSpeedE_, desSpeedRangeE_);
             }    
             
             
             // evacuation
-            if(p().eventTracker() == 2)            
+            if(p().eventTracker() == 3)            
             {
                 scalar integer = 1.0;
                 
@@ -333,12 +394,16 @@ void hogmanayControl::controlAfterForces()
                 {
                     desDir = integer*vector(1.0, 0.0, 0.0);
                 }
-                    
-                vector force = (p().desiredSpeed()*(desDir/mag(desDir)) - p().v())*p().mass() / tau_; 
-                p().f() += force;
-                vector R = vector(cloud_.rndGen().scalar01(), cloud_.rndGen().scalar01(), 0.0);
-                R /= mag(R);
-                p().f() += R*frac3_*mag(force);         
+                 
+                desDir /= mag(desDir);
+                
+                vector willForce = (p().desiredSpeed()*desDir - p().v())*p().mass() / tau_; 
+                vector tang = (2.0*cloud_.rndGen().scalar01()-1.0)*vector(-desDir.y(), desDir.x(), 0.0);
+                tang /= mag(tang);
+                willForce += fracEvac_*tang*mag(willForce);
+                p().f() += willForce;
+                
+                panic(&p(), willForce);
             }
         }
     }
@@ -357,7 +422,7 @@ void hogmanayControl::controlAfterForces()
             {
                 agent* agentI = agentsInCell[a];
                 
-                if(agentI->eventTracker() == 1)
+                if(agentI->eventTracker() == 2)
                 {                
                     vector rI = agentI->position();
                 

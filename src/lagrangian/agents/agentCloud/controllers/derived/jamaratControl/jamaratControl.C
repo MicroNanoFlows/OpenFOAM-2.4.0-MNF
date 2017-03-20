@@ -156,7 +156,7 @@ jamaratControl::jamaratControl
     
     searchTime_ = readScalar(propsDict_.lookup("searchTime"));    
     throwingTime_ = readScalar(propsDict_.lookup("throwingTime"));
-    
+    patienceTime_ = readScalar(propsDict_.lookup("patienceTime"));    
     maxThrowingDistance_ = readScalar(propsDict_.lookup("maxThrowingDistance"));
     
     
@@ -334,14 +334,14 @@ void jamaratControl::panic
     
     if(mag(p->v()) < desSpeed*fracV_)
     {
-        p->t() += deltaT_;
-        vector Fpanic = (p->t()/5.0)*willForce;
+        p->fraction() += deltaT_;
+        vector Fpanic = (p->fraction()/patienceTime_)*willForce;
         p->f() += Fpanic;
 //         Info << "panic force = " << Fpanic << " time = " << p->t() << endl;
     }
     else
     {
-        p->t() = 0.0;
+        p->fraction() = 0.0;
     }
 }
 
@@ -371,11 +371,11 @@ void jamaratControl::controlAfterForces()
                 
                 if(findIndex(agentIds_, p().id()) != -1)
                 {
-                    vector force = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
-                    p().f() += force;
+                    vector willForce = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
+                    p().f() += willForce;
                     vector R = vector(0.0, 2.0*cloud_.rndGen().scalar01()-1.0, 0.0);
                     R /= mag(R);
-                    p().f() += R*fracR_*mag(force);
+                    p().f() += R*fracR_*mag(willForce);
                 }
             }
             
@@ -437,21 +437,21 @@ void jamaratControl::controlAfterForces()
                 if(p().position().x() < P_[0])
                 {
 
-                    vector force = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
-                    p().f() += force;
+                    vector willForce = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
+                    p().f() += willForce;
                     vector R = vector(0.0, 2.0*cloud_.rndGen().scalar01()-1.0, 0.0);
                     R /= mag(R);
-                    p().f() += R*fracP_*mag(force);                  
-                    panic(&p(), force);
+                    p().f() += R*fracP_*mag(willForce);                  
+                    panic(&p(), willForce);
                     
                 }
                 else
                 {
-                    vector force = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
-                    p().f() += force;
+                    vector willForce = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
+                    p().f() += willForce;
                     vector R = vector(0.0, 2.0*cloud_.rndGen().scalar01()-1.0, 0.0);
                     R /= mag(R);
-                    p().f() += R*fracR_*mag(force);                    
+                    p().f() += R*fracR_*mag(willForce);                    
                 }
             }
             
@@ -511,20 +511,20 @@ void jamaratControl::controlAfterForces()
                 
                 if(p().position().x() < P_[1])
                 {
-                    vector force = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
-                    p().f() += force;
+                    vector willForce = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
+                    p().f() += willForce;
                     vector R = vector(0.0, 2.0*cloud_.rndGen().scalar01()-1.0, 0.0);
                     R /= mag(R);
-                    p().f() += R*fracP_*mag(force);
-                    panic(&p(), force);
+                    p().f() += R*fracP_*mag(willForce);
+                    panic(&p(), willForce);
                 }
                 else
                 {
-                    vector force = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
-                    p().f() += force;
+                    vector willForce = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
+                    p().f() += willForce;
                     vector R = vector(0.0, 2.0*cloud_.rndGen().scalar01()-1.0, 0.0);
                     R /= mag(R);
-                    p().f() += R*fracR_*mag(force);                    
+                    p().f() += R*fracR_*mag(willForce);                    
                 }
             }
             
@@ -576,20 +576,20 @@ void jamaratControl::controlAfterForces()
             {
                 if(p().position().x() < P_[2])
                 {
-                    vector force = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
-                    p().f() += force;
+                    vector willForce = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
+                    p().f() += willForce;
                     vector R = vector(0.0, 2.0*cloud_.rndGen().scalar01()-1.0, 0.0);
                     R /= mag(R);
-                    p().f() += R*fracP_*mag(force);           
-                    panic(&p(), force);
+                    p().f() += R*fracP_*mag(willForce);           
+                    panic(&p(), willForce);
                 }
                 else
                 {
-                    vector force = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
-                    p().f() += force;
+                    vector willForce = (p().desiredSpeed()*desiredDirection_ - p().v())*p().mass() / tau_; 
+                    p().f() += willForce;
                     vector R = vector(0.0, 2.0*cloud_.rndGen().scalar01()-1.0, 0.0);
                     R /= mag(R);
-                    p().f() += R*fracR_*mag(force);                    
+                    p().f() += R*fracR_*mag(willForce);                    
                 }
             }
         }
