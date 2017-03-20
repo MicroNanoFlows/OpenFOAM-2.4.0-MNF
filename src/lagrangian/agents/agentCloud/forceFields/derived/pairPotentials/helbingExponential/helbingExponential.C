@@ -138,33 +138,22 @@ void helbingExponential::pairPotentialFunction
 {
     // r is the distance between two agents 
     
-    if(r > 0.01) // test
+    vector rij = molI->position()-molJ->position();
+//     scalar rijMag=mag(rij);
+    vector nij = rij/r;
+    vector tij = vector (-nij.y(), nij.x(), 0);
+    
+    scalar dIJ = r;
+    
+    // the sum of radii
+    scalar rIJ = molI->radius() + molJ->radius();
+    
+    if(dIJ > rIJ)
     {
-        vector rij = molI->position()-molJ->position();
-    //     scalar rijMag=mag(rij);
-        vector nij = rij/r;
-        vector tij = vector (-nij.y(), nij.x(), 0);
-        
-        scalar dIJ = r;
-        
-        // the sum of radii
-        scalar rIJ = molI->radius() + molJ->radius();
-        
-        if(dIJ > rIJ)
-        {
-            force = A_*exp((rIJ-dIJ)/B_)*nij;
-        } 
-        else
-        {
-            force = (A_*exp((rIJ-dIJ)/B_) + k_*(rIJ-dIJ) )*nij  + 
-                    kappa_*(rIJ-dIJ)*((molJ->v() - molI->v()) & tij)*tij;
-        }
-    }
+        force = A_*exp((rIJ-dIJ)/B_)*nij;
+    } 
     else
     {
-<<<<<<< HEAD
-        force = vector::zero;
-=======
         vector socialForce = (A_*exp((rIJ-dIJ)/B_))*nij;
         vector normalForce = k_*(rIJ-dIJ)*nij;
         vector frictionForce = kappa_*(rIJ-dIJ)*((molJ->v() - molI->v()) & tij)*tij;
@@ -250,7 +239,6 @@ void helbingExponential::pairPotentialFunction
         
         molI->f() += wI*force;
         molJ->f() += -wJ*force;        
->>>>>>> devel-matthew
     }
 }
 
