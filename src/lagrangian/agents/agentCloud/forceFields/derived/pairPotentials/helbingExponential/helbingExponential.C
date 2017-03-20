@@ -81,7 +81,7 @@ helbingExponential::helbingExponential
     {
         injury_ = Switch(propsDict_.lookup("injury"));
         
-        timeDelay_ = 0.0;
+        timeDelay_ = 5.0;
         
         if (propsDict_.found("injuryTimeDelay"))
         {
