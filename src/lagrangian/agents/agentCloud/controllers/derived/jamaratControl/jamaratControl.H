@@ -94,6 +94,10 @@ private:
         scalar tau_;
         scalar fracP_;
         scalar fracR_;
+        
+        // panic
+        scalar fracV_;
+        
         // borders 
         
         List<vectorList> borderList_;
@@ -104,8 +108,8 @@ private:
         
         vectorList centrePoints_;
         
-        List<vector> sideTop_;
-        List<vector> sideBottom_;
+//         List<vector> sideTop_;
+//         List<vector> sideBottom_;
         
         
         autoPtr<agentWallForce> attractiveForceModel_;
@@ -116,14 +120,20 @@ private:
         scalar X2_;
         scalar X3_;
         
+        // edge of pillar
+        List<scalar> P_;
+        
         // searchTime 
         scalar searchTime_;
         scalar throwingTime_;
         scalar deltaT_;
+        scalar patienceTime_;
+        
+        scalar maxThrowingDistance_;
         
         // throwing boxes 
         
-        List<boundedBox> boxes_;
+//         List<boundedBox> boxes_;
         
     // Private Member Functions
 
@@ -146,11 +156,13 @@ private:
         
         void initialiseBorders();
         
-        void setBoundBoxes();
+//         void setBoundBoxes();
         
 //         bool isPointWithinBorder(label index, const vector& r);
         
         void reflect(label index, agent* p);
+        
+        void panic(agent* p, const vector& willForce);
         
 public:
 

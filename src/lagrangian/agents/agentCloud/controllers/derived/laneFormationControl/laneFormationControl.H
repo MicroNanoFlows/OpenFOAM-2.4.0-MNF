@@ -23,21 +23,21 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    hogmanayControl
+    laneFormationControl
 
 Description
     Add agents to a box based on a known flux 
     Not parallelised
 
 SourceFiles
-    hogmanayControlI.H
-    hogmanayControl.C
-    hogmanayControlIO.C
+    laneFormationControlI.H
+    laneFormationControl.C
+    laneFormationControlIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef hogmanayControl_H
-#define hogmanayControl_H
+#ifndef laneFormationControl_H
+#define laneFormationControl_H
 
 #include "agentController.H"
 #include "vector.H"
@@ -53,10 +53,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class hogmanayControl Declaration
+                           Class laneFormationControl Declaration
 \*---------------------------------------------------------------------------*/
 
-class hogmanayControl
+class laneFormationControl
 :
 	public agentController
 {
@@ -69,102 +69,34 @@ private:
         dictionary propsDict_;
 
         //- ids of agents
-        List<label> topAgentIds_;
-        List<label> bottomAgentIds_;
-
+        List<label> leftAgentIds_;
         List<label> rightAgentIds_;
-        List<label> leftAgentIds_;                
-        
-        boundedBox boxBottom_;
-        boundedBox boxTop_;
-        
-        scalar meanDesSpeedE_;
-        scalar desSpeedRangeE_;       
 
-        scalar meanDesSpeedF_;
-        scalar desSpeedRangeF_;   
+
         
         // will force 
         
         scalar tau_;
 
-        // waiting time
-        scalar fracW_;
-        scalar fracV_;
-        scalar fracEvac_;
-//         scalar frac3_;            
+        scalar frac1_;
+         
+        vector leftDir_;
+        vector rightDir_;
         
-        
-        // borders 
-        
-        List<vectorList> borderList_;
-        List<DynamicList<label> > interactionList_;  
-        
-        List<vectorList> midPoints_;
-        List<vectorList> normalVectors_;
-        
-        vectorList centrePoints_;
-        
-        autoPtr<agentWallForce> attractiveForceModel_;
-//         autoPtr<agentWallForce> repulsiveForceModel_;
-        
-        // distance at which will force is on/off
-//         scalar X1_;
-//         scalar X2_;
-//         scalar X3_;
-        
-        scalar Y_;
-        scalar YMax_;
-        scalar XRight_;
-        scalar XLeft_;
-        
-        // searchTime 
-        scalar fireworkTime_;
-        scalar evacuateTime_;
-        scalar patienceTime_;
-        scalar deltaT_;
-        
-        // throwing boxes 
-        
-//         List<boundedBox> boxes_;
         
     // Private Member Functions
 
-//         void readProperties();
-        
-        void setBoundBox
-        (
-            const dictionary& propsDict,
-            boundedBox& bb,
-            const word& name 
-        );
-     
-        
-        scalar gaussianDistribution
-        (
-            const scalar& mean,
-            const scalar& range
-        );
-        
-        void initialiseBorders();
-
-        void panic
-        (
-            agent* p,
-            const vector& willForce
-        );    
-        
 
         
 public:
 
     //- Runtime type information
-    TypeName("hogmanayControl");
+    TypeName("laneFormationControl");
 
     // Constructors
 
         //- Construct from components
-        hogmanayControl
+        laneFormationControl
         (
             Time& t,
             agentCloud& cloud,
@@ -173,7 +105,7 @@ public:
 
     // Destructor
 
-        ~hogmanayControl();
+        ~laneFormationControl();
 
 
     // Member Functions

@@ -72,7 +72,32 @@ helbingExponential::helbingExponential
         else if(option == "anisotropic")
         {
             option_ = 1;
+            
+            thetaRef1_ = 90;
+            thetaRef1_ *= constant::mathematical::pi/180;
+            
+            if (propsDict_.found("theta1"))
+            {
+                thetaRef1_ = readScalar(propsDict_.lookup("theta1"));
+                thetaRef1_ *= constant::mathematical::pi/180;                
+            }             
+            
         }
+//         else if(option == "opposingFlowAndAnisotropy")
+//         {
+//             option_ = 2;
+//             
+//             thetaRef2_=10; //deg
+//             
+//         
+//             if (propsDict_.found("theta2"))
+//             {
+//                 thetaRef2_ = readScalar(propsDict_.lookup("theta2"));
+//             }            
+//             
+//             C_ = readScalar(propsDict_.lookup("C"));
+//             
+//         }
     }
     
     injury_ = false;
@@ -144,17 +169,17 @@ void helbingExponential::pairPotentialFunction
 )
 {
 
-    
     // r is the distance between two agents 
     if(r > 0.0)
     {
         vector pairForce = vector::zero;
+        vector socialForce = vector::zero;
+        vector normalForce = vector::zero;
+        vector frictionForce = vector::zero;
         
         vector rij = molI->position()-molJ->position();
-    //     scalar rijMag=mag(rij);
         vector nij = rij/r;
-        vector tij = vector (-nij.y(), nij.x(), 0);
-        
+        vector tij = vector(-nij.y(), nij.x(), 0);
         scalar dIJ = r;
         
         // the sum of radii
@@ -162,14 +187,13 @@ void helbingExponential::pairPotentialFunction
         
         if(dIJ > rIJ)
         {
-            pairForce = A_*exp((rIJ-dIJ)/B_)*nij;
+            socialForce = A_*exp((rIJ-dIJ)/B_)*nij;
         } 
         else
         {
-            vector socialForce = (A_*exp((rIJ-dIJ)/B_))*nij;
-            vector normalForce = k_*(rIJ-dIJ)*nij;
-            vector frictionForce = kappa_*(rIJ-dIJ)*((molJ->v() - molI->v()) & tij)*tij;
-            pairForce = socialForce + normalForce  + frictionForce;
+            socialForce = (A_*exp((rIJ-dIJ)/B_))*nij;
+            normalForce = k_*(rIJ-dIJ)*nij;
+            frictionForce = kappa_*(rIJ-dIJ)*((molJ->v() - molI->v()) & tij)*tij;
             
             if(injury_)
             {
@@ -207,10 +231,11 @@ void helbingExponential::pairPotentialFunction
         
         if(option_ == 0) // standard
         {
+            pairForce = socialForce + normalForce  + frictionForce;            
             molI->f() += pairForce;
             molJ->f() += -pairForce;
         }
-        else if(option_ == 1) // ansitropy 
+        else if(option_ == 1) //|| (option_ == 2)) // anisotropy
         {
             scalar wI = 0.0;
 
@@ -226,9 +251,7 @@ void helbingExponential::pairPotentialFunction
                 {
                     if(dotI < 1)
                     {
-                        scalar theta = acos(dotI);
-                
-                        wI = 1.0 - (2.0*theta/constant::mathematical::pi);
+                        wI = 1.0 - (acos(dotI)/thetaRef1_);
                     }
                     else
                     {
@@ -251,21 +274,90 @@ void helbingExponential::pairPotentialFunction
                 {
                     if(dotJ < 1)
                     {
-                        scalar theta = acos(dotJ);
-                    
-                        wJ = 1.0 - (2.0*theta/constant::mathematical::pi);
+                        wJ = 1.0 - (acos(dotJ)/thetaRef1_);
                     }
                     else
                     {
                         wJ = 1.0;
                     }
-                    
                 }
             }
             
-            molI->f() += wI*pairForce;
-            molJ->f() += -wJ*pairForce;        
-        }        
+            molI->f() += wI*socialForce;
+            molJ->f() += -wJ*socialForce;        
+            
+            molI->f() += normalForce  + frictionForce;
+            molJ->f() += -(normalForce  + frictionForce);            
+            /*
+            if(option_ == 2) // opposing flow
+            {
+                scalar vIJ = molI->v() & molJ->v();
+                wI =0.0;
+                wJ =0.0;
+                
+                if(vIJ < 0)
+                {
+                    if(magVI > 0.0)
+                    {
+                        vector vI = molI->v()/magVI;
+                        scalar dotI = vI & -nij;
+                        
+                        if( (dotI > 0) && (dotI < 1))
+                        {
+                            scalar theta = acos(dotI);
+                            
+                            wI = 1.0 - (theta*thetaRef1_*constant::mathematical::pi/180.0);
+                        }
+                    }
+                    
+                    if(magVJ > 0.0)
+                    {
+                        vector vJ = molJ->v()/magVJ;
+                        scalar dotJ = vJ & nij;
+                        
+                        if( (dotJ > 0) && (dotJ < 1))
+                        {
+                            scalar theta = acos(dotJ);
+                            
+                            wJ = 1.0 - (theta*thetaRef1_*constant::mathematical::pi/180.0);
+                        }
+                    }                    
+                }
+                
+                vector tI = vector(-molI->v().y(), molI->v().x(), 0);
+                scalar magtI = mag(tI);
+                
+                if(magtI > 0.0)
+                {
+                    tI /= magtI;
+                    
+                    molI->f() += C_*wI*tI*mag(socialForce);
+
+//                     Info << "pos I = " << molI->position()
+//                         << ", vI = " << molI->v()
+//                         << ", wI = " << wI 
+//                         << ", socialForce = " << socialForce
+//                         << ", tI = " << tI
+//                         << ", rIJ = " << r
+//                         << ", force = " << C_*wI*tI*mag(socialForce)
+//                         << endl;
+                    
+                    
+                    molJ->f() += -C_*wJ*tI*mag(socialForce);
+                    
+//                     Info << "pos J = " << molJ->position()
+//                         << ", vJ = " << molJ->v()
+//                         << ", wJ = " << wJ 
+//                         << ", pairForce = " << socialForce
+//                         << ", tJ = " << -tI
+//                         << ", rIJ = " << r
+//                         << ", force = " << -C_*wJ*tI*mag(socialForce)
+//                         << endl;                     
+                }
+            }
+            */
+        }
+
     }
     else
     {

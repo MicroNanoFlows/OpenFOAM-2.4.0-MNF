@@ -56,7 +56,7 @@ forceFields::forceFields
             IOobject::NO_WRITE
         )
     ),
-    rCut_(readScalar(forceFieldsDict_.lookup("rCut"))/ (cloud.redUnits().refLength()) ) ,
+    rCut_(readScalar(forceFieldsDict_.lookup("rCut"))),
 
     nBodyForces_(0),
     bodyForceList_(forceFieldsDict_.lookup("bodyForces")),
@@ -76,6 +76,7 @@ forceFields::forceFields
 
     Info << nl << "Creating forceFields" << nl << endl;
 
+    Info << "global cutoff = " << rCut_ << endl;
     //- create forceFields
 
     if(bodyForces_.size() > 0 )

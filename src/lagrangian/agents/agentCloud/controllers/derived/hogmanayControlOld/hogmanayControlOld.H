@@ -88,12 +88,10 @@ private:
         
         scalar tau_;
 
-        // waiting time
-        scalar fracW_;
-        scalar fracV_;
         scalar fracEvac_;
-//         scalar frac3_;            
-        
+//         scalar frac2_;
+        scalar fracV_;            
+        scalar fracW_;
         
         // borders 
         
@@ -118,12 +116,13 @@ private:
         scalar XRight_;
         scalar XLeft_;
         
+        
         // searchTime 
         scalar fireworkTime_;
         scalar evacuateTime_;
-        scalar patienceTime_;
         scalar deltaT_;
-        
+        scalar resetTime_;
+        scalar patienceTime_;
         // throwing boxes 
         
 //         List<boundedBox> boxes_;
@@ -152,9 +151,7 @@ private:
         (
             agent* p,
             const vector& willForce
-        );    
-        
-
+        );
         
 public:
 

@@ -79,6 +79,12 @@ private:
         
         scalar timeDelay_;
         
+        // anisotropic 
+        scalar thetaRef1_;
+        
+//         scalar C_;
+//         scalar thetaRef2_;
+        
     // Private Member Functions
 
  
