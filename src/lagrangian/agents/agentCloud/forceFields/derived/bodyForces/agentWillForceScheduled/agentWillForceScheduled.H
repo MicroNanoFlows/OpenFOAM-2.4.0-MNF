@@ -83,6 +83,8 @@ private:
         bool panic_;
         scalar smallForce_;
         scalar forceMag_;
+	
+	scalar deltaT_;
         
 //         scalar stdev_;
         

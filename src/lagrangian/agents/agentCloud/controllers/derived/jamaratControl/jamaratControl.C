@@ -258,7 +258,7 @@ void jamaratControl::reflect(label index, agent* p)
     
     
     // reflect 
-    if(mag(rIC) < mag(rWC))
+    if((mag(rIC)-p->radius()) < mag(rWC))
     {
 /*        Info << " agent position  = " << p->position() 
              << " closestPoint on border  = " << pointOnBorder
@@ -266,10 +266,11 @@ void jamaratControl::reflect(label index, agent* p)
              <<  " centre point = " << rC 
              << " distance from wall = " << dWI
              << endl; */ 
+        vector nij = rWI/dWI;
         
         vector newPosition = p->position() + 2.0*rWI;
         
-        vector nij = rWI/dWI;
+
         vector tij = vector (-nij.y(), nij.x(), 0);
         vector vNew = mag(p->v())*tij;
         p->v() = vNew;

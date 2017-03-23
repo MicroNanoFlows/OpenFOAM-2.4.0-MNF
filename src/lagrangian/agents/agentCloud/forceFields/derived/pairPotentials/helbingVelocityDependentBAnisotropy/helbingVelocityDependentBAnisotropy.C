@@ -58,10 +58,55 @@ helbingVelocityDependentBAnisotropy::helbingVelocityDependentBAnisotropy
     Bmax_(readScalar(propsDict_.lookup("Bmax"))),
     Bmin_(readScalar(propsDict_.lookup("Bmin"))),
     k_(readScalar(propsDict_.lookup("k"))),
-    kappa_(readScalar(propsDict_.lookup("kappa"))),
-    lambda_(readScalar(propsDict_.lookup("lambda")))
+    kappa_(readScalar(propsDict_.lookup("kappa")))
 {
+    option_ = 0;
+    
+    if (propsDict_.found("option"))
+    {
+        const word option = propsDict_.lookup("option");
+        
+        if(option == "default")
+        {
+            option_ = 0;
+        }
+        else if(option == "anisotropic")
+        {
+            option_ = 1;
+        }
+    }
+    
+    injury_ = false;
+    
+    if (propsDict_.found("injury"))
+    {
+        injury_ = Switch(propsDict_.lookup("injury"));
+        
+        timeDelay_ = 0.0;
+        
+        if (propsDict_.found("injuryTimeDelay"))
+        {
+            timeDelay_ = readScalar(propsDict_.lookup("injuryTimeDelay"));
+        }
+        
+        const word idName(propsDict_.lookup("agentIdInjured")); 
+        const List<word>& idList(cloud_.cP().agentIds());
 
+        label id = findIndex(idList, idName);
+
+        if(id == -1)
+        {
+            FatalErrorIn("boxInitialise::setInitialConfiguration()")
+                << "Cannot find molecule id: " << idName << nl << "in idList."
+                << exit(FatalError);
+        }        
+        
+        agentId_ = id;
+        
+        maxForce_ = readScalar(propsDict_.lookup("maxForce"));
+    }
+
+    
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -99,56 +144,155 @@ void helbingVelocityDependentBAnisotropy::pairPotentialFunction
     vector& force
 )
 {
+
+    
+
     // r is the distance between two agents 
-    
-    vector rij = molI->position()-molJ->position();
-//     scalar rijMag=mag(rij);
-    vector nij = rij/r;
-    vector tij = vector (-nij.y(), nij.x(), 0);
-    
-    scalar dIJ = r;
-    
-    // the sum of radii
-    scalar rIJ = molI->radius() + molJ->radius();
-    
-    // Read Bmax and Bmin and define linear dependence w.r.t. velocity
-    scalar Bvel = Bmin_ + (Bmax_ - Bmin_)/1.5 * mag(molI->v());
-    
-    
-    //Add anisotropy parameter!
-//     vector vAlpha = molI->v()/mag(molI->v());
-//     scalar test = mag(vAlpha);
-//     cout << ">>>>>> test is equal to: " << test; 
-// 
-//     vector dAlphaBeta = (-1)*rij/mag(rij);
-//     scalar cosAngle = vAlpha & dAlphaBeta;
-//     cout << ">>>>>> cosAngle is equal to: " << cosAngle; 
-//     scalar w = (lambda_ + (1 - lambda_) * (1+cosAngle)/2);
-//     cout << ">>>>>> w is equal to: " << w; 
-    
-    scalar w;
-    if(mag(molI->v()) == 0)
+    if(r > 0.0)
     {
-	w = 0;
+	scalar BMolI = 0;
+	scalar BMolJ = 0;
+        vector pairForceMolI = vector::zero;
+	vector pairForceMolJ = vector::zero;
+	vector normalForce = vector::zero;
+	vector frictionForce = vector::zero;
+        
+        vector rij = molI->position()-molJ->position();
+    //     scalar rijMag=mag(rij);
+        vector nij = rij/r;
+        vector tij = vector (-nij.y(), nij.x(), 0);
+        
+        scalar dIJ = r;
+        
+        // the sum of radii
+        scalar rIJ = molI->radius() + molJ->radius();
+        
+        if(dIJ > rIJ)
+        {
+	    BMolI = Bmin_ + (Bmax_ - Bmin_)/1.5 * mag(molI->v());
+            pairForceMolI = A_*exp((rIJ-dIJ)/BMolI)*nij;
+	    
+	    BMolJ = Bmin_ + (Bmax_ - Bmin_)/1.5 * mag(molJ->v());
+	    pairForceMolJ = A_*exp((rIJ-dIJ)/BMolJ)*nij;
+        } 
+        else
+        {
+//             vector socialForce = (A_*exp((rIJ-dIJ)/B_))*nij;
+            normalForce = k_*(rIJ-dIJ)*nij;
+            frictionForce = kappa_*(rIJ-dIJ)*((molJ->v() - molI->v()) & tij)*tij;
+//             pairForce = socialForce + normalForce + frictionForce;
+// 	    pairForce = socialForce;
+	    BMolI = Bmin_ + (Bmax_ - Bmin_)/1.5 * mag(molI->v());
+            pairForceMolI = A_*exp((rIJ-dIJ)/BMolI)*nij;
+	    
+	    BMolJ = Bmin_ + (Bmax_ - Bmin_)/1.5 * mag(molJ->v());
+	    pairForceMolJ = A_*exp((rIJ-dIJ)/BMolJ)*nij;
+            
+            if(injury_)
+            {
+                if(cloud_.mesh().time().timeOutputValue() > timeDelay_)
+                {
+                    if( (mag(normalForce)/(2*constant::mathematical::pi*molI->radius())) >= maxForce_)
+                    {
+                        molI->v() = vector::zero;
+                        molI->special()= -2;
+                        molI->id() = agentId_;
+                    }
+                    
+                    if( (mag(normalForce)/(2*constant::mathematical::pi*molJ->radius())) >= maxForce_)
+                    {
+        /*                Info << "position = " << molJ->position()
+                            <<  ", trackingNumber = " << molJ->trackingNumber()
+                            << " radius J = " << molJ->radius()
+                            <<  ", nij " << nij
+                            <<  ", mag(nij) " << mag(nij)
+                            <<  ", dIJ " << dIJ
+                            <<  ", rIJ " << rIJ                    
+                            << ", normalForce = " << mag(normalForce)
+                            << ", force per unit width = " << (mag(normalForce)*2*constant::mathematical::pi*molJ->radius())
+                            << endl;*/                
+                        
+                        molJ->v() = vector::zero;
+                        molJ->special()= -2;
+                        molJ->id() = agentId_;
+                    }  
+                }
+            }
+        }
+        
+        // apply force
+        
+        if(option_ == 0) // standard
+        {
+            molI->f() += pairForceMolI + normalForce + frictionForce;
+            molJ->f() += -pairForceMolJ - normalForce - frictionForce;
+        }
+        else if(option_ == 1) // ansitropy 
+        {
+	    scalar lambda = 0.1;
+	    
+            scalar wI = 0.0;
+
+            scalar magVI = mag(molI->v());
+            
+            if(magVI > 0.0)
+            {    
+                vector vI = molI->v()/magVI;
+                
+                scalar dotI = vI & -nij;
+
+//                 if(dotI > 0)
+                {
+                    if(dotI < 1)
+                    {
+                        scalar theta = acos(dotI); 
+//                         wI = 1.0 - (2.0*theta/constant::mathematical::pi);
+			
+			wI = (lambda + (1 - lambda) * (1+cos(theta))/2);
+                    }
+                    else
+                    {
+                        wI = 1.0;
+                    }
+                }
+            }
+            
+            scalar wJ = 0.0;
+            
+            scalar magVJ = mag(molJ->v());
+            
+            if(magVJ)
+            {
+                vector vJ = molJ->v()/magVJ;
+                
+                scalar dotJ = vJ & nij;
+                
+//                 if(dotJ > 0)
+                {
+                    if(dotJ < 1)
+                    {
+                        scalar theta = acos(dotJ);
+//                         wJ = 1.0 - (2.0*theta/constant::mathematical::pi);
+			
+			wJ = (lambda + (1 - lambda) * (1+cos(theta))/2);
+                    }
+                    else
+                    {
+                        wJ = 1.0;
+                    }
+                    
+                }
+            }
+            
+            molI->f() += wI*pairForceMolI + normalForce + frictionForce;
+            molJ->f() += -wJ*pairForceMolJ - normalForce - frictionForce;        
+        }        
     }
     else
     {
-	vector v1 = molI->v()/mag(molI->v());
-	vector d12 = (-1)*rij/mag(rij);
-	scalar cosAngle = v1 & d12;
-	w = (lambda_ + (1 - lambda_) * (1+cosAngle)/2);
+        Info << "WARNING: two agents are overlapping, so no force will be applied" << endl;
     }
     
-    
-    if(dIJ >= rIJ)
-    {
-        force = w*A_*exp((rIJ-dIJ)/Bvel)*nij;
-    } 
-    else
-    {
-        force = (w*A_*exp((rIJ-dIJ)/Bvel) + k_*(rIJ-dIJ) )*nij  + 
-                kappa_*(rIJ-dIJ)*((molJ->v() - molI->v()) & tij)*tij;
-    }
 }
 
 

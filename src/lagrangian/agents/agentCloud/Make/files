@@ -74,6 +74,7 @@ controllers/derived/agentNumbers/agentNumbers.C
 controllers/derived/agentFlux/agentFlux.C
 controllers/derived/debuggerAgent/debuggerAgent.C
 controllers/derived/jamaratControl/jamaratControl.C
+controllers/derived/hogmanayControl/hogmanayControl.C
 
 /* borders */
 

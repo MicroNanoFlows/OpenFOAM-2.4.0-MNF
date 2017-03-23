@@ -71,9 +71,14 @@ private:
 	scalar Bmin_;
         scalar k_;
         scalar kappa_;
-	scalar lambda_;
-
-
+        
+        label option_;
+                
+        bool injury_;
+        scalar maxForce_; // per unit length
+        label agentId_;
+	
+	scalar timeDelay_;
         
     // Private Member Functions
 

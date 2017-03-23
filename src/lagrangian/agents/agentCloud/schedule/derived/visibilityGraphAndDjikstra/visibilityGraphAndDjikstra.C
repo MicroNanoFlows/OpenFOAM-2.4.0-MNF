@@ -171,7 +171,7 @@ void visibilityGraphAndDjikstra::initialConfiguration()
     //graphPtr = new scalarSquareMatrix(nSegments+2); // +2 because of agent position and goal position
     //scalarSquareMatrix graph_ = *graphPtr;
     
-    scalar offset = 0.3;
+    scalar offset = 0.26;
     
     forAll(borderList_, i)
     {
@@ -224,10 +224,10 @@ void visibilityGraphAndDjikstra::initialConfiguration()
 		offsetDirection /= mag(offsetDirection);
 		offsetPoints_[4*i+p] = borderList_[i][p] + offset*offsetDirection;
 		
-// 		borderList_[i][p] = borderList_[i][p] + (1*offset)*offsetDirection;
-// 		// 0.99 multiplied to avoid a colinear scenario later
+		borderList_[i][p] = borderList_[i][p] + (0.99*offset)*offsetDirection;
+		// 0.99 multiplied to avoid a colinear scenario later
 		
-// 		borderList_[i][4] = borderList_[i][p];
+		borderList_[i][4] = borderList_[i][p];
 	    }
 	    else
 	    {
@@ -235,7 +235,7 @@ void visibilityGraphAndDjikstra::initialConfiguration()
 		offsetDirection /= mag(offsetDirection);
 		offsetPoints_[4*i+p] = borderList_[i][p] + offset*offsetDirection;
 		
-// 		borderList_[i][p] = borderList_[i][p] + (1*offset)*offsetDirection;
+		borderList_[i][p] = borderList_[i][p] + (0.99*offset)*offsetDirection;
 		
 	    }
 	}

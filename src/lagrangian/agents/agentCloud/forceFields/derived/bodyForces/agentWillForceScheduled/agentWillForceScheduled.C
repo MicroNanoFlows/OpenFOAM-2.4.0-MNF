@@ -57,7 +57,8 @@ agentWillForceScheduled::agentWillForceScheduled
     agentIds_(),
 //     desiredSpeed_(readScalar(propsDict_.lookup("desiredSpeed"))),
 //     desiredDirection_(propsDict_.lookup("desiredDirection")),
-    tau_(readScalar(propsDict_.lookup("tau")))
+    tau_(readScalar(propsDict_.lookup("tau"))),
+    deltaT_(time_.deltaT().value())
     
 {
 
@@ -76,6 +77,10 @@ agentWillForceScheduled::agentWillForceScheduled
     if (propsDict_.found("initialTimeDelay"))
     {
         initialTimeDelay_ = readScalar(propsDict_.lookup("initialTimeDelay"));
+    }
+    else
+    {
+	initialTimeDelay_ = 0;
     }
     
 /*    panic_ = false;
@@ -108,38 +113,83 @@ void agentWillForceScheduled::initialConfiguration()
 
 void agentWillForceScheduled::force(agent* p)
 {
+        
+//     if((time_.timeOutputValue() - initialTime_) > initialTimeDelay_)
+//     {
+//         if(findIndex(agentIds_, p->id()) != -1)
+//         {
+//             
+//             if(p->t() == 0.0)
+//             {  
+//                 vector n = p->d() - p->position();
+//                 n /= mag(n);
+//                 
+//                 p->f() += (p->desiredSpeed()*n - p->v())*p->mass() / tau_; // MAKE SURE n is UNIT vector
+//                 
+// //                 if(panic_)
+// //                 {
+// //                     if(mag(p->f()) < smallForce_)
+// //                     {
+// //                         Info << "force = " << mag(p->f()) << endl;
+// //                         
+// //                         p->f() = n*forceMag_;
+// //                     }
+// //                 }
+// //                 if(p->trackingNumber() == 75 )
+// //                 {
+// //                     Info << "75, force = " <<  p->f() << endl;
+// //                 }
+//             }
+//         }
+//     }
+//     else
+//     {
+//         p->v() = vector::zero;
+//     }
+    
+    
+//     Info << "deltaT_= " << deltaT_ << endl;
+    
     if((time_.timeOutputValue() - initialTime_) > initialTimeDelay_)
     {
         if(findIndex(agentIds_, p->id()) != -1)
         {
             
-            if(p->t() == 0.0)
+            if(p->t() <= 0.0)
             {  
                 vector n = p->d() - p->position();
                 n /= mag(n);
                 
-                p->f() += (p->desiredSpeed()*n - p->v())*p->mass() / tau_; // MAKE SURE n is UNIT vector
-                
-//                 if(panic_)
-//                 {
-//                     if(mag(p->f()) < smallForce_)
-//                     {
-//                         Info << "force = " << mag(p->f()) << endl;
-//                         
-//                         p->f() = n*forceMag_;
-//                     }
-//                 }
-//                 if(p->trackingNumber() == 75 )
-//                 {
-//                     Info << "75, force = " <<  p->f() << endl;
-//                 }
+                p->f() += (p->desiredSpeed()*n - p->v())*p->mass() / tau_;
             }
+            else
+	    {
+// 		p->v() = vector::zero;
+// 		p->t() -=deltaT_;
+// 		Info << "p->(t) = " << p->t() << endl;
+	    }
         }
     }
     else
     {
-        p->v() = vector::zero;
+//         p->v() = vector::zero;
+	
+	if ((time_.timeOutputValue() - initialTime_) <= 0 && initialTimeDelay_ > 0)
+	{
+	    scalar uniformTimeDelay = initialTimeDelay_ + (30-initialTimeDelay_)*cloud_.rndGen().scalar01();
+	    p->t() = uniformTimeDelay;
+	    Info << "p->(t) = " << p->t() << endl;
+	}
+	
+// 	p->t() -= 0.5*deltaT_;
+// 	Info << "p->(t) = " << p->t() << endl;
+	
     }
+    
+    
+    
+    
+    
 }
 
 void agentWillForceScheduled::newForce()
