@@ -23,21 +23,21 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    hogmanayControl
+    hogmanayControlRoseStreet
 
 Description
     Add agents to a box based on a known flux 
     Not parallelised
 
 SourceFiles
-    hogmanayControlI.H
-    hogmanayControl.C
-    hogmanayControlIO.C
+    hogmanayControlRoseStreetI.H
+    hogmanayControlRoseStreet.C
+    hogmanayControlRoseStreetIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef hogmanayControl_H
-#define hogmanayControl_H
+#ifndef hogmanayControlRoseStreet_H
+#define hogmanayControlRoseStreet_H
 
 #include "agentController.H"
 #include "vector.H"
@@ -53,10 +53,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class hogmanayControl Declaration
+                           Class hogmanayControlRoseStreet Declaration
 \*---------------------------------------------------------------------------*/
 
-class hogmanayControl
+class hogmanayControlRoseStreet
 :
 	public agentController
 {
@@ -88,10 +88,12 @@ private:
         
         scalar tau_;
 
-        scalar fracEvac_;
-//         scalar frac2_;
-        scalar fracV_;            
+        // waiting time
         scalar fracW_;
+        scalar fracV_;
+        scalar fracEvac_;
+//         scalar frac3_;            
+        
         
         // borders 
         
@@ -116,13 +118,12 @@ private:
         scalar XRight_;
         scalar XLeft_;
         
-        
         // searchTime 
         scalar fireworkTime_;
         scalar evacuateTime_;
-        scalar deltaT_;
-        scalar resetTime_;
         scalar patienceTime_;
+        scalar deltaT_;
+        
         // throwing boxes 
         
 //         List<boundedBox> boxes_;
@@ -151,17 +152,19 @@ private:
         (
             agent* p,
             const vector& willForce
-        );
+        );    
+        
+
         
 public:
 
     //- Runtime type information
-    TypeName("hogmanayControl");
+    TypeName("hogmanayControlRoseStreet");
 
     // Constructors
 
         //- Construct from components
-        hogmanayControl
+        hogmanayControlRoseStreet
         (
             Time& t,
             agentCloud& cloud,
@@ -170,7 +173,7 @@ public:
 
     // Destructor
 
-        ~hogmanayControl();
+        ~hogmanayControlRoseStreet();
 
 
     // Member Functions

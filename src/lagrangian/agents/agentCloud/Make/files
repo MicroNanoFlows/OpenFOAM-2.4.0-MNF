@@ -74,6 +74,8 @@ controllers/derived/debuggerAgent/debuggerAgent.C
 controllers/derived/jamaratControl/jamaratControl.C
 controllers/derived/hogmanayControl/hogmanayControl.C
 controllers/derived/laneFormationControl/laneFormationControl.C
+controllers/derived/hogmanayControlRoseStreet/hogmanayControlRoseStreet.C
+controllers/derived/hogmanayControlRoseStreetUniDir/hogmanayControlRoseStreetUniDir.C
 
 /* borders */
 
