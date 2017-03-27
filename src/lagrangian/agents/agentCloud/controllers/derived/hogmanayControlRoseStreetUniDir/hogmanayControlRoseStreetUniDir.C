@@ -155,7 +155,7 @@ hogmanayControlRoseStreetUniDir::hogmanayControlRoseStreetUniDir
 //     X2_ = readScalar(propsDict_.lookup("X2")); 
 //     X3_ = readScalar(propsDict_.lookup("X3")); 
 //     
-    
+    YMid_ = readScalar(propsDict_.lookup("YMid"));    
     Y_ = readScalar(propsDict_.lookup("Y"));
     YMax_ = readScalar(propsDict_.lookup("YMax"));
     XRight_ = readScalar(propsDict_.lookup("XRight"));
