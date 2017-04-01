@@ -73,7 +73,7 @@ void velocityVerlet::init()
     cloud_.ob().initialConfig();        
     cloud_.s().initialConfig();
     
-    cloud_.tracker().track();
+//     cloud_.tracker().track();
     
     // initial force
     clearLagrangianFields();
@@ -99,7 +99,7 @@ void velocityVerlet::evolve()
     
     cloud_.move();
 
-    cloud_.tracker().track();
+//     cloud_.tracker().track();
     
     cloud_.buildCellOccupancy();
 

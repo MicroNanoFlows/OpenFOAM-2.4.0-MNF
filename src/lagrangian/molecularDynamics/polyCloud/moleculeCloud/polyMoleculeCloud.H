@@ -55,7 +55,7 @@ SourceFiles
 #include "potentials.H" 
 #include "constantMoleculeProperties.H"
 #include "polyIntegrators.H"
-
+#include "polyTracker.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -111,6 +111,8 @@ private:
         //- interaction particle list
         List<DynamicList<polyMolecule*> > ipl_;
         
+        polyTracker tracker_;
+                
         clockTimer clock_;
 
 
@@ -297,6 +299,10 @@ public:
             inline polyFaceTracker& tracker();
             inline trackingNumber& moleculeTracking();
             inline cellInteractions<polyMolecule>& il();
+            
+            inline const polyTracker& molTracker() const;     
+            inline polyTracker& molTracker();  
+            
             inline clockTimer& clock();
             
     // Member Operators

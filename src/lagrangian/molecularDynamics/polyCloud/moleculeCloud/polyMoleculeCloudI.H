@@ -738,15 +738,29 @@ inline Foam::polyFaceTracker& Foam::polyMoleculeCloud::tracker()
     return trackingInfo_;
 }
 
+inline Foam::trackingNumber& Foam::polyMoleculeCloud::moleculeTracking()
+{
+    return moleculeTracking_;
+}
+
+inline const Foam::polyTracker& Foam::polyMoleculeCloud::molTracker() const
+{
+    return tracker_;
+}
+
+inline Foam::polyTracker& Foam::polyMoleculeCloud::molTracker()  
+{
+    return tracker_;
+}
+
 inline Foam::cellInteractions<Foam::polyMolecule>& Foam::polyMoleculeCloud::il()
 {
     return iL_;
 }
 
-inline Foam::trackingNumber& Foam::polyMoleculeCloud::moleculeTracking()
-{
-    return moleculeTracking_;
-}
+
+
+
 
 inline Foam::clockTimer& Foam::polyMoleculeCloud::clock()
 {

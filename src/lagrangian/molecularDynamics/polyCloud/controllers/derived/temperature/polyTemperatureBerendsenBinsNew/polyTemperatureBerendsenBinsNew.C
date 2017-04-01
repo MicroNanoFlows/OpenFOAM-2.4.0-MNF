@@ -71,8 +71,20 @@ polyTemperatureBerendsenBinsNew::polyTemperatureBerendsenBinsNew
 //     singleValueController() = true;
 
 
-    temperature_ = readScalar(propsDict_.lookup("temperature"));
 
+
+    if (propsDict_.found("temperatureK"))
+    {
+        temperature_ = readScalar(propsDict_.lookup("temperatureK"));
+        temperature_ /= molCloud_.redUnits().refTemp();
+        
+        Info << "Temperature = " << temperature_ << endl;
+    }
+    else 
+    {
+        temperature_ = readScalar(propsDict_.lookup("temperature"));        
+    }
+    
     if (propsDict_.found("componentControl"))
     {
         componentControl_ = Switch(propsDict_.lookup("componentControl"));

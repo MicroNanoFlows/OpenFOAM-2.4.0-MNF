@@ -26,7 +26,7 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "polyBCC.H"
+#include "simpleLattice.H"
 #include "addToRunTimeSelectionTable.H"
 #include "IFstream.H"
 #include "graph.H"
@@ -36,22 +36,24 @@ Description
 namespace Foam
 {
 
-defineTypeNameAndDebug(polyBCC, 0);
+defineTypeNameAndDebug(simpleLattice, 0);
 
-addToRunTimeSelectionTable(polyConfiguration, polyBCC, dictionary);
+addToRunTimeSelectionTable(polyConfiguration, simpleLattice, dictionary);
 
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-polyBCC::polyBCC
+simpleLattice::simpleLattice
 (
     polyMoleculeCloud& molCloud,
     const dictionary& dict
+//     const word& name
 )
 :
-    polyConfiguration(molCloud, dict)
+    polyConfiguration(molCloud, dict/*, name*/)
+//     propsDict_(dict.subDict(typeName + "Properties"))
 {
 
 }
@@ -60,7 +62,7 @@ polyBCC::polyBCC
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-polyBCC::~polyBCC()
+simpleLattice::~simpleLattice()
 {}
 
 
@@ -68,7 +70,7 @@ polyBCC::~polyBCC()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 
-void polyBCC::setInitialConfiguration()
+void simpleLattice::setInitialConfiguration()
 {
     label initialSize = molCloud_.size();
 
@@ -88,8 +90,14 @@ void polyBCC::setInitialConfiguration()
         temperature = readScalar(mdInitialiseDict_.lookup("temperature"));        
     }    
     
-    const vector bulkVelocity(mdInitialiseDict_.lookup("bulkVelocity"));
+    vector bulkVelocity = vector::zero;
 
+    if (mdInitialiseDict_.found("bulkVelocity"))
+    {
+        bulkVelocity = mdInitialiseDict_.lookup("bulkVelocity");
+    }
+    
+    
     const word molIdName(mdInitialiseDict_.lookup("molId")); 
     const List<word>& idList(molCloud_.cP().molIds());
 
@@ -133,38 +141,32 @@ void polyBCC::setInitialConfiguration()
     
     setBoundBox(mdInitialiseDict_, bb, "boundBox");
 
-    scalar s(readScalar(mdInitialiseDict_.lookup("unitCellSize")));
+    label Nx = readLabel(mdInitialiseDict_.lookup("Nx"));
+    label Ny = readLabel(mdInitialiseDict_.lookup("Ny"));    
+    label Nz = readLabel(mdInitialiseDict_.lookup("Nz"));    
 
-    label nX = (bb.span().x()/s) + 1;
-    label nY = (bb.span().y()/s) + 1;
-    label nZ = (bb.span().z()/s) + 1;
+    scalar DX = bb.span().x()/Nx;
+    scalar DY = bb.span().y()/Ny;
+    scalar DZ = bb.span().z()/Nz;
     
     // basis points for bcc lattice which includes 2 sites
     label nAtoms= 0;
 
     DynamicList<vector> positions;
     
-    for (label k = 0; k < nX; k++)
+    for (label k = 0; k < Nx; k++)
     {
-        for (label j = 0; j < nY; j++)
+        for (label j = 0; j < Ny; j++)
         {
-            for (label i = 0; i < nZ; i++)
-            {
-                vector p1 = vector(1, 0, 0)*k*s + vector(0, 1, 0)*j*s + vector(0, 0, 1)*i*s + bb.min();
-                vector p2 = vector(1, 0, 0)*k*s + vector(1, 0, 0)*s*0.5 + 
-                            vector(0, 1, 0)*j*s + vector(0, 1, 0)*s*0.5 +
-                            vector(0, 0, 1)*i*s + vector(0, 0, 1)*s*0.5
-                            + bb.min();
-                            
-                if(bb.contains(p1))
+            for (label i = 0; i < Nz; i++)
+            {            
+                vector pos = bb.min() + vector(1, 0, 0)*i*DX +  vector(1, 0, 0)*DX*0.5 + 
+                                    vector(0, 1, 0)*j*DY +  vector(0, 1, 0)*DY*0.5 +
+                                    vector(0, 0, 1)*k*DZ +  vector(0, 0, 1)*DZ*0.5;      
+                                    
+                if(bb.contains(pos))
                 {
-                    positions.append(p1);
-                    nAtoms++;
-                }
-                
-                if(bb.contains(p2))
-                {
-                    positions.append(p2);
+                    positions.append(pos);
                     nAtoms++;
                 }
             }
@@ -190,7 +192,6 @@ void polyBCC::setInitialConfiguration()
                 << "Number of molecules in lattice  = " << positions.size()
                 << ", number of molecules to allow are lower, N = " << N
                 << exit(FatalError);            
-
         }
         
         Info << "Target number of molecules to insert = " << N << endl;
@@ -496,7 +497,7 @@ void polyBCC::setInitialConfiguration()
     }
 }
 
-void polyBCC::setBoundBox
+void simpleLattice::setBoundBox
 (
     const dictionary& propsDict,
     boundedBox& bb,
@@ -510,9 +511,6 @@ void polyBCC::setBoundBox
 
     bb.resetBoundedBox(startPoint, endPoint);
 }
-
-
-
 
 } // End namespace Foam
 

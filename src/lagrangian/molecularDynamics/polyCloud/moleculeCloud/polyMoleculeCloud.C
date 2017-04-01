@@ -689,6 +689,7 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     cyclics_(t, mesh_, -1), 
     iL_(mesh, rU, cyclics_, p_.rCutMax(), "poly"),
     ipl_(mesh.nCells()),
+    tracker_(*this),
 	clock_(t, "evolve", true)
 {
     polyMolecule::readFields(*this);
@@ -705,11 +706,14 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     updateTrackingNumbersAfterRead();
     p_.pairPots().initialiseExclusionModels();
 
-    int_.integrator()->init();
+
     
     //check and remove high energy overalps
     checkForOverlaps();
+    
 //     controllers_.initialConfig();
+
+    int_.integrator()->init();
     
     buildCellOccupancy();
 
@@ -760,6 +764,7 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     cyclics_(t, mesh_, -1),
     iL_(mesh, rU, cyclics_, p_.rCutMax(), "poly"),
     ipl_(mesh.nCells()),
+    tracker_(*this),    
 	clock_(t, "evolve", true)
 {
     polyMolecule::readFields(*this);

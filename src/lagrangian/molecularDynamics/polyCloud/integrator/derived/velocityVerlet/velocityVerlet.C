@@ -68,7 +68,7 @@ velocityVerlet::~velocityVerlet()
 
 void velocityVerlet::init()
 {
-    
+    molCloud_.molTracker().track();       
 }
 
 void velocityVerlet::evolve()
@@ -77,6 +77,7 @@ void velocityVerlet::evolve()
     updateVelocity(mesh_.time().deltaT().value());
     molCloud_.controlBeforeMove();
     molCloud_.move();
+    molCloud_.molTracker().track();
     molCloud_.controlAfterMove();
     molCloud_.buildCellOccupancy();
     molCloud_.controlBeforeForces();

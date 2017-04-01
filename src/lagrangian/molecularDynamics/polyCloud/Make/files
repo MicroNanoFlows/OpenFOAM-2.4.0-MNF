@@ -100,6 +100,7 @@ initialiseMolecules/derived/cilium/cilium.C
 initialiseMolecules/derived/ciliumIC/ciliumIC.C
 initialiseMolecules/derived/grapheneHydrogenFunctionalisation/grapheneHydrogenFunctionalisation.C
 initialiseMolecules/derived/freezeMolecules/freezeMolecules.C
+initialiseMolecules/derived/simpleLattice/simpleLattice.C
 
 /* Deletion */
 
@@ -243,5 +244,11 @@ boundaries/derived/cyclicBoundaries/polyStandardCyclic/polyStandardCyclic.C
 
 boundaries/derived/patchBoundaries/polySpecularPatch/polySpecularPatch.C
 boundaries/derived/patchBoundaries/polyDeletionPatch/polyDeletionPatch.C
+
+/* Primitives */
+primitives/polyTracker/polyTracker.C
+
+
+
 
 LIB = $(FOAM_LIBBIN)/libpolyCloud
