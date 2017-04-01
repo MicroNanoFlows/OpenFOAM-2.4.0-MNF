@@ -336,6 +336,8 @@ polyDensityRadialNew::~polyDensityRadialNew()
 
 void polyDensityRadialNew::createField()
 {}
+void  polyDensityRadialNew::afterForce()
+{}
 
 List<label> polyDensityRadialNew::isPointWithinBin
 (

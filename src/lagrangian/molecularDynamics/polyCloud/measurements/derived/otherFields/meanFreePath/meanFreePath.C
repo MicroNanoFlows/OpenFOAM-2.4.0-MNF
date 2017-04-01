@@ -66,7 +66,7 @@ meanFreePath::meanFreePath
 {
     dCol_ = readScalar(propsDict_.lookup("collisionDistance"));
     
-    
+    dCol_ /= molCloud_.redUnits().refLength();
    // choose molecule ids to sample
 
     molIds_.clear();
@@ -79,6 +79,16 @@ meanFreePath::meanFreePath
 
     molIds_ = ids.molIds();
     
+    testInitialTimeScale_ = false;
+
+    if (propsDict_.found("testInitialTimeScale"))
+    {
+        testInitialTimeScale_ = Switch(propsDict_.lookup("testInitialTimeScale"));
+    }
+    
+    nameFile1_ = "MFP_"+fieldName_+"_collectorOfFreePaths.txt";
+    nameFile2_ = "MFP_"+fieldName_+"_freePaths.txt";
+    nameFile3_ = "MFP_"+fieldName_+"_nCollisions.txt";
     
     deltaT_ = time_.deltaT().value();    
 }
@@ -93,24 +103,79 @@ meanFreePath::~meanFreePath()
 
 void meanFreePath::createField()
 {
-    label nTNs = molCloud_.moleculeTracking().getMaxTrackingNumber();
+    label largestTN = 0;
     
-    Info << "number of tracking numbers = " << nTNs << endl;
-    listSize_ = nTNs;
+    IDLList<polyMolecule>::iterator mol(molCloud_.begin());
+    
+    for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
+    {
+        label tNI = mol().trackingNumber();
+        
+        if(tNI > largestTN)
+        {
+            largestTN = tNI;
+        }
+    }
+    
+    if (Pstream::parRun())
+    {
+        //- sending
+        for (int p = 0; p < Pstream::nProcs(); p++)
+        {
+            if(p != Pstream::myProcNo())
+            {
+                const int proc = p;
+                {
+                    OPstream toNeighbour(Pstream::blocking, proc);
+                    toNeighbour << largestTN;
+                }
+            }
+        }
+    
+        //- receiving
+        for (int p = 0; p < Pstream::nProcs(); p++)
+        {
+            if(p != Pstream::myProcNo())
+            {
+                label largestTNProc;
+    
+                const int proc = p;
+                {
+                    IPstream fromNeighbour(Pstream::blocking, proc);
+                    fromNeighbour >> largestTNProc;
+                }
+    
+                if(largestTNProc > largestTN)
+                {
+                    largestTN = largestTNProc;
+                }
+            }
+        }
+    }
+    
+    Info << "number of tracking numbers = " << largestTN << endl;
+    
+    listSize_ = largestTN+1;
     
     freePaths_.setSize(listSize_, 0.0);
     Rold_.setSize(listSize_, 0.0);
     collectorOfFreePaths_.setSize(listSize_);
-    collided_.setSize(listSize_, false);
+    nCollisions_.setSize(listSize_, 0.0);
     setRolds();
+    nMols_ = molCloud_.nMols();
+    
+    readFromStorage();
 }
+
+void meanFreePath::calculateField()
+{}
 
 void meanFreePath::setRolds()
 {
     Rold_ = 0.0;
     
     {
-        IDLList<agent>::iterator mol(molCloud_.begin());
+        IDLList<polyMolecule>::iterator mol(molCloud_.begin());
         
         for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
         {
@@ -131,59 +196,91 @@ void meanFreePath::setRolds()
     }
 }
 
-void meanFreePath::calculateField()
+
+void meanFreePath::afterForce()
 {
-    // free paths 
-    
-    List<scalar> freePaths.setSize(listSize_, 0.0);
-    
+    // measure free paths 
     {
-        IDLList<agent>::iterator mol(molCloud_.begin());
+        List<scalar> freePaths(listSize_, 0.0);
+        
+        IDLList<polyMolecule>::iterator mol(molCloud_.begin());
         
         for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
         {
             label tNI = mol().trackingNumber();
             
-            if(mol().R() > dCol_) // free path
+            if(mol().R() > dCol_)
             {
-                freePaths[tNI] += mol().v()*deltaT_;
+                freePaths[tNI] += mag(mol().v()*deltaT_);
             }
         }
-    }
-    
-    // parallel comms 
+        
+        // parallel comms 
 
-    forAll(freePaths, i)
-    {
-        if(Pstream::parRun())
+        forAll(freePaths, i)
         {
-            reduce(freePaths[i], sumOp<scalar>());
+            if(Pstream::parRun())
+            {
+                reduce(freePaths[i], sumOp<scalar>());
+            }
+            
+            freePaths_[i] += freePaths[i];
         }
     }
     
-    freePaths_ += freePaths;
-    
     // check for collisions
-    collided_ = false;
-    
     {
-        IDLList<agent>::iterator mol(molCloud_.begin());
+        List<scalar> freePaths(listSize_, 0.0);
+        
+        IDLList<polyMolecule>::iterator mol(molCloud_.begin());
         
         for (mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
         {
             label tNI = mol().trackingNumber();
             
-            if( (mol().R() < dCol_) && (Rold_[tNI] > dCol_) ) // collision
+            if( (mol().R() < dCol_) && (Rold_[tNI] > dCol_) ) // collision criteria
             {
-                collided_[tNI] = true;
+                freePaths[tNI] = freePaths_[tNI];
+            }
+        }
+        
+        forAll(freePaths, i)
+        {
+            if(Pstream::parRun())
+            {
+                reduce(freePaths[i], sumOp<scalar>());
+            }
+        }
+        
+        forAll(freePaths, i)
+        {
+            if(freePaths[i] > 0.0)
+            {
+                collectorOfFreePaths_[i].append(freePaths[i]); 
+                nCollisions_[i] += 1.0;
             }
         }
     } 
     
     setRolds();
     
-    
-    Info << "av number of collisions per molecule = " << << endl;
+    if(testInitialTimeScale_)
+    {
+        bool allMolsCollided = true;
+        
+        forAll(nCollisions_, i)
+        {
+            if(nCollisions_[i] < 1.0)
+            {
+                allMolsCollided = false;
+            }
+        }
+        
+        if(allMolsCollided)
+        {
+            Info << " ALL MOLECULES HAVE COLLIDED AT LEAST ONCE " << endl;
+        }
+    }
 }
 
 void meanFreePath::writeField()
@@ -192,49 +289,101 @@ void meanFreePath::writeField()
 
     if(runTime.outputTime())
     {
+        writeToStorage();
+    }
+}
 
-        if(Pstream::master())
-        {
-
-            massFlux_.shrink();
-            scalarField timeField (massFlux_.size(), 0.0);
-            scalarField massFlux (massFlux_.size(), 0.0);
-            
-            massFlux.transfer(massFlux_);
-            massFlux_.clear();
-            
-            const scalar& deltaT = time_.time().deltaT().value();
-            
-            forAll(timeField, i)
-            {
-                timeField[timeField.size()-i-1]=runTime.timeOutputValue()-(deltaT*i);
-            }
-            
-            writeTimeData
-            (
-                casePath_,
-                "fluxZone_"+regionName_+"_"+fieldName_+"_M.xy",
-                timeField,
-                massFlux,
-                true
-            );
-
-
-            const reducedUnits& rU = molCloud_.redUnits();
+void meanFreePath::writeToStorage()
+{
+    fileName pathName(time_.path()/time_.timeName()/"uniform"/"poly");
     
-            if(rU.outputSIUnits())
-            {
-                writeTimeData
-                (
-                    casePath_,
-                    "fluxZone_"+regionName_+"_"+fieldName_+"_M_SI.xy",
-                    timeField*rU.refTime(),
-                    massFlux*rU.refMassFlux(),
-                    true
-                );
-            }
+    {
+        OFstream file(pathName/nameFile1_);
+
+        if(file.good())
+        {
+            file << collectorOfFreePaths_ << endl;
+        }
+        else
+        {
+            FatalErrorIn("void meanFreePath::writeToStorage()")
+                << "Cannot open file " << file.name()
+                << abort(FatalError);
         }
     }
+    
+    {
+        OFstream file(pathName/nameFile2_);
+
+        if(file.good())
+        {
+            file << freePaths_ << endl;
+        }
+        else
+        {
+            FatalErrorIn("void meanFreePath::writeToStorage()")
+                << "Cannot open file " << file.name()
+                << abort(FatalError);
+        }
+    }
+    
+    {
+        OFstream file(pathName/nameFile3_);
+
+        if(file.good())
+        {
+            file << nCollisions_ << endl;
+        }
+        else
+        {
+            FatalErrorIn("void meanFreePath::writeToStorage()")
+                << "Cannot open file " << file.name()
+                << abort(FatalError);
+        }
+    }
+}
+
+void meanFreePath::readFromStorage()
+{
+    Info << "reading from storage" << endl;
+    
+    fileName pathName(time_.path()/time_.timeName()/"uniform"/"poly");
+    
+    {
+        IFstream file(pathName/nameFile1_);
+
+        bool goodFile = file.good();
+
+        if(goodFile)
+        {
+            file >> collectorOfFreePaths_;
+        }
+    }
+    {
+        IFstream file(pathName/nameFile2_);
+
+        bool goodFile = file.good();
+
+        if(goodFile)
+        {
+            file >> freePaths_;
+        }
+    }    
+    {
+        IFstream file(pathName/nameFile3_);
+
+        bool goodFile = file.good();
+
+        if(goodFile)
+        {
+            file >> nCollisions_;
+        }
+    }
+    
+//     Info << "collectorOfFreePaths = " << collectorOfFreePaths_ << endl;
+//     Info << "freePaths = " << freePaths_ << endl;
+//     Info << "nCollisions = " << nCollisions_ << endl;        
+    
 }
 
 void meanFreePath::measureDuringForceComputation

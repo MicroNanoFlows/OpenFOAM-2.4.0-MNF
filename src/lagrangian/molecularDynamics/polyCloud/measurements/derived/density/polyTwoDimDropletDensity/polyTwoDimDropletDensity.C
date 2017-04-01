@@ -248,6 +248,8 @@ label polyTwoDimDropletDensity::findBin(const scalar& r)
 void polyTwoDimDropletDensity::createField()
 {}
 
+void polyTwoDimDropletDensity::afterForce()
+{}
 
 void polyTwoDimDropletDensity::calculateField()
 {

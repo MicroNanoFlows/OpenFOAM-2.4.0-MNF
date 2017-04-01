@@ -144,7 +144,8 @@ polyMassFluxZone::~polyMassFluxZone()
 
 void polyMassFluxZone::createField()
 {}
-
+void polyMassFluxZone::afterForce()
+{}
 void polyMassFluxZone::calculateField()
 {
     

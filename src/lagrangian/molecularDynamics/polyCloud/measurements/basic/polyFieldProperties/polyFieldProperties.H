@@ -98,6 +98,8 @@ public:
 
         void createFields();
 
+        void afterForce();        
+        
         void calculateFields();
 
         void writeFields();

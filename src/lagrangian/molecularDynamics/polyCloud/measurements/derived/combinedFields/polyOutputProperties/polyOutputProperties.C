@@ -89,6 +89,8 @@ polyOutputProperties::~polyOutputProperties()
 void polyOutputProperties::createField()
 {}
 
+void polyOutputProperties::afterForce()
+{}
 
 void polyOutputProperties::calculateField()
 {

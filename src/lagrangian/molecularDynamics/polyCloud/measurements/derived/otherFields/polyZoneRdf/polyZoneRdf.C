@@ -182,7 +182,8 @@ void polyZoneRdf::createField()
 {
     
 }
-
+void polyZoneRdf::afterForce()
+{}
 void polyZoneRdf::evaluatePair
 (
     polyMolecule* molI,

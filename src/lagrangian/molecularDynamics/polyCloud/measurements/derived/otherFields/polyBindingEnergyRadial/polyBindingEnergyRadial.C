@@ -478,7 +478,8 @@ void polyBindingEnergyRadial::calculateField()
     }    
 
 }
-
+void polyBindingEnergyRadial::afterForce()
+{}
 
 void polyBindingEnergyRadial::writeToStorage()
 {

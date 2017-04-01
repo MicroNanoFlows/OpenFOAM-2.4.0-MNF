@@ -254,6 +254,9 @@ polyPropertiesZone::~polyPropertiesZone()
 void polyPropertiesZone::createField()
 {}
 
+void polyPropertiesZone::afterForce()
+{}
+
 void polyPropertiesZone::calculateField()
 {
     nAvTimeSteps_ += 1.0;

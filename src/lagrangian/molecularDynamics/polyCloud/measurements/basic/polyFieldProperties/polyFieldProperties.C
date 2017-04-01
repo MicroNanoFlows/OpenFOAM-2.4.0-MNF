@@ -165,10 +165,16 @@ void polyFieldProperties::createFields()
     }
 }
 
+void polyFieldProperties::afterForce()
+{
+    forAll(fields_, f)
+    {
+        fields_[f]->afterForce();
+    }
+}
+
 void polyFieldProperties::calculateFields()
 {
-	Info << "Calculate fields" << endl;
- 
     forAll(fields_, f)
     {
         fields_[f]->calculateField();

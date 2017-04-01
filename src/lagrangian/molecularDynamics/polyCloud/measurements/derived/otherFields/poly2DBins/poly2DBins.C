@@ -212,7 +212,8 @@ poly2DBins::~poly2DBins()
 void poly2DBins::createField()
 {
 }
-
+void poly2DBins::afterForce()
+{}
 
 void poly2DBins::calculateField()
 {

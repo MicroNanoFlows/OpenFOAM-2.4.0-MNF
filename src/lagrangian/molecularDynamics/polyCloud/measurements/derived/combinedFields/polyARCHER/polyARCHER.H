@@ -106,6 +106,8 @@ public:
         //- calculate field
         void calculateField();
 
+        void afterForce();
+        
         //- write field
         void writeField();
 

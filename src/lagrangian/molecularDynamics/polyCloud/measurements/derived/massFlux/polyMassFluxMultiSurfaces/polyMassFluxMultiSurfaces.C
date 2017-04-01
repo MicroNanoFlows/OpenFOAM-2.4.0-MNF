@@ -159,6 +159,9 @@ polyMassFluxMultiSurfaces::~polyMassFluxMultiSurfaces()
 void polyMassFluxMultiSurfaces::createField()
 {}
 
+void polyMassFluxMultiSurfaces::afterForce()
+{}
+
 //- call this function every time-step before the state and flux objects are cleaned
 void polyMassFluxMultiSurfaces::calculateField()
 {

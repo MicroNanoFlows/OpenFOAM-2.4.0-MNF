@@ -257,6 +257,9 @@ polyPropertiesZoneBounded::~polyPropertiesZoneBounded()
 void polyPropertiesZoneBounded::createField()
 {}
 
+void polyPropertiesZoneBounded::afterForce()
+{}
+
 void polyPropertiesZoneBounded::calculateField()
 {
     nAvTimeSteps_ += 1.0;

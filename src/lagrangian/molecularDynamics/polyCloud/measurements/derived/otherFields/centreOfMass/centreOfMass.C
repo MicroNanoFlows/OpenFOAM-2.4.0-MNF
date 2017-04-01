@@ -90,6 +90,8 @@ void centreOfMass::createField()
     calculateField();
 }
 
+void centreOfMass::afterForce()
+{}
 
 //- call this function every time-step before the state and flux objects are cleaned
 void centreOfMass::calculateField()

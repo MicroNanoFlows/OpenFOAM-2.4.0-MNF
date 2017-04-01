@@ -136,6 +136,10 @@ void polyARCHER::calculateField()
         outputTime();
     }
 }
+void polyARCHER::afterForce()
+{
+
+}
 
 void polyARCHER::writeField()
 {

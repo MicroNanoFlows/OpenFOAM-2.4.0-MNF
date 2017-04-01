@@ -314,6 +314,8 @@ void polyForceTwoMolecules::calculateField()
         timeIndex_++;
     }
 }
+void polyForceTwoMolecules::afterForce()
+{}
 
 void polyForceTwoMolecules::writeField()
 {

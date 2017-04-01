@@ -113,6 +113,9 @@ void polyInstantPropertiesZoneBounded::createField()
  
 }
 
+void polyInstantPropertiesZoneBounded::afterForce()
+{}
+
 void polyInstantPropertiesZoneBounded::calculateField()
 {
     scalar mols = 0.0;

@@ -418,6 +418,8 @@ void polyPDB::writeInZone(List<labelField>& molIds, List<vectorField>& sites)
         molIds[myProc].transfer(moleculeIds);
     }
 }
+void polyPDB::afterForce()
+{}
 
 void polyPDB::write()
 {

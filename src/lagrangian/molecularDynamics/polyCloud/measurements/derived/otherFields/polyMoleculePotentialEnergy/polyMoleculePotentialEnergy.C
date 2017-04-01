@@ -150,6 +150,8 @@ void polyMoleculePotentialEnergy::calculateField()
         cellI_ = -1;
     }
 }
+void polyMoleculePotentialEnergy::afterForce()
+{}
 
 void polyMoleculePotentialEnergy::writeField()
 {}

@@ -173,6 +173,8 @@ measurements/derived/otherFields/polyDensityRadialNew/polyDensityRadialNew.C
 measurements/derived/otherFields/polyBindingEnergyRadial/polyBindingEnergyRadial.C
 measurements/derived/otherFields/centreOfMass/centreOfMass.C
 measurements/derived/otherFields/polyForceZone/polyForceZone.C
+measurements/derived/otherFields/meanFreePath/meanFreePath.C
+
 
 /*  - GREEN KUBO  */
 measurements/derived/greenKubo/axialSelfDiffusion/axialSelfDiffusion.C

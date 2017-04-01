@@ -1247,6 +1247,18 @@ void Foam::polyMoleculeCloud::calculatePairForces()
 
 }
 
+Foam::label Foam::polyMoleculeCloud::nMols()
+{
+    label nMols = this->size();
+    
+    if(Pstream::parRun())
+    {
+        reduce(nMols, sumOp<label>());
+    }
+    
+    return nMols;
+}
+
 void Foam::polyMoleculeCloud::writeXYZ(const fileName& fName) const
 {
     OFstream os(fName);

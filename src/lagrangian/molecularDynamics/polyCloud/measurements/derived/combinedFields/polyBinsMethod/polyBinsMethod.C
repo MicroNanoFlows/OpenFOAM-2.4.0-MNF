@@ -291,6 +291,9 @@ polyBinsMethod::~polyBinsMethod()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+void polyBinsMethod::afterForce()
+{}
+
 void polyBinsMethod::createField()
 {
     Info << "Initialising polyBinsMethod fields" << endl;

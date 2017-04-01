@@ -207,6 +207,8 @@ void poly2DBinsSites::createField()
 {
 }
 
+void poly2DBinsSites::afterForce()
+{}
 
 void poly2DBinsSites::calculateField()
 {

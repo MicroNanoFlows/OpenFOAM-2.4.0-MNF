@@ -148,6 +148,8 @@ public:
         //- calculate field
         virtual void calculateField() = 0;
 
+        virtual void afterForce() = 0;
+        
         //- write field
         virtual void writeField() = 0;
 

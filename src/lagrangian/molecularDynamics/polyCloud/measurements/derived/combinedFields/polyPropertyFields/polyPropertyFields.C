@@ -212,6 +212,9 @@ polyPropertyFields::~polyPropertyFields()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+void polyPropertyFields::afterForce()
+{}
+
 //- initial condition
 void polyPropertyFields::createField()
 {

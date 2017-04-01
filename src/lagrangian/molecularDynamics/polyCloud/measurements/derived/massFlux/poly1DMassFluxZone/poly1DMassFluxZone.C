@@ -113,6 +113,8 @@ poly1DMassFluxZone::~poly1DMassFluxZone()
 void poly1DMassFluxZone::createField()
 {}
 
+void poly1DMassFluxZone::afterForce()
+{}
 
 void poly1DMassFluxZone::calculateField()
 {

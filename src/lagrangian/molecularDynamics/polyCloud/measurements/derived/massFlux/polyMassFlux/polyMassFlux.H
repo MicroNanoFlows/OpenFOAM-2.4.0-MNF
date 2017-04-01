@@ -121,9 +121,12 @@ private:
 
         //- create initial field
         void createField();
-
+        
+        void afterForce();
+        
         //- calculate field
         void calculateField();
+        
         void measureDuringForceComputation
         (
             polyMolecule* molI,

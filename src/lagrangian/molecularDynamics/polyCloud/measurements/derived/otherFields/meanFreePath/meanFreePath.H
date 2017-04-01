@@ -26,7 +26,9 @@ Class
     meanFreePath
 
 Description
-
+    This tool works well if you initialise a set of molecules with tracking Numbers
+    that range between 0 and N. In the case of doing complex things,  like using
+    FADE, I would recommend you reinitiliase the trackingNumbers.
 
 SourceFiles
     meanFreePathI.H
@@ -74,26 +76,34 @@ private:
 
         List<label> molIds_;
         
+        fileName nameFile1_;
+        fileName nameFile2_;        
+        fileName nameFile3_;           
+        
         // collision distance
         scalar dCol_;
         
         // MD timestep
         scalar deltaT_;
         
-        label listSize_;
+        label nMols_;
         
-//         List<label> trackingNumbers_;
+        label listSize_;
         
         List<DynamicList<scalar> > collectorOfFreePaths_;        
         List<scalar> freePaths_;
+        List<scalar> nCollisions_;        
         List<scalar> Rold_;
-        List<bool> collided_;
 
+        bool testInitialTimeScale_;
         
     // Private Member Functions
 
         void setRolds();
         
+        void readFromStorage();
+        
+        void writeToStorage();
         
 public:
 
@@ -104,16 +114,16 @@ public:
 
         //- Construct from components
         meanFreePath
-		(
+        (
             Time& t,
             const polyMesh& mesh,
             polyMoleculeCloud& molCloud,
             const dictionary& dict
-		);
+        );
 
     // Destructor
 
- 		~meanFreePath();
+        ~meanFreePath();
 
 
     // Member Functions
@@ -121,6 +131,8 @@ public:
         //- create initial field
         void createField();
 
+        void afterForce();
+        
         //- calculate field
         void calculateField();
 
@@ -142,7 +154,7 @@ public:
 
         //- write field
         void writeField();
-}; 		
+};
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

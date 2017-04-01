@@ -411,6 +411,8 @@ void polyInstantBinsMethod::calculateField()
     
 }
 
+void polyInstantBinsMethod::afterForce()
+{}
 
 void polyInstantBinsMethod::writeField()
 {

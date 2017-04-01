@@ -160,6 +160,8 @@ polyForceZone::~polyForceZone()
 
 void polyForceZone::createField()
 {}
+void polyForceZone::afterForce()
+{}
 
 void polyForceZone::calculateField()
 {

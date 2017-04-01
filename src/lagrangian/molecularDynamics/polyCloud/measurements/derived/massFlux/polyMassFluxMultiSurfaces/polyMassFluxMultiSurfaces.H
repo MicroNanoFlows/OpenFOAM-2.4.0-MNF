@@ -132,6 +132,8 @@ private:
         //- create initial field
         void createField();
 
+        void afterForce();
+        
         //- calculate field
         void calculateField();
 

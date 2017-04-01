@@ -85,6 +85,7 @@ void velocityVerlet::evolve()
     molCloud_.calculateForce();
     molCloud_.updateAcceleration();
     molCloud_.controlAfterForces();
+    molCloud_.fields().afterForce();
     updateVelocity(mesh_.time().deltaT().value());
     molCloud_.controlAfterVelocity();
     molCloud_.postTimeStep();

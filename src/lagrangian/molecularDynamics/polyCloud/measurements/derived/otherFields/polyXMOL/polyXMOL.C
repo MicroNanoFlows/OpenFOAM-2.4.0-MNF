@@ -115,6 +115,8 @@ void polyXMOL::createField()
 
     Info   << "sites to exclude: " << excludeSites_ << endl;
 }
+void polyXMOL::afterForce()
+{}
 
 void polyXMOL::calculateField()
 {}

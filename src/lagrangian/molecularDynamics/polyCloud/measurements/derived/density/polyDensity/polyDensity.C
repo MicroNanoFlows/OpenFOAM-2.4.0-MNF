@@ -120,6 +120,10 @@ polyDensity::~polyDensity()
 void polyDensity::createField()
 {
 }
+
+void polyDensity::afterForce()
+{}
+        
 //- call this function every time-step before the state and flux objects are cleaned
 void polyDensity::calculateField()
 {

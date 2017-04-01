@@ -241,6 +241,8 @@ label polyDensityMOB2DRadialCOM::findBin(const scalar& r)
 void polyDensityMOB2DRadialCOM::createField()
 {}
 
+void polyDensityMOB2DRadialCOM::afterForce()
+{}
 
 void polyDensityMOB2DRadialCOM::calculateField()
 {

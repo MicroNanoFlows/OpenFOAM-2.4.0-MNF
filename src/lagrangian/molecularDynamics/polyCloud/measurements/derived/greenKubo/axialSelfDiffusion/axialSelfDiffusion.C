@@ -308,6 +308,9 @@ void axialSelfDiffusion::setVelocities()
     }     
 }
 
+void axialSelfDiffusion::afterForce()
+{}
+
 void axialSelfDiffusion::calculateField()
 {
     if(nS_ > nSteps_)

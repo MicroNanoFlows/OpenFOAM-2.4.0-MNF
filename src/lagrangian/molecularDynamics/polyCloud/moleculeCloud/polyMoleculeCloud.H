@@ -92,7 +92,6 @@ private:
         //- measurement fields
         polyFieldProperties fields_; 
         
-        
         //- boundaries
         polyBoundaries boundaries_;
         
@@ -276,7 +275,7 @@ public:
         void writeReferredCloud();
         
         // Access
-
+            label nMols();
             label nSites() const;
             inline const polyMesh& mesh() const;
             inline const potentials& pot() const;
