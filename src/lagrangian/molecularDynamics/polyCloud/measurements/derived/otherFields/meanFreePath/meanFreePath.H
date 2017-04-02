@@ -79,6 +79,10 @@ private:
         fileName nameFile1_;
         fileName nameFile2_;        
         fileName nameFile3_;           
+        fileName nameFile4_; 
+        fileName nameFile5_; 
+        fileName nameFile6_; 
+        fileName nameFile7_; 
         
         // collision distance
         scalar dCol_;
@@ -90,11 +94,18 @@ private:
         
         label listSize_;
         
-        List<DynamicList<scalar> > collectorOfFreePaths_;        
+        List<DynamicList<scalar> > collectorOfFreePaths_;
         List<scalar> freePaths_;
-        List<scalar> nCollisions_;        
+        List<scalar> nCollisions_;
         List<scalar> Rold_;
 
+        // points at which collisions occur
+        List<DynamicList<scalar> > collPosX_;
+        List<DynamicList<scalar> > collPosY_;
+        List<DynamicList<scalar> > collPosZ_;
+        
+        List<DynamicList<scalar> > collTimes_;
+        
         bool testInitialTimeScale_;
         
     // Private Member Functions

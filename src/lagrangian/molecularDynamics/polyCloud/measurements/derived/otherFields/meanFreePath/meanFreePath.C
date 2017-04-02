@@ -89,6 +89,10 @@ meanFreePath::meanFreePath
     nameFile1_ = "MFP_"+fieldName_+"_collectorOfFreePaths.txt";
     nameFile2_ = "MFP_"+fieldName_+"_freePaths.txt";
     nameFile3_ = "MFP_"+fieldName_+"_nCollisions.txt";
+    nameFile4_ = "MFP_"+fieldName_+"_collisionPositions_X.txt";
+    nameFile5_ = "MFP_"+fieldName_+"_collisionPositions_Y.txt";
+    nameFile6_ = "MFP_"+fieldName_+"_collisionPositions_Z.txt";
+    nameFile7_ = "MFP_"+fieldName_+"_collisionTimes.txt";
     
     deltaT_ = time_.deltaT().value();    
 }
@@ -161,7 +165,14 @@ void meanFreePath::createField()
     Rold_.setSize(listSize_, 0.0);
     collectorOfFreePaths_.setSize(listSize_);
     nCollisions_.setSize(listSize_, 0.0);
+    collPosX_.setSize(listSize_);
+    collPosY_.setSize(listSize_);
+    collPosZ_.setSize(listSize_);
+    collTimes_.setSize(listSize_);
+    
+    
     setRolds();
+    
     nMols_ = molCloud_.nMols();
     
     readFromStorage();
@@ -199,7 +210,7 @@ void meanFreePath::setRolds()
 
 void meanFreePath::afterForce()
 {
-    // measure free paths 
+    // measure free paths on individual procs
     {
         List<scalar> freePaths(listSize_, 0.0);
         
@@ -215,8 +226,7 @@ void meanFreePath::afterForce()
             }
         }
         
-        // parallel comms 
-
+        // parallel comms between procs
         forAll(freePaths, i)
         {
             if(Pstream::parRun())
@@ -224,13 +234,15 @@ void meanFreePath::afterForce()
                 reduce(freePaths[i], sumOp<scalar>());
             }
             
+            // set free paths on every proc correctly
             freePaths_[i] += freePaths[i];
         }
     }
     
-    // check for collisions
+    // check for collisions & record collision position
     {
         List<scalar> freePaths(listSize_, 0.0);
+        List<vector> positions(listSize_, vector::zero);
         
         IDLList<polyMolecule>::iterator mol(molCloud_.begin());
         
@@ -241,14 +253,17 @@ void meanFreePath::afterForce()
             if( (mol().R() < dCol_) && (Rold_[tNI] > dCol_) ) // collision criteria
             {
                 freePaths[tNI] = freePaths_[tNI];
+                positions[tNI] = mol().position();
             }
         }
-        
+
+        // parallel comms 
         forAll(freePaths, i)
         {
             if(Pstream::parRun())
             {
                 reduce(freePaths[i], sumOp<scalar>());
+                reduce(positions[i], sumOp<vector>());
             }
         }
         
@@ -256,8 +271,15 @@ void meanFreePath::afterForce()
         {
             if(freePaths[i] > 0.0)
             {
-                collectorOfFreePaths_[i].append(freePaths[i]); 
+                collectorOfFreePaths_[i].append(freePaths[i]);
+                freePaths_[i] = 0.0;
                 nCollisions_[i] += 1.0;
+                
+                collPosX_[i].append(positions[i].x());
+                collPosY_[i].append(positions[i].y());
+                collPosZ_[i].append(positions[i].z());
+                
+                collTimes_[i].append(time_.timeOutputValue());
             }
         }
     } 
@@ -295,6 +317,8 @@ void meanFreePath::writeField()
 
 void meanFreePath::writeToStorage()
 {
+    // note all output/input is in reduced units - carefully convert!
+    
     fileName pathName(time_.path()/time_.timeName()/"uniform"/"poly");
     
     {
@@ -341,6 +365,64 @@ void meanFreePath::writeToStorage()
                 << abort(FatalError);
         }
     }
+    
+    {
+        OFstream file(pathName/nameFile4_);
+
+        if(file.good())
+        {
+            file << collPosX_ << endl;
+        }
+        else
+        {
+            FatalErrorIn("void meanFreePath::writeToStorage()")
+                << "Cannot open file " << file.name()
+                << abort(FatalError);
+        }
+    }
+    
+    {
+        OFstream file(pathName/nameFile5_);
+
+        if(file.good())
+        {
+            file << collPosY_ << endl;
+        }
+        else
+        {
+            FatalErrorIn("void meanFreePath::writeToStorage()")
+                << "Cannot open file " << file.name()
+                << abort(FatalError);
+        }
+    }
+    {
+        OFstream file(pathName/nameFile6_);
+
+        if(file.good())
+        {
+            file << collPosZ_ << endl;
+        }
+        else
+        {
+            FatalErrorIn("void meanFreePath::writeToStorage()")
+                << "Cannot open file " << file.name()
+                << abort(FatalError);
+        }
+    }
+    {
+        OFstream file(pathName/nameFile7_);
+
+        if(file.good())
+        {
+            file << collTimes_ << endl;
+        }
+        else
+        {
+            FatalErrorIn("void meanFreePath::writeToStorage()")
+                << "Cannot open file " << file.name()
+                << abort(FatalError);
+        }
+    }    
 }
 
 void meanFreePath::readFromStorage()
@@ -379,6 +461,47 @@ void meanFreePath::readFromStorage()
             file >> nCollisions_;
         }
     }
+    {
+        IFstream file(pathName/nameFile4_);
+
+        bool goodFile = file.good();
+
+        if(goodFile)
+        {
+            file >> collPosX_;
+        }
+    }
+    {
+        IFstream file(pathName/nameFile5_);
+
+        bool goodFile = file.good();
+
+        if(goodFile)
+        {
+            file >> collPosY_;
+        }
+    }
+    {
+        IFstream file(pathName/nameFile6_);
+
+        bool goodFile = file.good();
+
+        if(goodFile)
+        {
+            file >> collPosZ_;
+        }
+    }
+    
+    {
+        IFstream file(pathName/nameFile7_);
+
+        bool goodFile = file.good();
+
+        if(goodFile)
+        {
+            file >> collTimes_;
+        }
+    }    
     
 //     Info << "collectorOfFreePaths = " << collectorOfFreePaths_ << endl;
 //     Info << "freePaths = " << freePaths_ << endl;
