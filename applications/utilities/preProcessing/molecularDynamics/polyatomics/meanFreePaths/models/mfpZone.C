@@ -49,12 +49,14 @@ mfpZone::mfpZone
 (
     Time& t,
     const polyMesh& mesh,
+    const reducedUnits& rU,
     const dictionary& dict
 )
 :
-    mfpField(t, mesh, dict),
+    mfpField(t, mesh, rU, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
     fieldName_(propsDict_.lookup("fieldName")),
+    
     nameFile1_(propsDict_.lookup("nameFile_collectorOfFreePaths")),
     nameFile2_(propsDict_.lookup("nameFile_freePaths")),
     nameFile3_(propsDict_.lookup("nameFile_nCollisions")),
@@ -68,8 +70,24 @@ mfpZone::mfpZone
     nameFile11_(propsDict_.lookup("nameFile_endCollisionTimes"))
 {
     
-
+    binWidthColl_ = readScalar(propsDict_.lookup("binWidthNcollisions"));
+    binWidthProb_ = readScalar(propsDict_.lookup("binWidthFreePaths"));    
+    binWidthVel_ = readScalar(propsDict_.lookup("binWidthVelocity"));
     
+    endTime_ = time_.endTime().value();
+    
+    Info << "endTime = " << endTime_ << endl;
+    
+    deltaT_ = time_.deltaT().value();
+    
+    nSteps_ = endTime_/deltaT_;
+    
+//     nOutputSteps_=1000;
+//     
+//     if(propsDict_.found("nOutputSteps"))
+//     {
+//         nOutputSteps_ = readLabel(propsDict_.lookup("nOutputSteps"));
+//     }
 }
 
 
@@ -120,10 +138,178 @@ void mfpZone::createField()
 //     bb.resetBoundedBox(startPoint, endPoint);
 // }
 
+
+void mfpZone::meanFreePathVsTime()
+{
+    scalarField mfp(nSteps_, 0.0);
+    scalarField mfp2(nSteps_, 0.0);    
+    scalarField time(nSteps_, 0.0);
+    
+    List<label> indices(nMols_, 0);
+    
+    scalar MFP = 0.0;
+    scalar Nmols_freepaths = 0.0;
+    scalar Nmols = 0.0;
+
+    distribution velDistr(binWidthVel_);    
+    distribution probDistr(binWidthProb_);
+        
+    for(label t = 0; t < nSteps_; t++)
+    {
+        time[t] = ( scalar(t)+1.0 )*deltaT_;
+        
+        Info << "time = " << time[t] << endl;
+                    
+        for(label i = 0; i < nMols_; i++)
+        {
+            label& index = indices[i];
+
+            scalar tStart = 0.0;             
+            scalar tEnd = endTime_;
+            
+            if(index < endCollTimes_[i].size())
+            {
+                if(time[t] > endCollTimes_[i][index])
+                {
+                    index++;
+                }
+            }
+            
+            if(index < endCollTimes_[i].size())
+            {
+                tEnd = endCollTimes_[i][index];            
+            }
+            
+            if(index < startCollTimes_[i].size()+1)
+            {
+                if(index != 0)
+                {
+                    tStart = startCollTimes_[i][index-1];
+                }
+            }
+            
+            scalar fp = 0.0; // free path
+            
+            if( index < collectorOfFreePaths_[i].size() )
+            {
+                fp = collectorOfFreePaths_[i][index];
+            }
+            else
+            {
+                fp = freePaths_[i];
+            }
+            
+            if(time[t] > tStart)
+            {
+                scalar m = fp/(tEnd-tStart);
+                scalar C = fp - m*tEnd;
+                scalar l = m*time[t] + C;
+                probDistr.add(l*rU_.refLength()/1e-9);
+                MFP += l;
+                Nmols_freepaths += 1.0;
+                
+                scalar dl = (fp*deltaT_)/(tEnd-tStart);
+                scalar dV = dl/deltaT_;
+                velDistr.add(dV*rU_.refVelocity());
+                
+//                 if(i == 0)
+//                 {
+//                     Info << "index = " << index 
+//                         << ", tStart = " << tStart
+//                         << ", tEnd = " << tEnd
+//                         << ", fp = " << fp 
+//                         << ", dl = " << dl
+//                         << ", l = " << l
+//                         << endl;
+//                 }
+            }
+        }
+        
+        Nmols += scalar(nMols_);
+        
+        if(Nmols_freepaths > 0.0)
+        {
+            mfp[t] = MFP/Nmols_freepaths;
+        }
+        
+        if(Nmols > 0.0)
+        {
+             mfp2[t] = MFP/Nmols;
+        }
+    }
+    
+    writeTimeData
+    (
+        outputPath_,
+        "mfpZone_"+fieldName_+"_method_1_cumulFreePath_nm_vs_time_ns.txt",
+        time*rU_.refTime()/1e-9,
+        mfp*rU_.refLength()/1e-9,
+        false
+    );
+
+    writeTimeData
+    (
+        outputPath_,
+        "mfpZone_"+fieldName_+"_method_2_cumulFreePath_nm_vs_time_ns.txt",
+        time*rU_.refTime()/1e-9,
+        mfp2*rU_.refLength()/1e-9,
+        false
+    );    
+    
+    {
+        
+        List< Pair<scalar> > histogram = probDistr.scaledByMax();
+        
+        OFstream file(outputPath_/"mfpZone_"+fieldName_+"_probability_vs_freePathDistr_nm.txt");
+
+        if(file.good())
+        {
+            forAll(histogram, i)
+            {
+                file 
+                    << histogram[i].first() << "\t"
+                    << histogram[i].second() << "\t"
+                    << endl;
+            }
+        }
+        else
+        {
+            FatalErrorIn("void mfpZone::write()")
+                << "Cannot open file " << file.name()
+                << abort(FatalError);
+        }
+    }
+    {
+        
+        List< Pair<scalar> > histogram = velDistr.normalised();
+        
+        OFstream file(outputPath_/"mfpZone_"+fieldName_+"_probabilityNormalised_vs_velocity.txt");
+
+        if(file.good())
+        {
+            forAll(histogram, i)
+            {
+                file 
+                    << histogram[i].first() << "\t"
+                    << histogram[i].second() << "\t"
+                    << endl;
+            }
+        }
+        else
+        {
+            FatalErrorIn("void mfpZone::write()")
+                << "Cannot open file " << file.name()
+                << abort(FatalError);
+        }
+    }    
+    
+}
+
 void mfpZone::calculateField()
 {
-    // find the last free path that made a fresh start 
-    label index = -1;
+    // find the last free path that made the first start
+    
+    label iStart = -1;
     scalar tStart = 0.0;
     
     for (label i = 0; i < nMols_; i++)
@@ -131,11 +317,44 @@ void mfpZone::calculateField()
         if(startCollTimes_[i][0] > tStart)
         {
             tStart = startCollTimes_[i][0];
-            index = i;
+            iStart = i;
         }
     }
     
-    Info << "start at time = " << tStart << ", mol = " << index << endl;
+    Info << nl << "start at time = " << tStart << ", mol = " << iStart << endl;
+
+    meanFreePathVsTime();
+    
+    // distribution for no of collisions per atom       
+    {
+        distribution d(binWidthColl_);
+        
+        for (label i = 0; i < nMols_; i++)
+        {
+            d.add(nCollisions_[i]);
+        }        
+        
+        List< Pair<scalar> > histogram = d.raw();
+        
+        OFstream file(outputPath_/"mfpZone_"+fieldName_+"_collisionDistribution.txt");
+
+        if(file.good())
+        {
+            forAll(histogram, i)
+            {
+                file 
+                    << histogram[i].first() << "\t"
+                    << histogram[i].second() << "\t"
+                    << endl;
+            }
+        }
+        else
+        {
+            FatalErrorIn("void mfpZone::write()")
+                << "Cannot open file " << file.name()
+                << abort(FatalError);
+        }
+    }
 }
     
 void mfpZone::writeField()
@@ -162,9 +381,12 @@ void mfpZone::writeField()
 //         true
 //     );
 
-        
        
 }
+
+
+
+
 
 void mfpZone::readFromStorage()
 {

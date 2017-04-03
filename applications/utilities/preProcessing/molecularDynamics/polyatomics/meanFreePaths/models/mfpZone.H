@@ -44,6 +44,8 @@ SourceFiles
 #include "polyMesh.H"
 #include "volFields.H"
 // #include "boundedBox.H"
+#include "distribution.H"
+#include "writeTimeData.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -101,15 +103,21 @@ private:
         
 
         label nMols_;
-        
-        DynamicList<scalar> mfp_;
 
+        label nSteps_;
+
+//         label nOutputSteps_;        
+        scalar binWidthVel_;
+        scalar binWidthColl_;
+        scalar binWidthProb_;
         
-        
+        scalar deltaT_;
+        scalar endTime_;
         
     // Private Member Functions
         
         void readFromStorage();
+        void meanFreePathVsTime();
 
  public:
 
@@ -123,6 +131,7 @@ private:
         (
             Time& t,
             const polyMesh& mesh,
+            const reducedUnits& rU,
             const dictionary& dict
         );
 

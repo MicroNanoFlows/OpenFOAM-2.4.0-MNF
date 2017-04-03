@@ -38,7 +38,8 @@ namespace Foam
 mfpMeasurements::mfpMeasurements
 (
     Time& t,
-    const polyMesh& mesh
+    const polyMesh& mesh,
+    const reducedUnits& rU    
 )
 :
     time_(t),
@@ -63,10 +64,13 @@ mfpMeasurements::mfpMeasurements
         fileName outputPath(time_.path()/"mfp");
         fileName inputPath(time_.path()/time_.timeName()/"uniform"/"poly");
         
-        if (!isDir(outputPath))
+       
+        if (isDir(outputPath))
         {
-            mkDir(outputPath);
+            rmDir(outputPath);            
         }
+        
+        mkDir(outputPath);        
 
         forAll(fields_, f)
         {
@@ -75,7 +79,7 @@ mfpMeasurements::mfpMeasurements
     
             fields_[f] = autoPtr<mfpField>
             (
-                mfpField::New(time_, mesh, fieldIDict)
+                mfpField::New(time_, mesh, rU, fieldIDict)
             );
     
             fieldNames_[f] = fields_[f]->type();

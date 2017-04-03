@@ -43,7 +43,7 @@ SourceFiles
 #include "vector.H"
 #include "volFields.H"
 #include "writeTimeData.H"
-
+#include "reducedUnits.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -64,7 +64,9 @@ protected:
         const fvMesh& mesh_;
 
         Time& time_;
-
+        
+        const reducedUnits& rU_;
+        
         fileName inputPath_;
 
         fileName outputPath_;
@@ -85,9 +87,10 @@ public:
             (
                 Time& t,
                 const polyMesh& mesh,
+                const reducedUnits& rU,
                 const dictionary& dict
             ),
-            (t, mesh, dict)
+            (t, mesh, rU, dict)
         );
    
     // Constructors
@@ -97,6 +100,7 @@ public:
         (
             Time& t,
             const polyMesh& mesh,
+            const reducedUnits& rU,
             const dictionary& dict
         );
 
@@ -107,6 +111,7 @@ public:
         (
             Time& t,
             const polyMesh& mesh,
+            const reducedUnits& rU,
             const dictionary& dict
         );
 

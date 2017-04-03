@@ -220,6 +220,7 @@ void meanFreePath::setRolds()
     }
 }
 
+// IMPROVE PARALLEL COMMS [MAKE MORE EFFICIENT]
 
 void meanFreePath::afterForce()
 {
@@ -234,6 +235,11 @@ void meanFreePath::afterForce()
             label tNI = mol().trackingNumber();
             
             if(mol().R() > dCol_)
+            {
+                freePaths[tNI] += mag(mol().v()*deltaT_);
+            }
+            
+            if( (mol().R() < dCol_) && (Rold_[tNI] > dCol_) )
             {
                 freePaths[tNI] += mag(mol().v()*deltaT_);
             }
@@ -336,7 +342,7 @@ void meanFreePath::afterForce()
                 startCollPosY_[i].append(positions[i].y());
                 startCollPosZ_[i].append(positions[i].z());
                 
-                startCollTimes_[i].append(time_.timeOutputValue());
+                startCollTimes_[i].append(time_.timeOutputValue()-deltaT_);
             }
         }
     }     

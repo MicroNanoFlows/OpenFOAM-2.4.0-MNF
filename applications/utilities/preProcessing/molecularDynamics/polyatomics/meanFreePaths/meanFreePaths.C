@@ -38,7 +38,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
-// #include "mdPoly.H"
+#include "mdPoly.H"
 #include "mfpMeasurements.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -53,12 +53,14 @@ int main(int argc, char *argv[])
     instantList timeDirs = timeSelector::select0(runTime, args);
 
 #   include "createMesh.H"
+
+    reducedUnits rU(runTime, mesh);
     
     runTime.setTime(timeDirs[timeDirs.size()-1], timeDirs.size()-1);
 
     Info<< "Running utility for Latest Time: " << runTime.timeName() << endl;
 
-    mfpMeasurements mfp(runTime, mesh);   
+    mfpMeasurements mfp(runTime, mesh, rU);   
 
     mfp.createFields();       
     mfp.calculateFields();

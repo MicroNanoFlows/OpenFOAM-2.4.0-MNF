@@ -42,7 +42,7 @@ Description
 #include "autoPtr.H"
 #include "polyMesh.H"
 #include "mfpField.H"
-
+#include "reducedUnits.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -77,7 +77,8 @@ public:
         mfpMeasurements
         (
             Time& t,
-            const polyMesh& mesh
+            const polyMesh& mesh,
+            const reducedUnits& rU 
         );
 
         ~mfpMeasurements();

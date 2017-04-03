@@ -46,11 +46,13 @@ mfpField::mfpField
 (
     Time& t,
     const polyMesh& mesh,
+    const reducedUnits& rU, 
     const dictionary& dict
 )
 :
     mesh_(refCast<const fvMesh>(mesh)),
-    time_(t)
+    time_(t),
+    rU_(rU)
 {}
 
 
@@ -60,6 +62,7 @@ autoPtr<mfpField> mfpField::New
 (
     Time& t,
     const polyMesh& mesh,
+    const reducedUnits& rU,
     const dictionary& dict
 )
 {
@@ -87,7 +90,7 @@ autoPtr<mfpField> mfpField::New
 
     return autoPtr<mfpField>
 	(
-		cstrIter()(t, mesh, dict)
+		cstrIter()(t, mesh, rU, dict)
 	);
 }
 
