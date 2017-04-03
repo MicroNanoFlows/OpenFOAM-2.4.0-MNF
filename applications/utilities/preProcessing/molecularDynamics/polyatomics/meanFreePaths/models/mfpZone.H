@@ -23,31 +23,27 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    meanFreePath
+    mfpZone
 
 Description
-    This tool works well if you initialise a set of molecules with tracking Numbers
-    that range between 0 and N. In the case of doing complex things,  like using
-    FADE, I would recommend you reinitiliase the trackingNumbers.
 
+    
+    
+    
 SourceFiles
-    meanFreePathI.H
-    meanFreePath.C
-    meanFreePathIO.C
+    mfpZone.C
+
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef meanFreePath_H
-#define meanFreePath_H
+#ifndef mfpZone_H
+#define mfpZone_H
 
-#include "polyField.H"
+#include "mfpField.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
-#include "polyMoleculeCloud.H"
-#include "distribution.H"
-#include "boundedBox.H"
-
+// #include "boundedBox.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -55,12 +51,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class meanFreePath Declaration
+                           Class mfpZone Declaration
 \*---------------------------------------------------------------------------*/
 
-class meanFreePath
+class mfpZone
 :
-	public polyField
+    public mfpField
 {
 
 private:
@@ -70,12 +66,10 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-        propertyField fields_;
-
+//         boundedBox bb_;
+        
         word fieldName_;
 
-        List<label> molIds_;
-        
         fileName nameFile1_;
         fileName nameFile2_;        
         fileName nameFile3_;           
@@ -86,22 +80,11 @@ private:
         fileName nameFile8_; 
         fileName nameFile9_; 
         fileName nameFile10_; 
-        fileName nameFile11_;         
-        
-        // collision distance
-        scalar dCol_;
-        
-        // MD timestep
-        scalar deltaT_;
-        
-        label nMols_;
-        
-        label listSize_;
-        
+        fileName nameFile11_;  
+
         List<DynamicList<scalar> > collectorOfFreePaths_;
         List<scalar> freePaths_;
         List<scalar> nCollisions_;
-        List<scalar> Rold_;
 
         // points at which collisions occur
         List<DynamicList<scalar> > startCollPosX_;
@@ -116,62 +99,45 @@ private:
         List<DynamicList<scalar> > startCollTimes_;
         List<DynamicList<scalar> > endCollTimes_;
         
-        bool testInitialTimeScale_;
+
+        label nMols_;
+        
+        DynamicList<scalar> mfp_;
+
+        
+        
         
     // Private Member Functions
-
-        void setRolds();
         
         void readFromStorage();
-        
-        void writeToStorage();
-        
-public:
+
+ public:
 
     //- Runtime type information
-    TypeName("meanFreePath");
+    TypeName("mfpZone");
 
     // Constructors
 
         //- Construct from components
-        meanFreePath
+        mfpZone
         (
             Time& t,
             const polyMesh& mesh,
-            polyMoleculeCloud& molCloud,
             const dictionary& dict
         );
 
     // Destructor
 
-        ~meanFreePath();
+        ~mfpZone();
 
 
     // Member Functions
 
         //- create initial field
         void createField();
-
-        void afterForce();
         
         //- calculate field
         void calculateField();
-
-        void measureDuringForceComputation
-        (
-            polyMolecule* molI,
-            polyMolecule* molJ
-        );
-
-        void measureDuringForceComputationSite
-        (
-            polyMolecule* molI,
-            polyMolecule* molJ,
-            label sI,
-            label sJ
-        );
-
-        const propertyField& fields() const;
 
         //- write field
         void writeField();

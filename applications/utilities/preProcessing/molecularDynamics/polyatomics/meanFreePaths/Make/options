@@ -1,0 +1,19 @@
+EXE_INC = \
+    -I./basic/mfpMeasurements \
+    -I./basic/mfpField \
+    -I./models \
+    -I$(LIB_SRC)/finiteVolume/lnInclude \
+    -I$(LIB_SRC)/meshTools/lnInclude \
+    -I$(LIB_SRC)/lagrangian/basic/lnInclude \
+    -I$(LIB_SRC)/lagrangian/molecularDynamics/polyCloud/lnInclude \
+    -I$(LIB_SRC)/lagrangian/molecularDynamics/polyCloud/mdTools \
+    -I$(LIB_SRC)/lagrangian/molecularDynamics/general/lnInclude \
+    -I$(LIB_SRC)/lagrangian/molecularDynamics/general/includeFiles     
+    
+
+EXE_LIBS = \
+    -lfiniteVolume \
+    -lmeshTools \
+    -llagrangian \
+    -lpolyCloud \
+    -lgeneralMolecule
