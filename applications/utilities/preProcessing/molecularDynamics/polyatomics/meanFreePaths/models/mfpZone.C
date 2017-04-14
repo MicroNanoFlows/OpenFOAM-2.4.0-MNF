@@ -153,13 +153,20 @@ void mfpZone::meanFreePathVsTime()
 
     distribution velDistr(binWidthVel_);    
     distribution probDistr(binWidthProb_);
-        
+
+    label count = 0;
     for(label t = 0; t < nSteps_; t++)
     {
         time[t] = ( scalar(t)+1.0 )*deltaT_;
         
-        Info << "time = " << time[t] << endl;
-                    
+        if(count > 100000)
+        {
+            Info << "time = " << time[t] << endl;
+            count = 0;
+        }
+        
+        count++;
+        
         for(label i = 0; i < nMols_; i++)
         {
             label& index = indices[i];
