@@ -23,29 +23,27 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    mfpZone
+    utilField
 
 Description
 
-    
-    
-    
 SourceFiles
-    mfpZone.C
-
+    utilFieldI.H
+    utilField.C
+    utilFieldIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef mfpZone_H
-#define mfpZone_H
+#ifndef utilField_H
+#define utilField_H
 
-#include "utilField.H"
+#include "IOdictionary.H"
+#include "autoPtr.H"
+#include "runTimeSelectionTables.H"
 #include "vector.H"
-#include "polyMesh.H"
 #include "volFields.H"
-// #include "boundedBox.H"
-#include "distribution.H"
 #include "writeTimeData.H"
+#include "reducedUnits.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -53,81 +51,52 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class mfpZone Declaration
+                           Class utilField Declaration
 \*---------------------------------------------------------------------------*/
 
-class mfpZone
-:
-    public utilField
+class utilField
 {
 
-private:
+protected:
 
-    // Private data
+    // Protected data
 
-        //- subDictionary containing the properties
-        dictionary propsDict_;
+        const fvMesh& mesh_;
 
-//         boundedBox bb_;
+        Time& time_;
         
-        word fieldName_;
-
-        fileName nameFile1_;
-        fileName nameFile2_;        
-        fileName nameFile3_;           
-        fileName nameFile4_; 
-        fileName nameFile5_; 
-        fileName nameFile6_; 
-        fileName nameFile7_; 
-        fileName nameFile8_; 
-        fileName nameFile9_; 
-        fileName nameFile10_; 
-        fileName nameFile11_;  
-
-        List<DynamicList<scalar> > collectorOfFreePaths_;
-        List<scalar> freePaths_;
-        List<scalar> nCollisions_;
-
-        // points at which collisions occur
-        List<DynamicList<scalar> > startCollPosX_;
-        List<DynamicList<scalar> > startCollPosY_;
-        List<DynamicList<scalar> > startCollPosZ_;
-
-        List<DynamicList<scalar> > endCollPosX_;
-        List<DynamicList<scalar> > endCollPosY_;
-        List<DynamicList<scalar> > endCollPosZ_;
-
-        // times at which collisions occur
-        List<DynamicList<scalar> > startCollTimes_;
-        List<DynamicList<scalar> > endCollTimes_;
+        const reducedUnits& rU_;
         
+        fileName inputPath_;
 
-        label nMols_;
+        fileName outputPath_;
 
-        label nSteps_;
-
-//         label nOutputSteps_;        
-        scalar binWidthVel_;
-        scalar binWidthColl_;
-        scalar binWidthProb_;
-        
-        scalar deltaT_;
-        scalar endTime_;
-        
     // Private Member Functions
-        
-        void readFromStorage();
-        void meanFreePathVsTime();
 
- public:
+public:
 
     //- Runtime type information
-    TypeName("mfpZone");
+    TypeName("utilField");
 
+    // Declare runtime constructor selection table
+        declareRunTimeSelectionTable
+        (
+            autoPtr,
+            utilField,
+            dictionary,
+            (
+                Time& t,
+                const polyMesh& mesh,
+                const reducedUnits& rU,
+                const dictionary& dict
+            ),
+            (t, mesh, rU, dict)
+        );
+   
     // Constructors
 
         //- Construct from components
-        mfpZone
+        utilField
         (
             Time& t,
             const polyMesh& mesh,
@@ -135,21 +104,42 @@ private:
             const dictionary& dict
         );
 
+
+    // Selectors
+
+        static autoPtr<utilField> New
+        (
+            Time& t,
+            const polyMesh& mesh,
+            const reducedUnits& rU,
+            const dictionary& dict
+        );
+
+
+
     // Destructor
 
-        ~mfpZone();
+        virtual ~utilField();
 
 
     // Member Functions
 
-        //- create initial field
-        void createField();
-        
-        //- calculate field
-        void calculateField();
 
+        const fileName& outputPath() const;
+        fileName& outputPath();
+
+        const fileName& inputPath() const;
+        fileName& inputPath();
+
+        //- create initial field
+        virtual void createField() = 0;
+
+        //- calculate field
+        virtual void calculateField() = 0;
+        
         //- write field
-        void writeField();
+        virtual void writeField() = 0;
+
 };
 
 

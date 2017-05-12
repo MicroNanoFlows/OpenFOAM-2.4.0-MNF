@@ -127,7 +127,14 @@ mappingModels/basic/polyMappingModels/polyMappingModels.C
 mappingModels/derived/polyMappingZone/polyMappingZone.C
 
 
+/*  UTILITY-BASED MEASUREMENTS */
+
+utilMeasurements/basic/utilMeasurements/utilMeasurements.C
+utilMeasurements/basic/utilField/utilField.C
+
+
 /*  MEASUREMENTS */
+
 
 measurements/basic/polyFieldProperties/polyFieldProperties.C
 measurements/basic/polyField/polyField.C
@@ -175,6 +182,7 @@ measurements/derived/otherFields/centreOfMass/centreOfMass.C
 measurements/derived/otherFields/polyForceZone/polyForceZone.C
 measurements/derived/otherFields/meanFreePath/meanFreePath.C
 measurements/derived/otherFields/velocityDistribution/velocityDistribution.C
+measurements/derived/otherFields/outputPairForces/outputPairForces.C
 
 /*  - GREEN KUBO  */
 measurements/derived/greenKubo/axialSelfDiffusion/axialSelfDiffusion.C

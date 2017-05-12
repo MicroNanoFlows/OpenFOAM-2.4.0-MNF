@@ -32,22 +32,22 @@ namespace Foam
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 
-inline List< autoPtr<mfpField> >& mfpMeasurements::fields()
+inline List< autoPtr<utilField> >& utilMeasurements::fields()
 {
     return fields_;
 }
 
-inline const List< autoPtr<mfpField> >& mfpMeasurements::fields() const
+inline const List< autoPtr<utilField> >& utilMeasurements::fields() const
 {
     return fields_;
 }
 
-inline const List<word>& mfpMeasurements::fieldNames() const
+inline const List<word>& utilMeasurements::fieldNames() const
 {
     return fieldNames_;
 }
 
-inline const List<label>& mfpMeasurements::fieldIds() const
+inline const List<label>& utilMeasurements::fieldIds() const
 {
     return fieldIds_;
 }

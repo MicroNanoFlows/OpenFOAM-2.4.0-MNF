@@ -26,7 +26,7 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "mfpZone.H"
+#include "dropletInfo.H"
 #include "addToRunTimeSelectionTable.H"
 #include "fvc.H"
 #include "IFstream.H"
@@ -36,16 +36,16 @@ Description
 namespace Foam
 {
 
-defineTypeNameAndDebug(mfpZone, 0);
+defineTypeNameAndDebug(dropletInfo, 0);
 
-addToRunTimeSelectionTable(utilField, mfpZone, dictionary);
+addToRunTimeSelectionTable(utilField, dropletInfo, dictionary);
 
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-mfpZone::mfpZone
+dropletInfo::dropletInfo
 (
     Time& t,
     const polyMesh& mesh,
@@ -56,31 +56,19 @@ mfpZone::mfpZone
     utilField(t, mesh, rU, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
     fieldName_(propsDict_.lookup("fieldName")),
-    
-    nameFile1_(propsDict_.lookup("nameFile_collectorOfFreePaths")),
-    nameFile2_(propsDict_.lookup("nameFile_freePaths")),
-    nameFile3_(propsDict_.lookup("nameFile_nCollisions")),
-    nameFile4_(propsDict_.lookup("nameFile_startCollisionPositions_X")),
-    nameFile5_(propsDict_.lookup("nameFile_startCollisionPositions_Y")),
-    nameFile6_(propsDict_.lookup("nameFile_startCollisionPositions_Z")),
-    nameFile7_(propsDict_.lookup("nameFile_endCollisionPositions_X")),
-    nameFile8_(propsDict_.lookup("nameFile_endCollisionPositions_Y")),
-    nameFile9_(propsDict_.lookup("nameFile_endCollisionPositions_Z")),
-    nameFile10_(propsDict_.lookup("nameFile_startCollisionTimes")),
-    nameFile11_(propsDict_.lookup("nameFile_endCollisionTimes"))
+    nameFile1_(propsDict_.lookup("nameFile_positions")),
+    nameFile2_(propsDict_.lookup("nameFile_energies")),
+    nameFile3_(propsDict_.lookup("nameFile_forces")),
+    nameFile4_(propsDict_.lookup("nameFile_nPairs")),
+    nameFile5_(propsDict_.lookup("nameFile_referenceMols"))
 {
+//     endTime_ = time_.endTime().value();
     
-    binWidthColl_ = readScalar(propsDict_.lookup("binWidthNcollisions"));
-    binWidthProb_ = readScalar(propsDict_.lookup("binWidthFreePaths"));    
-    binWidthVel_ = readScalar(propsDict_.lookup("binWidthVelocity"));
+//     Info << "endTime = " << endTime_ << endl;
     
-    endTime_ = time_.endTime().value();
+//     deltaT_ = time_.deltaT().value();
     
-    Info << "endTime = " << endTime_ << endl;
-    
-    deltaT_ = time_.deltaT().value();
-    
-    nSteps_ = endTime_/deltaT_;
+//     nSteps_ = endTime_/deltaT_;
     
 //     nOutputSteps_=1000;
 //     
@@ -93,7 +81,7 @@ mfpZone::mfpZone
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-mfpZone::~mfpZone()
+dropletInfo::~dropletInfo()
 {}
 
 
@@ -102,44 +90,14 @@ mfpZone::~mfpZone()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void mfpZone::createField()
+void dropletInfo::createField()
 {
     readFromStorage();
-    
-    //test 
-    forAll(nCollisions_, i)
-    {
-        if(nCollisions_[i] < 1)
-        {
-            FatalErrorIn("void mfpZone::createField()")
-                << "File: " << nameFile3_
-                << ", contains an entry which has no collisions" 
-                << nl << "   -> this will result in a bug in this code, "
-                << " so I've decided to terminate until solved."
-                << abort(FatalError);            
-        }
-    }
-    
-    nMols_ = nCollisions_.size();    
+ 
 }
 
-// void mfpZone::setBoundBox
-// (
-//     const dictionary& propsDict,
-//     boundedBox& bb,
-//     const word& name 
-// )
-// {
-//     const dictionary& dict(propsDict.subDict(name));
-//     
-//     vector startPoint = dict.lookup("startPoint");
-//     vector endPoint = dict.lookup("endPoint");
-// 
-//     bb.resetBoundedBox(startPoint, endPoint);
-// }
 
-
-void mfpZone::meanFreePathVsTime()
+void dropletInfo::meanFreePathVsTime()
 {
     scalarField mfp(nSteps_, 0.0);
     scalarField mfp2(nSteps_, 0.0);    
@@ -248,7 +206,7 @@ void mfpZone::meanFreePathVsTime()
     writeTimeData
     (
         outputPath_,
-        "mfpZone_"+fieldName_+"_method_1_cumulFreePath_nm_vs_time_ns.txt",
+        "dropletInfo_"+fieldName_+"_method_1_cumulFreePath_nm_vs_time_ns.txt",
         time*rU_.refTime()/1e-9,
         mfp*rU_.refLength()/1e-9,
         false
@@ -257,7 +215,7 @@ void mfpZone::meanFreePathVsTime()
     writeTimeData
     (
         outputPath_,
-        "mfpZone_"+fieldName_+"_method_2_cumulFreePath_nm_vs_time_ns.txt",
+        "dropletInfo_"+fieldName_+"_method_2_cumulFreePath_nm_vs_time_ns.txt",
         time*rU_.refTime()/1e-9,
         mfp2*rU_.refLength()/1e-9,
         false
@@ -267,7 +225,7 @@ void mfpZone::meanFreePathVsTime()
         
         List< Pair<scalar> > histogram = probDistr.scaledByMax();
         
-        OFstream file(outputPath_/"mfpZone_"+fieldName_+"_probability_vs_freePathDistr_nm.txt");
+        OFstream file(outputPath_/"dropletInfo_"+fieldName_+"_probability_vs_freePathDistr_nm.txt");
 
         if(file.good())
         {
@@ -281,7 +239,7 @@ void mfpZone::meanFreePathVsTime()
         }
         else
         {
-            FatalErrorIn("void mfpZone::write()")
+            FatalErrorIn("void dropletInfo::write()")
                 << "Cannot open file " << file.name()
                 << abort(FatalError);
         }
@@ -290,7 +248,7 @@ void mfpZone::meanFreePathVsTime()
         
         List< Pair<scalar> > histogram = velDistr.normalised();
         
-        OFstream file(outputPath_/"mfpZone_"+fieldName_+"_probabilityNormalised_vs_velocity.txt");
+        OFstream file(outputPath_/"dropletInfo_"+fieldName_+"_probabilityNormalised_vs_velocity.txt");
 
         if(file.good())
         {
@@ -304,7 +262,7 @@ void mfpZone::meanFreePathVsTime()
         }
         else
         {
-            FatalErrorIn("void mfpZone::write()")
+            FatalErrorIn("void dropletInfo::write()")
                 << "Cannot open file " << file.name()
                 << abort(FatalError);
         }
@@ -312,12 +270,12 @@ void mfpZone::meanFreePathVsTime()
     
 }
 
-void mfpZone::calculateField()
+void dropletInfo::calculateField()
 {
 
 }
     
-void mfpZone::writeField()
+void dropletInfo::writeField()
 {
     // find the last free path that made the first start
     
@@ -348,7 +306,7 @@ void mfpZone::writeField()
         
         List< Pair<scalar> > histogram = d.raw();
         
-        OFstream file(outputPath_/"mfpZone_"+fieldName_+"_collisionDistribution.txt");
+        OFstream file(outputPath_/"dropletInfo_"+fieldName_+"_collisionDistribution.txt");
 
         if(file.good())
         {
@@ -362,7 +320,7 @@ void mfpZone::writeField()
         }
         else
         {
-            FatalErrorIn("void mfpZone::write()")
+            FatalErrorIn("void dropletInfo::write()")
                 << "Cannot open file " << file.name()
                 << abort(FatalError);
         }
@@ -374,7 +332,7 @@ void mfpZone::writeField()
 
 
 
-void mfpZone::readFromStorage()
+void dropletInfo::readFromStorage()
 {
     Info << "reading from storage" << endl;
     

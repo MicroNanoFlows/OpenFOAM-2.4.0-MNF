@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    mfpZone
+    dropletInfo
 
 Description
 
@@ -31,13 +31,13 @@ Description
     
     
 SourceFiles
-    mfpZone.C
+    dropletInfo.C
 
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef mfpZone_H
-#define mfpZone_H
+#ifndef dropletInfo_H
+#define dropletInfo_H
 
 #include "utilField.H"
 #include "vector.H"
@@ -53,10 +53,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class mfpZone Declaration
+                           Class dropletInfo Declaration
 \*---------------------------------------------------------------------------*/
 
-class mfpZone
+class dropletInfo
 :
     public utilField
 {
@@ -77,57 +77,37 @@ private:
         fileName nameFile3_;           
         fileName nameFile4_; 
         fileName nameFile5_; 
-        fileName nameFile6_; 
-        fileName nameFile7_; 
-        fileName nameFile8_; 
-        fileName nameFile9_; 
-        fileName nameFile10_; 
-        fileName nameFile11_;  
+ 
 
-        List<DynamicList<scalar> > collectorOfFreePaths_;
-        List<scalar> freePaths_;
-        List<scalar> nCollisions_;
-
-        // points at which collisions occur
-        List<DynamicList<scalar> > startCollPosX_;
-        List<DynamicList<scalar> > startCollPosY_;
-        List<DynamicList<scalar> > startCollPosZ_;
-
-        List<DynamicList<scalar> > endCollPosX_;
-        List<DynamicList<scalar> > endCollPosY_;
-        List<DynamicList<scalar> > endCollPosZ_;
-
-        // times at which collisions occur
-        List<DynamicList<scalar> > startCollTimes_;
-        List<DynamicList<scalar> > endCollTimes_;
+/*
         
 
         label nMols_;
 
         label nSteps_;
-
+*/
 //         label nOutputSteps_;        
-        scalar binWidthVel_;
-        scalar binWidthColl_;
-        scalar binWidthProb_;
-        
-        scalar deltaT_;
-        scalar endTime_;
+//         scalar binWidthVel_;
+//         scalar binWidthColl_;
+//         scalar binWidthProb_;
+//         
+//         scalar deltaT_;
+//         scalar endTime_;
         
     // Private Member Functions
         
-        void readFromStorage();
-        void meanFreePathVsTime();
+        void readTimeDirInfo();
+
 
  public:
 
     //- Runtime type information
-    TypeName("mfpZone");
+    TypeName("dropletInfo");
 
     // Constructors
 
         //- Construct from components
-        mfpZone
+        dropletInfo
         (
             Time& t,
             const polyMesh& mesh,
@@ -137,7 +117,7 @@ private:
 
     // Destructor
 
-        ~mfpZone();
+        ~dropletInfo();
 
 
     // Member Functions

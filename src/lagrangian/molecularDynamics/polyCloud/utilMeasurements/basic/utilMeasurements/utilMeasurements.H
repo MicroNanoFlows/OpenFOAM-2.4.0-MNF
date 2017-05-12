@@ -23,17 +23,17 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    mfpMeasurements
+    utilMeasurements
 
 Description
 
-	Stores all the information for the mfpMeasurements models (state and fluxes),
-    defined within the mfpMeasurementsDict, and selects & builds the models automatically.
+	Stores all the information for the utilMeasurements models (state and fluxes),
+    defined within the utilMeasurementsDict, and selects & builds the models automatically.
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef mfpMeasurements_H
-#define mfpMeasurements_H
+#ifndef utilMeasurements_H
+#define utilMeasurements_H
 
 #include "vector.H"
 #include "List.H"
@@ -41,7 +41,7 @@ Description
 #include "dictionary.H"
 #include "autoPtr.H"
 #include "polyMesh.H"
-#include "mfpField.H"
+#include "utilField.H"
 #include "reducedUnits.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -50,10 +50,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class mfpMeasurements Declaration
+                           Class utilMeasurements Declaration
 \*---------------------------------------------------------------------------*/
 
-class mfpMeasurements
+class utilMeasurements
 {
 
     // Private data
@@ -62,26 +62,26 @@ class mfpMeasurements
         //  (it contains multiple subDictionaries)
         Time& time_;
 
-        IOdictionary mfpDict_;
+        IOdictionary dict_;
 
         PtrList<entry> fieldList_;
         List<word> fieldNames_;
         List<label> fieldIds_;
-        List< autoPtr<mfpField> > fields_;
+        List< autoPtr<utilField> > fields_;
 
 public:
 
     // Constructors
 
         //- Null Constructor (mdInitialise)
-        mfpMeasurements
+        utilMeasurements
         (
             Time& t,
             const polyMesh& mesh,
             const reducedUnits& rU 
         );
 
-        ~mfpMeasurements();
+        ~utilMeasurements();
 
     // Member Functions
         
@@ -91,14 +91,14 @@ public:
 
         void writeFields();
 
-        inline List< autoPtr<mfpField> >& fields();
-        inline const List< autoPtr<mfpField> >& fields() const;
+        inline List< autoPtr<utilField> >& fields();
+        inline const List< autoPtr<utilField> >& fields() const;
         inline const List<word>& fieldNames() const;
         inline const List<label>& fieldIds() const;
 
     // Ostream Operator
 
-//         friend Ostream& operator<<(Ostream&, const mfpMeasurements&);
+//         friend Ostream& operator<<(Ostream&, const utilMeasurements&);
 };
 
 
@@ -108,7 +108,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#include "mfpMeasurementsI.H"
+#include "utilMeasurementsI.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

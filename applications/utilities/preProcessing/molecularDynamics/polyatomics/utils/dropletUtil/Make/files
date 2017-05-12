@@ -1,0 +1,5 @@
+models/dropletInfo.C
+
+dropletUtil.C
+
+EXE = $(FOAM_APPBIN)/dropletUtil

@@ -26,7 +26,7 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "mfpField.H"
+#include "utilField.H"
 
 
 
@@ -35,14 +35,14 @@ namespace Foam
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(mfpField, 0);
+defineTypeNameAndDebug(utilField, 0);
 
-defineRunTimeSelectionTable(mfpField, dictionary);
+defineRunTimeSelectionTable(utilField, dictionary);
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-mfpField::mfpField
+utilField::utilField
 (
     Time& t,
     const polyMesh& mesh,
@@ -58,7 +58,7 @@ mfpField::mfpField
 
 // * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * * //
 
-autoPtr<mfpField> mfpField::New
+autoPtr<utilField> utilField::New
 (
     Time& t,
     const polyMesh& mesh,
@@ -66,29 +66,29 @@ autoPtr<mfpField> mfpField::New
     const dictionary& dict
 )
 {
-    word mfpFieldName
+    word utilFieldName
     (
         dict.lookup("model")
     );
 
     Info<< "Selecting field: "
-         << mfpFieldName << endl;
+         << utilFieldName << endl;
 
     dictionaryConstructorTable::iterator cstrIter =
-        dictionaryConstructorTablePtr_->find(mfpFieldName);
+        dictionaryConstructorTablePtr_->find(utilFieldName);
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
         FatalError
-            << "mfpField::New(const dictionary&) : " << endl
-            << "    unknown mfpField type "
-            << mfpFieldName
+            << "utilField::New(const dictionary&) : " << endl
+            << "    unknown utilField type "
+            << utilFieldName
             << ", constructor not in hash table" << endl << endl
             << "    Valid types are :" << endl;
         Info<< dictionaryConstructorTablePtr_->toc() << abort(FatalError);
     }
 
-    return autoPtr<mfpField>
+    return autoPtr<utilField>
 	(
 		cstrIter()(t, mesh, rU, dict)
 	);
@@ -97,26 +97,26 @@ autoPtr<mfpField> mfpField::New
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-mfpField::~mfpField()
+utilField::~utilField()
 {}
 
 
-const fileName& mfpField::outputPath() const
+const fileName& utilField::outputPath() const
 {
     return outputPath_;
 }
 
-fileName& mfpField::outputPath()
+fileName& utilField::outputPath()
 {
     return outputPath_;
 }
 
-const fileName& mfpField::inputPath() const
+const fileName& utilField::inputPath() const
 {
     return inputPath_;
 }
 
-fileName& mfpField::inputPath()
+fileName& utilField::inputPath()
 {
     return inputPath_;
 }

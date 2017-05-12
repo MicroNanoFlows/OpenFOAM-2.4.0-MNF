@@ -23,27 +23,32 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    mfpField
+    outputPairForces
+
 
 Description
+    a rectangular measurement box divided into nBinsX and nBinsY
+    but rotated about an axis to measure rotationally symmetric averages
+
+
 
 SourceFiles
-    mfpFieldI.H
-    mfpField.C
-    mfpFieldIO.C
+    outputPairForcesI.H
+    outputPairForces.C
+    outputPairForcesIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef mfpField_H
-#define mfpField_H
+#ifndef outputPairForces_H
+#define outputPairForces_H
 
-#include "IOdictionary.H"
-#include "autoPtr.H"
-#include "runTimeSelectionTables.H"
+#include "polyField.H"
 #include "vector.H"
+#include "polyMesh.H"
 #include "volFields.H"
-#include "writeTimeData.H"
-#include "reducedUnits.H"
+#include "polyMoleculeCloud.H"
+#include "distribution.H"
+#include "boundedBox.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,96 +56,95 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class mfpField Declaration
+                           Class outputPairForces Declaration
 \*---------------------------------------------------------------------------*/
 
-class mfpField
+class outputPairForces
+:
+	public polyField
 {
 
-protected:
+private:
 
-    // Protected data
+    // Private data
 
-        const fvMesh& mesh_;
+        //- subDictionary containing the properties
+        dictionary propsDict_;
 
-        Time& time_;
+        propertyField fields_;
         
-        const reducedUnits& rU_;
+        fileName pathName_;
         
-        fileName inputPath_;
+        fileName nameFile1_;
+        fileName nameFile2_;
+        fileName nameFile3_;
+        fileName nameFile4_;
+        fileName nameFile5_;
+        
+        word fieldName_;
 
-        fileName outputPath_;
-
+        List<label> molIdsWall_;
+        List<label> molIdsFluid_;
+        
+       
+        vectorField positions_;
+        scalarField energies_;
+        vectorField forces_;
+        scalarField nPairs_;
+        List<bool> fluidMols_; 
+        
     // Private Member Functions
-
+        
 public:
 
     //- Runtime type information
-    TypeName("mfpField");
+    TypeName("outputPairForces");
 
-    // Declare runtime constructor selection table
-        declareRunTimeSelectionTable
-        (
-            autoPtr,
-            mfpField,
-            dictionary,
-            (
-                Time& t,
-                const polyMesh& mesh,
-                const reducedUnits& rU,
-                const dictionary& dict
-            ),
-            (t, mesh, rU, dict)
-        );
-   
     // Constructors
 
         //- Construct from components
-        mfpField
+        outputPairForces
         (
             Time& t,
             const polyMesh& mesh,
-            const reducedUnits& rU,
+            polyMoleculeCloud& molCloud,
             const dictionary& dict
         );
-
-
-    // Selectors
-
-        static autoPtr<mfpField> New
-        (
-            Time& t,
-            const polyMesh& mesh,
-            const reducedUnits& rU,
-            const dictionary& dict
-        );
-
-
 
     // Destructor
 
-        virtual ~mfpField();
+        ~outputPairForces();
 
 
     // Member Functions
 
-
-        const fileName& outputPath() const;
-        fileName& outputPath();
-
-        const fileName& inputPath() const;
-        fileName& inputPath();
-
         //- create initial field
-        virtual void createField() = 0;
+        void createField();
+        
+        void afterForce();
 
         //- calculate field
-        virtual void calculateField() = 0;
-        
-        //- write field
-        virtual void writeField() = 0;
+        void calculateField();
 
-};
+        void measureDuringForceComputation
+        (
+            polyMolecule* molI,
+            polyMolecule* molJ
+        );
+
+        void measureDuringForceComputationSite
+        (
+            polyMolecule* molI,
+            polyMolecule* molJ,
+            label sI,
+            label sJ
+        );
+
+        const propertyField& fields() const;
+
+        //- write field
+        void writeField();
+}; 		
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

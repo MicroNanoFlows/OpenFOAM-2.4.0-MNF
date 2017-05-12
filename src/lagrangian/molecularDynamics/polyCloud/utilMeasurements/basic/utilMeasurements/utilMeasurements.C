@@ -26,7 +26,7 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "mfpMeasurements.H"
+#include "utilMeasurements.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -35,7 +35,7 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-mfpMeasurements::mfpMeasurements
+utilMeasurements::utilMeasurements
 (
     Time& t,
     const polyMesh& mesh,
@@ -43,27 +43,26 @@ mfpMeasurements::mfpMeasurements
 )
 :
     time_(t),
-    mfpDict_
+    dict_
     (
         IOobject
         (
-            "mfpDict",
+            "inputDict",
             time_.system(),
             mesh,
             IOobject::MUST_READ,
             IOobject::NO_WRITE
         )
     ),
-    fieldList_(mfpDict_.lookup("fields")),
+    fieldList_(dict_.lookup("fields")),
     fieldNames_(fieldList_.size()),
     fieldIds_(fieldList_.size()),
     fields_(fieldList_.size())
 {
     if(fields_.size() > 0)
     {
-        fileName outputPath(time_.path()/"mfp");
+        fileName outputPath(time_.path()/"output");
         fileName inputPath(time_.path()/time_.timeName()/"uniform"/"poly");
-        
        
         if (isDir(outputPath))
         {
@@ -77,9 +76,9 @@ mfpMeasurements::mfpMeasurements
             const entry& fieldI = fieldList_[f];
             const dictionary& fieldIDict = fieldI.dict();
     
-            fields_[f] = autoPtr<mfpField>
+            fields_[f] = autoPtr<utilField>
             (
-                mfpField::New(time_, mesh, rU, fieldIDict)
+                utilField::New(time_, mesh, rU, fieldIDict)
             );
     
             fieldNames_[f] = fields_[f]->type();
@@ -92,13 +91,13 @@ mfpMeasurements::mfpMeasurements
 }
 
 
-mfpMeasurements::~mfpMeasurements()
+utilMeasurements::~utilMeasurements()
 {}
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
 
-void mfpMeasurements::createFields()
+void utilMeasurements::createFields()
 {
     forAll(fields_, f)
     {
@@ -106,7 +105,7 @@ void mfpMeasurements::createFields()
     }
 }
 
-void mfpMeasurements::calculateFields()
+void utilMeasurements::calculateFields()
 {
     forAll(fields_, f)
     {
@@ -115,10 +114,13 @@ void mfpMeasurements::calculateFields()
 }
 
 //- Note, not all fields automatically write out to disk.
-void mfpMeasurements::writeFields()
+void utilMeasurements::writeFields()
 {
+    fileName inputPath(time_.path()/time_.timeName()/"uniform"/"poly");
+        
     forAll(fields_, f)
     {
+        fields_[f]->inputPath() = inputPath;        
         fields_[f]->writeField();
     }
 }

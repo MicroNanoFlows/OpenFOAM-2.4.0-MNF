@@ -23,29 +23,28 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    mfpZone
+    positionsOutput
+
 
 Description
+    to write out a pdb file for creating movies
 
-    
-    
-    
 SourceFiles
-    mfpZone.C
-
+    positionsOutputI.H
+    positionsOutput.C
+    positionsOutputIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef mfpZone_H
-#define mfpZone_H
+#ifndef positionsOutput_H
+#define positionsOutput_H
 
-#include "utilField.H"
+#include "polyField.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
-// #include "boundedBox.H"
-#include "distribution.H"
-#include "writeTimeData.H"
+#include "polyMoleculeCloud.H"
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -53,12 +52,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class mfpZone Declaration
+                           Class positionsOutput Declaration
 \*---------------------------------------------------------------------------*/
 
-class mfpZone
+class positionsOutput
 :
-    public utilField
+    public polyField
 {
 
 private:
@@ -68,85 +67,61 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-//         boundedBox bb_;
+        propertyField fields_;
+
+        List<label> molIds_;
+
+        List<word> excludeSites_;
         
-        word fieldName_;
-
-        fileName nameFile1_;
-        fileName nameFile2_;        
-        fileName nameFile3_;           
-        fileName nameFile4_; 
-        fileName nameFile5_; 
-        fileName nameFile6_; 
-        fileName nameFile7_; 
-        fileName nameFile8_; 
-        fileName nameFile9_; 
-        fileName nameFile10_; 
-        fileName nameFile11_;  
-
-        List<DynamicList<scalar> > collectorOfFreePaths_;
-        List<scalar> freePaths_;
-        List<scalar> nCollisions_;
-
-        // points at which collisions occur
-        List<DynamicList<scalar> > startCollPosX_;
-        List<DynamicList<scalar> > startCollPosY_;
-        List<DynamicList<scalar> > startCollPosZ_;
-
-        List<DynamicList<scalar> > endCollPosX_;
-        List<DynamicList<scalar> > endCollPosY_;
-        List<DynamicList<scalar> > endCollPosZ_;
-
-        // times at which collisions occur
-        List<DynamicList<scalar> > startCollTimes_;
-        List<DynamicList<scalar> > endCollTimes_;
+//         fileName pathName_;
         
+        word nameFile_;
 
-        label nMols_;
-
-        label nSteps_;
-
-//         label nOutputSteps_;        
-        scalar binWidthVel_;
-        scalar binWidthColl_;
-        scalar binWidthProb_;
-        
-        scalar deltaT_;
-        scalar endTime_;
-        
     // Private Member Functions
-        
-        void readFromStorage();
-        void meanFreePathVsTime();
 
- public:
+public:
 
     //- Runtime type information
-    TypeName("mfpZone");
+    TypeName("positionsOutput");
 
     // Constructors
 
         //- Construct from components
-        mfpZone
+        positionsOutput
         (
             Time& t,
             const polyMesh& mesh,
-            const reducedUnits& rU,
+            polyMoleculeCloud& molCloud,
             const dictionary& dict
         );
 
     // Destructor
 
-        ~mfpZone();
-
+        ~positionsOutput();
 
     // Member Functions
 
         //- create initial field
         void createField();
-        
+        void afterForce();
         //- calculate field
         void calculateField();
+
+        void measureDuringForceComputation
+        (
+            polyMolecule* molI,
+            polyMolecule* molJ
+        );
+
+        void measureDuringForceComputationSite
+        (
+            polyMolecule* molI,
+            polyMolecule* molJ,
+            label sI,
+            label sJ
+        );
+
+        const propertyField& fields() const;
 
         //- write field
         void writeField();

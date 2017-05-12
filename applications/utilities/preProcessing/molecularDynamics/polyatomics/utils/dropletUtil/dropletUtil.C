@@ -55,16 +55,21 @@ int main(int argc, char *argv[])
 #   include "createMesh.H"
 
     reducedUnits rU(runTime, mesh);
+
+    utilMeasurements fields(runTime, mesh, rU);     
     
-    runTime.setTime(timeDirs[timeDirs.size()-1], timeDirs.size()-1);
+    forAll(timeDirs, timeI)
+    {
+        runTime.setTime(timeDirs[timeI], timeI);
 
-    Info<< "Running utility for Latest Time: " << runTime.timeName() << endl;
+        Info<< "Time: " << runTime.timeName() << endl;
 
-    utilMeasurements fields(runTime, mesh, rU);   
+        fields.createFields();       
+        fields.calculateFields();
+        fields.writeFields(); 
 
-    fields.createFields();       
-    fields.calculateFields();
-    fields.writeFields();    
+        runTime.write();
+    }  
     
     Info<< nl << "ClockTime = " << runTime.elapsedClockTime() << " s"
         << nl << endl;

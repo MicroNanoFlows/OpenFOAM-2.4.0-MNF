@@ -1,6 +1,3 @@
-basic/mfpMeasurements/mfpMeasurements.C
-basic/mfpField/mfpField.C
-
 models/mfpZone.C
 
 meanFreePaths.C
