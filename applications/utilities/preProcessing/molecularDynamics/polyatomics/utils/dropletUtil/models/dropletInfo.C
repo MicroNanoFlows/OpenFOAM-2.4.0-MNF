@@ -60,13 +60,19 @@ dropletInfo::dropletInfo
     nameFile2_(propsDict_.lookup("nameFile_energies")),
     nameFile3_(propsDict_.lookup("nameFile_forces")),
     nameFile4_(propsDict_.lookup("nameFile_nPairs")),
-    nameFile5_(propsDict_.lookup("nameFile_referenceMols"))
+    nameFile5_(propsDict_.lookup("nameFile_referenceMols")),
+    endTime_(readScalar(propsDict_.lookup("endTime"))),
+    mass_(readScalar(propsDict_.lookup("molecularMass")))
 {
+//     writeTime_ = GET;
+    deltaT_ = time_.deltaT().value();
+    
 //     endTime_ = time_.endTime().value();
     
 //     Info << "endTime = " << endTime_ << endl;
     
-//     deltaT_ = time_.deltaT().value();
+    
+    mass_ /= rU_.refMass();
     
 //     nSteps_ = endTime_/deltaT_;
     
@@ -76,6 +82,14 @@ dropletInfo::dropletInfo
 //     {
 //         nOutputSteps_ = readLabel(propsDict_.lookup("nOutputSteps"));
 //     }
+//     
+    startTime_ = deltaT_*2.0;
+    
+    if(propsDict_.found("startTime"))    
+    {        
+        startTime_ = readScalar(propsDict_.lookup("startTime"));
+    }
+//     writeTime/deltaT
 }
 
 
@@ -92,240 +106,296 @@ dropletInfo::~dropletInfo()
 
 void dropletInfo::createField()
 {
-    readFromStorage();
- 
+    
 }
 
 
-void dropletInfo::meanFreePathVsTime()
+void dropletInfo::findSegments(List<DynamicList<label> >& ids)
 {
-    scalarField mfp(nSteps_, 0.0);
-    scalarField mfp2(nSteps_, 0.0);    
-    scalarField time(nSteps_, 0.0);
+    // outer list = number of segments
+    // inner list = mol indices within segment 
+    DynamicList<vector> segmentPositions;
     
-    List<label> indices(nMols_, 0);
+    label counter = 0;
     
-    scalar MFP = 0.0;
-    scalar Nmols_freepaths = 0.0;
-    scalar Nmols = 0.0;
-
-    distribution velDistr(binWidthVel_);    
-    distribution probDistr(binWidthProb_);
-
-    label count = 0;
-    for(label t = 0; t < nSteps_; t++)
+    forAll(positions_, i)
     {
-        time[t] = ( scalar(t)+1.0 )*deltaT_;
+        const vector& pI = positions_[i];
         
-        if(count > 100000)
+        label N = segmentPositions.size();
+        
+        if(fluidMols_[i])
         {
-            Info << "time = " << time[t] << endl;
-            count = 0;
-        }
-        
-        count++;
-        
-        for(label i = 0; i < nMols_; i++)
-        {
-            label& index = indices[i];
-
-            scalar tStart = 0.0;             
-            scalar tEnd = endTime_;
-            
-            if(index < endCollTimes_[i].size())
+            if(N == 0)
             {
-                if(time[t] > endCollTimes_[i][index])
-                {
-                    index++;
-                }
-            }
-            
-            if(index < endCollTimes_[i].size())
-            {
-                tEnd = endCollTimes_[i][index];            
-            }
-            
-            if(index < startCollTimes_[i].size()+1)
-            {
-                if(index != 0)
-                {
-                    tStart = startCollTimes_[i][index-1];
-                }
-            }
-            
-            scalar fp = 0.0; // free path
-            
-            if( index < collectorOfFreePaths_[i].size() )
-            {
-                fp = collectorOfFreePaths_[i][index];
+                segmentPositions.append(pI);
+                ids[counter].append(i);
+                counter++;
             }
             else
             {
-                fp = freePaths_[i];
-            }
-            
-            if(time[t] > tStart)
-            {
-                scalar m = fp/(tEnd-tStart);
-                scalar C = fp - m*tEnd;
-                scalar l = m*time[t] + C;
-                probDistr.add(l*rU_.refLength()/1e-9);
-                MFP += l;
-                Nmols_freepaths += 1.0;
+                bool segmentFound = false;
                 
-                scalar dl = (fp*deltaT_)/(tEnd-tStart);
-                scalar dV = dl/deltaT_;
-                velDistr.add(dV*rU_.refVelocity());
+                forAll(segmentPositions, j)
+                {
+                    const vector& pJ = segmentPositions[j];
+                    
+                    scalar pIJ = mag(pI - pJ);
+                    
+                    if(pIJ < D_)
+                    {
+                        segmentFound = true;
+                        ids[j].append(i);
+                    }
+                }
                 
-//                 if(i == 0)
-//                 {
-//                     Info << "index = " << index 
-//                         << ", tStart = " << tStart
-//                         << ", tEnd = " << tEnd
-//                         << ", fp = " << fp 
-//                         << ", dl = " << dl
-//                         << ", l = " << l
-//                         << endl;
-//                 }
+                if(!segmentFound)
+                {
+                    segmentPositions.append(pI);
+                    ids[counter].append(i);          
+                    counter++;
+                }
             }
         }
+    }
+
+    Info << "segmentPositions = " << segmentPositions << endl; 
+}
+
+
+void dropletInfo::getError
+(
+    const List<DynamicList<label> >& ids,
+    label& error,
+    label& id
+)
+{
+    label actualN = nActualMols_;
+    error = actualN;
+    
+    id = -1;
+    
+    forAll(ids, i)
+    {
+        label nMols = ids[i].size();
         
-        Nmols += scalar(nMols_);
-        
-        if(Nmols_freepaths > 0.0)
+        if((actualN - nMols) < error)
         {
-            mfp[t] = MFP/Nmols_freepaths;
-        }
-        
-        if(Nmols > 0.0)
-        {
-             mfp2[t] = MFP/Nmols;
+            error = actualN - nMols;
+            id = i;
         }
     }
     
-    writeTimeData
+    Info << "error = " << error << endl;
+}
+
+void dropletInfo::setDropletPositions
+(
+    const List<DynamicList<label> >& ids,
+    const label& id
+)
+{
+    newMolsToPick_.setSize(fluidMols_.size(), false);
+    
+    nSelectedMols_ = 0;
+    forAll(ids[id], j)
+    {
+        const label& tN = ids[id][j];
+        newMolsToPick_[tN] = true;
+        nSelectedMols_++;
+    }
+    
+}
+
+
+void dropletInfo::calculateField()
+{
+    if(time_.timeOutputValue() >= startTime_) // skipping some known issues in first time step
+    {
+        readFromStorage();
+    
+        {
+            // estimate radius             
+            label N = 0;
+            
+            forAll(positions_, i)
+            {
+                if(fluidMols_[i])
+                {
+                    N++;
+                }
+            }
+            
+            nActualMols_ = N;
+            
+            scalar rho = 1000.0/rU_.refMassDensity();
+            scalar factor = 0.5;
+            scalar term = (3.0*mass_*scalar(N))/(factor*rho*4.0*constant::mathematical::pi);
+            scalar R = Foam::pow(term, (1.0/3.0));
+            
+            Info << " R = " << R << endl;
+            
+            scalar offset_ = 1.0;
+            
+            D_ = 2*R + offset_;
+            
+            boundedBox bbMesh( mesh_.bounds().min(), mesh_.bounds().max());
+            scalar Lx = bbMesh.span().x();
+            scalar Lz = bbMesh.span().z();
+            scalar midX = Lx*0.5;            
+            scalar midZ = Lz*0.5;            
+            
+            
+            {
+
+                List<DynamicList<label> > ids(10);
+                
+                findSegments(ids);
+               
+                bool fullSegmentFound = false;
+                
+                // try 0
+
+                label error;
+                label id;
+                
+                getError(ids, error, id);
+                
+                if(error < 5)
+                {
+                    fullSegmentFound = true;
+                    
+                    setDropletPositions(ids, id);
+                }
+            
+            
+                if(!fullSegmentFound)
+                {
+                    // repeat but first translate some molecules
+                    forAll(ids, i)
+                    {
+                        //push all molecules in +Lx
+                        // then push all molecules in +Lz
+                        forAll(ids[i], j)
+                        {
+                            const label& tN = ids[i][j];
+                        
+                            vector r1 = positions_[tN];
+                            
+                            if(r1.x() < midX)
+                            {
+                                vector r2 = r1 + Lx*vector(1, 0, 0);
+                                positions_[tN] = r2;
+                            }
+                        }
+                    }
+                    
+                    // try again 
+                    
+                    List<DynamicList<label> > ids1(10);
+            
+                    findSegments(ids1);
+
+                    label error1;
+                    label id1;
+                    
+                    getError(ids1, error1, id1);
+                    
+                    if(error1 < 5)
+                    {
+                        fullSegmentFound = true;
+                        setDropletPositions(ids1, id1);
+                    }                        
+                    
+                    if(!fullSegmentFound)
+                    {
+                        forAll(ids1, i)
+                        {
+                            //push all molecules in +Lx
+                            // then push all molecules in +Lz
+                            forAll(ids1[i], j)
+                            {
+                                const label& tN = ids1[i][j];
+                            
+                                vector r1 = positions_[tN];
+                                
+                                if (r1.z() < midZ) 
+                                {
+                                    vector r2 = r1 + Lz*vector(0, 0, 1);
+                                    positions_[tN] = r2;
+                                }
+                            }
+                        }
+                        
+                        // try again
+                        List<DynamicList<label> > ids2(10);
+                
+                        findSegments(ids2);
+
+                        label error2;
+                        label id2;
+                        
+                        getError(ids2, error2, id2);
+                        
+                        if(error2 < 5)
+                        {
+                            fullSegmentFound = true;
+                            setDropletPositions(ids2, id2);
+                        }        
+                        else
+                        {
+                            FatalErrorIn("void dropletInfo::calculateField()")
+                                << "Something strange - bad coding or something"
+                                << exit(FatalError);                                
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+    
+void dropletInfo::writeField()
+{
+    // write xmol file
+    {
+        const reducedUnits& rU = rU_;
+
+        fileName fName(outputPath_/"shifted_"+fieldName_+".xmol");
+    
+        OFstream str(fName);
+    
+        str << nSelectedMols_ << nl << "polyMoleculeCloud site positions in angstroms" << nl;
+
+        // for all processors
+        forAll(positions_, i)
+        {
+            vector rI = positions_[i]*rU.refLength()*1e10;
+            
+            if(newMolsToPick_[i])
+            {
+                str <<  'C'
+                    << ' ' << rI.x()
+                    << ' ' << rI.y()
+                    << ' ' << rI.z()
+                    << nl;
+            }
+        }
+    }    
+    
+    if(time_.timeOutputValue() >= endTime_)
+    {
+        
+        
+    }
+/*    writeTimeData
     (
         outputPath_,
         "dropletInfo_"+fieldName_+"_method_1_cumulFreePath_nm_vs_time_ns.txt",
         time*rU_.refTime()/1e-9,
         mfp*rU_.refLength()/1e-9,
         false
-    );
-
-    writeTimeData
-    (
-        outputPath_,
-        "dropletInfo_"+fieldName_+"_method_2_cumulFreePath_nm_vs_time_ns.txt",
-        time*rU_.refTime()/1e-9,
-        mfp2*rU_.refLength()/1e-9,
-        false
-    );    
-    
-    {
-        
-        List< Pair<scalar> > histogram = probDistr.scaledByMax();
-        
-        OFstream file(outputPath_/"dropletInfo_"+fieldName_+"_probability_vs_freePathDistr_nm.txt");
-
-        if(file.good())
-        {
-            forAll(histogram, i)
-            {
-                file 
-                    << histogram[i].first() << "\t"
-                    << histogram[i].second() << "\t"
-                    << endl;
-            }
-        }
-        else
-        {
-            FatalErrorIn("void dropletInfo::write()")
-                << "Cannot open file " << file.name()
-                << abort(FatalError);
-        }
-    }
-    {
-        
-        List< Pair<scalar> > histogram = velDistr.normalised();
-        
-        OFstream file(outputPath_/"dropletInfo_"+fieldName_+"_probabilityNormalised_vs_velocity.txt");
-
-        if(file.good())
-        {
-            forAll(histogram, i)
-            {
-                file 
-                    << histogram[i].first() << "\t"
-                    << histogram[i].second() << "\t"
-                    << endl;
-            }
-        }
-        else
-        {
-            FatalErrorIn("void dropletInfo::write()")
-                << "Cannot open file " << file.name()
-                << abort(FatalError);
-        }
-    }    
-    
-}
-
-void dropletInfo::calculateField()
-{
-
-}
-    
-void dropletInfo::writeField()
-{
-    // find the last free path that made the first start
-    
-    label iStart = -1;
-    scalar tStart = 0.0;
-    
-    for (label i = 0; i < nMols_; i++)
-    {
-        if(startCollTimes_[i][0] > tStart)
-        {
-            tStart = startCollTimes_[i][0];
-            iStart = i;
-        }
-    }
-    
-    Info << nl << "start at time = " << tStart << ", mol = " << iStart << endl;
-
-    meanFreePathVsTime();
-    
-    // distribution for no of collisions per atom       
-    {
-        distribution d(binWidthColl_);
-        
-        for (label i = 0; i < nMols_; i++)
-        {
-            d.add(nCollisions_[i]);
-        }        
-        
-        List< Pair<scalar> > histogram = d.raw();
-        
-        OFstream file(outputPath_/"dropletInfo_"+fieldName_+"_collisionDistribution.txt");
-
-        if(file.good())
-        {
-            forAll(histogram, i)
-            {
-                file 
-                    << histogram[i].first() << "\t"
-                    << histogram[i].second() << "\t"
-                    << endl;
-            }
-        }
-        else
-        {
-            FatalErrorIn("void dropletInfo::write()")
-                << "Cannot open file " << file.name()
-                << abort(FatalError);
-        }
-    }    
-       
+    ); */    
 }
 
 
@@ -345,7 +415,7 @@ void dropletInfo::readFromStorage()
 
         if(goodFile)
         {
-            file >> collectorOfFreePaths_;
+            file >> positions_;
         }
     }
     {
@@ -355,7 +425,7 @@ void dropletInfo::readFromStorage()
 
         if(goodFile)
         {
-            file >> freePaths_;
+            file >> energies_;
         }
     }    
     {
@@ -365,7 +435,7 @@ void dropletInfo::readFromStorage()
 
         if(goodFile)
         {
-            file >> nCollisions_;
+            file >> forces_;
         }
     }
     {
@@ -375,7 +445,7 @@ void dropletInfo::readFromStorage()
 
         if(goodFile)
         {
-            file >> startCollPosX_;
+            file >> nPairs_;
         }
     }
     {
@@ -385,75 +455,9 @@ void dropletInfo::readFromStorage()
 
         if(goodFile)
         {
-            file >> startCollPosY_;
+            file >> fluidMols_;
         }
     }
-    {
-        IFstream file(pathName/nameFile6_);
-
-        bool goodFile = file.good();
-
-        if(goodFile)
-        {
-            file >> startCollPosZ_;
-        }
-    }
-    {
-        IFstream file(pathName/nameFile7_);
-
-        bool goodFile = file.good();
-
-        if(goodFile)
-        {
-            file >> endCollPosX_;
-        }
-    }
-    {
-        IFstream file(pathName/nameFile8_);
-
-        bool goodFile = file.good();
-
-        if(goodFile)
-        {
-            file >> endCollPosY_;
-        }
-    }
-    {
-        IFstream file(pathName/nameFile9_);
-
-        bool goodFile = file.good();
-
-        if(goodFile)
-        {
-            file >> endCollPosZ_;
-        }
-    }    
-    {
-        IFstream file(pathName/nameFile10_);
-
-        bool goodFile = file.good();
-
-        if(goodFile)
-        {
-            file >> startCollTimes_;
-        }
-    }
-    {
-        IFstream file(pathName/nameFile11_);
-
-        bool goodFile = file.good();
-
-        if(goodFile)
-        {
-            file >> endCollTimes_;
-        }
-    } 
-    
-//     Info << "collectorOfFreePaths = " << collectorOfFreePaths_ << endl;
-//     Info << "freePaths = " << freePaths_ << endl;
-//     Info << "nCollisions = " << nCollisions_ << endl;        
-          
-    
 }
 
 } // End namespace Foam

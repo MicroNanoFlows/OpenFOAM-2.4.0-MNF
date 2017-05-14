@@ -382,7 +382,7 @@ void meanFreePath::writeToStorage()
 {
     // note all output/input is in reduced units - carefully convert!
     
-    fileName pathName(time_.path()/time_.timeName()/"uniform"/"poly");
+    fileName pathName(time_.path()/time_.timeName()/"uniform");
     
     {
         OFstream file(pathName/nameFile1_);
@@ -548,7 +548,7 @@ void meanFreePath::readFromStorage()
 {
     Info << "reading from storage" << endl;
     
-    fileName pathName(time_.path()/time_.timeName()/"uniform"/"poly");
+    fileName pathName(time_.path()/time_.timeName()/"uniform");
     
     {
         IFstream file(pathName/nameFile1_);

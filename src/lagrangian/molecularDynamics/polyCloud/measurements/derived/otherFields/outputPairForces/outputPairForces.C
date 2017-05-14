@@ -198,7 +198,8 @@ void outputPairForces::calculateField()
 }
 
 void outputPairForces::afterForce()
-{}
+{
+}
 
 void outputPairForces::writeField()
 {
@@ -231,7 +232,7 @@ void outputPairForces::writeField()
             {
                 FatalErrorIn("void outputPairForces::writeField()")
                     << "Cannot open file " << file.name()
-                    << abort(FatalError);
+                   << exit(FatalError);
             }
         }
         {
@@ -245,7 +246,7 @@ void outputPairForces::writeField()
             {
                 FatalErrorIn("void outputPairForces::writeField()")
                     << "Cannot open file " << file.name()
-                    << abort(FatalError);
+                   << exit(FatalError);
             }
         }        
         
@@ -260,7 +261,7 @@ void outputPairForces::writeField()
             {
                 FatalErrorIn("void outputPairForces::writeField()")
                     << "Cannot open file " << file.name()
-                    << abort(FatalError);
+                   << exit(FatalError);
             }
         }    
         {
@@ -274,7 +275,7 @@ void outputPairForces::writeField()
             {
                 FatalErrorIn("void outputPairForces::writeField()")
                     << "Cannot open file " << file.name()
-                    << abort(FatalError);
+                   << exit(FatalError);
             }
         }  
         
@@ -289,7 +290,7 @@ void outputPairForces::writeField()
             {
                 FatalErrorIn("void outputPairForces::writeField()")
                     << "Cannot open file " << file.name()
-                    << abort(FatalError);
+                   << exit(FatalError);
             }
         }
         

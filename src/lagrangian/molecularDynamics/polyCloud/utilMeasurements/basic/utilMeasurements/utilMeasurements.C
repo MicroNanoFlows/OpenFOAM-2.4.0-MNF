@@ -62,7 +62,7 @@ utilMeasurements::utilMeasurements
     if(fields_.size() > 0)
     {
         fileName outputPath(time_.path()/"output");
-        fileName inputPath(time_.path()/time_.timeName()/"uniform"/"poly");
+        fileName inputPath(time_.path()/time_.timeName()/"uniform");
        
         if (isDir(outputPath))
         {
@@ -107,8 +107,11 @@ void utilMeasurements::createFields()
 
 void utilMeasurements::calculateFields()
 {
+    fileName inputPath(time_.path()/time_.timeName()/"uniform");
+    
     forAll(fields_, f)
     {
+        fields_[f]->inputPath() = inputPath;          
         fields_[f]->calculateField();
     }
 }
@@ -116,8 +119,8 @@ void utilMeasurements::calculateFields()
 //- Note, not all fields automatically write out to disk.
 void utilMeasurements::writeFields()
 {
-    fileName inputPath(time_.path()/time_.timeName()/"uniform"/"poly");
-        
+    fileName inputPath(time_.path()/time_.timeName()/"uniform");
+    
     forAll(fields_, f)
     {
         fields_[f]->inputPath() = inputPath;        

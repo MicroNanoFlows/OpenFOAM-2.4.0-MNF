@@ -43,9 +43,9 @@ SourceFiles
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
-// #include "boundedBox.H"
 #include "distribution.H"
 #include "writeTimeData.H"
+#include "boundedBox.H" 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -68,8 +68,6 @@ private:
         //- subDictionary containing the properties
         dictionary propsDict_;
 
-//         boundedBox bb_;
-        
         word fieldName_;
 
         fileName nameFile1_;
@@ -79,26 +77,45 @@ private:
         fileName nameFile5_; 
  
 
-/*
+        vectorField positions_;
+        scalarField energies_;
+        vectorField forces_;
+        scalarField nPairs_;
+        List<bool> fluidMols_; 
+
+        List<bool> newMolsToPick_;
         
+        label nActualMols_;
+        
+        label nSelectedMols_;
+        
+        scalar startTime_;
+        scalar endTime_;
+        
+        scalar mass_;
+        
+        scalar deltaT_;
 
-        label nMols_;
-
-        label nSteps_;
-*/
-//         label nOutputSteps_;        
-//         scalar binWidthVel_;
-//         scalar binWidthColl_;
-//         scalar binWidthProb_;
-//         
-//         scalar deltaT_;
-//         scalar endTime_;
+        scalar D_;
         
     // Private Member Functions
         
-        void readTimeDirInfo();
-
-
+        void readFromStorage();
+        
+        void findSegments(List<DynamicList<label> >& ids);
+        
+        void getError
+        (
+            const List<DynamicList<label> >& ids,
+            label& error,
+            label& id
+        );
+        void setDropletPositions
+        (
+            const List<DynamicList<label> >& ids,
+            const label& id
+        );        
+        
  public:
 
     //- Runtime type information

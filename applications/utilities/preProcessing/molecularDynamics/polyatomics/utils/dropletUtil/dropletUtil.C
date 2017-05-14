@@ -57,14 +57,14 @@ int main(int argc, char *argv[])
     reducedUnits rU(runTime, mesh);
 
     utilMeasurements fields(runTime, mesh, rU);     
+    fields.createFields();     
     
     forAll(timeDirs, timeI)
     {
         runTime.setTime(timeDirs[timeI], timeI);
 
         Info<< "Time: " << runTime.timeName() << endl;
-
-        fields.createFields();       
+  
         fields.calculateFields();
         fields.writeFields(); 
 
