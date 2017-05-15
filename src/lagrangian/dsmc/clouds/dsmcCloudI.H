@@ -207,12 +207,12 @@ inline Foam::dsmcFaceTracker& Foam::dsmcCloud::tracker()//****
 
 inline const Foam::dsmcReactions& Foam::dsmcCloud::reactions() const//****
 {
-	return reactions_;
+    return reactions_;
 }
 
 inline Foam::dsmcReactions& Foam::dsmcCloud::reactions()//****
 {
-	return reactions_;
+    return reactions_;
 }
 
 
@@ -221,7 +221,7 @@ inline Foam::scalarList Foam::dsmcCloud::infoMeasurements() const
 {
 //     scalar sysMass = 0.0;
     
-    scalarList infoMeasurements(5 ,0.0);
+    scalarList infoMeasurements(7 ,0.0);
 
     forAllConstIter(dsmcCloud, *this, iter)
     {
@@ -240,6 +240,14 @@ inline Foam::scalarList Foam::dsmcCloud::infoMeasurements() const
             infoMeasurements[3] += physicoChemical::k.value()*p.vibLevel()[i]*cP.thetaV()[i]; //vibrationalEnergy
         }
         infoMeasurements[4] += cP.electronicEnergyList()[p.ELevel()]; //electronicEnergy
+        if(p.stuckToWall() == 1)
+        {
+            infoMeasurements[5]++; //stuckToWall
+        }
+        else
+        {
+            infoMeasurements[6]++; //not stuckToWall
+        }
     }
     
     infoMeasurements[0] *= nParticle_;
@@ -247,6 +255,8 @@ inline Foam::scalarList Foam::dsmcCloud::infoMeasurements() const
     infoMeasurements[2] *= nParticle_;
     infoMeasurements[3] *= nParticle_;
     infoMeasurements[4] *= nParticle_;
+    infoMeasurements[5] *= nParticle_;
+    infoMeasurements[6] *= nParticle_;
 
     return infoMeasurements;
 }

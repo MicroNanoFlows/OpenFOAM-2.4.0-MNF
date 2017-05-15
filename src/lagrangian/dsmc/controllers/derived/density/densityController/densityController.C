@@ -315,6 +315,11 @@ void densityController::insertParcelWithinDSMC(const label& c)
         
         RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
     }
+    
+    label stuckToWall = 0;
+    scalarField wallTemperature(4, 0.0);
+    vectorField wallVectors(4, vector::zero);
+              
 
     cloud_.addNewParcel
     (
@@ -329,6 +334,9 @@ void densityController::insertParcelWithinDSMC(const label& c)
         typeId_,
         0,
         0,
+        stuckToWall,
+        wallTemperature,
+        wallVectors,
         vibLevel
     );
 } 

@@ -46,6 +46,9 @@ Foam::dsmcParcel::dsmcParcel
     typeId_(-1),
     newParcel_(0),
     classification_(0),
+    stuckToWall_(0),
+    wallTemperature_(0),
+    wallVectors_(0),
     vibLevel_(0)
 {
     if (readFields)
@@ -59,6 +62,9 @@ Foam::dsmcParcel::dsmcParcel
             typeId_ = readLabel(is);
             newParcel_ = readLabel(is);
             classification_ = readLabel(is);
+            stuckToWall_ = readLabel(is);
+            is >> wallTemperature_;
+            is >> wallVectors_;
             is >> vibLevel_;
         }
         else
@@ -73,7 +79,10 @@ Foam::dsmcParcel::dsmcParcel
                 + sizeof(typeId_)
                 + sizeof(newParcel_)
                 + sizeof(classification_)
+                + sizeof(stuckToWall_)
             );
+            is >> wallTemperature_;
+            is >> wallVectors_;
             is >> vibLevel_;
         }
     }
@@ -117,6 +126,15 @@ void Foam::dsmcParcel::readFields(Cloud<dsmcParcel>& c)
     
     IOField<label> classification(c.fieldIOobject("classification", IOobject::MUST_READ));
     c.checkFieldIOobject(c, classification);
+
+    IOField<label> stuckToWall(c.fieldIOobject("stuckToWall", IOobject::MUST_READ));
+    c.checkFieldIOobject(c, stuckToWall);
+    
+    IOField<scalarField> wallTemperature(c.fieldIOobject("wallTemperature", IOobject::MUST_READ));
+    c.checkFieldIOobject(c, wallTemperature);
+    
+    IOField<vectorField> wallVectors(c.fieldIOobject("wallVectors", IOobject::MUST_READ));
+    c.checkFieldIOobject(c, wallVectors);
     
     IOField<labelField> vibLevel(c.fieldIOobject("vibLevel", IOobject::MUST_READ));
     c.checkFieldIOobject(c, vibLevel);
@@ -133,6 +151,9 @@ void Foam::dsmcParcel::readFields(Cloud<dsmcParcel>& c)
         p.typeId_ = typeId[i];
         p.newParcel_ = newParcel[i];
         p.classification_ = classification[i];
+        p.stuckToWall_ = stuckToWall[i];
+        p.wallTemperature_ = wallTemperature[i];
+        p.wallVectors_ = wallVectors[i];
         p.vibLevel_ = vibLevel[i];
         i++;
     }
@@ -153,6 +174,9 @@ void Foam::dsmcParcel::writeFields(const Cloud<dsmcParcel>& c)
     IOField<label> typeId(c.fieldIOobject("typeId", IOobject::NO_READ), np);
     IOField<label> newParcel(c.fieldIOobject("newParcel", IOobject::NO_READ), np);
     IOField<label> classification(c.fieldIOobject("classification", IOobject::NO_READ), np);
+    IOField<label> stuckToWall(c.fieldIOobject("stuckToWall", IOobject::NO_READ), np);
+    IOField<scalarField> wallTemperature(c.fieldIOobject("wallTemperature", IOobject::NO_READ), np);
+    IOField<vectorField> wallVectors(c.fieldIOobject("wallVectors", IOobject::NO_READ), np);
     IOField<labelField> vibLevel(c.fieldIOobject("vibLevel", IOobject::NO_READ), np);
 
     label i = 0;
@@ -167,6 +191,9 @@ void Foam::dsmcParcel::writeFields(const Cloud<dsmcParcel>& c)
         typeId[i] = p.typeId();
         newParcel[i] = p.newParcel();
         classification[i] = p.classification();
+        stuckToWall[i] = p.stuckToWall();
+        wallTemperature[i] = p.wallTemperature();
+        wallVectors[i] = p.wallVectors();
         vibLevel[i] = p.vibLevel();
         i++;
     }
@@ -178,7 +205,11 @@ void Foam::dsmcParcel::writeFields(const Cloud<dsmcParcel>& c)
     ELevel.write();
     typeId.write();
     newParcel.write();
+    stuckToWall.write();
+    wallTemperature.write();
+    wallVectors.write();
     classification.write();
+    
     vibLevel.write();
 }
 
@@ -202,6 +233,9 @@ Foam::Ostream& Foam::operator<<
             << token::SPACE << p.typeId()
             << token::SPACE << p.newParcel()
             << token::SPACE << p.classification()
+            << token::SPACE << p.stuckToWall()
+            << token::SPACE << p.wallTemperature()
+            << token::SPACE << p.wallVectors()
             << token::SPACE << p.vibLevel();
     }
     else
@@ -217,7 +251,10 @@ Foam::Ostream& Foam::operator<<
             + sizeof(p.typeId())
             + sizeof(p.newParcel())
             + sizeof(p.classification())
+            + sizeof(p.stuckToWall())
         );
+        os << p.wallTemperature();
+        os << p.wallVectors();
         os << p.vibLevel();
     }
 

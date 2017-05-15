@@ -231,6 +231,12 @@ void dsmcZoneFill::setInitialConfiguration()
                         
                         label classification = 0;
                         
+                        label stuckToWall = 0;
+                    
+                        scalarField wallTemperature(4, 0.0);
+                        
+                        vectorField wallVectors(4, vector::zero);
+                        
                         scalar RWF = 1.0;
                         
                         if(cloud_.axisymmetric())
@@ -240,7 +246,7 @@ void dsmcZoneFill::setInitialConfiguration()
                             
                             RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
                         }
-                        
+
                         cloud_.addNewParcel
                         (
                             p,
@@ -254,6 +260,9 @@ void dsmcZoneFill::setInitialConfiguration()
                             typeId,
                             newParcel,
                             classification,
+                            stuckToWall,
+                            wallTemperature,
+                            wallVectors,
                             vibLevel
                         );
                     }

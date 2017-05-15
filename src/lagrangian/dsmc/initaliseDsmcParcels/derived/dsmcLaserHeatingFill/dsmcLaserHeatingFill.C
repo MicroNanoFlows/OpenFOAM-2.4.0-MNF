@@ -250,6 +250,12 @@ void dsmcLaserHeatingFill::setInitialConfiguration()
                         
                         label classification = 0;
                         
+                        label stuckToWall = 0;
+                    
+                        scalarField wallTemperature(4, 0.0);
+                        
+                        vectorField wallVectors(4, vector::zero);
+                        
                         scalar RWF = 1.0;
                         
                         if(cloud_.axisymmetric())
@@ -273,6 +279,9 @@ void dsmcLaserHeatingFill::setInitialConfiguration()
                             typeId,
                             newParcel,
                             classification,
+                            stuckToWall,
+                            wallTemperature,
+                            wallVectors,
                             vibLevel
                         );
                     }

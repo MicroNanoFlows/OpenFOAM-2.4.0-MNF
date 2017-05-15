@@ -155,6 +155,9 @@ inline Foam::dsmcParcel::dsmcParcel
     const label typeId,
     const label newParcel,
     const label classification,
+    const label stuckToWall,
+    const scalarField wallTemperature,
+    const vectorField wallVectors,
     const labelList vibLevel
 )
 :
@@ -166,6 +169,9 @@ inline Foam::dsmcParcel::dsmcParcel
     typeId_(typeId),
     newParcel_(newParcel),
     classification_(classification),
+    stuckToWall_(stuckToWall),
+    wallTemperature_(wallTemperature),
+    wallVectors_(wallVectors),
     vibLevel_(vibLevel)
 {}
 
@@ -321,6 +327,21 @@ inline Foam::label Foam::dsmcParcel::classification() const
     return classification_;
 }
 
+inline Foam::label Foam::dsmcParcel::stuckToWall() const
+{
+    return stuckToWall_;
+}
+
+inline Foam::scalarField Foam::dsmcParcel::wallTemperature() const
+{
+    return wallTemperature_;
+}
+
+inline Foam::vectorField Foam::dsmcParcel::wallVectors() const
+{
+    return wallVectors_;
+}
+
 inline Foam::labelList Foam::dsmcParcel::vibLevel() const
 {
     return vibLevel_;
@@ -362,6 +383,21 @@ inline Foam::label& Foam::dsmcParcel::newParcel()
 inline Foam::label& Foam::dsmcParcel::classification()
 {
     return classification_;
+}
+
+inline Foam::label& Foam::dsmcParcel::stuckToWall()
+{
+    return stuckToWall_;
+}
+
+inline Foam::scalarField& Foam::dsmcParcel::wallTemperature()
+{
+    return wallTemperature_;
+}
+
+inline Foam::vectorField& Foam::dsmcParcel::wallVectors()
+{
+    return wallVectors_;
 }
 
 inline Foam::labelList& Foam::dsmcParcel::vibLevel()

@@ -347,6 +347,9 @@ void dsmcPlumeInflowPatch::controlParcelsBeforeMove()
             
                 label newParcel = 1;
                 
+                label stuckToWall = 0;
+                scalarField wallTemperature(4, 0.0);
+                vectorField wallVectors(4, vector::zero);       
 
                 cloud_.addNewParcel
                 (
@@ -360,7 +363,10 @@ void dsmcPlumeInflowPatch::controlParcelsBeforeMove()
                     faceTetIs.tetPt(),
                     typeId,
                     newParcel,
-                    0 ,
+                    0,
+                    stuckToWall,
+                    wallTemperature,
+                    wallVectors,
                     vibLevel
                 );
 

@@ -330,6 +330,10 @@ void dsmcMassFlowRateInlet::controlParcelsBeforeMove()
                     RWF = cloud_.maxRWF()*(radius/cloud_.radialExtent());
                 }
 
+                label stuckToWall = 0;
+                scalarField wallTemperature(4, 0.0);
+                vectorField wallVectors(4, vector::zero);
+              
                 cloud_.addNewParcel
                 (
                     p,
@@ -343,6 +347,9 @@ void dsmcMassFlowRateInlet::controlParcelsBeforeMove()
                     typeId,
                     newParcel,
                     0,
+                    stuckToWall,
+                    wallTemperature,
+                    wallVectors,
                     vibLevel
                 );
 
