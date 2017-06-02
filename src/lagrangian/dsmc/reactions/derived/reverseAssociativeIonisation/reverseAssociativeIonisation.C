@@ -387,7 +387,7 @@ void reverseAssociativeIonisation::reaction
             
             if((iMax - id) > VSMALL)
             {
-                //DISSOCIATION CAN OCCUR
+                //ASS. ION. CAN OCCUR
                 nReactions_++;
                 nReactionsPerTimeStep_++;
                 

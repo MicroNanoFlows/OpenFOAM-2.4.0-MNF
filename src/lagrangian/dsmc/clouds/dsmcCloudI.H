@@ -235,9 +235,13 @@ inline Foam::scalarList Foam::dsmcCloud::infoMeasurements() const
         infoMeasurements[0] += cP.mass(); //massInSystem
         infoMeasurements[1] += 0.5*cP.mass()*(p.U() & p.U()); //linearKineticEnergy
         infoMeasurements[2] += p.ERot(); //rotationalEnergy
-        forAll(p.vibLevel(), i)
+        if(cP.vibrationalDegreesOfFreedom() > 0)
         {
-            infoMeasurements[3] += physicoChemical::k.value()*p.vibLevel()[i]*cP.thetaV()[i]; //vibrationalEnergy
+            forAll(p.vibLevel(), i)
+            {
+                infoMeasurements[3] += physicoChemical::k.value()
+                                        *p.vibLevel()[i]*cP.thetaV()[i];
+            }
         }
         infoMeasurements[4] += cP.electronicEnergyList()[p.ELevel()]; //electronicEnergy
         if(p.stuckToWall() == 1)

@@ -298,8 +298,13 @@ void atomIonIonisation::reaction
         vector UQ = q.U();
         scalar ERotP = p.ERot();
         scalar ERotQ = q.ERot();
-        scalar EVibP = p.vibLevel()[0]*cloud_.constProps(typeIdP).thetaV()[0]*physicoChemical::k.value();
-        scalar EVibQ = q.vibLevel()[0]*cloud_.constProps(typeIdQ).thetaV()[0]*physicoChemical::k.value();
+        scalar EVibQ = 0;
+        if(cloud_.constProps(typeIdQ).vibrationalDegreesOfFreedom() > 0)
+        {        
+            EVibQ = q.vibLevel()[0]
+                        *cloud_.constProps(typeIdQ).thetaV()[0]
+                        *physicoChemical::k.value();
+        }
         scalar EEleP = cloud_.constProps(typeIdP).electronicEnergyList()[p.ELevel()];
         scalar EEleQ = cloud_.constProps(typeIdQ).electronicEnergyList()[q.ELevel()];
 
@@ -343,12 +348,21 @@ void atomIonIonisation::reaction
             {
                 relax_ = false;
                 
-                scalar thetaVQ = cloud_.constProps(typeIdQ).thetaV()[0];
-                scalar thetaDQ = cloud_.constProps(typeIdQ).thetaD()[0];
+                scalar thetaVQ = 0;
+                scalar thetaDQ = 0;
+                scalar ZrefQ = 0;
+                scalar refTempZvQ = 0;
+                
+                if(cloud_.constProps(typeIdQ).vibrationalDegreesOfFreedom() > 0)
+                {        
+                    thetaVQ = cloud_.constProps(typeIdQ).thetaV()[0];
+                    thetaDQ = cloud_.constProps(typeIdQ).thetaD()[0];
+                    ZrefQ = cloud_.constProps(typeIdQ).Zref()[0];
+                    refTempZvQ = cloud_.constProps(typeIdQ).TrefZv()[0];
+                }
                 scalar jMaxQ = cloud_.constProps(typeIdQ).numberOfElectronicLevels()-1;
                 scalar rotationalDofQ = cloud_.constProps(typeIdQ).rotationalDegreesOfFreedom();
-                scalar ZrefQ = cloud_.constProps(typeIdQ).Zref()[0];
-                scalar refTempZvQ = cloud_.constProps(typeIdQ).TrefZv()[0];
+                
                                 
                 translationalEnergy = translationalEnergy + heatOfReactionJoulesIon + EEleP;
                 
@@ -432,7 +446,7 @@ void atomIonIonisation::reaction
 
                 vector UcmAtoms = UP;
                 
-                scalar translationalEnergy2 = ERotP + EVibP;
+                scalar translationalEnergy2 = ERotP;
 
                 scalar cRatoms = sqrt(2.0*translationalEnergy2/mRatoms);
 
@@ -521,8 +535,13 @@ void atomIonIonisation::reaction
         vector UQ = q.U();
         scalar ERotP = p.ERot();
         scalar ERotQ = q.ERot();
-        scalar EVibP = p.vibLevel()[0]*cloud_.constProps(typeIdP).thetaV()[0]*physicoChemical::k.value();
-        scalar EVibQ = q.vibLevel()[0]*cloud_.constProps(typeIdQ).thetaV()[0]*physicoChemical::k.value();
+        scalar EVibP = 0.0;
+        if(cloud_.constProps(typeIdP).vibrationalDegreesOfFreedom() > 0)
+        {        
+            EVibP = p.vibLevel()[0]
+                        *cloud_.constProps(typeIdP).thetaV()[0]
+                        *physicoChemical::k.value();
+        }
         scalar EEleP = cloud_.constProps(typeIdP).electronicEnergyList()[p.ELevel()];
         scalar EEleQ = cloud_.constProps(typeIdQ).electronicEnergyList()[q.ELevel()];
 
@@ -567,12 +586,21 @@ void atomIonIonisation::reaction
             {
                 relax_ = false;
                 
-                scalar thetaVP = cloud_.constProps(typeIdP).thetaV()[0];
-                scalar thetaDP = cloud_.constProps(typeIdP).thetaD()[0];
+                scalar thetaVP = 0;
+                scalar thetaDP = 0;
+                scalar ZrefP = 0;
+                scalar refTempZvP = 0;
+                
+                if(cloud_.constProps(typeIdP).vibrationalDegreesOfFreedom() > 0)
+                {        
+                    thetaVP = cloud_.constProps(typeIdP).thetaV()[0];
+                    thetaDP = cloud_.constProps(typeIdP).thetaD()[0];
+                    ZrefP = cloud_.constProps(typeIdP).Zref()[0];
+                    refTempZvP = cloud_.constProps(typeIdP).TrefZv()[0];
+                }
                 scalar jMaxP = cloud_.constProps(typeIdP).numberOfElectronicLevels()-1;
                 scalar rotationalDofP = cloud_.constProps(typeIdP).rotationalDegreesOfFreedom();
-                scalar ZrefP = cloud_.constProps(typeIdP).Zref()[0];
-                scalar refTempZvP = cloud_.constProps(typeIdP).TrefZv()[0];
+               
                                 
                 translationalEnergy = translationalEnergy + heatOfReactionJoulesIon + EEleQ;
                 
@@ -656,7 +684,7 @@ void atomIonIonisation::reaction
 
                 vector UcmAtoms = UQ;
                 
-                scalar translationalEnergy2 = ERotQ + EVibQ;
+                scalar translationalEnergy2 = ERotQ;
 
                 scalar cRatoms = sqrt(2.0*translationalEnergy2/mRatoms);
 
@@ -685,7 +713,7 @@ void atomIonIonisation::reaction
                 p.ERot() = ERotP;
                 p.vibLevel()[0] = vibLevelP;
 
-                // Molecule Q will ionise
+                // Atom Q will ionise
                 vector position = q.position();
                 
                 label cell = -1;

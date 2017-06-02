@@ -315,8 +315,18 @@ void moleculeIonDissociationIonisation::reaction
         vector UQ = q.U();
         scalar ERotP = p.ERot();
         scalar ERotQ = q.ERot();
-        scalar EVibP = p.vibLevel()[0]*cloud_.constProps(typeIdP).thetaV()[0]*physicoChemical::k.value();
-        scalar EVibQ = q.vibLevel()[0]*cloud_.constProps(typeIdQ).thetaV()[0]*physicoChemical::k.value();
+        scalar EVibP = p.vibLevel()[0]
+                        *cloud_.constProps(typeIdP).thetaV()[0]
+                        *physicoChemical::k.value();
+                        
+        scalar EVibQ = 0;
+        
+        if(cloud_.constProps(typeIdQ).vibrationalDegreesOfFreedom() > 0)
+        {
+            EVibQ = q.vibLevel()[0]
+                    *cloud_.constProps(typeIdQ).thetaV()[0]
+                    *physicoChemical::k.value();
+        }
         scalar EEleP = cloud_.constProps(typeIdP).electronicEnergyList()[p.ELevel()];
         scalar EEleQ = cloud_.constProps(typeIdQ).electronicEnergyList()[q.ELevel()];
 
@@ -327,10 +337,18 @@ void moleculeIonDissociationIonisation::reaction
         scalar cRsqr = magSqr(UP - UQ);
         scalar translationalEnergy = 0.5*mR*cRsqr;
         
-        scalar thetaVQ = cloud_.constProps(typeIdQ).thetaV()[0];
-        scalar thetaDQ = cloud_.constProps(typeIdQ).thetaD()[0];
-        scalar ZrefQ = cloud_.constProps(typeIdQ).Zref()[0];
-        scalar refTempZvQ = cloud_.constProps(typeIdQ).TrefZv()[0];
+        scalar thetaVQ = 0;
+        scalar thetaDQ = 0;
+        scalar ZrefQ = 0;
+        scalar refTempZvQ = 0;
+        
+        if(cloud_.constProps(typeIdQ).vibrationalDegreesOfFreedom() > 0)
+        {
+            thetaVQ = cloud_.constProps(typeIdQ).thetaV()[0];
+            thetaDQ = cloud_.constProps(typeIdQ).thetaD()[0];
+            ZrefQ = cloud_.constProps(typeIdQ).Zref()[0];
+            refTempZvQ = cloud_.constProps(typeIdQ).TrefZv()[0];
+        }
         
         List<label> gListP = cloud_.constProps(typeIdP).degeneracyList();
         List<scalar> EElistP = cloud_.constProps(typeIdP).electronicEnergyList();
@@ -540,7 +558,10 @@ void moleculeIonDissociationIonisation::reaction
                 // Q remains NON-DISSOCIATED.
                 q.U() = UQ;
                 q.ERot() = ERotQ;
-                q.vibLevel()[0] = vibLevelQ;
+                if(cloud_.constProps(typeIdQ).vibrationalDegreesOfFreedom() > 0)
+                {
+                    q.vibLevel()[0] = vibLevelQ;
+                }
                 q.ELevel() = ELevelQ;
 
                 // Molecule P will dissociation.
@@ -709,7 +730,10 @@ void moleculeIonDissociationIonisation::reaction
                 // Q remains NON-DISSOCIATED.
                 q.U() = UQ;
                 q.ERot() = ERotQ;
-                q.vibLevel()[0] = vibLevelQ;
+                if(cloud_.constProps(typeIdQ).vibrationalDegreesOfFreedom() > 0)
+                {
+                    q.vibLevel()[0] = vibLevelQ;
+                }
                 q.ELevel() = ELevelQ;
 
                 // Molecule P will ionise.
@@ -777,8 +801,18 @@ void moleculeIonDissociationIonisation::reaction
         vector UQ = q.U();
         scalar ERotP = p.ERot();
         scalar ERotQ = q.ERot();
-        scalar EVibP = p.vibLevel()[0]*cloud_.constProps(typeIdP).thetaV()[0]*physicoChemical::k.value();
-        scalar EVibQ = q.vibLevel()[0]*cloud_.constProps(typeIdQ).thetaV()[0]*physicoChemical::k.value();
+        scalar EVibQ = q.vibLevel()[0]
+                        *cloud_.constProps(typeIdQ).thetaV()[0]
+                        *physicoChemical::k.value();
+                        
+        scalar EVibP = 0;
+        
+        if(cloud_.constProps(typeIdP).vibrationalDegreesOfFreedom() > 0)
+        {
+            EVibP = p.vibLevel()[0]
+                    *cloud_.constProps(typeIdP).thetaV()[0]
+                    *physicoChemical::k.value();
+        }
         scalar EEleP = cloud_.constProps(typeIdP).electronicEnergyList()[p.ELevel()];
         scalar EEleQ = cloud_.constProps(typeIdQ).electronicEnergyList()[q.ELevel()];
 
@@ -789,10 +823,18 @@ void moleculeIonDissociationIonisation::reaction
         scalar cRsqr = magSqr(UP - UQ);
         scalar translationalEnergy = 0.5*mR*cRsqr;
         
-        scalar thetaVP = cloud_.constProps(typeIdP).thetaV()[0];        
-        scalar thetaDP = cloud_.constProps(typeIdP).thetaD()[0];
-        scalar ZrefP = cloud_.constProps(typeIdP).Zref()[0];
-        scalar refTempZvP = cloud_.constProps(typeIdP).TrefZv()[0];
+        scalar thetaVP = 0;
+        scalar thetaDP = 0;
+        scalar ZrefP = 0;
+        scalar refTempZvP = 0;
+        
+        if(cloud_.constProps(typeIdP).vibrationalDegreesOfFreedom() > 0)
+        {
+            thetaVP = cloud_.constProps(typeIdP).thetaV()[0];
+            thetaDP = cloud_.constProps(typeIdP).thetaD()[0];
+            ZrefP = cloud_.constProps(typeIdP).Zref()[0];
+            refTempZvP = cloud_.constProps(typeIdP).TrefZv()[0];
+        }
         
         scalar rotationalDofP = cloud_.constProps(typeIdP).rotationalDegreesOfFreedom();
         
@@ -1002,7 +1044,10 @@ void moleculeIonDissociationIonisation::reaction
                 // P remains NON-DISSOCIATED.
                 p.U() = UP;
                 p.ERot() = ERotP;
-                p.vibLevel()[0] = vibLevelP;
+                if(cloud_.constProps(typeIdP).vibrationalDegreesOfFreedom() > 0)
+                {
+                    p.vibLevel()[0] = vibLevelP;
+                }
                 p.ELevel() = ELevelP;
 
                 // Molecule Q will dissociation.
@@ -1172,7 +1217,10 @@ void moleculeIonDissociationIonisation::reaction
                 // Q remains NON-DISSOCIATED.
                 p.U() = UP;
                 p.ERot() = ERotP;
-                p.vibLevel()[0] = vibLevelP;
+                if(cloud_.constProps(typeIdP).vibrationalDegreesOfFreedom() > 0)
+                {
+                    p.vibLevel()[0] = vibLevelP;
+                }
                 p.ELevel() = ELevelP;
 
                 // Molecule Q will ionise.

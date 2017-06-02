@@ -93,9 +93,9 @@ autoPtr<dsmcField> dsmcField::New
     }
 
     return autoPtr<dsmcField>
-	(
-		cstrIter()(t, mesh, cloud, dict)
-	);
+    (
+        cstrIter()(t, mesh, cloud, dict)
+    );
 }
 
 

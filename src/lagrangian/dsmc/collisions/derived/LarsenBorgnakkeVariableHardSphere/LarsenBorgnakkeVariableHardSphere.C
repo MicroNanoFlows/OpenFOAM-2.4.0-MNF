@@ -172,17 +172,8 @@ void Foam::LarsenBorgnakkeVariableHardSphere::collide
     scalarList preCollisionEVibP(vibLevelP.size(),0.0);
     scalarList preCollisionEVibQ(vibLevelQ.size(),0.0);
    
-    forAll(vibLevelP, i)
-    {
-        preCollisionEVibP[i] =  vibLevelP[i]*cloud_.constProps(typeIdP).thetaV()[i]*physicoChemical::k.value();
-    }
-
-    forAll(vibLevelQ, i)
-    {
-        preCollisionEVibQ[i] =  vibLevelQ[i]*cloud_.constProps(typeIdQ).thetaV()[i]*physicoChemical::k.value();
-    }
-
     
+        
     scalar preCollisionEEleP = cloud_.constProps(typeIdP).electronicEnergyList()[ELevelP];
     scalar preCollisionEEleQ = cloud_.constProps(typeIdQ).electronicEnergyList()[ELevelQ];
 
@@ -191,6 +182,26 @@ void Foam::LarsenBorgnakkeVariableHardSphere::collide
     
     scalar vibrationalDofP = cloud_.constProps(typeIdP).vibrationalDegreesOfFreedom();
     scalar vibrationalDofQ = cloud_.constProps(typeIdQ).vibrationalDegreesOfFreedom();
+    
+    if(vibrationalDofP > 0)
+    {
+        forAll(vibLevelP, i)
+        {
+            preCollisionEVibP[i] =  vibLevelP[i]*
+                                    cloud_.constProps(typeIdP).thetaV()[i]
+                                    *physicoChemical::k.value();
+        }
+    }
+
+    if(vibrationalDofQ > 0)
+    {
+        forAll(vibLevelQ, i)
+        {
+            preCollisionEVibQ[i] =  vibLevelQ[i]*
+                                    cloud_.constProps(typeIdQ).thetaV()[i]
+                                    *physicoChemical::k.value();
+        }
+    }
     
     label jMaxP = cloud_.constProps(typeIdP).numberOfElectronicLevels();    
     label jMaxQ = cloud_.constProps(typeIdQ).numberOfElectronicLevels();

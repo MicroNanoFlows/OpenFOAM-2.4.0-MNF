@@ -325,11 +325,28 @@ void chargeExchange::reaction
         labelList gListQ = cloud_.constProps(typeIdQ).degeneracyList();
         
         scalar ERotP = p.ERot();
-        scalar EVibP = p.vibLevel()[0]*cloud_.constProps(typeIdP).thetaV()[0]*physicoChemical::k.value();
+        scalar EVibP = 0.0;
+        
+        if(cloud_.constProps(typeIdP).vibrationalDegreesOfFreedom() > 0)
+        {
+            EVibP = 
+                p.vibLevel()[0]
+                *cloud_.constProps(typeIdP).thetaV()[0]
+                *physicoChemical::k.value();
+        }
         scalar EElecP = EElistP[p.ELevel()];
         
         scalar ERotQ = q.ERot();
-        scalar EVibQ = q.vibLevel()[0]*cloud_.constProps(typeIdQ).thetaV()[0]*physicoChemical::k.value();
+        scalar EVibQ = 0.0;
+        
+        if(cloud_.constProps(typeIdQ).vibrationalDegreesOfFreedom() > 0)
+        {
+            EVibQ = 
+                q.vibLevel()[0]
+                *cloud_.constProps(typeIdQ).thetaV()[0]
+                *physicoChemical::k.value();
+        }
+        
         scalar EElecQ = EElistQ[q.ELevel()];
         
         label maxElectronicLevelP = cloud_.constProps(typeIdP).numberOfElectronicLevels();
@@ -362,15 +379,16 @@ void chargeExchange::reaction
         
         scalar EcP = 0.0;
         scalar TColl = 0.0;
-        label idP = cloud_.constProps(typeIdP).charDissQuantumLevel()[0];
-        label imaxP = 0;
-        
         //check for dissociation
         
         if(dissociationPossible_)
         {
             if(cloud_.constProps(typeIdP).rotationalDegreesOfFreedom() > 0)
             {
+                label idP = 
+                    cloud_.constProps(typeIdP).charDissQuantumLevel()[0];
+                label imaxP = 0;
+                
                 //Only diatomics can be dissociated
                 EcP = translationalEnergy + EVibP;
 
@@ -398,6 +416,8 @@ void chargeExchange::reaction
         }
         
         scalar heatOfReactionExchJoules = heatOfReactionExch_*physicoChemical::k.value();
+        
+        
         
         EcP = translationalEnergy + EElecP;
         
@@ -553,12 +573,22 @@ void chargeExchange::reaction
                 
                 translationalEnergy = translationalEnergy + heatOfReactionDissociationJoules + EVibP;
                 
-                scalar thetaVQ = cloud_.constProps(typeIdQ).thetaV()[0];
-                scalar thetaDQ = cloud_.constProps(typeIdQ).thetaD()[0];
+                scalar thetaVQ = 0;
+                scalar thetaDQ = 0;
+                scalar ZrefQ = 0;
+                scalar refTempZvQ = 0;
+                
+                if(cloud_.constProps(typeIdQ).vibrationalDegreesOfFreedom() > 0)
+                {
+                    thetaVQ = cloud_.constProps(typeIdQ).thetaV()[0];
+                    thetaDQ = cloud_.constProps(typeIdQ).thetaD()[0];
+                    ZrefQ = cloud_.constProps(typeIdQ).Zref()[0];
+                    refTempZvQ = cloud_.constProps(typeIdQ).TrefZv()[0];
+                }
+                
                 scalar jMaxQ = cloud_.constProps(typeIdQ).numberOfElectronicLevels()-1;
                 scalar rotationalDofQ = cloud_.constProps(typeIdQ).rotationalDegreesOfFreedom();
-                scalar ZrefQ = cloud_.constProps(typeIdQ).Zref()[0];
-                scalar refTempZvQ = cloud_.constProps(typeIdQ).TrefZv()[0];
+                
                 
                 translationalEnergy += EElecQ;
                     
@@ -669,7 +699,7 @@ void chargeExchange::reaction
                 }
                 else 
                 {
-                    q.vibLevel().setSize(0, vibLevelQ);
+                    q.vibLevel().setSize(0,0);
                 }
                 q.ELevel() = ELevelQ;
 
@@ -737,14 +767,23 @@ void chargeExchange::reaction
                 
                 translationalEnergy = translationalEnergy + heatOfReactionIonisationJoules + EElecP;
                 
-                scalar thetaVQ = cloud_.constProps(typeIdQ).thetaV()[0];
-                scalar thetaDQ = cloud_.constProps(typeIdQ).thetaD()[0];
+                scalar thetaVQ = 0;
+                scalar thetaDQ = 0;
+                scalar ZrefQ = 0;
+                scalar refTempZvQ = 0;
+                
+                if(cloud_.constProps(typeIdQ).vibrationalDegreesOfFreedom() > 0)
+                {
+                    thetaVQ = cloud_.constProps(typeIdQ).thetaV()[0];
+                    thetaDQ = cloud_.constProps(typeIdQ).thetaD()[0];
+                    ZrefQ = cloud_.constProps(typeIdQ).Zref()[0];
+                    refTempZvQ = cloud_.constProps(typeIdQ).TrefZv()[0];
+                }
+               
                 scalar jMaxQ = cloud_.constProps(typeIdQ).numberOfElectronicLevels()-1;
                 scalar rotationalDofP = cloud_.constProps(typeIdP).rotationalDegreesOfFreedom();
                 scalar rotationalDofQ = cloud_.constProps(typeIdQ).rotationalDegreesOfFreedom();
-                scalar ZrefQ = cloud_.constProps(typeIdQ).Zref()[0];
-                scalar refTempZvQ = cloud_.constProps(typeIdQ).TrefZv()[0];
-                
+ 
                 translationalEnergy += EElecQ;
                     
                 label ELevelQ = cloud_.postCollisionElectronicEnergyLevel
@@ -850,11 +889,11 @@ void chargeExchange::reaction
                 q.ERot() = ERotQ;
                 if(rotationalDofQ > VSMALL)
                 {
-                    q.vibLevel().setSize(1, vibLevelQ);
+                    q.vibLevel()[0] = vibLevelQ;
                 }
                 else
                 {
-                    q.vibLevel().setSize(0, vibLevelQ);
+                    q.vibLevel().setSize(0,0);
                 }
                 q.ELevel() = ELevelQ;
 
@@ -1002,11 +1041,28 @@ void chargeExchange::reaction
         labelList gListQ = cloud_.constProps(typeIdQ).degeneracyList();
         
         scalar ERotP = p.ERot();
-        scalar EVibP = p.vibLevel()[0]*cloud_.constProps(typeIdP).thetaV()[0]*physicoChemical::k.value();
+        scalar EVibP = 0.0;
+        
+        if(cloud_.constProps(typeIdP).vibrationalDegreesOfFreedom() > 0)
+        {
+            EVibP = 
+                p.vibLevel()[0]
+                *cloud_.constProps(typeIdP).thetaV()[0]
+                *physicoChemical::k.value();
+        }
+        
         scalar EElecP = EElistP[p.ELevel()];
         
         scalar ERotQ = q.ERot();
-        scalar EVibQ = q.vibLevel()[0]*cloud_.constProps(typeIdQ).thetaV()[0]*physicoChemical::k.value();
+        scalar EVibQ = 0.0;
+        
+        if(cloud_.constProps(typeIdQ).vibrationalDegreesOfFreedom() > 0)
+        {
+            EVibQ = 
+                q.vibLevel()[0]
+                *cloud_.constProps(typeIdQ).thetaV()[0]
+                *physicoChemical::k.value();
+        }
         scalar EElecQ = EElistQ[q.ELevel()];
         
         label maxElectronicLevelQ = cloud_.constProps(typeIdQ).numberOfElectronicLevels();
@@ -1039,8 +1095,6 @@ void chargeExchange::reaction
         
         scalar EcQ = 0.0;
         scalar TColl = 0.0;
-        label idQ = cloud_.constProps(typeIdQ).charDissQuantumLevel()[0];
-        label imaxQ = 0;
         
         //check for dissociation
         
@@ -1048,6 +1102,10 @@ void chargeExchange::reaction
         {
             if(cloud_.constProps(typeIdQ).rotationalDegreesOfFreedom() > 0)
             {
+                label idQ = 
+                    cloud_.constProps(typeIdQ).charDissQuantumLevel()[0];
+                label imaxQ = 0;
+                
                 //Only diatomics can be dissociated
                 EcQ = translationalEnergy + EVibQ;
 
@@ -1230,14 +1288,22 @@ void chargeExchange::reaction
                 const scalar& heatOfReactionDissociationJoules = heatOfReactionDissoc_*physicoChemical::k.value();
                 
                 translationalEnergy = translationalEnergy + heatOfReactionDissociationJoules + EVibQ;
+               
+                scalar thetaVP = 0;
+                scalar thetaDP = 0;
+                scalar ZrefP = 0;
+                scalar refTempZvP = 0;
                 
-                scalar thetaVP = cloud_.constProps(typeIdP).thetaV()[0];
-                scalar thetaDP = cloud_.constProps(typeIdP).thetaD()[0];
+                if(cloud_.constProps(typeIdP).vibrationalDegreesOfFreedom() > 0)
+                {
+                    thetaVP = cloud_.constProps(typeIdP).thetaV()[0];
+                    thetaDP = cloud_.constProps(typeIdP).thetaD()[0];
+                    ZrefP = cloud_.constProps(typeIdP).Zref()[0];
+                    refTempZvP = cloud_.constProps(typeIdP).TrefZv()[0];
+                }
                 scalar jMaxP = cloud_.constProps(typeIdP).numberOfElectronicLevels();
                 scalar rotationalDofP = cloud_.constProps(typeIdP).rotationalDegreesOfFreedom();
-                scalar ZrefP = cloud_.constProps(typeIdP).Zref()[0];
-                scalar refTempZvP = cloud_.constProps(typeIdP).TrefZv()[0];
-                
+
                 translationalEnergy += EElecP;
                     
                 label ELevelP = cloud_.postCollisionElectronicEnergyLevel
@@ -1415,14 +1481,23 @@ void chargeExchange::reaction
                 
                 translationalEnergy = translationalEnergy + heatOfReactionIonisationJoules + EElecQ;
                 
-                scalar thetaVP = cloud_.constProps(typeIdP).thetaV()[0];
-                scalar thetaDP = cloud_.constProps(typeIdP).thetaD()[0];
+                scalar thetaVP = 0;
+                scalar thetaDP = 0;
+                scalar ZrefP = 0;
+                scalar refTempZvP = 0;
+                
+                if(cloud_.constProps(typeIdP).vibrationalDegreesOfFreedom() > 0)
+                {
+                    thetaVP = cloud_.constProps(typeIdP).thetaV()[0];
+                    thetaDP = cloud_.constProps(typeIdP).thetaD()[0];
+                    ZrefP = cloud_.constProps(typeIdP).Zref()[0];
+                    refTempZvP = cloud_.constProps(typeIdP).TrefZv()[0];
+                }
+                
                 scalar jMaxP = cloud_.constProps(typeIdP).numberOfElectronicLevels();
                 scalar rotationalDofP = cloud_.constProps(typeIdP).rotationalDegreesOfFreedom();
                 scalar rotationalDofQ = cloud_.constProps(typeIdQ).rotationalDegreesOfFreedom();
-                scalar ZrefP = cloud_.constProps(typeIdP).Zref()[0];
-                scalar refTempZvP = cloud_.constProps(typeIdP).TrefZv()[0];
-                
+
                 translationalEnergy += EElecP;
                     
                 label ELevelP = cloud_.postCollisionElectronicEnergyLevel
@@ -1532,7 +1607,7 @@ void chargeExchange::reaction
                 }
                 else
                 {
-                    p.vibLevel().setSize(0, vibLevelP);
+                    p.vibLevel().setSize(0,0);
                 }
                 p.ELevel() = ELevelP;
 
@@ -1553,7 +1628,7 @@ void chargeExchange::reaction
                 
                 q.typeId() = typeId1;
                 q.U() = uQ1;
-                if(rotationalDofQ < VSMALL)
+                if(rotationalDofQ > VSMALL)
                 {
                     q.vibLevel().setSize(1,0);
                 }       
@@ -1634,10 +1709,13 @@ void chargeExchange::reaction
                 UP = Ucm + (postCollisionRelU*mQ/(mP + mQ));
                 UQ = Ucm - (postCollisionRelU*mP/(mP + mQ));
                 
-                p.typeId() = chargeExchangeProductIds_[0];
+                p.typeId() = chargeExchangeProductIds_[1];
                 p.U() = UP;
                 p.ERot() = 0.0;
-                 if(cloud_.constProps(chargeExchangeProductIds_[0]).rotationalDegreesOfFreedom() > VSMALL)
+                 
+                if(cloud_.constProps(chargeExchangeProductIds_[1]).
+                                        rotationalDegreesOfFreedom() 
+                    > VSMALL)
                 {
                     p.vibLevel().setSize(1,0);
                 }       
@@ -1647,10 +1725,13 @@ void chargeExchange::reaction
                 } 
                 p.ELevel() = 0;
                 
-                q.typeId() = chargeExchangeProductIds_[1];
+                q.typeId() = chargeExchangeProductIds_[0];
                 q.U() = UQ;
                 q.ERot() = 0.0;
-                 if(cloud_.constProps(chargeExchangeProductIds_[1]).rotationalDegreesOfFreedom() > VSMALL)
+                 
+                if(cloud_.constProps(chargeExchangeProductIds_[0]).
+                                        rotationalDegreesOfFreedom() 
+                    > VSMALL)
                 {
                     q.vibLevel().setSize(1,0);
                 }       

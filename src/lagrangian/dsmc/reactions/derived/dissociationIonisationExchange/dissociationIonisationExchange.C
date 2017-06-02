@@ -526,8 +526,8 @@ void dissociationIonisationExchange::reaction
     label typeIdQ = q.typeId();
 
     //if particle p is the molecule and q is the atom...
-    if(typeIdP == reactantIds_[0] && typeIdQ == reactantIds_[1]) // AB + C ---> A + B + C (diss type II) or AB + C ---> AC + B (forward exchange)
-    {
+    if(typeIdP == reactantIds_[0] && typeIdQ == reactantIds_[1])
+    {       
         relax_ = true;
         
         scalar totalReactionProbability = 0.0;
@@ -537,8 +537,9 @@ void dissociationIonisationExchange::reaction
         vector UQ = q.U();
         scalar ERotP = p.ERot();
         scalar ERotQ = q.ERot();
+
         scalar EVibP = p.vibLevel()[0]*cloud_.constProps(typeIdP).thetaV()[0]*physicoChemical::k.value();
-        scalar EVibQ = q.vibLevel()[0]*cloud_.constProps(typeIdQ).thetaV()[0]*physicoChemical::k.value();
+
         scalar EEleP = cloud_.constProps(typeIdP).electronicEnergyList()[p.ELevel()];
         scalar EEleQ = cloud_.constProps(typeIdQ).electronicEnergyList()[q.ELevel()];
 
@@ -553,15 +554,15 @@ void dissociationIonisationExchange::reaction
         scalar thetaDP = cloud_.constProps(typeIdP).thetaD()[0];
         scalar ZrefP = cloud_.constProps(typeIdP).Zref()[0];
         scalar refTempZvP = cloud_.constProps(typeIdP).TrefZv()[0];
-        
+       
         label jMaxP = cloud_.constProps(typeIdP).numberOfElectronicLevels();
         List<label> gListP = cloud_.constProps(typeIdP).degeneracyList();
         List<scalar> EElistP = cloud_.constProps(typeIdP).electronicEnergyList();
-        
+       
         label jMaxQ = cloud_.constProps(typeIdQ).numberOfElectronicLevels();
         List<label> gListQ = cloud_.constProps(typeIdQ).degeneracyList();
         List<scalar> EElistQ = cloud_.constProps(typeIdQ).electronicEnergyList();
-        
+       
         scalar rotationalDofP = cloud_.constProps(typeIdP).rotationalDegreesOfFreedom();
 
         scalar omegaPQ =
@@ -584,7 +585,7 @@ void dissociationIonisationExchange::reaction
         bool ionisationReactionQ = false;
         bool exchangeReaction = false;
         bool chargeExchangeReaction = false;
-
+       
         if(!chargedMolecule_)
         {
             // firstly calculate dissociation probability (0 or 1).
@@ -619,6 +620,8 @@ void dissociationIonisationExchange::reaction
             }
         }
         
+        
+        
         if(!chargedAtom_)
         {
             //Now, ionisation of the atom (Q)
@@ -635,6 +638,8 @@ void dissociationIonisationExchange::reaction
                 reactionProbabilities[2] = 1.0;
             }
         }
+        
+        
         
         EcPQ = translationalEnergy + EVibP;
         
@@ -655,6 +660,8 @@ void dissociationIonisationExchange::reaction
             activationEnergy -= heatOfReactionExchJoules;
         }
 
+        
+        
         if(EcPQ > activationEnergy) // i.e. exchange reaction can possibly occur.
         {
             scalar summation = 0.0; // declare "summation" term.
@@ -678,7 +685,7 @@ void dissociationIonisationExchange::reaction
             totalReactionProbability += P_exch;
             reactionProbabilities[3] = P_exch;
         }
-        
+       
         if(chargeExchange_)
         {
             //calculate charge exchange probability
@@ -891,9 +898,9 @@ void dissociationIonisationExchange::reaction
                             sinTheta*sin(phi)
                         );
 
-
+                //P dissociates
                 UP = Ucm + postCollisionRelU*mQ/(mP + mQ);
-                UQ = Ucm - postCollisionRelU*mP/(mP + mQ); // Q is the NON-IONISING molecule.
+                UQ = Ucm - postCollisionRelU*mP/(mP + mQ);
 
                 const label& typeId1 = dissociationProductIds_[0];
                 const label& typeId2 = dissociationProductIds_[1];
@@ -1337,14 +1344,36 @@ void dissociationIonisationExchange::reaction
                 UP = Ucm + (postCollisionRelU*mQExch/(mPExch + mQExch)); // P changes from mol to atom.
                 UQ = Ucm - (postCollisionRelU*mPExch/(mPExch + mQExch)); // Q changes from atom to mol.
 
-                q.vibLevel() = 0;
+                if(
+                    cloud_.constProps(exchangeProductIds_[1]).
+                    rotationalDegreesOfFreedom() > VSMALL
+                )
+                {
+                    q.vibLevel().setSize(1,0);
+                }       
+                else
+                {
+                    q.vibLevel().setSize(0,0);
+                }
+                
+                q.vibLevel().setSize(1, 0.0);
                 q.ELevel() = 0;
                 q.ERot() = 0;
                 q.U() = UQ;
 
                 p.U() = UP;
                 p.ERot() = 0.0; // remove p's internal energies as it's now an atom
-                p.vibLevel() = 0;
+                if(
+                    cloud_.constProps(exchangeProductIds_[0]).
+                    rotationalDegreesOfFreedom() > VSMALL
+                )
+                {
+                    p.vibLevel().setSize(1,0);
+                }       
+                else
+                {
+                    p.vibLevel().setSize(0,0);
+                }
                 p.ELevel() = 0;
             }   
         }
@@ -1364,8 +1393,8 @@ void dissociationIonisationExchange::reaction
                 
                 translationalEnergy = translationalEnergy + heatOfReactionChargeExchJoules;
                 
-                translationalEnergy += ERotP + EVibP + EEleP + ERotQ + EVibQ + EEleQ;
-                
+                translationalEnergy += ERotP + EVibP + EEleP + ERotQ  + EEleQ;
+                //+EVibQ
                 scalar relVel = sqrt((2.0*translationalEnergy)/mR);
                     
                 // centre of mass velocity of molecules (pre-split)
@@ -1432,13 +1461,19 @@ void dissociationIonisationExchange::reaction
         
         vector UP = p.U();
         vector UQ = q.U();
+        
         scalar ERotP = p.ERot();
         scalar ERotQ = q.ERot();
-        scalar EVibP = p.vibLevel()[0]*(cloud_.constProps(typeIdP).thetaV()[0]*physicoChemical::k.value());
-        scalar EVibQ = q.vibLevel()[0]*(cloud_.constProps(typeIdQ).thetaV()[0]*physicoChemical::k.value());
+        
+        
         scalar EEleP = cloud_.constProps(typeIdP).electronicEnergyList()[p.ELevel()];
-        scalar EEleQ = cloud_.constProps(typeIdQ).electronicEnergyList()[q.ELevel()];
-
+        scalar EEleQ = 
+            cloud_.constProps(typeIdQ).electronicEnergyList()[q.ELevel()];
+       
+        scalar EVibQ = 
+                q.vibLevel()[0]*(cloud_.constProps(typeIdQ).thetaV()[0]
+                *physicoChemical::k.value());
+        
         scalar mP = cloud_.constProps(typeIdP).mass();
         scalar mQ = cloud_.constProps(typeIdQ).mass();
         
@@ -1480,6 +1515,7 @@ void dissociationIonisationExchange::reaction
         bool ionisationReactionQ = false;
         bool exchangeReaction = false;
         bool chargeExchangeReaction = false;
+        
         
         if(!chargedMolecule_)
         {
@@ -1571,6 +1607,8 @@ void dissociationIonisationExchange::reaction
             totalReactionProbability += P_exch;
             reactionProbabilities[3] = P_exch;
         }
+        
+        
         
         if(chargeExchange_)
         {
@@ -1675,7 +1713,7 @@ void dissociationIonisationExchange::reaction
                 }
             }
         }
-        
+               
         //Decide if a reaction is to occur
         
         if(totalReactionProbability > cloud_.rndGen().scalar01())
@@ -2230,7 +2268,11 @@ void dissociationIonisationExchange::reaction
                 UP = Ucm + (postCollisionRelU*mQExch/(mPExch + mQExch)); // P changes from atom to mol.
                 UQ = Ucm - (postCollisionRelU*mPExch/(mPExch + mQExch)); // Q changes from mol to atom. 
                 
-                if(cloud_.constProps(chargeExchangeProductIds_[0]).rotationalDegreesOfFreedom() > VSMALL)
+                
+                if(
+                    cloud_.constProps(exchangeProductIds_[0]).
+                    rotationalDegreesOfFreedom() > VSMALL
+                )
                 {
                     p.vibLevel().setSize(1,0);
                 }       
@@ -2244,8 +2286,10 @@ void dissociationIonisationExchange::reaction
                 
                 q.U() = UQ;
                 q.ELevel() = 0;
-                q.ERot() = 0.0; // remove q's internal energy as it's now an atom
-                if(cloud_.constProps(chargeExchangeProductIds_[1]).rotationalDegreesOfFreedom() > VSMALL)
+                if(
+                    cloud_.constProps(exchangeProductIds_[1]).
+                    rotationalDegreesOfFreedom() > VSMALL
+                )
                 {
                     q.vibLevel().setSize(1,0);
                 }       
@@ -2269,8 +2313,8 @@ void dissociationIonisationExchange::reaction
                 
                 translationalEnergy = translationalEnergy + heatOfReactionChargeExchJoules;
                 
-                translationalEnergy += ERotP + EVibP + EEleP + ERotQ + EVibQ + EEleQ;
-                
+                translationalEnergy += ERotP + EEleP + ERotQ + EVibQ + EEleQ;
+                //+EVibP
                 scalar relVel = sqrt((2.0*translationalEnergy)/mR);
                     
                     // centre of mass velocity of molecules (pre-split)
@@ -2298,16 +2342,36 @@ void dissociationIonisationExchange::reaction
                 UP = Ucm + (postCollisionRelU*mQ/(mP + mQ));
                 UQ = Ucm - (postCollisionRelU*mP/(mP + mQ));
                 
-                p.typeId() = chargeExchangeProductIds_[0];
+                p.typeId() = chargeExchangeProductIds_[1];
                 p.U() = UP;
                 p.ERot() = 0.0;
-                p.vibLevel() = 0;
+                 
+                if(cloud_.constProps(chargeExchangeProductIds_[1]).
+                                        rotationalDegreesOfFreedom() 
+                    > VSMALL)
+                {
+                    p.vibLevel().setSize(1,0);
+                }       
+                else
+                {
+                    p.vibLevel().setSize(0,0);
+                } 
                 p.ELevel() = 0;
                 
-                q.typeId() = chargeExchangeProductIds_[1];
+                q.typeId() = chargeExchangeProductIds_[0];
                 q.U() = UQ;
                 q.ERot() = 0.0;
-                q.vibLevel() = 0;
+                 
+                if(cloud_.constProps(chargeExchangeProductIds_[0]).
+                                        rotationalDegreesOfFreedom() 
+                    > VSMALL)
+                {
+                    q.vibLevel().setSize(1,0);
+                }       
+                else
+                {
+                    q.vibLevel().setSize(0,0);
+                } 
                 q.ELevel() = 0;
             }
         }

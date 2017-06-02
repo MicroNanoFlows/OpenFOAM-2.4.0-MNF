@@ -468,8 +468,6 @@ void atomAtomIonisationDissimilarSpecies::reaction
         vector UQ = q.U();
         scalar ERotP = p.ERot();
         scalar ERotQ = q.ERot();
-        scalar EVibP = p.vibLevel()[0]*cloud_.constProps(typeIdP).thetaV()[0]*physicoChemical::k.value();
-        scalar EVibQ = q.vibLevel()[0]*cloud_.constProps(typeIdQ).thetaV()[0]*physicoChemical::k.value();
         scalar EEleP = cloud_.constProps(typeIdP).electronicEnergyList()[p.ELevel()];
         scalar EEleQ = cloud_.constProps(typeIdQ).electronicEnergyList()[q.ELevel()];
 
@@ -624,7 +622,7 @@ void atomAtomIonisationDissimilarSpecies::reaction
 
                 vector UcmAtoms = UP;
                 
-                scalar translationalEnergy2 = ERotP + EVibP;
+                scalar translationalEnergy2 = ERotP;
 
                 scalar cRatoms = sqrt(2.0*translationalEnergy2/mRatoms);
 
@@ -764,7 +762,7 @@ void atomAtomIonisationDissimilarSpecies::reaction
 
                 vector UcmAtoms = UQ;
                 
-                scalar translationalEnergy2 = ERotQ + EVibQ;
+                scalar translationalEnergy2 = ERotQ;
 
                 scalar cRatoms = sqrt(2.0*translationalEnergy2/mRatoms);
 
@@ -854,8 +852,7 @@ void atomAtomIonisationDissimilarSpecies::reaction
         vector UQ = q.U();
         scalar ERotP = p.ERot();
         scalar ERotQ = q.ERot();
-        scalar EVibP = p.vibLevel()[0]*cloud_.constProps(typeIdP).thetaV()[0]*physicoChemical::k.value();
-        scalar EVibQ = q.vibLevel()[0]*cloud_.constProps(typeIdQ).thetaV()[0]*physicoChemical::k.value();
+     
         scalar EEleP = cloud_.constProps(typeIdP).electronicEnergyList()[p.ELevel()];
         scalar EEleQ = cloud_.constProps(typeIdQ).electronicEnergyList()[q.ELevel()];
 
@@ -1010,7 +1007,7 @@ void atomAtomIonisationDissimilarSpecies::reaction
 
                 vector UcmAtoms = UP;
                 
-                scalar translationalEnergy2 = ERotP + EVibP;
+                scalar translationalEnergy2 = ERotP;
 
                 scalar cRatoms = sqrt(2.0*translationalEnergy2/mRatoms);
 
@@ -1149,7 +1146,7 @@ void atomAtomIonisationDissimilarSpecies::reaction
 
                 vector UcmAtoms = UQ;
                 
-                scalar translationalEnergy2 = ERotQ + EVibQ;
+                scalar translationalEnergy2 = ERotQ;
 
                 scalar cRatoms = sqrt(2.0*translationalEnergy2/mRatoms);
 
@@ -1237,7 +1234,7 @@ void atomAtomIonisationDissimilarSpecies::reaction
         vector UP = p.U();
         vector UQ = q.U();
         scalar ERotP = p.ERot();
-        scalar EVibP = p.vibLevel()[0]*cloud_.constProps(typeIdP).thetaV()[0]*physicoChemical::k.value();
+
         scalar EEleP = cloud_.constProps(typeIdP).electronicEnergyList()[p.ELevel()];
         scalar EEleQ = cloud_.constProps(typeIdQ).electronicEnergyList()[q.ELevel()];
 
@@ -1332,7 +1329,7 @@ void atomAtomIonisationDissimilarSpecies::reaction
 
                 vector UcmAtoms = UP;
                 
-                scalar translationalEnergy2 = ERotP + EVibP;
+                scalar translationalEnergy2 = ERotP;
 
                 scalar cRatoms = sqrt(2.0*translationalEnergy2/mRatoms);
 
@@ -1418,7 +1415,7 @@ void atomAtomIonisationDissimilarSpecies::reaction
         vector UP = p.U();
         vector UQ = q.U();
         scalar ERotQ = q.ERot();
-        scalar EVibQ = q.vibLevel()[0]*cloud_.constProps(typeIdQ).thetaV()[0]*physicoChemical::k.value();
+        
         scalar EEleP = cloud_.constProps(typeIdP).electronicEnergyList()[p.ELevel()];
         scalar EEleQ = cloud_.constProps(typeIdQ).electronicEnergyList()[q.ELevel()];
 
@@ -1513,7 +1510,7 @@ void atomAtomIonisationDissimilarSpecies::reaction
 
                 vector UcmAtoms = UQ;
                 
-                scalar translationalEnergy2 = ERotQ + EVibQ;
+                scalar translationalEnergy2 = ERotQ;
 
                 scalar cRatoms = sqrt(2.0*translationalEnergy2/mRatoms);
 
