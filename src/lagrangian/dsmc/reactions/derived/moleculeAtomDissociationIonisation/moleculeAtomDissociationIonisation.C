@@ -795,7 +795,7 @@ void moleculeAtomDissociationIonisation::reaction
                 
                 label classificationP = p.classification();
                 scalar RWF = p.RWF();
-                labelList vibLevel(1,0);
+                labelList vibLevel(0,0);
                 
                 label stuckToWall = 0; 
                 scalarField wallTemperature(4, 0.0); 
@@ -913,7 +913,7 @@ void moleculeAtomDissociationIonisation::reaction
                 p.U() = UP;
                 p.ELevel() = ELevelP;
 
-                // Molecule P will dissociate into 2 atoms.
+                // Molecule P will ionise
                 vector position = q.position();
                 
                 label cell = -1;
@@ -1145,12 +1145,9 @@ void moleculeAtomDissociationIonisation::reaction
     
                 UP = Ucm + (postCollisionRelU*mQ/(mP + mQ)); // UP is the single atom
                 UQ = Ucm - (postCollisionRelU*mP/(mP + mQ)); // UQ is used as Ucm for atomic split.
-                
-                label q1 = 0;
-                label q2 = 1;
 
-                const label& typeId1 = productIdsDiss_[q1];
-                const label& typeId2 = productIdsDiss_[q2];
+                const label& typeId1 = productIdsDiss_[0];
+                const label& typeId2 = productIdsDiss_[1];
                 
                 //Mass of Product one and two
                 scalar mP1 = cloud_.constProps(typeId1).mass();
@@ -1185,7 +1182,7 @@ void moleculeAtomDissociationIonisation::reaction
                 p.U() = UP;
                 p.ELevel() = ELevelP;
 
-                // Molecule Q will ionise.
+                // Molecule Q will dissociate.
                 vector position = q.position();
                 
                 label cell = -1;
@@ -1287,11 +1284,8 @@ void moleculeAtomDissociationIonisation::reaction
                 UP = Ucm + postCollisionRelU*mQ/(mP + mQ);
                 UQ = Ucm - postCollisionRelU*mP/(mP + mQ); // Q is the NON-IONISING atom.
 
-                label p1 = 0;
-                label p2 = 1;
-
-                const label& typeId1 = productIdsIon_[p1];
-                const label& typeId2 = productIdsIon_[p2];
+                const label& typeId1 = productIdsIon_[0];
+                const label& typeId2 = productIdsIon_[1];
                 
                 //Mass of Product one and two
                 scalar mP1 = cloud_.constProps(typeId1).mass(); // ion
@@ -1353,7 +1347,7 @@ void moleculeAtomDissociationIonisation::reaction
                 
                 label classificationP = q.classification();
                 scalar RWF = q.RWF();
-                labelList vibLevel(1,0);
+                labelList vibLevel(0,0);
                 
                 label stuckToWall = 0; 
                 scalarField wallTemperature(4, 0.0); 

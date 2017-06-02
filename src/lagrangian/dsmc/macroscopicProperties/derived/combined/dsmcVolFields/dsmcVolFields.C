@@ -1278,8 +1278,7 @@ void dsmcVolFields::calculateField()
                                     vibrationalEMean
                                     /(physicoChemical::k.value()*thetaV);
                             
-                            vibTMode[iD][v] = thetaV 
-                                / log(1.0 + (1.0/iMean));
+                            vibTMode[iD][v] = thetaV / log(1.0 + (1.0/iMean));
 
                             degreesOfFreedomMode[iD][v] = 
                                 (2.0*thetaV/vibTMode[iD][v]) 
