@@ -1345,7 +1345,7 @@ void dissociationIonisationExchange::reaction
                 UQ = Ucm - (postCollisionRelU*mPExch/(mPExch + mQExch)); // Q changes from atom to mol.
 
                 if(
-                    cloud_.constProps(exchangeProductIds_[1]).
+                    cloud_.constProps(exchangeProductIds_[0]).
                     rotationalDegreesOfFreedom() > VSMALL
                 )
                 {
@@ -1363,7 +1363,7 @@ void dissociationIonisationExchange::reaction
                 p.U() = UP;
                 p.ERot() = 0.0; // remove p's internal energies as it's now an atom
                 if(
-                    cloud_.constProps(exchangeProductIds_[0]).
+                    cloud_.constProps(exchangeProductIds_[1]).
                     rotationalDegreesOfFreedom() > VSMALL
                 )
                 {

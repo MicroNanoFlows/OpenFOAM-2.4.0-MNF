@@ -206,6 +206,10 @@ void Foam::dsmcCloud::addElectrons()
                 electronVelocity += cellVelocity_[cellI];
 
                 scalar RWF = p->RWF();
+                
+                scalarField wallTemperature(3, 0.0);
+                
+                vectorField wallVectors(3, vector::zero);
 
                 addNewParcel
                 (
@@ -220,6 +224,9 @@ void Foam::dsmcCloud::addElectrons()
                     electronTypeId,
                     0,
                     0,
+                    0,
+                    wallTemperature,
+                    wallVectors,
                     vibLevel
                 );
             }
