@@ -49,7 +49,6 @@ collisions/derived/NoBinaryCollision/NoBinaryCollision.C
 collisions/derived/VariableHardSphere/VariableHardSphere.C
 collisions/derived/VariableSoftSphere/VariableSoftSphere.C
 collisions/derived/LarsenBorgnakkeVariableHardSphere/LarsenBorgnakkeVariableHardSphere.C
-collisions/derived/LarsenBorgnakkeVariableHardSphereClassification/LarsenBorgnakkeVariableHardSphereClassification.C
 collisions/derived/LarsenBorgnakkeVariableSoftSphere/LarsenBorgnakkeVariableSoftSphere.C
 
 /* COLLISION PARTNER SELECTION ROUTINES */

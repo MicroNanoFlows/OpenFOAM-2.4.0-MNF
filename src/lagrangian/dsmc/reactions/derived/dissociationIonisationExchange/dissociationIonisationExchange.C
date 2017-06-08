@@ -1355,8 +1355,7 @@ void dissociationIonisationExchange::reaction
                 {
                     q.vibLevel().setSize(0,0);
                 }
-                
-                q.vibLevel().setSize(1, 0.0);
+               
                 q.ELevel() = 0;
                 q.ERot() = 0;
                 q.U() = UQ;

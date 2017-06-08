@@ -160,6 +160,33 @@ void Foam::VariableHardSphere::collide
     UP = Ucm + postCollisionRelU*mQ/(mP + mQ);
 
     UQ = Ucm - postCollisionRelU*mP/(mP + mQ);
+    
+    label classificationP = pP.classification();
+    label classificationQ = pQ.classification();
+    
+    //- class I molecule changes to class
+    //- III molecule when it collides with either class II or class III
+    //- molecules.
+    
+    if(classificationP == 0 && classificationQ == 1)
+    {
+        pP.classification() = 2;
+    }
+    
+    if(classificationQ == 0 && classificationP == 1)
+    {
+        pQ.classification() = 2;
+    }
+    
+    if(classificationP == 0 && classificationQ == 2)
+    {
+        pP.classification() = 2;
+    }
+    
+    if(classificationQ == 0 && classificationP == 2)
+    {
+        pQ.classification() = 2;
+    }
 }
 
 const Foam::dictionary& Foam::VariableHardSphere::coeffDict() const
