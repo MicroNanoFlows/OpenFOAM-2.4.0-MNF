@@ -967,16 +967,24 @@ void dsmcVolFields::calculateField()
                 {
                     forAll(EVib, i)
                     {
-                        EVib[i] = 0.0;
+                       
+                        EVib[i] = p.vibLevel()[i]
+                                    *physicoChemical::k.value()
+                                    *cloud_.constProps(p.typeId()).thetaV()[i];
+                        
+                        vibrationalETotal_[iD][i][cell] +=           
+                                    p.vibLevel()[i]
+                                    *physicoChemical::k.value()
+                                    *cloud_.constProps(p.typeId()).thetaV()[i];
                     }
                     
-                    forAll(vibrationalETotal_[iD], v)
-                    {
-                        vibrationalETotal_[iD][v][cell] +=
-                                p.vibLevel()[v]
-                                *physicoChemical::k.value()
-                                *cloud_.constProps(p.typeId()).thetaV()[v];
-                    }
+//                     forAll(vibrationalETotal_[iD], v)
+//                     {
+//                         vibrationalETotal_[iD][v][cell] +=
+//                                 p.vibLevel()[v]
+//                                 *physicoChemical::k.value()
+//                                 *cloud_.constProps(p.typeId()).thetaV()[v];
+//                     }
                 }
                                 
                 rhoNMean_[cell] += 1.0;

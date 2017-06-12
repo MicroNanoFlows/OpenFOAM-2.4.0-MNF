@@ -1284,7 +1284,7 @@ void forwardAssociativeIonisationDissimilarSpecies::reaction
                                     gListQ
                                 );
                                 
-                translationalEnergy -= EElistP[ELevelQ];
+                translationalEnergy -= EElistQ[ELevelQ];
                 
                 scalar relVelNonDissoMol = sqrt(2.0*translationalEnergy/mR);
 
