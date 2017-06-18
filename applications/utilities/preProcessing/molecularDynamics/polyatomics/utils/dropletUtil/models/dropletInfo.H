@@ -96,6 +96,8 @@ private:
        
         scalar deltaT_;
 
+        scalar mass_;
+        
         scalar maxR_;
         
         label nSegs_;
@@ -107,13 +109,41 @@ private:
         DynamicList<vector> dropletMolPositions_;
         DynamicList<label> dropletMolIds_;
         
+        
+        
+        boundedBox box_;
+        
+        List<scalarField> nMols_;
+        
+        scalar averagingCounter_;
+        
+        scalar h_; // start location in y dir
+        
+        vector unitVectorX_;
+        vector unitVectorY_;
+        vector unitVectorZ_; // thickness
+        
+        label nBinsX_;
+        label nBinsY_;
+
+        scalar lengthX_;
+        scalar lengthY_;
+        scalar lengthZ_; // thickness
+        
+        scalar binWidthX_;
+        scalar binWidthY_;        
+        
+        
     // Private Member Functions
         
         void readFromStorage();
+        
         void reconstructDroplet();
             
+        void calculateDensityBins();
         
-
+        void initialiseBins();
+        
  public:
 
     //- Runtime type information

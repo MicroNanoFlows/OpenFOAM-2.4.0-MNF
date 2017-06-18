@@ -63,6 +63,7 @@ dropletInfo::dropletInfo
     nameFile5_(propsDict_.lookup("nameFile_referenceMols")),
     translate_(propsDict_.lookup("translate")),
     endTime_(readScalar(propsDict_.lookup("endTime"))),
+    mass_(readScalar(propsDict_.lookup("mass"))),
     maxR_(readScalar(propsDict_.lookup("maxR")))
 {
 //     writeTime_ = GET;
@@ -73,7 +74,7 @@ dropletInfo::dropletInfo
 //     Info << "endTime = " << endTime_ << endl;
     
     
-//     mass_ /= rU_.refMass();
+    mass_ /= rU_.refMass();
     
 //     nSteps_ = endTime_/deltaT_;
     
@@ -104,7 +105,8 @@ dropletInfo::dropletInfo
     scalar Lx = bbMesh.span().x();
     scalar Ly = bbMesh.span().x();
     scalar Lz = bbMesh.span().z();
-
+    
+    box_ = bbMesh;
     
     if(translate_ == "X")
     {
@@ -120,8 +122,9 @@ dropletInfo::dropletInfo
     {
         translationVector_ = vector(0, 0, 1)*Lz;
     }       
-  
-//     writeTime/deltaT
+
+    initialiseBins();
+
 }
 
 
@@ -302,8 +305,16 @@ void dropletInfo::reconstructDroplet()
         
         dropletMolPositions_.clear();
         dropletMolIds_.clear();
-        
-        if(noOfSegments == 2)
+
+        if(noOfSegments == 1)
+        {
+            forAll(sortedPositions[0], i)
+            {
+                dropletMolPositions_.append(sortedPositions[0][i]);
+                dropletMolIds_.append(sortedIds[0][i]);
+            }             
+        }
+        else if(noOfSegments == 2)
         {
             vector com1 = vector::zero;
             
@@ -359,8 +370,10 @@ void dropletInfo::calculateField()
     )
     {
         readFromStorage();
+        
         reconstructDroplet();
-//         measureContactAngle();
+        
+        calculateDensityBins();
         
     }
 }
@@ -368,48 +381,154 @@ void dropletInfo::calculateField()
 void dropletInfo::writeField()
 {
     // write xmol file
-    {
-        const reducedUnits& rU = rU_;
-
-        fileName fName(outputPath_/time_.timeName()+"_shifted_"+fieldName_+".xmol");
-    
-        OFstream str(fName);
-    
-        str << dropletMolPositions_.size() << nl << "polyMoleculeCloud site positions in angstroms" << nl;
-
-        // for all processors
-        forAll(dropletMolPositions_, i)
-        {
-            vector rI = dropletMolPositions_[i]*rU.refLength()*1e10;
-
-            {
-                str <<  'C'
-                    << ' ' << rI.x()
-                    << ' ' << rI.y()
-                    << ' ' << rI.z()
-                    << nl;
-            }
-        }
-    }    
-    
+//     {
+//         const reducedUnits& rU = rU_;
+// 
+//         fileName fName(outputPath_/time_.timeName()+"_shifted_"+fieldName_+".xmol");
+//     
+//         OFstream str(fName);
+//     
+//         str << dropletMolPositions_.size() << nl << "polyMoleculeCloud site positions in angstroms" << nl;
+// 
+//         // for all processors
+//         forAll(dropletMolPositions_, i)
+//         {
+//             vector rI = dropletMolPositions_[i]*rU.refLength()*1e10;
+// 
+//             {
+//                 str <<  'C'
+//                     << ' ' << rI.x()
+//                     << ' ' << rI.y()
+//                     << ' ' << rI.z()
+//                     << nl;
+//             }
+//         }
+//     }    
+//     
     if(time_.timeOutputValue() >= endTime_)
     {
+        Info << "outputting... " << endl;
         
+        List<scalarField> rho(nBinsX_);
         
+        scalar volume = binWidthX_*binWidthY_*lengthZ_;
+        
+        forAll(rho, i)
+        {
+            rho[i].setSize(nBinsY_);
+            
+            forAll(rho[i], j)
+            {
+                rho[i][j] = rU_.refMassDensity()*nMols_[i][j]*mass_/(volume*averagingCounter_);
+            }
+        }
+        
+        writeTimeData
+        (
+            outputPath_,
+            "densityContour.txt",
+            rho
+        );  
     }
-/*    writeTimeData
-    (
-        outputPath_,
-        "dropletInfo_"+fieldName_+"_method_1_cumulFreePath_nm_vs_time_ns.txt",
-        time*rU_.refTime()/1e-9,
-        mfp*rU_.refLength()/1e-9,
-        false
-    ); */    
+   
 }
 
+// assumes a 2D bin for cylindrical droplets
+void dropletInfo::calculateDensityBins()
+{
+    
+    Info << "calculate density " << endl;
+    
+    
+    vector com = vector::zero;
+    
+    forAll(dropletMolPositions_, i)
+    {
+        com += dropletMolPositions_[i];
+    }
+    
+    com /= scalar(dropletMolPositions_.size());
+    
+    vector C = vector(com.x(), h_, 0.0);
+    
+    vector C2 = vector(box_.span().x(), box_.span().y(), box_.span().z());
+    
+    Info << "C = " << C << endl;
 
+    Info << "C1 = " << C2 << endl;    
+    
+    forAll(dropletMolPositions_, i)
+    {
+        const vector& rI = dropletMolPositions_[i];
+        
+        boundedBox box1(C,C2);
+        
+        if(box1.contains(rI))
+        {
+            vector rSI = rI - C;
+            scalar rDx = rSI & unitVectorX_;
+            scalar rDy = rSI & unitVectorY_;
+            label nX = label(rDx/binWidthX_);
+            label nY = label(rDy/binWidthY_);
+            
+            if( (nX >= 0) && (nY >= 0) )
+            {
+                if(nX == nBinsX_) 
+                {
+                    nX--;
+                }
+           
+                if(nY == nBinsY_) 
+                {
+                    nY--;
+                }
+            }
+            
+            nMols_[nX][nY] += 1.0;
+        }
+    }
+    
+    averagingCounter_ += 1.0;
+}
 
-
+void dropletInfo::initialiseBins()
+{
+    unitVectorX_ = propsDict_.lookup("unitVectorX");
+    unitVectorY_ = propsDict_.lookup("unitVectorY");
+    unitVectorZ_ = propsDict_.lookup("unitVectorZ");
+    nBinsX_ = readLabel(propsDict_.lookup("nBinsX"));
+    nBinsY_ = readLabel(propsDict_.lookup("nBinsY"));
+    h_ = readScalar(propsDict_.lookup("h"));
+    
+    unitVectorX_ /= mag(unitVectorX_);
+    unitVectorY_ /= mag(unitVectorY_);
+    unitVectorZ_ /= mag(unitVectorZ_);  
+    
+    vector C1 = vector(box_.span().x()*0.5, h_, 0.0);
+    
+    vector C2 = vector(box_.span().x(), box_.span().y(), box_.span().z());    
+    
+    boundedBox box(C1, C2);
+    
+    vector rS = box.span();
+    
+    lengthX_ = rS & unitVectorX_;
+    lengthY_ = rS & unitVectorY_;
+    lengthZ_ = rS & unitVectorZ_; 
+    
+    binWidthX_ = lengthX_/nBinsX_;
+    binWidthY_ = lengthY_/nBinsY_;
+    
+    
+    nMols_.setSize(nBinsX_);
+    
+    forAll(nMols_, x)
+    {
+        nMols_[x].setSize(nBinsY_);
+    }    
+    
+    averagingCounter_ = 0.0;
+}
 
 void dropletInfo::readFromStorage()
 {
