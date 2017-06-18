@@ -76,6 +76,7 @@ private:
         fileName nameFile4_; 
         fileName nameFile5_; 
  
+        word translate_;
 
         vectorField positions_;
         scalarField energies_;
@@ -85,37 +86,34 @@ private:
 
         List<bool> newMolsToPick_;
         
-        label nActualMols_;
+        label nFluidMols_;
         
         label nSelectedMols_;
         
         scalar startTime_;
         scalar endTime_;
         
-        scalar mass_;
-        
+       
         scalar deltaT_;
 
-        scalar D_;
+        scalar maxR_;
+        
+        label nSegs_;
+
+        label val_;
+        
+        vector translationVector_;
+        
+        DynamicList<vector> dropletMolPositions_;
+        DynamicList<label> dropletMolIds_;
         
     // Private Member Functions
         
         void readFromStorage();
+        void reconstructDroplet();
+            
         
-        void findSegments(List<DynamicList<label> >& ids);
-        
-        void getError
-        (
-            const List<DynamicList<label> >& ids,
-            label& error,
-            label& id
-        );
-        void setDropletPositions
-        (
-            const List<DynamicList<label> >& ids,
-            const label& id
-        );        
-        
+
  public:
 
     //- Runtime type information

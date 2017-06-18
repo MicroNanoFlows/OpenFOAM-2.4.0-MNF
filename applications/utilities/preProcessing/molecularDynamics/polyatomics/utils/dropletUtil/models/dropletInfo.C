@@ -61,8 +61,9 @@ dropletInfo::dropletInfo
     nameFile3_(propsDict_.lookup("nameFile_forces")),
     nameFile4_(propsDict_.lookup("nameFile_nPairs")),
     nameFile5_(propsDict_.lookup("nameFile_referenceMols")),
+    translate_(propsDict_.lookup("translate")),
     endTime_(readScalar(propsDict_.lookup("endTime"))),
-    mass_(readScalar(propsDict_.lookup("molecularMass")))
+    maxR_(readScalar(propsDict_.lookup("maxR")))
 {
 //     writeTime_ = GET;
     deltaT_ = time_.deltaT().value();
@@ -72,7 +73,7 @@ dropletInfo::dropletInfo
 //     Info << "endTime = " << endTime_ << endl;
     
     
-    mass_ /= rU_.refMass();
+//     mass_ /= rU_.refMass();
     
 //     nSteps_ = endTime_/deltaT_;
     
@@ -83,12 +84,43 @@ dropletInfo::dropletInfo
 //         nOutputSteps_ = readLabel(propsDict_.lookup("nOutputSteps"));
 //     }
 //     
+    nSegs_ = 5;
+    
+    if(propsDict_.found("nSegments"))
+    {
+        nSegs_ = readLabel(propsDict_.lookup("nSegments"));
+    }    
+    
     startTime_ = deltaT_*2.0;
     
     if(propsDict_.found("startTime"))    
     {        
         startTime_ = readScalar(propsDict_.lookup("startTime"));
     }
+    
+    val_ = 1;
+    
+    boundedBox bbMesh( mesh_.bounds().min(), mesh_.bounds().max() );
+    scalar Lx = bbMesh.span().x();
+    scalar Ly = bbMesh.span().x();
+    scalar Lz = bbMesh.span().z();
+
+    
+    if(translate_ == "X")
+    {
+        translationVector_ = vector(1, 0, 0)*Lx;
+    }
+    
+    if(translate_ == "Y")
+    {
+        translationVector_ = vector(0, 1, 0)*Ly;
+    }       
+    
+    if(translate_ == "Z")
+    {
+        translationVector_ = vector(0, 0, 1)*Lz;
+    }       
+  
 //     writeTime/deltaT
 }
 
@@ -109,249 +141,227 @@ void dropletInfo::createField()
     
 }
 
-
-void dropletInfo::findSegments(List<DynamicList<label> >& ids)
+void dropletInfo::reconstructDroplet()
 {
-    // outer list = number of segments
-    // inner list = mol indices within segment 
-    DynamicList<vector> segmentPositions;
+    Info << " reconstruct droplet ... " << endl;
     
-    label counter = 0;
-    
-    forAll(positions_, i)
     {
-        const vector& pI = positions_[i];
-        
-        label N = segmentPositions.size();
-        
-        if(fluidMols_[i])
+        label N = 0;
+
+        forAll(positions_, i)
         {
-            if(N == 0)
+            if(fluidMols_[i])
             {
-                segmentPositions.append(pI);
-                ids[counter].append(i);
-                counter++;
+                N++;
+            }
+        }
+        
+        nFluidMols_ = N;
+
+        Info << "no. of fluid mols = " << N << endl;
+        
+        List<vector> fluidPositions(N);
+        List<label> fluidIds(N);
+        
+        label c = 0;
+        
+        forAll(positions_, i)
+        {
+            if(fluidMols_[i])
+            {
+                fluidPositions[c] = positions_[i];
+                fluidIds[c] = i;
+                c++;
+            }
+        }            
+        
+        List<DynamicList<vector> > selectPositions(nSegs_);
+        List<DynamicList<label> > selectIds(nSegs_);
+
+        // initial estimate
+        
+        List<label> molsChosen(N, -1);
+        
+        forAll(selectPositions, s)
+        {
+            vector com = vector::zero;
+            
+            if(s == 0)
+            {
+                com = fluidPositions[0];                
             }
             else
             {
-                bool segmentFound = false;
+                bool foundMol = false;
                 
-                forAll(segmentPositions, j)
+                forAll(molsChosen, i)
                 {
-                    const vector& pJ = segmentPositions[j];
-                    
-                    scalar pIJ = mag(pI - pJ);
-                    
-                    if(pIJ < D_)
+                    if(molsChosen[i] == -1)
                     {
-                        segmentFound = true;
-                        ids[j].append(i);
+                        com = fluidPositions[i];
+                        foundMol = true;
+                        break;
                     }
                 }
                 
-                if(!segmentFound)
+                if(!foundMol)
                 {
-                    segmentPositions.append(pI);
-                    ids[counter].append(i);          
-                    counter++;
+                    break;
                 }
             }
+            
+            scalar count = 1.0;
+            
+            label molsCount = 0;
+            
+            bool finish = false;
+            
+            while(!finish)
+            {
+                forAll(fluidPositions, j)
+                {
+                    const vector& rJ = fluidPositions[j];
+                    
+                    scalar rIJ = mag(com - rJ);
+                
+                    if(rIJ < count*maxR_)
+                    {
+                        selectPositions[s].append(rJ);
+                        selectIds[s].append(j);
+                    }
+                }
+                
+                com = vector::zero;
+                
+                forAll(selectPositions[s], j)
+                {
+                    com += selectPositions[s][j];
+                }
+                
+                label newMolsCount = selectPositions[s].size();
+                
+                com /= scalar(newMolsCount);
+                
+//                     Info << "com = " << com << endl;
+            
+                count += 1.0;
+                
+                if(newMolsCount == molsCount)
+                {
+                    finish = true;
+                }
+                else
+                {
+                    selectPositions[s].clear();
+                    selectIds[s].clear();                    
+                    molsCount = newMolsCount;
+                }
+            }
+            
+            // set remaining molecules
+            forAll(selectIds[s], i)
+            {
+                molsChosen[selectIds[s][i]] = s;
+            }
         }
-    }
-
-    Info << "segmentPositions = " << segmentPositions << endl; 
-}
-
-
-void dropletInfo::getError
-(
-    const List<DynamicList<label> >& ids,
-    label& error,
-    label& id
-)
-{
-    label actualN = nActualMols_;
-    error = actualN;
-    
-    id = -1;
-    
-    forAll(ids, i)
-    {
-        label nMols = ids[i].size();
         
-        if((actualN - nMols) < error)
+        
+        Info << "sorted lists = " << endl;
+        
+        forAll(selectPositions, s)
         {
-            error = actualN - nMols;
-            id = i;
+            Info << selectPositions[s].size() << endl;
+        }
+        
+        // reduce lists
+        label noOfSegments = 0;
+        
+        forAll(selectPositions, s)
+        {
+            if(selectPositions[s].size() > val_)
+            {
+                noOfSegments++;
+            }
+        }
+        
+        List<DynamicList<vector> > sortedPositions(noOfSegments);
+        List<DynamicList<label> > sortedIds(noOfSegments);                
+            
+        label cS = 0;
+        
+        forAll(selectPositions, s)
+        {
+            if(selectPositions[s].size() > val_)
+            {
+                sortedPositions[cS].transfer(selectPositions[s]);
+                sortedIds[cS].transfer(selectIds[s]);
+                cS++;
+            }
+        }
+        
+        
+        dropletMolPositions_.clear();
+        dropletMolIds_.clear();
+        
+        if(noOfSegments == 2)
+        {
+            vector com1 = vector::zero;
+            
+            forAll(sortedPositions[0], i)
+            {
+                com1 += sortedPositions[0][i];
+            }
+
+            com1 /= sortedPositions[0].size();
+            
+            vector com2 = vector::zero;
+            
+            forAll(sortedPositions[1], i)
+            {
+                com2 += sortedPositions[1][i];
+            } 
+            
+            com2 /= sortedPositions[1].size();
+            
+            vector c21 = com1 - com2;
+            
+            scalar sgn = sign(translationVector_ & c21);
+
+            forAll(sortedPositions[0], i)
+            {
+                dropletMolPositions_.append(sortedPositions[0][i]);
+                dropletMolIds_.append(sortedIds[0][i]);
+            }
+            
+            forAll(sortedPositions[1], i)
+            {
+                dropletMolPositions_.append(sortedPositions[1][i] + sgn*translationVector_);
+                dropletMolIds_.append(sortedIds[1][i]);
+            }                
+        }
+        else if(noOfSegments > 2)
+        {
+            FatalErrorIn("void dropletInfo::calculateField()")
+                << "Did not code for more than 2 segements"
+                << exit(FatalError);
         }
     }
-    
-    Info << "error = " << error << endl;
 }
-
-void dropletInfo::setDropletPositions
-(
-    const List<DynamicList<label> >& ids,
-    const label& id
-)
-{
-    newMolsToPick_.setSize(fluidMols_.size(), false);
-    
-    nSelectedMols_ = 0;
-    forAll(ids[id], j)
-    {
-        const label& tN = ids[id][j];
-        newMolsToPick_[tN] = true;
-        nSelectedMols_++;
-    }
-    
-}
-
 
 void dropletInfo::calculateField()
 {
-    if(time_.timeOutputValue() >= startTime_) // skipping some known issues in first time step
+    
+    Info << " Calculate Field " << endl;
+    
+    if(
+        (time_.timeOutputValue() >= startTime_) // skipping some known issues in first time step
+        && (time_.timeOutputValue() <= endTime_)
+    )
     {
         readFromStorage();
-    
-        {
-            // estimate radius             
-            label N = 0;
-            
-            forAll(positions_, i)
-            {
-                if(fluidMols_[i])
-                {
-                    N++;
-                }
-            }
-            
-            nActualMols_ = N;
-            
-            scalar rho = 1000.0/rU_.refMassDensity();
-            scalar factor = 0.5;
-            scalar term = (3.0*mass_*scalar(N))/(factor*rho*4.0*constant::mathematical::pi);
-            scalar R = Foam::pow(term, (1.0/3.0));
-            
-            Info << " R = " << R << endl;
-            
-            scalar offset_ = 1.0;
-            
-            D_ = 2*R + offset_;
-            
-            boundedBox bbMesh( mesh_.bounds().min(), mesh_.bounds().max());
-            scalar Lx = bbMesh.span().x();
-            scalar Lz = bbMesh.span().z();
-            scalar midX = Lx*0.5;            
-            scalar midZ = Lz*0.5;            
-            
-            
-            {
-
-                List<DynamicList<label> > ids(10);
-                
-                findSegments(ids);
-               
-                bool fullSegmentFound = false;
-                
-                // try 0
-
-                label error;
-                label id;
-                
-                getError(ids, error, id);
-                
-                if(error < 5)
-                {
-                    fullSegmentFound = true;
-                    
-                    setDropletPositions(ids, id);
-                }
-            
-            
-                if(!fullSegmentFound)
-                {
-                    // repeat but first translate some molecules
-                    forAll(ids, i)
-                    {
-                        //push all molecules in +Lx
-                        // then push all molecules in +Lz
-                        forAll(ids[i], j)
-                        {
-                            const label& tN = ids[i][j];
-                        
-                            vector r1 = positions_[tN];
-                            
-                            if(r1.x() < midX)
-                            {
-                                vector r2 = r1 + Lx*vector(1, 0, 0);
-                                positions_[tN] = r2;
-                            }
-                        }
-                    }
-                    
-                    // try again 
-                    
-                    List<DynamicList<label> > ids1(10);
-            
-                    findSegments(ids1);
-
-                    label error1;
-                    label id1;
-                    
-                    getError(ids1, error1, id1);
-                    
-                    if(error1 < 5)
-                    {
-                        fullSegmentFound = true;
-                        setDropletPositions(ids1, id1);
-                    }                        
-                    
-                    if(!fullSegmentFound)
-                    {
-                        forAll(ids1, i)
-                        {
-                            //push all molecules in +Lx
-                            // then push all molecules in +Lz
-                            forAll(ids1[i], j)
-                            {
-                                const label& tN = ids1[i][j];
-                            
-                                vector r1 = positions_[tN];
-                                
-                                if (r1.z() < midZ) 
-                                {
-                                    vector r2 = r1 + Lz*vector(0, 0, 1);
-                                    positions_[tN] = r2;
-                                }
-                            }
-                        }
-                        
-                        // try again
-                        List<DynamicList<label> > ids2(10);
-                
-                        findSegments(ids2);
-
-                        label error2;
-                        label id2;
-                        
-                        getError(ids2, error2, id2);
-                        
-                        if(error2 < 5)
-                        {
-                            fullSegmentFound = true;
-                            setDropletPositions(ids2, id2);
-                        }        
-                        else
-                        {
-                            FatalErrorIn("void dropletInfo::calculateField()")
-                                << "Something strange - bad coding or something"
-                                << exit(FatalError);                                
-                        }
-                    }
-                }
-            }
-        }
+        reconstructDroplet();
+//         measureContactAngle();
+        
     }
 }
     
@@ -361,18 +371,17 @@ void dropletInfo::writeField()
     {
         const reducedUnits& rU = rU_;
 
-        fileName fName(outputPath_/"shifted_"+fieldName_+".xmol");
+        fileName fName(outputPath_/time_.timeName()+"_shifted_"+fieldName_+".xmol");
     
         OFstream str(fName);
     
-        str << nSelectedMols_ << nl << "polyMoleculeCloud site positions in angstroms" << nl;
+        str << dropletMolPositions_.size() << nl << "polyMoleculeCloud site positions in angstroms" << nl;
 
         // for all processors
-        forAll(positions_, i)
+        forAll(dropletMolPositions_, i)
         {
-            vector rI = positions_[i]*rU.refLength()*1e10;
-            
-            if(newMolsToPick_[i])
+            vector rI = dropletMolPositions_[i]*rU.refLength()*1e10;
+
             {
                 str <<  'C'
                     << ' ' << rI.x()
