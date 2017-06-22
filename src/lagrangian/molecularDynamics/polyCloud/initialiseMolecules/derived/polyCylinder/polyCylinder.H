@@ -23,31 +23,27 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    outputPairForces
-
+    polyCylinder
 
 Description
-
-doesnt work in parallel
-
+    not parallelised 
 
 SourceFiles
-    outputPairForcesI.H
-    outputPairForces.C
-    outputPairForcesIO.C
+    polyCylinderI.H
+    polyCylinder.C
+    polyCylinderIO.C
+
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef outputPairForces_H
-#define outputPairForces_H
+#ifndef polyCylinder_H
+#define polyCylinder_H
 
-#include "polyField.H"
+#include "polyConfiguration.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
 #include "polyMoleculeCloud.H"
-#include "distribution.H"
-#include "boundedBox.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -55,12 +51,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class outputPairForces Declaration
+                           Class polyCylinder Declaration
 \*---------------------------------------------------------------------------*/
 
-class outputPairForces
+class polyCylinder
 :
-	public polyField
+	public polyConfiguration
 {
 
 private:
@@ -68,82 +64,38 @@ private:
     // Private data
 
         //- subDictionary containing the properties
-        dictionary propsDict_;
+//         dictionary propsDict_;
 
-        propertyField fields_;
-        
-        fileName pathName_;
-        
-        fileName nameFile1_;
-        fileName nameFile2_;
-        fileName nameFile3_;
-        fileName nameFile4_;
-        fileName nameFile5_;
-        
-        word fieldName_;
 
-        List<label> molIdsWall_;
-        List<label> molIdsFluid_;
-        
-       
-        vectorField positions_;
-        scalarField energies_;
-        vectorField forces_;
-        scalarField nPairs_;
-        List<bool> fluidMols_; 
-        
     // Private Member Functions
-        
+
+
+
 public:
 
     //- Runtime type information
-    TypeName("outputPairForces");
+    TypeName("polyCylinder");
 
     // Constructors
 
         //- Construct from components
-        outputPairForces
-        (
-            Time& t,
-            const polyMesh& mesh,
+        polyCylinder
+		(
             polyMoleculeCloud& molCloud,
             const dictionary& dict
-        );
+//             const word& name
+		);
 
     // Destructor
 
-        ~outputPairForces();
+ 		~polyCylinder();
 
 
     // Member Functions
 
-        //- create initial field
-        void createField();
-        
-        void afterForce();
+        void setInitialConfiguration();
 
-        //- calculate field
-        void calculateField();
-
-        void measureDuringForceComputation
-        (
-            polyMolecule* molI,
-            polyMolecule* molJ
-        );
-
-        void measureDuringForceComputationSite
-        (
-            polyMolecule* molI,
-            polyMolecule* molJ,
-            label sI,
-            label sJ
-        );
-
-        const propertyField& fields() const;
-
-        //- write field
-        void writeField();
-}; 		
+};
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

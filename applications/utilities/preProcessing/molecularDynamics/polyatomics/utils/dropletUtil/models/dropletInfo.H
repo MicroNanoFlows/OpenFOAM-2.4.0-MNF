@@ -110,14 +110,40 @@ private:
         DynamicList<label> dropletMolIds_;
         
         
-        
+        // mesh box
         boundedBox box_;
         
-        List<scalarField> nMols_;
         
         scalar averagingCounter_;
         
-        scalar h_; // start location in y dir
+        // final density 2D contour measured averaged over specified period
+        
+        List<scalarField> nMols_;
+        List<scalarField> pE_;        
+
+
+        // 1D plot of potential energy
+        scalarField nMolsY_;
+        scalarField pEY_;
+        
+        // dynamic measurement of droplets
+        bool dynamic_;
+        List<scalarField> nMols2_;
+        scalar averagingCounter2_;
+        
+        label nBinsX2_;
+        label nBinsY2_;        
+        scalar Lx2_;
+        scalar Ly2_;
+        scalar binWidthX2_;
+        scalar binWidthY2_;   
+        
+        label nSteps_;        
+        label outputCounter_;
+        
+        scalar h_; // start (reference) location in y dir 
+        scalar Lx_;
+        scalar Ly_;
         
         vector unitVectorX_;
         vector unitVectorY_;
@@ -126,23 +152,27 @@ private:
         label nBinsX_;
         label nBinsY_;
 
-        scalar lengthX_;
-        scalar lengthY_;
+//         scalar lengthX_;
+//         scalar lengthY_;
         scalar lengthZ_; // thickness
         
         scalar binWidthX_;
         scalar binWidthY_;        
         
+        // distance between centre and truncate point for PE measurement
+        scalar dX_;
         
     // Private Member Functions
         
         void readFromStorage();
         
         void reconstructDroplet();
-            
-        void calculateDensityBins();
         
         void initialiseBins();
+        
+        void calculateBinnedProperties();
+
+        void outputDynamicContourPlot();
         
  public:
 

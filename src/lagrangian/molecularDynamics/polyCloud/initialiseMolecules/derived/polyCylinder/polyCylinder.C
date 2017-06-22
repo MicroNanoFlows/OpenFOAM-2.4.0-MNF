@@ -26,7 +26,7 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "polySphere.H"
+#include "polyCylinder.H"
 #include "addToRunTimeSelectionTable.H"
 #include "IFstream.H"
 #include "graph.H"
@@ -36,16 +36,16 @@ Description
 namespace Foam
 {
 
-defineTypeNameAndDebug(polySphere, 0);
+defineTypeNameAndDebug(polyCylinder, 0);
 
-addToRunTimeSelectionTable(polyConfiguration, polySphere, dictionary);
+addToRunTimeSelectionTable(polyConfiguration, polyCylinder, dictionary);
 
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-polySphere::polySphere
+polyCylinder::polyCylinder
 (
     polyMoleculeCloud& molCloud,
     const dictionary& dict
@@ -62,7 +62,7 @@ polySphere::polySphere
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-polySphere::~polySphere()
+polyCylinder::~polyCylinder()
 {}
 
 
@@ -70,7 +70,7 @@ polySphere::~polySphere()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 
-void polySphere::setInitialConfiguration()
+void polyCylinder::setInitialConfiguration()
 {
     label initialSize = molCloud_.size();
 
@@ -80,13 +80,13 @@ void polySphere::setInitialConfiguration()
 
     const vector bulkVelocity(mdInitialiseDict_.lookup("bulkVelocity"));
     
-    vector midPoint(mdInitialiseDict_.lookup("midPoint"));
+    vector startPoint(mdInitialiseDict_.lookup("startPoint"));
+    vector endPoint(mdInitialiseDict_.lookup("endPoint"));
     
+    vector unitVector = (endPoint - startPoint)/mag(endPoint - startPoint);
     
-    vector unitVectorX = vector(1, 0, 0);
-    vector unitVectorY = vector(0, 1, 0);
-    vector unitVectorZ = vector(0, 0, 1);
-
+    vector unitVectorX(mdInitialiseDict_.lookup("unitVectorX"));
+    vector unitVectorY(mdInitialiseDict_.lookup("unitVectorY"));        
     
     
     scalar R(readScalar(mdInitialiseDict_.lookup("radius")));
@@ -112,7 +112,7 @@ void polySphere::setInitialConfiguration()
 
     if(molId == -1)
     {
-        FatalErrorIn("polySphere::setInitialConfiguration()")
+        FatalErrorIn("polyCylinder::setInitialConfiguration()")
             << "Cannot find molecule id: " << molIdName << nl << "in idList."
             << exit(FatalError);
     }
@@ -123,8 +123,8 @@ void polySphere::setInitialConfiguration()
     boundedBox bb;
     
     
-    vector rMin = midPoint - unitVectorX*R - unitVectorY*R - unitVectorZ*R;
-    vector rMax = midPoint + unitVectorX*R + unitVectorY*R + unitVectorZ*R;
+    vector rMin = startPoint - unitVectorX*R - unitVectorY*R;
+    vector rMax = endPoint + unitVectorX*R + unitVectorY*R;
     
     bb.resetBoundedBox(rMin, rMax);
 
@@ -177,7 +177,9 @@ void polySphere::setInitialConfiguration()
     forAll(positions, i)
     {
         const vector& rI = positions[i];
-        scalar rD = mag(rI - midPoint);
+        vector rIS = rI - startPoint;
+        
+        vector rD = rIS - (rIS & unitVector)*unitVector;
         
         if(mag(rD) <= R)
         {

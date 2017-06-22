@@ -101,6 +101,7 @@ initialiseMolecules/derived/ciliumIC/ciliumIC.C
 initialiseMolecules/derived/grapheneHydrogenFunctionalisation/grapheneHydrogenFunctionalisation.C
 initialiseMolecules/derived/freezeMolecules/freezeMolecules.C
 initialiseMolecules/derived/simpleLattice/simpleLattice.C
+initialiseMolecules/derived/polyCylinder/polyCylinder.C
 
 /* Deletion */
 

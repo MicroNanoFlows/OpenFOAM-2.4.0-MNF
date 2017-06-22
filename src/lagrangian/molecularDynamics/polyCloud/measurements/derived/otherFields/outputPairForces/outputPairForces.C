@@ -332,17 +332,18 @@ void outputPairForces::measureDuringForceComputationSite
 
         label tN = -1; // trackingNumber of water molecule
         
-        if
-        (
-            ((idIW != -1) && (idJF != -1)) 
-        )
+        label fluidIndex = -1;
+        
+        if((idIF != -1) && (idJW != -1)) // fluid is i
+        {
+            tN = molI->trackingNumber();
+            fluidIndex = 1;
+        }    
+        else if(((idIW != -1) && (idJF != -1))) // fluid is j
         {
             tN = molJ->trackingNumber();
-        }
-        else if((idJW != -1) && (idIF != -1))
-        {
-            tN = molI->trackingNumber();        
-        }    
+            fluidIndex = 2;
+        }   
         
         if(tN != -1)
         {
@@ -351,7 +352,30 @@ void outputPairForces::measureDuringForceComputationSite
             scalar rsIsJMag = mag(rsIsJ);
             scalar pE = molCloud_.pot().pairPots().energy(k, rsIsJMag);
             vector force = (rsIsJ/rsIsJMag)*molCloud_.pot().pairPots().force(k, rsIsJMag);
+        
             
+            if(fluidIndex == 1) // mol index is i
+            {
+                if(!molI->referred())
+                {
+                    nPairs_[tN] += 1;
+                    energies_[tN] += pE*0.5;
+                    forces_[tN] += force;
+                }
+            }
+            else if(fluidIndex == 2)  // mol index is j
+            {
+                if(!molJ->referred())
+                {
+                    nPairs_[tN] += 1;
+                    energies_[tN] += pE*0.5;
+                    forces_[tN] -= force;
+                }                
+            }
+            
+            // MISSING FORCES ON THE SOLID
+/*            
+
             if(molI->referred() || molJ->referred())
             {
                 nPairs_[tN] += 0.5;
@@ -379,7 +403,7 @@ void outputPairForces::measureDuringForceComputationSite
                 {
                     forces_[tN] -= force;
                 }
-            }
+            }*/
         }
     }
 }
