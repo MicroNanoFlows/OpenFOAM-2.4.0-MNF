@@ -162,6 +162,15 @@ void Foam::VariableSoftSphere::collide
 //     }
     
 //     Info << "alphaPQ = " << alphaPQ << endl;
+        
+    scalar collisionSeparation = sqrt(
+            sqr(pP.position().x() - pQ.position().x()) +
+            sqr(pP.position().y() - pQ.position().y())
+    );
+    
+    cloud_.cellPropMeasurements().collisionSeparation()[cellI] += 
+                                                        collisionSeparation;
+    cloud_.cellPropMeasurements().nColls()[cellI]++;
 
     Random& rndGen(cloud_.rndGen());
 
