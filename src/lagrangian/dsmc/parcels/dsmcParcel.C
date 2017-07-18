@@ -38,75 +38,77 @@ bool Foam::dsmcParcel::move
     td.switchProcessor = false;
     td.keepParticle = true;
 
-    const polyMesh& mesh = td.cloud().pMesh();
-    const polyBoundaryMesh& pbMesh = mesh.boundaryMesh();
-//     Random& rndGen(td.cloud().rndGen());
-
-    if(newParcel() == 1)
+    if(stuckToWall() == 0)
     {
-        Random& rndGen(td.cloud().rndGen());
-        stepFraction() = rndGen.scalar01(); 
-        newParcel() = 0;
-    }
-    
-    
-    scalar tEnd = (1.0 - stepFraction())*trackTime;
-    const scalar dtMax = tEnd;
-                
-    // For reduced-D cases, the velocity used to track needs to be
-    // constrained, but the actual U_ of the parcel must not be
-    // altered or used, as it is altered by patch interactions an
-    // needs to retain its 3D value for collision purposes.
-    vector Utracking = U_;
+        const polyMesh& mesh = td.cloud().pMesh();
+        const polyBoundaryMesh& pbMesh = mesh.boundaryMesh();
+
+        if(newParcel() == 1)
+        {
+            Random& rndGen(td.cloud().rndGen());
+            stepFraction() = rndGen.scalar01(); 
+            newParcel() = 0;
+        }
         
-    while (td.keepParticle && !td.switchProcessor && tEnd > ROOTVSMALL)
-    {
-        Utracking = U_;
-
-        if(!td.cloud().axisymmetric())
-        {
-            // Apply correction to position for reduced-D cases, 
-            // but not axisymmetric cases
-            meshTools::constrainToMeshCentre(mesh, position());
+        
+        scalar tEnd = (1.0 - stepFraction())*trackTime;
+        const scalar dtMax = tEnd;
+                    
+        // For reduced-D cases, the velocity used to track needs to be
+        // constrained, but the actual U_ of the parcel must not be
+        // altered or used, as it is altered by patch interactions an
+        // needs to retain its 3D value for collision purposes.
+        vector Utracking = U_;
             
-            // Apply correction to velocity to constrain tracking for
-            // reduced-D cases,  but not axisymmetric cases
-            meshTools::constrainDirection(mesh, mesh.solutionD(), Utracking);
-        }
-
-        // Set the Lagrangian time-step
-        scalar dt = min(dtMax, tEnd);
-
-        dt *= trackToFace(position() + dt*Utracking, td, true/*, td.cloud().faceTree()*/);
-
-        tEnd -= dt;
-
-        stepFraction() = 1.0 - tEnd/trackTime;
-               
-        // - face tracking info
-        if( face() != -1 )    //*******
+        while (td.keepParticle && !td.switchProcessor && tEnd > ROOTVSMALL)
         {
-            //--  measure flux properties
-            td.cloud().tracker().updateFields
-            (
-                *this
-            );
-        }
+            Utracking = U_;
 
-        if (onBoundary() && td.keepParticle)
-        {
-            if (isA<processorPolyPatch>(pbMesh[patch(face())]))
+            if(!td.cloud().axisymmetric())
             {
-                td.switchProcessor = true;
+                // Apply correction to position for reduced-D cases, 
+                // but not axisymmetric cases
+                meshTools::constrainToMeshCentre(mesh, position());
+                
+                // Apply correction to velocity to constrain tracking for
+                // reduced-D cases,  but not axisymmetric cases
+                meshTools::constrainDirection(mesh, mesh.solutionD(), Utracking);
             }
 
-            forAll(td.cloud().boundaries().cyclicBoundaryModels(), c)
-            {
-                const labelList& faces = td.cloud().boundaries().cyclicBoundaryModels()[c]->allFaces();
+            // Set the Lagrangian time-step
+            scalar dt = min(dtMax, tEnd);
 
-                if(findIndex(faces, this->face()) != -1)
+            dt *= trackToFace(position() + dt*Utracking, td, true/*, td.cloud().faceTree()*/);
+
+            tEnd -= dt;
+
+            stepFraction() = 1.0 - tEnd/trackTime;
+                
+            // - face tracking info
+            if( face() != -1 )    //*******
+            {
+                //--  measure flux properties
+                td.cloud().tracker().updateFields
+                (
+                    *this
+                );
+            }
+
+            if (onBoundary() && td.keepParticle)
+            {
+                if (isA<processorPolyPatch>(pbMesh[patch(face())]))
                 {
-                    td.cloud().boundaries().cyclicBoundaryModels()[c]->controlMol(*this, td);
+                    td.switchProcessor = true;
+                }
+
+                forAll(td.cloud().boundaries().cyclicBoundaryModels(), c)
+                {
+                    const labelList& faces = td.cloud().boundaries().cyclicBoundaryModels()[c]->allFaces();
+
+                    if(findIndex(faces, this->face()) != -1)
+                    {
+                        td.cloud().boundaries().cyclicBoundaryModels()[c]->controlMol(*this, td);
+                    }
                 }
             }
         }

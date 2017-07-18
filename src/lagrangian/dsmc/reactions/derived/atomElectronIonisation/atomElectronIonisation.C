@@ -281,7 +281,7 @@ void atomElectronIonisation::reaction
         vector UP = p.U();
         vector UQ = q.U();
         scalar ERotP = p.ERot();
-        scalar EVibP = p.vibLevel()[0]*cloud_.constProps(typeIdP).thetaV()[0]*physicoChemical::k.value();
+       
         scalar EEleP = cloud_.constProps(typeIdP).electronicEnergyList()[p.ELevel()];
 
         scalar mP = cloud_.constProps(typeIdP).mass();
@@ -355,7 +355,7 @@ void atomElectronIonisation::reaction
 
                 vector UcmAtoms = UP;
                 
-                scalar translationalEnergy2 = ERotP + EVibP;
+                scalar translationalEnergy2 = ERotP;
 
                 scalar cRatoms = sqrt(2.0*translationalEnergy2/mRatoms);
 
@@ -407,6 +407,10 @@ void atomElectronIonisation::reaction
                 scalar RWF = p.RWF();
                 labelList vibLevel(0,0);
                 
+                label stuckToWall = 0;
+                scalarField wallTemperature(4, 0.0);
+                vectorField wallVectors(4, vector::zero);
+                
                 // insert new product 2
                 cloud_.addNewParcel
                 (
@@ -421,6 +425,9 @@ void atomElectronIonisation::reaction
                     typeId2,
                     0,
                     classificationP,
+                    stuckToWall,
+                    wallTemperature,
+                    wallVectors,
                     vibLevel
                 );
             }
@@ -434,7 +441,7 @@ void atomElectronIonisation::reaction
         vector UP = p.U();
         vector UQ = q.U();
         scalar ERotQ = q.ERot();
-        scalar EVibQ = q.vibLevel()[0]*cloud_.constProps(typeIdQ).thetaV()[0]*physicoChemical::k.value();
+        
         scalar EEleQ = cloud_.constProps(typeIdQ).electronicEnergyList()[q.ELevel()];
 
         scalar mP = cloud_.constProps(typeIdP).mass();
@@ -508,7 +515,7 @@ void atomElectronIonisation::reaction
 
                 vector UcmAtoms = UQ;
                 
-                scalar translationalEnergy2 = ERotQ + EVibQ;
+                scalar translationalEnergy2 = ERotQ;
 
                 scalar cRatoms = sqrt(2.0*translationalEnergy2/mRatoms);
 
@@ -560,6 +567,10 @@ void atomElectronIonisation::reaction
                 scalar RWF = q.RWF();
                 labelList vibLevel(0,0);
                 
+                label stuckToWall = 0;
+                scalarField wallTemperature(4, 0.0);
+                vectorField wallVectors(4, vector::zero);
+                
                 // insert new product 2
                 cloud_.addNewParcel
                 (
@@ -574,6 +585,9 @@ void atomElectronIonisation::reaction
                     typeId2,
                     0,
                     classificationP,
+                    stuckToWall,
+                    wallTemperature,
+                    wallVectors,
                     vibLevel
                 );
             }

@@ -248,6 +248,15 @@ private:
             // Physics of Fluids, 20, 016101, 2008.
             label classification_;
             
+            //Defines if a particle is stuck to a wall
+            label stuckToWall_;
+            
+            //Store temperature of wall particle is stuck to
+            scalarField wallTemperature_;
+            
+            //Store vectors of wall particle is stuck to
+            vectorField wallVectors_;
+            
              //- Vibrational energy of the Parcel [J]
             labelList vibLevel_;
 
@@ -277,6 +286,9 @@ public:
             const label typeId,
             const label newParcel,
             const label classification,
+            const label stuckToWall,
+            const scalarField wallTemperature,
+            const vectorField wallVectors,
             const labelList vibLevel
         );
 
@@ -351,6 +363,16 @@ public:
             //- Physics of Fluids, 20, 016101, 2008
             inline label classification() const;
             
+            //Return const access to stuckToWall
+            //1 if stuck to a wall, 0 if not
+            inline label stuckToWall() const;
+            
+             //Return const access to temperature of wall particle is stuck to
+            inline scalarField wallTemperature() const;
+            
+            //Return access to wall vectors of wall particle is stuck to
+            inline vectorField wallVectors() const;
+            
             //- Return const access to vibrational energy
             inline labelList vibLevel() const;
 
@@ -380,6 +402,16 @@ public:
             //- aspects of shock waves over power-law leading edges,
             //- Physics of Fluids, 20, 016101, 2008
             inline label& classification();
+            
+            //Return access to stuckToWall
+            //1 if stuck to a wall, 0 if not
+            inline label& stuckToWall();
+            
+            //Return access to temperature of wall particle is stuck to
+            inline scalarField& wallTemperature();
+            
+            //Return access to wall vectors of wall particle is stuck to
+            inline vectorField& wallVectors();
             
             //- Return access to vibrational energy
             inline labelList& vibLevel();

@@ -23,7 +23,7 @@ configurations
 		numberDensities
 		{
 			N2            2.318e18;
-            		O2            6.161e17;
+    		O2            6.161e17;
 		};
 
 		translationalTemperature     217.63;

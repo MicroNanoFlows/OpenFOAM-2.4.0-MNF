@@ -626,6 +626,10 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                 scalar RWF = p.RWF();
                 labelList vibLevel(0,0);
                 
+                label stuckToWall = 0;
+                scalarField wallTemperature(4, 0.0);
+                vectorField wallVectors(4, vector::zero);
+                
                 // insert new product 2
                 cloud_.addNewParcel
                 (
@@ -640,6 +644,9 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                     typeId2,
                     0,
                     classificationP,
+                    stuckToWall,
+                    wallTemperature,
+                    wallVectors,
                     vibLevel
                 );
             }
@@ -785,6 +792,10 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                 scalar RWF = q.RWF();
                 labelList vibLevel(0,0);
                 
+                label stuckToWall = 0;
+                scalarField wallTemperature(4, 0.0);
+                vectorField wallVectors(4, vector::zero);
+                
                 // insert new product 2
                 cloud_.addNewParcel
                 (
@@ -799,6 +810,9 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                     typeId2,
                     0,
                     classificationQ,
+                    stuckToWall,
+                    wallTemperature,
+                    wallVectors,
                     vibLevel
                 );
             }
@@ -943,6 +957,10 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                 scalar RWF = p.RWF();
                 labelList vibLevel(0,0);
                 
+                label stuckToWall = 0;
+                scalarField wallTemperature(4, 0.0);
+                vectorField wallVectors(4, vector::zero);
+                
                 // insert new product 2
                 cloud_.addNewParcel
                 (
@@ -957,6 +975,9 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                     typeId2,
                     0,
                     classificationP,
+                    stuckToWall,
+                    wallTemperature,
+                    wallVectors,
                     vibLevel
                 );
             }
@@ -1102,6 +1123,10 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                 scalar RWF = q.RWF();
                 labelList vibLevel(0,0);
                 
+                label stuckToWall = 0;
+                scalarField wallTemperature(4, 0.0);
+                vectorField wallVectors(4, vector::zero);
+                
                 // insert new product 2
                 cloud_.addNewParcel
                 (
@@ -1116,6 +1141,9 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                     typeId2,
                     0,
                     classificationP,
+                    stuckToWall,
+                    wallTemperature,
+                    wallVectors,
                     vibLevel
                 );
             }
@@ -1436,6 +1464,10 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                 scalar RWF = p.RWF();
                 labelList vibLevel(0,0);
                 
+                label stuckToWall = 0;
+                scalarField wallTemperature(4, 0.0);
+                vectorField wallVectors(4, vector::zero);
+                
                 // insert new product 2
                 cloud_.addNewParcel
                 (
@@ -1450,6 +1482,9 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                     typeId2,
                     0,
                     classificationP,
+                    stuckToWall,
+                    wallTemperature,
+                    wallVectors,
                     vibLevel
                 );
             }
@@ -1595,6 +1630,10 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                 scalar RWF = q.RWF();
                 labelList vibLevel(0,0);
                 
+                label stuckToWall = 0;
+                scalarField wallTemperature(4, 0.0);
+                vectorField wallVectors(4, vector::zero);
+                
                 // insert new product 2
                 cloud_.addNewParcel
                 (
@@ -1609,6 +1648,9 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                     typeId2,
                     0,
                     classificationP,
+                    stuckToWall,
+                    wallTemperature,
+                    wallVectors,
                     vibLevel
                 );
             }
@@ -1753,6 +1795,10 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                 scalar RWF = p.RWF();
                 labelList vibLevel(0,0);
                 
+                label stuckToWall = 0;
+                scalarField wallTemperature(4, 0.0);
+                vectorField wallVectors(4, vector::zero);
+                
                 // insert new product 2
                 cloud_.addNewParcel
                 (
@@ -1767,6 +1813,9 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                     typeId2,
                     0,
                     classificationP,
+                    stuckToWall,
+                    wallTemperature,
+                    wallVectors,
                     vibLevel
                 );
             }
@@ -1912,6 +1961,10 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                 scalar RWF = q.RWF();
                 labelList vibLevel(0,0);
                 
+                label stuckToWall = 0;
+                scalarField wallTemperature(4, 0.0);
+                vectorField wallVectors(4, vector::zero);
+                
                 // insert new product 2
                 cloud_.addNewParcel
                 (
@@ -1926,6 +1979,9 @@ void dissociationIonisationTypeIDissimilarSpecies::reaction
                     typeId2,
                     0,
                     classificationP,
+                    stuckToWall,
+                    wallTemperature,
+                    wallVectors,
                     vibLevel
                 );
             }

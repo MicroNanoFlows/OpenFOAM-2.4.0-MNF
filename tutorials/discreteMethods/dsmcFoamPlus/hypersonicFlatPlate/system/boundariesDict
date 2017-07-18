@@ -16,50 +16,49 @@ FoamFile
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 dsmcPatchBoundaries
-(
-    
-     boundary
-     {
-         patchBoundaryProperties
-         {
-     		patchName                      plate;
-         }
+( 
+    boundary
+    {
+        patchBoundaryProperties
+        {
+            patchName     plate;
+        }
 
         boundaryModel        dsmcDiffuseWallPatch;
 
-       dsmcDiffuseWallPatchProperties
+        dsmcDiffuseWallPatchProperties
         {
             velocity             (0 0 0);
             temperature            290;
         }
-     }
-
-     boundary
-     {
-         patchBoundaryProperties
-         {
-     		patchName                      defaultFaces;
-         }
-
-        boundaryModel        dsmcSpecularWallPatch;
-
-       dsmcSpecularWallPatchProperties
-        {
-        }
-     }
+    }
 
     boundary
     {
         patchBoundaryProperties
         {
-            patchName                           inlet;
+            patchName            defaultFaces;
+        }
+
+        boundaryModel        dsmcSpecularWallPatch;
+
+        dsmcSpecularWallPatchProperties
+        {
+        }
+    }
+
+    boundary
+    {
+        patchBoundaryProperties
+        {
+         patchName                           inlet;
         }
 
         boundaryModel   dsmcDeletionPatch;
 
         dsmcDeletionPatchProperties
         {
-	      allSpecies		yes;
+            allSpecies		yes;
         }
     }
 );

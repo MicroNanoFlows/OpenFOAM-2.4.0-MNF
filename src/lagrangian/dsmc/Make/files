@@ -49,7 +49,6 @@ collisions/derived/NoBinaryCollision/NoBinaryCollision.C
 collisions/derived/VariableHardSphere/VariableHardSphere.C
 collisions/derived/VariableSoftSphere/VariableSoftSphere.C
 collisions/derived/LarsenBorgnakkeVariableHardSphere/LarsenBorgnakkeVariableHardSphere.C
-collisions/derived/LarsenBorgnakkeVariableHardSphereClassification/LarsenBorgnakkeVariableHardSphereClassification.C
 collisions/derived/LarsenBorgnakkeVariableSoftSphere/LarsenBorgnakkeVariableSoftSphere.C
 
 /* COLLISION PARTNER SELECTION ROUTINES */
@@ -97,6 +96,7 @@ boundaries/derived/patchBoundaries/dsmcDiffuseCatalyticWallPatch/dsmcDiffuseCata
 boundaries/derived/patchBoundaries/dsmcFixedHeatFluxFieldPatch/dsmcFixedHeatFluxFieldPatch.C
 boundaries/derived/patchBoundaries/dsmcFixedHeatFluxWallPatch/dsmcFixedHeatFluxWallPatch.C
 boundaries/derived/patchBoundaries/dsmcMixedDiffuseSpecularSphericalPatch/dsmcMixedDiffuseSpecularSphericalPatch.C
+boundaries/derived/patchBoundaries/dsmcStickingDiffuseWallPatch/dsmcStickingDiffuseWallPatch.C
 
 
 /* GENERAL BOUNDARY MODELS */

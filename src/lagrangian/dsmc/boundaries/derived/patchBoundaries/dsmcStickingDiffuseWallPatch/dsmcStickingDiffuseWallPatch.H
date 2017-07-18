@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    dsmcAdiabaticWallPatch
+    dsmcStickingDiffuseWallPatch
 
 Description
     Wall interaction setting microscopic velocity to a random one
@@ -34,13 +34,13 @@ Description
 
 
 SourceFiles
-    dsmcAdiabaticWallPatch.C
+    dsmcStickingDiffuseWallPatch.C
 
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef dsmcAdiabaticWallPatch_H
-#define dsmcAdiabaticWallPatch_H
+#ifndef dsmcStickingDiffuseWallPatch_H
+#define dsmcStickingDiffuseWallPatch_H
 
 #include "dsmcPatchBoundary.H"
 #include "vector.H"
@@ -56,10 +56,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class dsmcAdiabaticWallPatch Declaration
+                           Class dsmcStickingDiffuseWallPatch Declaration
 \*---------------------------------------------------------------------------*/
 
-class dsmcAdiabaticWallPatch
+class dsmcStickingDiffuseWallPatch
 :
 	public dsmcPatchBoundary
 {
@@ -68,23 +68,30 @@ private:
 
     // Private data
         dictionary propsDict_;
-        vector gasVelocity_;
-        vector totalMomentum_;
-        scalar totalMass_;
 
         void setProperties();
+        
+        scalar stickingProbability_;
+        
+        label nStrikes_;
+        
+        scalar strikeRate_;
+        
+        label nSteps_;
+        
+//         scalar residenceTime_;
 
 
 
 public:
 
     //- Runtime type information
-    TypeName("dsmcAdiabaticWallPatch");
+    TypeName("dsmcStickingDiffuseWallPatch");
 
     // Constructors
 
         //- Construct from components
-        dsmcAdiabaticWallPatch
+        dsmcStickingDiffuseWallPatch
         (
             Time& t,
             const polyMesh& mesh,
@@ -94,7 +101,7 @@ public:
 
     // Destructor
 
-        ~dsmcAdiabaticWallPatch();
+        ~dsmcStickingDiffuseWallPatch();
 
 
     // Member Functions

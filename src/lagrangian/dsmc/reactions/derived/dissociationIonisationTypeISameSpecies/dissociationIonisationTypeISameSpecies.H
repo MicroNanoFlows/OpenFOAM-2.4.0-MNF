@@ -50,7 +50,7 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class dissociationIonisationTypeISameSpecies Declaration
+            Class dissociationIonisationTypeISameSpecies Declaration
 \*---------------------------------------------------------------------------*/
 
 class dissociationIonisationTypeISameSpecies
@@ -104,7 +104,7 @@ public:
         //- Construct from components
         dissociationIonisationTypeISameSpecies
         (
-	        Time& t,
+            Time& t,
             dsmcCloud& cloud,
             const dictionary& dict
         );

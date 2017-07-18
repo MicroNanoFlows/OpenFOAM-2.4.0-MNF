@@ -68,9 +68,12 @@ void Foam::dsmcCloud::buildCellOccupancy()
         cellOccupancy_[cO].clear();
     }
 
-    forAllIter(dsmcCloud, *this, iter)
+   forAllIter(dsmcCloud, *this, iter)
     {
-        cellOccupancy_[iter().cell()].append(&iter());
+        if(iter().stuckToWall() != 1)
+        {
+            cellOccupancy_[iter().cell()].append(&iter());
+        }
     }
 }
 
@@ -119,10 +122,7 @@ void Foam::dsmcCloud::removeElectrons()
 }
 
 void Foam::dsmcCloud::addElectrons()
-{    
-    
-    label electronIndex = 0;
-    
+{      
     label electronTypeId = -1;
             
     //find electron typeId
@@ -141,88 +141,270 @@ void Foam::dsmcCloud::addElectrons()
     {                
         if(rhoMMeanElectron_[c] > VSMALL)
         {
-            
-            scalar V = mesh_.cellVolumes()[c];
+           scalar V = mesh_.cellVolumes()[c];
                 
             scalar rhoMMeanElectron = rhoMMeanElectron_[c]*nParticle_/V;
             scalar rhoNMeanElectron = rhoNMeanElectron_[c]*nParticle_/V;
             vector UElectron = momentumMeanElectron_[c] /(rhoMMeanElectron*V);
-            scalar linearKEMeanElectron = (0.5*linearKEMeanElectron_[c]*nParticle_)/V;
+            scalar linearKEMeanElectron = 
+                                (0.5*linearKEMeanElectron_[c]*nParticle_)/V;
             
-            electronTemperature_[c] = 2.0/(3.0*physicoChemical::k.value()*rhoNMeanElectron)
-                                    *(linearKEMeanElectron - 0.5*rhoMMeanElectron*(UElectron & UElectron));
-                                    
-//             electronVelocity_[c] = UElectron;
+            electronTemperature_[c] = 2.0/(3.0*physicoChemical::k.value()
+                                    *rhoNMeanElectron)*(linearKEMeanElectron 
+                                    - 0.5*rhoMMeanElectron
+                                    *(UElectron & UElectron));
+        }
+        
+        const DynamicList<dsmcParcel*>& molsInCell = cellOccupancy_[c];
+        
+        forAll(molsInCell, mIC)
+        {
+            dsmcParcel* p = molsInCell[mIC];
+            
+            const dsmcParcel::constantProperties& constProp 
+                                = constProps(p->typeId());
+                                
+            label charge = constProp.charge();
+        
+            if(charge  == 1)
+            {
+                //found an ion, add an electron here
+                
+                //electron temperature will be zero if there have been no
+                //electrons in the cell during the simulation
+                
+                
+                label cellI = p->cell();
+                vector position = p->position();
+                label tetFaceI = p->tetFace();
+                label tetPtI = p->tetPt();
+                
+                if(electronTemperature_[cellI] < VSMALL)
+                {
+                    electronTemperature_[cellI] = 6000.0;
+                }
+                if(electronTemperature_[cellI] > 8.0e4)
+                {
+                    electronTemperature_[cellI] = 30000.0;
+                }
+                    
+
+                vector electronVelocity = equipartitionLinearVelocity
+                    (
+                        electronTemperature_[cellI],
+                        constProps_[electronTypeId].mass()
+                    );
+                
+                if(rhoMMean_[cellI] > VSMALL)
+                {
+                    cellVelocity_[cellI] = momentumMean_[cellI]
+                                                        /rhoMMean_[cellI];
+                }
+                
+                labelList vibLevel(0,0);
+                    
+                electronVelocity += cellVelocity_[cellI];
+
+                scalar RWF = p->RWF();
+                
+                scalarField wallTemperature(3, 0.0);
+                
+                vectorField wallVectors(3, vector::zero);
+
+                addNewParcel
+                (
+                    position,
+                    electronVelocity,
+                    RWF,
+                    0.0,
+                    0,
+                    cellI,
+                    tetFaceI,
+                    tetPtI,
+                    electronTypeId,
+                    0,
+                    0,
+                    0,
+                    wallTemperature,
+                    wallVectors,
+                    vibLevel
+                );
+            }
         }
     }
         
-    forAllConstIter(dsmcCloud, *this, iter)
+//     forAllConstIter(dsmcCloud, *this, iter)
+//     {
+//         const dsmcParcel& p = iter();
+//         
+//         const dsmcParcel::constantProperties& constProp 
+//                             = constProps(p.typeId());
+//                             
+//         label charge = constProp.charge();
+//         
+//         if(charge  == 1)
+//         {
+//             //found an ion, add an electron here
+//             
+//             //electron temperature will be zero if there have been no
+//             //electrons in the cell during the simulation
+//             
+//             
+//             label cellI = p.cell();
+//             vector position = p.position();
+//             label tetFaceI = p.tetFace();
+//             label tetPtI = p.tetPt();
+//             
+//             if(electronTemperature_[cellI] < VSMALL)
+//             {
+//                 electronTemperature_[cellI] = 6000.0;
+//             }
+//             if(electronTemperature_[cellI] > 8.0e4)
+//             {
+//                 electronTemperature_[cellI] = 30000.0;
+//             }
+//                 
+// 
+//             vector electronVelocity = equipartitionLinearVelocity
+//                 (
+//                     electronTemperature_[cellI],
+//                     constProps_[electronTypeId].mass()
+//                 );
+//               
+//             if(rhoMMean_[cellI] > VSMALL)
+//             {
+//                 cellVelocity_[cellI] = momentumMean_[cellI]/rhoMMean_[cellI];
+//             }
+//             
+//             labelList vibLevel(0,0);
+//                 
+//             electronVelocity += cellVelocity_[cellI];
+// 
+//             scalar RWF = p.RWF();
+//             
+//             scalarField wallTemperature(3, 0.0);
+//                 
+//             vectorField wallVectors(3, vector::zero);
+// 
+//             addNewParcel
+//             (
+//                 position,
+//                 electronVelocity,
+//                 RWF,
+//                 0.0,
+//                 0,
+//                 cellI,
+//                 tetFaceI,
+//                 tetPtI,
+//                 electronTypeId,
+//                 0,
+//                 0,
+//                 0,
+//                 wallTemperature,
+//                 wallVectors,
+//                 vibLevel
+//             );
+//         }            
+//     }
+}
+
+void Foam::dsmcCloud::releaseParticlesFromWall()
+{ 
+    label i = -1;
+    
+    forAllIter(dsmcCloud, *this, iter)
     {
-        const dsmcParcel& p = iter();
+        i++;
         
-        const dsmcParcel::constantProperties& constProp 
-                            = constProps(p.typeId());
-                            
-        label charge = constProp.charge();
-        
-        if(charge  == 1)
+        if(iter().stuckToWall() == 1)
         {
-            //found an ion, add an electron here
+//             Info << "Releasing from wall" << endl;
+            //Calculate probability this particle will be released
+            scalar residencyTime = 0.5;
+            const scalar deltaT = mesh_.time().deltaTValue();
             
-            //electron temperature will be zero if there have been no
-            //electrons in the cell during the simulation
-            
-            
-            label cellI = p.cell();
-            vector position = p.position();
-            label tetFaceI = p.tetFace();
-            label tetPtI = p.tetPt();
-            
-            if(electronTemperature_[cellI] < VSMALL)
+            if(rndGen_.scalar01() < (deltaT/residencyTime))
             {
-                electronTemperature_[cellI] = 6000.0;
-            }
-            if(electronTemperature_[cellI] > 8.0e4)
-            {
-                electronTemperature_[cellI] = 30000.0;
-            }
+                iter().stuckToWall() = 0;
+//                 Info << "Particle released from wall" << endl;
                 
-
-            vector electronVelocity = equipartitionLinearVelocity
-                (
-                    electronTemperature_[cellI],
-                    constProps_[electronTypeId].mass()
-                );
-              
-            if(rhoMMean_[cellI] > VSMALL)
-            {
-                cellVelocity_[cellI] = momentumMean_[cellI]/rhoMMean_[cellI];
-            }
-            
-            labelList vibLevel(0,0);
+                iter().U() = sqrt(physicoChemical::k.value()*iter().wallTemperature()[0]/constProps_[iter().typeId()].mass())
+                        *(
+                            rndGen_.GaussNormal()*iter().wallVectors()[0]
+                        + rndGen_.GaussNormal()*iter().wallVectors()[1]
+                        - sqrt(-2.0*log(max(1 - rndGen_.scalar01(), VSMALL)))*iter().wallVectors()[2]
+                        );
                 
-            electronVelocity += cellVelocity_[cellI];
+//                 iter().U() /= SMALL;
 
-            scalar RWF = p.RWF();
-
-            addNewParcel
-            (
-                position,
-                electronVelocity,
-                RWF,
-                0.0,
-                0,
-                cellI,
-                tetFaceI,
-                tetPtI,
-                electronTypeId,
-                0,
-                0,
-                vibLevel
-            );
+                label wppIndex = iter().wallTemperature()[1];
+                const polyPatch& wpp = mesh_.boundaryMesh()[wppIndex];
+                label wppLocalFace = iter().wallTemperature()[2];
             
-            electronIndex++;
-        }            
+                const scalar fA = mag(wpp.faceAreas()[wppLocalFace]);
+            
+                const scalar deltaT = mesh_.time().deltaTValue();
+            
+//                 const dsmcParcel::constantProperties& constProps = constProps(iter().typeId());
+                
+                const dsmcParcel::constantProperties& constProp 
+                                = constProps(iter().typeId());
+            
+                scalar m = constProp.mass();
+            
+                vector nw = wpp.faceAreas()[wppLocalFace];
+                nw /= mag(nw);
+            
+                scalar U_dot_nw = iter().U() & nw;
+            
+                vector Ut = iter().U() - U_dot_nw*nw;
+            
+                scalar invMagUnfA = 1/max(mag(U_dot_nw)*fA, VSMALL);
+
+                boundaryFluxMeasurements().rhoNBF()[iter().typeId()][wppIndex][wppLocalFace] += invMagUnfA;
+                if(constProp.rotationalDegreesOfFreedom() > 0)
+                {
+                boundaryFluxMeasurements().rhoNIntBF()[iter().typeId()][wppIndex][wppLocalFace] += invMagUnfA; 
+                }
+                if(constProp.numberOfElectronicLevels() > 1)
+                {
+                boundaryFluxMeasurements().rhoNElecBF()[iter().typeId()][wppIndex][wppLocalFace] += invMagUnfA; 
+                }
+                boundaryFluxMeasurements().rhoMBF()[iter().typeId()][wppIndex][wppLocalFace] += m*invMagUnfA;
+                boundaryFluxMeasurements().linearKEBF()[iter().typeId()][wppIndex][wppLocalFace] += 0.5*m*(iter().U() & iter().U())*invMagUnfA;
+                boundaryFluxMeasurements().momentumBF()[iter().typeId()][wppIndex][wppLocalFace] += m*Ut*invMagUnfA;
+                boundaryFluxMeasurements().rotationalEBF()[iter().typeId()][wppIndex][wppLocalFace] += iter().ERot()*invMagUnfA;
+                boundaryFluxMeasurements().rotationalDofBF()[iter().typeId()][wppIndex][wppLocalFace] += constProp.rotationalDegreesOfFreedom()*invMagUnfA;
+                forAll(iter().vibLevel(), i)
+                {
+                    boundaryFluxMeasurements().vibrationalEBF()[iter().typeId()][wppIndex][wppLocalFace] += iter().vibLevel()[i]*constProp.thetaV()[i]*physicoChemical::k.value()*invMagUnfA;
+                }
+                boundaryFluxMeasurements().electronicEBF()[iter().typeId()][wppIndex][wppLocalFace] += constProp.electronicEnergyList()[iter().ELevel()]*invMagUnfA;
+                
+                // post-interaction energy
+                scalar postIE = 0.5*m*(iter().U() & iter().U()) + iter().ERot() + constProp.electronicEnergyList()[iter().ELevel()];
+                
+                forAll(iter().vibLevel(), i)
+                {
+                    postIE +=  iter().vibLevel()[i]*constProp.thetaV()[i]*physicoChemical::k.value();
+                }
+                
+                // post-interaction momentum
+                vector postIMom = m*iter().U();
+                
+                scalar preIE = iter().wallTemperature()[3];
+                vector preIMom = iter().wallVectors()[3];
+            
+                scalar deltaQ = nParticle()*(preIE - postIE)/(deltaT*fA);
+                vector deltaFD = nParticle()*(preIMom - postIMom)/(deltaT*fA);
+                
+                boundaryFluxMeasurements().qBF()[iter().typeId()][wppIndex][wppLocalFace] += deltaQ;
+                boundaryFluxMeasurements().fDBF()[iter().typeId()][wppIndex][wppLocalFace] += deltaFD;
+                
+                iter().wallTemperature()[0] = 0.0;
+                iter().wallVectors() = vector::zero;
+            }
+        }
     }
 }
 
@@ -366,6 +548,9 @@ void Foam::dsmcCloud::addNewParcel
     const label typeId,
     const label newParcel,
     const label classification,
+    const label stuckToWall,
+    const scalarField wallTemperature,
+    const vectorField wallVectors,
     const labelList vibLevel
 )
 {
@@ -383,6 +568,9 @@ void Foam::dsmcCloud::addNewParcel
         typeId,
         newParcel,
         classification,
+        stuckToWall,
+        wallTemperature,
+        wallVectors,
         vibLevel
     );
 
@@ -753,7 +941,9 @@ void Foam::dsmcCloud::evolve()
     boundaries_.controlBeforeMove();//****
     
     //Remove electrons
-//     removeElectrons();
+    removeElectrons();
+    
+    releaseParticlesFromWall();
     
     // Move the particles ballistically with their current velocities
     Cloud<dsmcParcel>::move(td, mesh_.time().deltaTValue());
@@ -768,7 +958,7 @@ void Foam::dsmcCloud::evolve()
     }
 
     //Add electrons back after the move function
-//     addElectrons();
+    addElectrons();
     
     // Update cell occupancy
     buildCellOccupancy();
@@ -779,6 +969,9 @@ void Foam::dsmcCloud::evolve()
 
     // Calculate new velocities via stochastic collisions
     collisions();
+    
+     // Update cell occupancy (reactions may have changed it)
+    buildCellOccupancy();
 
     controllers_.controlAfterCollisions();//****
     boundaries_.controlAfterCollisions();//****
@@ -809,7 +1002,8 @@ void Foam::dsmcCloud::info() const
     label nDsmcParticles = this->size();
     reduce(nDsmcParticles, sumOp<label>());
 
-    scalar nMol = nDsmcParticles*nParticle_;
+    scalar nMol = infoMeasurements()[6];
+    reduce(nMol, sumOp<scalar>());
     
     scalar linearKineticEnergy = infoMeasurements()[1];
     reduce(linearKineticEnergy, sumOp<scalar>());
@@ -822,6 +1016,9 @@ void Foam::dsmcCloud::info() const
     
     scalar electronicEnergy = infoMeasurements()[4];
     reduce(electronicEnergy, sumOp<scalar>());
+    
+    scalar stuckMolecules = infoMeasurements()[5];
+    reduce(stuckMolecules, sumOp<scalar>());
 
 //     vector linearMomentum = linearMomentumOfSystem();
 //     reduce(linearMomentum, sumOp<vector>());
@@ -838,11 +1035,11 @@ void Foam::dsmcCloud::info() const
 //     scalar electronicEnergy = electronicEnergyOfSystem();
 //     reduce(electronicEnergy, sumOp<scalar>());
 
-    Info << "    Number of dsmc particles        = "
+    Info << "    Number of DSMC particles        = "
     << nDsmcParticles
     << endl;
 
-    if (nDsmcParticles)
+    if (nDsmcParticles > VSMALL)
     {
 //         Info<< "    Number of molecules             = "
 //             << nMol << nl
@@ -852,7 +1049,11 @@ void Foam::dsmcCloud::info() const
 //             << linearMomentum/nMol << nl
 //             << "    |Total linear momentum|         = "
 //             << mag(linearMomentum) << nl
-       Info << "    Average linear kinetic energy   = "
+       Info << "    Number of stuck particles       = "
+            << stuckMolecules/nParticle_ << nl
+            << "    Number of free particles        = "
+            << nMol/nParticle_ << nl
+            << "    Average linear kinetic energy   = "
             << linearKineticEnergy/nMol << nl
             << "    Average rotational energy       = "
             << rotationalEnergy/nMol << nl
@@ -1375,6 +1576,9 @@ void Foam::dsmcCloud::axisymmetricWeighting()
                         p->typeId(),
                         p->newParcel(),
                         p->classification(),
+                        p->stuckToWall(),
+                        p->wallTemperature(),
+                        p->wallVectors(),
                         p->vibLevel()
                     );
                     
@@ -1405,6 +1609,9 @@ void Foam::dsmcCloud::axisymmetricWeighting()
                         p->typeId(),
                         p->newParcel(),
                         p->classification(),
+                        p->stuckToWall(),
+                        p->wallTemperature(),
+                        p->wallVectors(),
                         p->vibLevel()
                     );
                 }

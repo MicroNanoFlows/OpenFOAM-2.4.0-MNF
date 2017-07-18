@@ -538,7 +538,7 @@ int main(int argc, char *argv[])
 
     labelList finalDecomp;
     
-    nProcs = 
+//     nProcs = 
 
     // Create decompositionMethod and new decomposition
     {

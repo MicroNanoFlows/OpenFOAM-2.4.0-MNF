@@ -15,74 +15,8 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-
-// temperature	400;
-
-
 dsmcStateControllers
 (
-//     controller
-//     {
-// 
-// 	controllerProperties
-// 	{
-// 	    zoneName			zoneA;
-// 	    controlSwitch		on;
-// 	    readStateFromFile		yes;
-// 
-// 	    timeProperties
-// 	    {
-// 		nSamples			1;
-// 		nControls			2;
-// 		nAverages			10;
-// 		initialTimePeriod		0;
-// 		decoupledFromWriteInterval	yes;
-// 	    }
-// 	}
-// 
-// 	stateControllerModel          	densityZoneController;
-// 
-//         densityZoneControllerProperties
-//         {
-// 	    massDensity			1.185e-6; //  N2     	3.613e-6;
-// 	    temperature			300;
-// 	    velocity			(1500 0 0);
-// 	    samplingZoneName		zoneA;
-//             typeId                 	O2;
-//         }
-//     }
-// 
-//     controller
-//     {
-// 
-// 	controllerProperties
-// 	{
-// 	    zoneName			zoneA;
-// 	    controlSwitch		on;
-// 	    readStateFromFile		yes;
-// 
-// 	    timeProperties
-// 	    {
-// 		nSamples			1;
-// 		nControls			2;
-// 		nAverages			10;
-// 		initialTimePeriod		0;
-// 		decoupledFromWriteInterval	yes;
-// 	    }
-// 	}
-// 
-// 	stateControllerModel          	densityZoneController;
-// 
-//         densityZoneControllerProperties
-//         {
-// 	    massDensity			3.613e-6; //  N2     	3.613e-6;
-// 	    temperature			300;
-// 	    velocity			(1500 0 0);
-// 	    samplingZoneName		zoneA;
-//             typeId                 	N2;
-//         }
-//     }
-
 );
 
 dsmcFluxControllers

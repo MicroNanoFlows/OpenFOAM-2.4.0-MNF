@@ -367,14 +367,18 @@ void densityControlZone::controlParcelsAfterCollisions()
                 
                 scalar RWF = 1.0;
     
-            if(cloud_.axisymmetric())
-            {
-                const point& cC = mesh_.cellCentres()[cell];
-                scalar radius = cC.y();
-                
-                RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
-            }
+                if(cloud_.axisymmetric())
+                {
+                    const point& cC = mesh_.cellCentres()[cell];
+                    scalar radius = cC.y();
+                    
+                    RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
+                }
 
+                label stuckToWall = 0;
+                scalarField wallTemperature(4, 0.0);
+                vectorField wallVectors(4, vector::zero);
+              
                 cloud_.addNewParcel
                 (
                     position,
@@ -388,6 +392,9 @@ void densityControlZone::controlParcelsAfterCollisions()
                     typeId,
                     0,
                     0,
+                    stuckToWall,
+                    wallTemperature,
+                    wallVectors,
                     vibLevel
                 );
                 

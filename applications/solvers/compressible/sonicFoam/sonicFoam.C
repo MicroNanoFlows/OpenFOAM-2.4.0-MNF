@@ -63,6 +63,7 @@ int main(int argc, char *argv[])
 
         #include "readTimeControls.H"
         #include "compressibleCourantNo.H"
+        #include "setDeltaT.H"
 
         #include "rhoEqn.H"
 

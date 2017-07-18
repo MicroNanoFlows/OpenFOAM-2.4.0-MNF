@@ -56,8 +56,12 @@ class LarsenBorgnakkeVariableSoftSphere
         //- Reference temperature
         const scalar Tref_;
 
-        //- Relaxation collision number
+        //- Rotational relaxation collision number
         const scalar rotationalRelaxationCollisionNumber_;
+        
+        //- Electronic relaxation collision number
+        const scalar electronicRelaxationCollisionNumber_;
+
 
 
     // Private Member Functions

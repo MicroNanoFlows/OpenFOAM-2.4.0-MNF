@@ -589,6 +589,10 @@ void densityZoneController::insertParcels(const label& nMols, const label& c)
             RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
         }
 
+        label stuckToWall = 0;
+        scalarField wallTemperature(4, 0.0);
+        vectorField wallVectors(4, vector::zero);
+                
         cloud_.addNewParcel
         (
             p,
@@ -602,8 +606,12 @@ void densityZoneController::insertParcels(const label& nMols, const label& c)
             typeId_,
             0,
             0,
+            stuckToWall,
+            wallTemperature,
+            wallVectors,
             vibLevel
         );
+        
    // if parcel is inserted before the move function, the cell occupnacy need not be updated
     // only if the parcel is inserted after the buildCellOccupancy step, should the the 
     // cell occupancy be updated.

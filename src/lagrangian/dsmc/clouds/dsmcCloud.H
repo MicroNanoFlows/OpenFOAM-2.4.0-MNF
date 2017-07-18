@@ -222,6 +222,9 @@ private:
         
         // Add an electron where an ion is found, after the move function
         void addElectrons();
+        
+        // Check if a particle stuck to the wall should be released
+        void releaseParticlesFromWall();
 
         //- Calculate collisions between molecules
         void collisions();
@@ -494,7 +497,7 @@ public:
         
         // Check
 
-            //- Total mass in system
+            //- Calculate properties of system
             inline scalarList infoMeasurements() const;
 
             //- Print cloud information
@@ -538,6 +541,9 @@ public:
                 const label typeId,
                 const label newParcel,
                 const label classification,
+                const label stuckToWall,
+                const scalarField wallTemperature,
+                const vectorField wallVectors,
                 const labelList vibLevel
             );
             

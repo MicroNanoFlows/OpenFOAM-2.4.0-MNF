@@ -10,6 +10,6 @@ radialExtentOfDomain        0.03;
 maxRadialWeightingFactor    1000.0;
 
 
-If the axisymmetricSimulation flag is true, then radial weighting factors will be employed, based on the cell centre radial positions. As particles move in the radial direction they have a probability of being deleted (if moving away from the radial centre), or being duplicated (if moving towards the radial centre). The user gives the simulaton the radial extent of the domain and the radial weighting factor to be used at this extent. The local RWF is calculated as: RWF = 1.0 + maxRadialWeightingFactor(radius/radialExtent). A value of 1000 for maxRadialWeightingFactor has been found to work well for the 5 degree wedges recommended for use in dsmcFOAM.
+If the axisymmetricSimulation flag is true, then radial weighting factors will be employed, based on the cell centre radial positions. As particles move in the radial direction they have a probability of being deleted (if moving away from the radial centre), or being duplicated (if moving towards the radial centre). The user gives the simulaton the radial extent of the domain and the radial weighting factor to be used at this extent. The local RWF is calculated as: RWF = 1.0 + maxRadialWeightingFactor(radius/radialExtent).
 
 This tutorial case is the cold surface case of the flat nosed cylinder axisymmetric demonstration case in Bird's 1994 book (page 374-375).

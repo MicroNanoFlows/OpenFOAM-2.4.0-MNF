@@ -180,6 +180,12 @@ void dsmcInitialiseOnLine::setInitialConfiguration()
             
             label classification = 0;
             
+            label stuckToWall = 0;
+                    
+            scalarField wallTemperature(4, 0.0);
+            
+            vectorField wallVectors(4, vector::zero);
+            
             label tetFace = -1;
             label tetPt = -1;
 
@@ -214,6 +220,9 @@ void dsmcInitialiseOnLine::setInitialConfiguration()
                 typeId,
                 newParcel,
                 classification,
+                stuckToWall,
+                wallTemperature,
+                wallVectors,
                 vibLevel
             );
         }
