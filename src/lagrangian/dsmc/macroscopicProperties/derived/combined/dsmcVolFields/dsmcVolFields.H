@@ -65,6 +65,8 @@ private:
     // Private data
         dictionary propsDict_;
         
+        label sampleInterval_;
+        label sampleCounter_;
         scalar mfpReferenceTemperature_;
         word fieldName_;
         volScalarField dsmcRhoN_;

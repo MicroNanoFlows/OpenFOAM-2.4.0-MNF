@@ -24,7 +24,8 @@ License
 
 Description
 
-\*---------------------------------------------------------------------------*/
+
+\*--------------------------------------------------------------------------*/
 
 #include "dsmcLiouFangPressureOutletSpecifiedMolarFraction.H"
 #include "addToRunTimeSelectionTable.H"
@@ -527,14 +528,14 @@ void dsmcLiouFangPressureOutletSpecifiedMolarFraction::controlParcelsAfterCollis
                 translationalTemperature[c] = 300.00;
             }
                         
-            if(totalRotationalDof_[c] > VSMALL)
-            {
-                rotationalTemperature[c] = (2.0/physicoChemical::k.value())*(totalRotationalEnergy_[c]/totalRotationalDof_[c]);
-            }
-            else
-            {
-                rotationalTemperature[c] = 0.0;
-            }
+//             if(totalRotationalDof_[c] > VSMALL)
+//             {
+//                 rotationalTemperature[c] = (2.0/physicoChemical::k.value())*(totalRotationalEnergy_[c]/totalRotationalDof_[c]);
+//             }
+//             else
+//             {
+//                 rotationalTemperature[c] = 0.0;
+//             }
             
 //             forAll(totalVibrationalEnergy_, iD)
 //             {
@@ -619,8 +620,7 @@ void dsmcLiouFangPressureOutletSpecifiedMolarFraction::controlParcelsAfterCollis
             outletNumberDensity_[c] = outletMassDensity_[c] / molecularMass; 
             
             outletTemperature_[c] = outletPressure_ / (gasConstant*outletMassDensity_[c]);
-            
-            Info << "outletTemperature_[c] = " << outletTemperature_[c] << endl;
+
             
             outletVelocity_[c] = totalMomentum_[c]/totalMass_[c];
             
