@@ -318,24 +318,23 @@ void Foam::dsmcCloud::releaseParticlesFromWall()
         
         if(iter().stuckToWall() == 1)
         {
-//             Info << "Releasing from wall" << endl;
-            //Calculate probability this particle will be released
+            //- Calculate probability this particle will be released
             scalar residencyTime = 0.5;
             const scalar deltaT = mesh_.time().deltaTValue();
             
             if(rndGen_.scalar01() < (deltaT/residencyTime))
             {
                 iter().stuckToWall() = 0;
-//                 Info << "Particle released from wall" << endl;
                 
-                iter().U() = sqrt(physicoChemical::k.value()*iter().wallTemperature()[0]/constProps_[iter().typeId()].mass())
+                iter().U() = sqrt(physicoChemical::k.value()
+                                *iter().wallTemperature()[0]
+                                /constProps_[iter().typeId()].mass())
                         *(
                             rndGen_.GaussNormal()*iter().wallVectors()[0]
                         + rndGen_.GaussNormal()*iter().wallVectors()[1]
-                        - sqrt(-2.0*log(max(1 - rndGen_.scalar01(), VSMALL)))*iter().wallVectors()[2]
+                        - sqrt(-2.0*log(max(1 - rndGen_.scalar01(), VSMALL)))
+                                *iter().wallVectors()[2]
                         );
-                
-//                 iter().U() /= SMALL;
 
                 label wppIndex = iter().wallTemperature()[1];
                 const polyPatch& wpp = mesh_.boundaryMesh()[wppIndex];
@@ -344,8 +343,6 @@ void Foam::dsmcCloud::releaseParticlesFromWall()
                 const scalar fA = mag(wpp.faceAreas()[wppLocalFace]);
             
                 const scalar deltaT = mesh_.time().deltaTValue();
-            
-//                 const dsmcParcel::constantProperties& constProps = constProps(iter().typeId());
                 
                 const dsmcParcel::constantProperties& constProp 
                                 = constProps(iter().typeId());
@@ -361,32 +358,50 @@ void Foam::dsmcCloud::releaseParticlesFromWall()
             
                 scalar invMagUnfA = 1/max(mag(U_dot_nw)*fA, VSMALL);
 
-                boundaryFluxMeasurements().rhoNBF()[iter().typeId()][wppIndex][wppLocalFace] += invMagUnfA;
+                boundaryFluxMeasurements().rhoNBF()[iter().typeId()]
+                                    [wppIndex][wppLocalFace] += invMagUnfA;
                 if(constProp.rotationalDegreesOfFreedom() > 0)
                 {
-                boundaryFluxMeasurements().rhoNIntBF()[iter().typeId()][wppIndex][wppLocalFace] += invMagUnfA; 
+                boundaryFluxMeasurements().rhoNIntBF()[iter().typeId()]
+                                        [wppIndex][wppLocalFace] += invMagUnfA; 
                 }
                 if(constProp.numberOfElectronicLevels() > 1)
                 {
-                boundaryFluxMeasurements().rhoNElecBF()[iter().typeId()][wppIndex][wppLocalFace] += invMagUnfA; 
+                boundaryFluxMeasurements().rhoNElecBF()[iter().typeId()]
+                                        [wppIndex][wppLocalFace] += invMagUnfA; 
                 }
-                boundaryFluxMeasurements().rhoMBF()[iter().typeId()][wppIndex][wppLocalFace] += m*invMagUnfA;
-                boundaryFluxMeasurements().linearKEBF()[iter().typeId()][wppIndex][wppLocalFace] += 0.5*m*(iter().U() & iter().U())*invMagUnfA;
-                boundaryFluxMeasurements().momentumBF()[iter().typeId()][wppIndex][wppLocalFace] += m*Ut*invMagUnfA;
-                boundaryFluxMeasurements().rotationalEBF()[iter().typeId()][wppIndex][wppLocalFace] += iter().ERot()*invMagUnfA;
-                boundaryFluxMeasurements().rotationalDofBF()[iter().typeId()][wppIndex][wppLocalFace] += constProp.rotationalDegreesOfFreedom()*invMagUnfA;
+                boundaryFluxMeasurements().rhoMBF()[iter().typeId()]
+                                    [wppIndex][wppLocalFace] += m*invMagUnfA;
+                boundaryFluxMeasurements().linearKEBF()[iter().typeId()]
+                            [wppIndex][wppLocalFace] += 0.5*m
+                                        *(iter().U() & iter().U())*invMagUnfA;
+                boundaryFluxMeasurements().momentumBF()[iter().typeId()]
+                                [wppIndex][wppLocalFace] += m*Ut*invMagUnfA;
+                boundaryFluxMeasurements().rotationalEBF()[iter().typeId()]
+                        [wppIndex][wppLocalFace] += iter().ERot()*invMagUnfA;
+                boundaryFluxMeasurements().rotationalDofBF()[iter().typeId()]
+                                [wppIndex][wppLocalFace] += 
+                            constProp.rotationalDegreesOfFreedom()*invMagUnfA;
                 forAll(iter().vibLevel(), i)
                 {
-                    boundaryFluxMeasurements().vibrationalEBF()[iter().typeId()][wppIndex][wppLocalFace] += iter().vibLevel()[i]*constProp.thetaV()[i]*physicoChemical::k.value()*invMagUnfA;
+                    boundaryFluxMeasurements().vibrationalEBF()[iter().typeId()]
+                                [wppIndex][wppLocalFace] += 
+                                    iter().vibLevel()[i]*constProp.thetaV()[i]
+                                    *physicoChemical::k.value()*invMagUnfA;
                 }
-                boundaryFluxMeasurements().electronicEBF()[iter().typeId()][wppIndex][wppLocalFace] += constProp.electronicEnergyList()[iter().ELevel()]*invMagUnfA;
+                boundaryFluxMeasurements().electronicEBF()[iter().typeId()]
+                            [wppIndex][wppLocalFace] += 
+                            constProp.electronicEnergyList()[iter().ELevel()]
+                            *invMagUnfA;
                 
                 // post-interaction energy
-                scalar postIE = 0.5*m*(iter().U() & iter().U()) + iter().ERot() + constProp.electronicEnergyList()[iter().ELevel()];
+                scalar postIE = 0.5*m*(iter().U() & iter().U()) + iter().ERot()
+                        + constProp.electronicEnergyList()[iter().ELevel()];
                 
                 forAll(iter().vibLevel(), i)
                 {
-                    postIE +=  iter().vibLevel()[i]*constProp.thetaV()[i]*physicoChemical::k.value();
+                    postIE +=  iter().vibLevel()[i]*constProp.thetaV()[i]
+                                                *physicoChemical::k.value();
                 }
                 
                 // post-interaction momentum
@@ -398,8 +413,10 @@ void Foam::dsmcCloud::releaseParticlesFromWall()
                 scalar deltaQ = nParticle()*(preIE - postIE)/(deltaT*fA);
                 vector deltaFD = nParticle()*(preIMom - postIMom)/(deltaT*fA);
                 
-                boundaryFluxMeasurements().qBF()[iter().typeId()][wppIndex][wppLocalFace] += deltaQ;
-                boundaryFluxMeasurements().fDBF()[iter().typeId()][wppIndex][wppLocalFace] += deltaFD;
+                boundaryFluxMeasurements().qBF()[iter().typeId()]
+                                    [wppIndex][wppLocalFace] += deltaQ;
+                boundaryFluxMeasurements().fDBF()[iter().typeId()]
+                                    [wppIndex][wppLocalFace] += deltaFD;
                 
                 iter().wallTemperature()[0] = 0.0;
                 iter().wallVectors() = vector::zero;
@@ -419,7 +436,7 @@ Foam::label Foam::dsmcCloud::pickFromCandidateList
 
     if(size > 0)
     {
-        // choose a random number between 0 and the size of the candidateList size
+        // choose a random number between 0 and the size of the candidateList
         label randomIndex = rndGen_.integer(0, size - 1);
         entry = candidatesInCell[randomIndex];
 

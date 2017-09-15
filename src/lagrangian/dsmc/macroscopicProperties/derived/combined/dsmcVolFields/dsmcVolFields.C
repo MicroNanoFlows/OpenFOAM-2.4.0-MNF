@@ -60,6 +60,8 @@ dsmcVolFields::dsmcVolFields
 :
     dsmcField(t, mesh, cloud, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
+    sampleInterval_(1),
+    sampleCounter_(0),
     mfpReferenceTemperature_(273.0),
     fieldName_(propsDict_.lookup("fieldName")),
     dsmcRhoN_
@@ -764,6 +766,11 @@ dsmcVolFields::dsmcVolFields
         }
     }
     
+    if (propsDict_.found("sampleInterval"))
+    {
+        sampleInterval_ = 
+                        readLabel(propsDict_.lookup("sampleInterval"));
+    }    
     if (propsDict_.found("measureClassifications"))
     {
         measureClassifications_ = Switch(propsDict_.lookup("measureClassifications"));
@@ -902,241 +909,260 @@ void dsmcVolFields::createField()
 
 
 void dsmcVolFields::calculateField()
-{  
-    nTimeSteps_ += 1.0;
+{ 
+    sampleCounter_++;
     
     const scalar& nParticle = cloud_.nParticle();
     rhoNInstantaneous_ = 0.0;
     
-    if(densityOnly_)
+    if(sampleInterval_ <= sampleCounter_)
     {
-        forAllConstIter(dsmcCloud, cloud_, iter)
+        nTimeSteps_ += 1.0;
+        
+        if(densityOnly_)
         {
-            const dsmcParcel& p = iter();
-            label iD = findIndex(typeIds_, p.typeId());
-
-            if(iD != -1)
+            forAllConstIter(dsmcCloud, cloud_, iter)
             {
-                const label& cell = p.cell();
-                const scalar& mass = cloud_.constProps(p.typeId()).mass();
+                const dsmcParcel& p = iter();
+                label iD = findIndex(typeIds_, p.typeId());
 
-                rhoNMean_[cell] += 1.0;
-                rhoNInstantaneous_[cell] += 1.0;
-//                 rhoMMean_[cell] += mass;
-                
-                if(cloud_.axisymmetric())
+                if(iD != -1)
                 {
-                    const point& cC = cloud_.mesh().cellCentres()[cell];
+                    const label& cell = p.cell();
+                    const scalar& mass = cloud_.constProps(p.typeId()).mass();
+
+                    rhoNMean_[cell] += 1.0;
+                    rhoNInstantaneous_[cell] += 1.0;
+    //                 rhoMMean_[cell] += mass;
                     
-                    scalar radius = cC.y();
-//                     scalar radius = sqrt((p.position().y()*p.position().y()) + (p.position().z()*p.position().z()));
-                    
-                    scalar RWF = 1.0;
-                    
-                    RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
-                    
-                    rhoNMeanXnParticle_[cell] += (RWF*nParticle);
-                    rhoMMeanXnParticle_[cell] += (mass*RWF*nParticle);
-                }
-                else
-                {
-                    rhoNMeanXnParticle_[cell] += nParticle;
-                    rhoMMeanXnParticle_[cell] += (mass*nParticle);
+                    if(cloud_.axisymmetric())
+                    {
+                        const point& cC = cloud_.mesh().cellCentres()[cell];
+                        
+                        scalar radius = cC.y();
+                        
+                        scalar RWF = 1.0;
+                        
+                        RWF = 1.0 + 
+                            cloud_.maxRWF()*(radius/cloud_.radialExtent());
+                        
+                        rhoNMeanXnParticle_[cell] += (RWF*nParticle);
+                        rhoMMeanXnParticle_[cell] += (mass*RWF*nParticle);
+                    }
+                    else
+                    {
+                        rhoNMeanXnParticle_[cell] += nParticle;
+                        rhoMMeanXnParticle_[cell] += (mass*nParticle);
+                    }
                 }
             }
         }
-    }
-    else
-    {
-        forAllConstIter(dsmcCloud, cloud_, iter)
+        else
         {
-            const dsmcParcel& p = iter();
-            const label& iD = findIndex(typeIds_, p.typeId());
-
-            if(iD != -1)
+            forAllConstIter(dsmcCloud, cloud_, iter)
             {
-                const label& cell = p.cell();
-                const scalar& mass = cloud_.constProps(p.typeId()).mass();
-                const scalarList& electronicEnergies = cloud_.constProps(typeIds_[iD]).electronicEnergyList();
-                const scalar& rotationalDof = cloud_.constProps(p.typeId()).rotationalDegreesOfFreedom();
-//                 const scalar& EVib = p.vibLevel()*physicoChemical::k.value()*cloud_.constProps(p.typeId()).thetaV();
+                const dsmcParcel& p = iter();
+                const label& iD = findIndex(typeIds_, p.typeId());
 
-                scalarList EVib(cloud_.constProps(typeIds_[iD]).vibrationalDegreesOfFreedom());
-                
-                if(EVib.size() > 0)
+                if(iD != -1)
                 {
-                    forAll(EVib, i)
+                    const label& cell = p.cell();
+                    const scalar& mass = cloud_.constProps(p.typeId()).mass();
+                    const scalarList& electronicEnergies = 
+                        cloud_.constProps(typeIds_[iD]).electronicEnergyList();
+                    const scalar& rotationalDof = 
+                    cloud_.constProps(p.typeId()).rotationalDegreesOfFreedom();
+
+                    scalarList EVib
+                    (
+                        cloud_.constProps(typeIds_[iD])
+                        .vibrationalDegreesOfFreedom()
+                    );
+                    
+                    if(EVib.size() > 0)
                     {
-                       
-                        EVib[i] = p.vibLevel()[i]
-                                    *physicoChemical::k.value()
-                                    *cloud_.constProps(p.typeId()).thetaV()[i];
+                        forAll(EVib, i)
+                        {
                         
-                        vibrationalETotal_[iD][i][cell] +=           
-                                    p.vibLevel()[i]
-                                    *physicoChemical::k.value()
-                                    *cloud_.constProps(p.typeId()).thetaV()[i];
+                            EVib[i] = p.vibLevel()[i]
+                                     *physicoChemical::k.value()                
+                                     *cloud_.constProps(p.typeId()).thetaV()[i];
+                            
+                            vibrationalETotal_[iD][i][cell] +=           
+                                        p.vibLevel()[i]
+                                        *physicoChemical::k.value()
+                                     *cloud_.constProps(p.typeId()).thetaV()[i];
+                        }
+                    }
+                                    
+                    rhoNMean_[cell] += 1.0;
+                    rhoNInstantaneous_[cell] += 1.0;
+                    rhoMMean_[cell] += mass;
+                    linearKEMean_[cell] += mass*(p.U() & p.U());
+                    momentumMean_[cell] += mass*p.U();
+                    rotationalEMean_[cell] += p.ERot();
+                    rotationalDofMean_[cell] += rotationalDof;
+                    electronicETotal_[iD][cell] += 
+                                        electronicEnergies[p.ELevel()];
+                    nParcels_[iD][cell] += 1.0;
+                    mccSpecies_[iD][cell] += mass*mag(p.U())*mag(p.U());
+                    
+                    if(cloud_.axisymmetric())
+                    {
+                        const point& cC = cloud_.mesh().cellCentres()[cell];
+                        
+                        scalar radius = cC.y();
+                        
+                        scalar RWF = 1.0;
+                        
+                        RWF = 1.0 + 
+                            cloud_.maxRWF()*(radius/cloud_.radialExtent());
+                        
+                        nParcelsXnParticle_[iD][cell] += (RWF*nParticle);
+                        rhoNMeanXnParticle_[cell] += (RWF*nParticle);
+                        rhoMMeanXnParticle_[cell] += (mass*RWF*nParticle);
+                        momentumMeanXnParticle_[cell] += 
+                                    (mass*(p.U())*RWF*nParticle);
+                        linearKEMeanXnParticle_[cell] += (mass*(p.U() & 
+                                                        p.U())*RWF*nParticle);
+                    }
+                    else
+                    {
+                        nParcelsXnParticle_[iD][cell] += nParticle;
+                        rhoNMeanXnParticle_[cell] += nParticle;
+                        rhoMMeanXnParticle_[cell] += (mass*nParticle);
+                        momentumMeanXnParticle_[cell] += 
+                                                (mass*(p.U())*nParticle);
+                        linearKEMeanXnParticle_[cell] += (mass*(p.U() & 
+                                                        p.U())*nParticle);
                     }
                     
-//                     forAll(vibrationalETotal_[iD], v)
-//                     {
-//                         vibrationalETotal_[iD][v][cell] +=
-//                                 p.vibLevel()[v]
-//                                 *physicoChemical::k.value()
-//                                 *cloud_.constProps(p.typeId()).thetaV()[v];
-//                     }
-                }
-                                
-                rhoNMean_[cell] += 1.0;
-                rhoNInstantaneous_[cell] += 1.0;
-                rhoMMean_[cell] += mass;
-                linearKEMean_[cell] += mass*(p.U() & p.U());
-                momentumMean_[cell] += mass*p.U();
-                rotationalEMean_[cell] += p.ERot();
-                rotationalDofMean_[cell] += rotationalDof; 
-//                 vibrationalETotal_[iD][cell] += EVib;
-                electronicETotal_[iD][cell] += electronicEnergies[p.ELevel()];
-                nParcels_[iD][cell] += 1.0;
-                mccSpecies_[iD][cell] += mass*mag(p.U())*mag(p.U());
-                
-                if(cloud_.axisymmetric())
-                {
-                    const point& cC = cloud_.mesh().cellCentres()[cell];
+                    muu_[cell] += mass*sqr(p.U().x());
+                    muv_[cell] += mass*( (p.U().x()) * (p.U().y()) );
+                    muw_[cell] += mass*( (p.U().x()) * (p.U().z()) );
+                    mvv_[cell] += mass*sqr(p.U().y());
+                    mvw_[cell] += mass*( (p.U().y()) * (p.U().z()) );
+                    mww_[cell] += mass*sqr(p.U().z());
                     
-                    scalar radius = cC.y();
-//                     scalar radius = sqrt((p.position().y()*p.position().y()) + (p.position().z()*p.position().z()));
+                    mcc_[cell] += mass*mag(p.U())*mag(p.U());
+                    mccu_[cell] += mass*mag(p.U())*mag(p.U())*(p.U().x());
+                    mccv_[cell] += mass*mag(p.U())*mag(p.U())*(p.U().y());
+                    mccw_[cell] += mass*mag(p.U())*mag(p.U())*(p.U().z());
                     
-                    scalar RWF = 1.0;
+                    scalar vibEn = 0.0;
                     
-                    RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
-                    
-//                     Info << "RWF = " << RWF << endl;
-                    
-                    nParcelsXnParticle_[iD][cell] += (RWF*nParticle);
-                    rhoNMeanXnParticle_[cell] += (RWF*nParticle);
-                    rhoMMeanXnParticle_[cell] += (mass*RWF*nParticle);
-                    momentumMeanXnParticle_[cell] += (mass*(p.U())*RWF*nParticle);
-                    linearKEMeanXnParticle_[cell] += (mass*(p.U() & p.U())*RWF*nParticle);
-                }
-                else
-                {
-                    nParcelsXnParticle_[iD][cell] += nParticle;
-                    rhoNMeanXnParticle_[cell] += nParticle;
-                    rhoMMeanXnParticle_[cell] += (mass*nParticle);
-                    momentumMeanXnParticle_[cell] += (mass*(p.U())*nParticle);
-                    linearKEMeanXnParticle_[cell] += (mass*(p.U() & p.U())*nParticle);
-                }
-                
-                muu_[cell] += mass*sqr(p.U().x());
-                muv_[cell] += mass*( (p.U().x()) * (p.U().y()) );
-                muw_[cell] += mass*( (p.U().x()) * (p.U().z()) );
-                mvv_[cell] += mass*sqr(p.U().y());
-                mvw_[cell] += mass*( (p.U().y()) * (p.U().z()) );
-                mww_[cell] += mass*sqr(p.U().z());
-                
-                mcc_[cell] += mass*mag(p.U())*mag(p.U());
-                mccu_[cell] += mass*mag(p.U())*mag(p.U())*(p.U().x());
-                mccv_[cell] += mass*mag(p.U())*mag(p.U())*(p.U().y());
-                mccw_[cell] += mass*mag(p.U())*mag(p.U())*(p.U().z());
-                
-                scalar vibEn = 0.0;
-                
-                if(EVib.size() > 0)
-                {
-                    forAll(EVib, v)
+                    if(EVib.size() > 0)
                     {
-                        vibEn += EVib[v];
-                    }
-                }
-                
-                eu_[cell] += ( p.ERot() + vibEn )*(p.U().x());
-                ev_[cell] += ( p.ERot() + vibEn )*(p.U().y());
-                ew_[cell] += ( p.ERot() + vibEn )*(p.U().z());
-                e_[cell] += ( p.ERot() + vibEn );
-                 
-                if(rotationalDof > VSMALL)
-                {
-                    rhoNMeanInt_[cell] += 1.0;
-                }
-                
-                label nElecLevels =                  
-                    cloud_.constProps(p.typeId()).numberOfElectronicLevels();
-                
-                if(nElecLevels > 1)
-                {
-                    molsElec_[cell] += 1.0;
-                    
-                    if(p.ELevel() == 0)
-                    {
-                        nGroundElectronicLevel_[iD][cell]++;
-                    }
-                    if(p.ELevel() == 1)
-                    {
-                        nFirstElectronicLevel_[iD][cell]++;
-                    }
-                }
-                
-                if(measureClassifications_)
-                {
-                    label classification = p.classification();
-                    
-                    if(classification == 0)
-                    {
-                        nClassI_[cell] += 1.0;
+                        forAll(EVib, v)
+                        {
+                            vibEn += EVib[v];
+                        }
                     }
                     
-                    if(classification == 1)
+                    eu_[cell] += ( p.ERot() + vibEn )*(p.U().x());
+                    ev_[cell] += ( p.ERot() + vibEn )*(p.U().y());
+                    ew_[cell] += ( p.ERot() + vibEn )*(p.U().z());
+                    e_[cell] += ( p.ERot() + vibEn );
+                    
+                    if(rotationalDof > VSMALL)
                     {
-                        nClassII_[cell] += 1.0;
+                        rhoNMeanInt_[cell] += 1.0;
                     }
                     
-                    if(classification == 2)
+                    label nElecLevels =                 
+                       cloud_.constProps(p.typeId()).numberOfElectronicLevels();
+                    
+                    if(nElecLevels > 1)
                     {
-                        nClassIII_[cell] += 1.0;
+                        molsElec_[cell] += 1.0;
+                        
+                        if(p.ELevel() == 0)
+                        {
+                            nGroundElectronicLevel_[iD][cell]++;
+                        }
+                        if(p.ELevel() == 1)
+                        {
+                            nFirstElectronicLevel_[iD][cell]++;
+                        }
+                    }
+                    
+                    if(measureClassifications_)
+                    {
+                        label classification = p.classification();
+                        
+                        if(classification == 0)
+                        {
+                            nClassI_[cell] += 1.0;
+                        }
+                        
+                        if(classification == 1)
+                        {
+                            nClassII_[cell] += 1.0;
+                        }
+                        
+                        if(classification == 2)
+                        {
+                            nClassIII_[cell] += 1.0;
+                        }
+                    }
+                }
+            }
+            
+            // obtain collision quality measurements
+            
+            forAll(cloud_.cellPropMeasurements().collisionSeparation(), cell)
+            {
+                collisionSeparation_[cell] += 
+                    cloud_.cellPropMeasurements().collisionSeparation()[cell];
+                nColls_[cell] += cloud_.cellPropMeasurements().nColls()[cell];
+            }
+            
+            // obtain boundary measurements
+            
+            forAll(cloud_.boundaryFluxMeasurements().rhoNBF(), i)
+            {
+                const label& iD = findIndex(typeIds_, i);
+            
+                forAll(cloud_.boundaryFluxMeasurements().rhoNBF()[i], j)
+                {                
+                    forAll(cloud_.boundaryFluxMeasurements().rhoNBF()[i][j], k)
+                    {
+                        if(iD != -1)
+                        { 
+                            rhoNBF_[j][k] += 
+                            cloud_.boundaryFluxMeasurements().rhoNBF()[i][j][k];
+                            rhoMBF_[j][k] += 
+                            cloud_.boundaryFluxMeasurements().rhoMBF()[i][j][k];
+                            linearKEBF_[j][k] += 
+                        cloud_.boundaryFluxMeasurements().linearKEBF()[i][j][k];
+                            momentumBF_[j][k] += 
+                        cloud_.boundaryFluxMeasurements().momentumBF()[i][j][k];
+                            rotationalEBF_[j][k] += 
+                    cloud_.boundaryFluxMeasurements().rotationalEBF()[i][j][k];
+                            rotationalDofBF_[j][k] += 
+                cloud_.boundaryFluxMeasurements().rotationalDofBF()[i][j][k];
+                            qBF_[j][k] += 
+                               cloud_.boundaryFluxMeasurements().qBF()[i][j][k];
+                            fDBF_[j][k] += 
+                              cloud_.boundaryFluxMeasurements().fDBF()[i][j][k];
+                            speciesRhoNBF_[iD][j][k] += 
+                            cloud_.boundaryFluxMeasurements().rhoNBF()[i][j][k];
+                            vibrationalEBF_[iD][j][k] += 
+                    cloud_.boundaryFluxMeasurements().vibrationalEBF()[i][j][k];
+                            electronicEBF_[iD][j][k] += 
+                    cloud_.boundaryFluxMeasurements().electronicEBF()[i][j][k];
+                            mccSpeciesBF_[iD][j][k] += 
+                    cloud_.boundaryFluxMeasurements().mccSpeciesBF()[i][j][k];
+                            speciesRhoNIntBF_[j][k] += 
+                        cloud_.boundaryFluxMeasurements().rhoNIntBF()[i][j][k];
+                            speciesRhoNElecBF_[j][k] += 
+                        cloud_.boundaryFluxMeasurements().rhoNElecBF()[i][j][k];
+                        }
                     }
                 }
             }
         }
-        
-        // obtain collision quality measurements
-        
-        forAll(cloud_.cellPropMeasurements().collisionSeparation(), cell)
-        {
-            collisionSeparation_[cell] += cloud_.cellPropMeasurements().collisionSeparation()[cell];
-            nColls_[cell] += cloud_.cellPropMeasurements().nColls()[cell];
-        }
-        
-        // obtain boundary measurements
-        
-        forAll(cloud_.boundaryFluxMeasurements().rhoNBF(), i)
-        {
-            const label& iD = findIndex(typeIds_, i);
-        
-            forAll(cloud_.boundaryFluxMeasurements().rhoNBF()[i], j)
-            {                
-                forAll(cloud_.boundaryFluxMeasurements().rhoNBF()[i][j], k)
-                {
-                    if(iD != -1)
-                    { 
-                        rhoNBF_[j][k] += cloud_.boundaryFluxMeasurements().rhoNBF()[i][j][k];
-                        rhoMBF_[j][k] += cloud_.boundaryFluxMeasurements().rhoMBF()[i][j][k];
-                        linearKEBF_[j][k] += cloud_.boundaryFluxMeasurements().linearKEBF()[i][j][k];
-                        momentumBF_[j][k] += cloud_.boundaryFluxMeasurements().momentumBF()[i][j][k];
-                        rotationalEBF_[j][k] += cloud_.boundaryFluxMeasurements().rotationalEBF()[i][j][k];
-                        rotationalDofBF_[j][k] += cloud_.boundaryFluxMeasurements().rotationalDofBF()[i][j][k];
-                        qBF_[j][k] += cloud_.boundaryFluxMeasurements().qBF()[i][j][k];
-                        fDBF_[j][k] += cloud_.boundaryFluxMeasurements().fDBF()[i][j][k];
-                        
-                        speciesRhoNBF_[iD][j][k] += cloud_.boundaryFluxMeasurements().rhoNBF()[i][j][k];
-                        vibrationalEBF_[iD][j][k] += cloud_.boundaryFluxMeasurements().vibrationalEBF()[i][j][k];
-                        electronicEBF_[iD][j][k] += cloud_.boundaryFluxMeasurements().electronicEBF()[i][j][k];
-                        mccSpeciesBF_[iD][j][k] += cloud_.boundaryFluxMeasurements().mccSpeciesBF()[i][j][k];
-                        speciesRhoNIntBF_[j][k] += cloud_.boundaryFluxMeasurements().rhoNIntBF()[i][j][k];
-                        speciesRhoNElecBF_[j][k] += cloud_.boundaryFluxMeasurements().rhoNElecBF()[i][j][k];
-                    }
-                }
-            }
-        }
+        sampleCounter_ = 0;
     }
     
     if(time_.time().outputTime())
