@@ -9,12 +9,12 @@ clouds/dsmcCloud.C
 dynamicLoadBalancing/dsmcDynamicLoadBalancing.C
 
 /* INITIALISE DSMC */
-initaliseDsmcParcels/basic/dsmcConfiguration/dsmcConfiguration.C
-initaliseDsmcParcels/basic/dsmcAllConfigurations/dsmcAllConfigurations.C
-initaliseDsmcParcels/derived/dsmcMeshFill/dsmcMeshFill.C
-initaliseDsmcParcels/derived/dsmcZoneFill/dsmcZoneFill.C
-initaliseDsmcParcels/derived/dsmcInitialiseOnLine/dsmcInitialiseOnLine.C
-initaliseDsmcParcels/derived/dsmcLaserHeatingFill/dsmcLaserHeatingFill.C
+initialiseDsmcParcels/basic/dsmcConfiguration/dsmcConfiguration.C
+initialiseDsmcParcels/basic/dsmcAllConfigurations/dsmcAllConfigurations.C
+initialiseDsmcParcels/derived/dsmcMeshFill/dsmcMeshFill.C
+initialiseDsmcParcels/derived/dsmcZoneFill/dsmcZoneFill.C
+initialiseDsmcParcels/derived/dsmcInitialiseOnLine/dsmcInitialiseOnLine.C
+initialiseDsmcParcels/derived/dsmcLaserHeatingFill/dsmcLaserHeatingFill.C
 
 /* DELETE PARCELS*/
 
