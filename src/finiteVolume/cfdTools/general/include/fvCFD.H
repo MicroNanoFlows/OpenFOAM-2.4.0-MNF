@@ -2,6 +2,7 @@
 #define fvCFD_H
 
 #include "parRun.H"
+#include "cplRun.H"
 
 #include "Time.H"
 #include "fvMesh.H"

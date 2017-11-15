@@ -1,0 +1,11 @@
+#!/bin/bash
+
+source $HOME/OpenFOAM/OpenFOAM-2.4.0-MNF/etc/bashrc
+export WM_NCOMPPROCS=6
+export ParaView_DIR=/home/ktc05078/OpenFOAM/ThirdParty-2.4.0-MNF/platforms/linux64GccMNF-MUI/ParaView-4.1.0
+export PATH=$ParaView_DIR/bin:$PATH
+export PV_PLUGIN_PATH=$FOAM_LIBBIN/paraview-4.1
+
+blockMesh
+createCyclicBoundaries
+mdInitialiseField

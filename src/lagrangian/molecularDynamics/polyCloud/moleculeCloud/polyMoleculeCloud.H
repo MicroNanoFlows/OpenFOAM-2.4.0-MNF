@@ -96,6 +96,11 @@ private:
         //- boundaries
         polyBoundaries boundaries_;
         
+        //- MUI coupling interfaces
+        couplingInterface1d oneDInterfaces_;
+        couplingInterface2d twoDInterfaces_;
+        couplingInterface3d threeDInterfaces_;
+
         //- controllers
         polyControllers controllers_;
         
@@ -146,6 +151,19 @@ public:
             cachedRandomMD& rndGen
         );
 
+        //- Construct for mdFoam with MUI coupling
+        polyMoleculeCloud
+        (
+            Time& t,
+            const polyMesh& mesh,
+            const reducedUnits& rU,
+            const constantMoleculeProperties& cP,
+            cachedRandomMD& rndGen,
+            couplingInterface1d& oneDInterfaces,
+            couplingInterface2d& twoDInterfaces,
+            couplingInterface3d& threeDInterfaces
+        );
+
         //- General constructor
         polyMoleculeCloud
         (
@@ -168,7 +186,10 @@ public:
 //             const potentials& p,
             const reducedUnits& rU,
             const constantMoleculeProperties& cP,
-            cachedRandomMD& rndGen
+            cachedRandomMD& rndGen,
+            couplingInterface1d& oneDInterfaces,
+            couplingInterface2d& twoDInterfaces,
+            couplingInterface3d& threeDInterfaces
         );
 
         static autoPtr<polyMoleculeCloud> New

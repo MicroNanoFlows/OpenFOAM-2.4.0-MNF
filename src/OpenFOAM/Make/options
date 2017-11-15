@@ -1,6 +1,15 @@
-EXE_INC = -I$(OBJECTS_DIR)
+sinclude $(GENERAL_RULES)/mplib$(WM_MPLIB)
+sinclude $(RULES)/mplib$(WM_MPLIB)
+sinclude $(GENERAL_RULES)/MUI
+
+EXE_INC = \
+    $(PFLAGS) \
+    $(PINC) \
+    ${MUI_INC} \
+    -I$(OBJECTS_DIR)
 
 LIB_LIBS = \
     $(FOAM_LIBBIN)/libOSspecific.o \
     -L$(FOAM_LIBBIN)/dummy -lPstream \
-    -lz
+    -lz \
+    $(PLIBS)

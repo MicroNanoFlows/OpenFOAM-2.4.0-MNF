@@ -182,8 +182,12 @@ measurements/derived/greenKubo/axialSelfDiffusion/axialSelfDiffusion.C
 /*  CONTROLLERS  */
 
 controllers/basic/polyControllers/polyControllers.C
+controllers/basic/polyCouplingController/polyCouplingController.C
 controllers/basic/polyStateController/polyStateController.C
 controllers/basic/polyFluxController/polyFluxController.C
+
+/*  MUI COUPLING  */
+controllers/derived/coupling/polyCoupling/polyCoupling.C
 
 /*  - VELOCITY  */
 
