@@ -77,7 +77,7 @@ bool Foam::UOPstream::write
             MPI_BYTE,
             toProcNo,   //procID(toProcNo),
             tag,
-            PstreamGlobals::MPICommunicators_[communicator] //MPI_COMM_WORLD
+            PstreamGlobals::MPICommunicators_[communicator] //MPI_COMM_WORLD, unless MUI in use
         );
 
         if (debug)
@@ -97,7 +97,7 @@ bool Foam::UOPstream::write
             MPI_BYTE,
             toProcNo,   //procID(toProcNo),
             tag,
-            PstreamGlobals::MPICommunicators_[communicator] //MPI_COMM_WORLD
+            PstreamGlobals::MPICommunicators_[communicator] //MPI_COMM_WORLD, unless MUI in use
         );
 
         if (debug)
@@ -119,7 +119,7 @@ bool Foam::UOPstream::write
             MPI_BYTE,
             toProcNo,   //procID(toProcNo),
             tag,
-            PstreamGlobals::MPICommunicators_[communicator],//MPI_COMM_WORLD,
+            PstreamGlobals::MPICommunicators_[communicator],//MPI_COMM_WORLD, unless MUI in use
             &request
         );
 

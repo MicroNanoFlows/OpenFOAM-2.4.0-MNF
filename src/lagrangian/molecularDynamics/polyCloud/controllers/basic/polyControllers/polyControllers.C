@@ -54,6 +54,7 @@ polyControllers::polyControllers
     ),
     nStateControllers_(0),
     nFluxControllers_(0),
+    nCouplingControllers_(0),
     stateControllersList_(),
     sCNames_(),
     sCIds_(),
@@ -64,7 +65,15 @@ polyControllers::polyControllers
     fCIds_(),
     fCFixedPathNames_(),
     fluxControllers_(),
-    controllersDuringForceComp_()
+    couplingControllersList_(),
+    cCNames_(),
+    cCIds_(),
+    cCFixedPathNames_(),
+    couplingControllers_(),
+    controllersDuringForceComp_(),
+    oneDInterfaces_(),
+    twoDInterfaces_(),
+    threeDInterfaces_()
 {}
 
 //- Constructor for mdFOAM
@@ -90,6 +99,7 @@ polyControllers::polyControllers
     ),
     nStateControllers_(0),
     nFluxControllers_(0),
+    nCouplingControllers_(0),
 	stateControllersList_(polyControllersDict_.lookup("polyStateControllers")),
     sCNames_(stateControllersList_.size()),
     sCIds_(stateControllersList_.size()),
@@ -100,7 +110,15 @@ polyControllers::polyControllers
     fCIds_(fluxControllersList_.size()),
     fCFixedPathNames_(fluxControllersList_.size()),
 	fluxControllers_(fluxControllersList_.size()),
-    controllersDuringForceComp_()
+	couplingControllersList_(),
+    cCNames_(),
+    cCIds_(),
+    cCFixedPathNames_(),
+    couplingControllers_(0),
+    controllersDuringForceComp_(),
+    oneDInterfaces_(),
+    twoDInterfaces_(),
+    threeDInterfaces_()
 {
 
     Info << nl << "Creating polyControllers" << nl << endl;
@@ -269,6 +287,295 @@ polyControllers::polyControllers
     }
 }
 
+//- Constructor for mdFoam+ with MUI coupling
+polyControllers::polyControllers
+(
+    Time& t,
+    const polyMesh& mesh,
+    polyMoleculeCloud& molCloud,
+    couplingInterface1d& oneDInterfaces,
+    couplingInterface2d& twoDInterfaces,
+    couplingInterface3d& threeDInterfaces
+)
+:
+    time_(t),
+    mesh_(mesh),
+    polyControllersDict_
+    (
+        IOobject
+        (
+            "controllersDict",
+            time_.system(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::NO_WRITE
+        )
+    ),
+    nStateControllers_(0),
+    nFluxControllers_(0),
+    nCouplingControllers_(0),
+    stateControllersList_(polyControllersDict_.lookup("polyStateControllers")),
+    sCNames_(stateControllersList_.size()),
+    sCIds_(stateControllersList_.size()),
+    sCFixedPathNames_(stateControllersList_.size()),
+    stateControllers_(stateControllersList_.size()),
+    fluxControllersList_(polyControllersDict_.lookup("polyFluxControllers")),
+    fCNames_(fluxControllersList_.size()),
+    fCIds_(fluxControllersList_.size()),
+    fCFixedPathNames_(fluxControllersList_.size()),
+    fluxControllers_(fluxControllersList_.size()),
+    couplingControllersList_(polyControllersDict_.lookup("polyCouplingControllers")),
+    cCNames_(couplingControllersList_.size()),
+    cCIds_(couplingControllersList_.size()),
+    cCFixedPathNames_(couplingControllersList_.size()),
+    couplingControllers_(couplingControllersList_.size()),
+    controllersDuringForceComp_(),
+    oneDInterfaces_(oneDInterfaces),
+    twoDInterfaces_(twoDInterfaces),
+    threeDInterfaces_(threeDInterfaces)
+{
+    Info << nl << "Creating polyControllers" << nl << endl;
+
+    //- state polyControllers
+
+    DynamicList<label> controllersDuringForceComp(0);
+
+    if(stateControllers_.size() > 0 )
+    {
+        forAll(stateControllers_, sC)
+        {
+            const entry& polyControllersI = stateControllersList_[sC];
+            const dictionary& polyControllersIDict = polyControllersI.dict();
+
+            stateControllers_[sC] = autoPtr<polyStateController>
+            (
+                polyStateController::New(time_, molCloud, polyControllersIDict)
+            );
+
+            sCNames_[sC] = stateControllers_[sC]->type();
+            sCIds_[sC] = sC;
+
+            nStateControllers_++;
+
+            if(stateControllers_[sC]->controlInterForces())
+            {
+                controllersDuringForceComp.append(sC);
+            }
+        }
+    }
+
+    controllersDuringForceComp_.transfer(controllersDuringForceComp);
+
+    //- flux polyControllers
+
+    if(fluxControllers_.size() > 0 )
+    {
+        forAll(fluxControllers_, fC)
+        {
+            const entry& polyControllersI = fluxControllersList_[fC];
+            const dictionary& polyControllersIDict = polyControllersI.dict();
+
+            fluxControllers_[fC] = autoPtr<polyFluxController>
+            (
+                polyFluxController::New(time_, molCloud, polyControllersIDict)
+            );
+
+            fCNames_[fC] = fluxControllers_[fC]->type();
+            fCIds_[fC] = fC;
+
+            nFluxControllers_++;
+        }
+    }
+
+    //- coupling polyControllers
+
+    if(couplingControllers_.size() > 0 )
+    {
+        forAll(couplingControllers_, cC)
+        {
+            const entry& polyControllersI = couplingControllersList_[cC];
+
+            const dictionary& polyControllersIDict = polyControllersI.dict();
+
+            couplingControllers_[cC] = autoPtr<polyCouplingController>
+            (
+                polyCouplingController::New(time_, molCloud, polyControllersIDict, oneDInterfaces_, twoDInterfaces_, threeDInterfaces_)
+            );
+
+            cCNames_[cC] = couplingControllers_[cC]->type();
+            cCIds_[cC] = cC;
+
+            nCouplingControllers_++;
+        }
+    }
+
+    // creating directories for state controllers
+    if(nStateControllers_ > 0)
+    {
+        // directory: case/controllers
+        fileName controllersPath(time_.path()/"controllers");
+
+        if( !isDir(controllersPath) )
+        {
+            mkDir(controllersPath);
+        }
+
+        // directory: case/controllers/poly
+        fileName polyControllersPath(controllersPath/"poly");
+
+        if(isDir(polyControllersPath) )
+        {
+            rmDir(polyControllersPath);
+        }
+
+        mkDir(polyControllersPath);
+
+        // directory: case/controllers/poly/stateControllers
+        fileName stateControllersPath(polyControllersPath/"stateControllers");
+
+        if (!isDir(stateControllersPath))
+        {
+            mkDir(stateControllersPath);
+        }
+
+        forAll(stateControllers_, sC)
+        {
+            if(stateControllers_[sC]->writeInCase())
+            {
+                // directory: case/controllers/poly/stateControllers/<stateControllerModel>
+                fileName stateControllerPath(stateControllersPath/sCNames_[sC]);
+
+                if (!isDir(stateControllerPath))
+                {
+                    mkDir(stateControllerPath);
+                }
+
+                const word& regionName = stateControllers_[sC]->regionName();
+
+                // directory: case/controllers/poly/stateControllers/<stateControllerModel>/<cellZoneName>
+                fileName zonePath(stateControllerPath/regionName);
+
+                if (!isDir(zonePath))
+                {
+                    mkDir(zonePath);
+                }
+
+                sCFixedPathNames_[sC] = zonePath;
+            }
+        }
+    }
+
+    // creating directories for flux controllers
+    if(nFluxControllers_ > 0)
+    {
+        // directory: case/controllers
+        fileName controllersPath(time_.path()/"controllers");
+
+        if( !isDir(controllersPath) )
+        {
+            mkDir(controllersPath);
+        }
+
+        // directory: case/controllers/poly
+        fileName polyControllersPath(time_.path()/"poly");
+
+        if( !isDir(polyControllersPath) )
+        {
+            mkDir(polyControllersPath);
+        }
+
+        // directory: case/controllers/poly/fluxControllers
+        fileName fluxControllersPath(polyControllersPath/"fluxControllers");
+
+        if (!isDir(fluxControllersPath))
+        {
+            mkDir(fluxControllersPath);
+        }
+
+        forAll(fluxControllers_, fC)
+        {
+            if(fluxControllers_[fC]->writeInCase())
+            {
+                // directory: case/controllers/poly/fluxControllers/<fluxControllerModel>
+                fileName fluxControllerPath(fluxControllersPath/fCNames_[fC]);
+
+                if (!isDir(fluxControllerPath))
+                {
+                    mkDir(fluxControllerPath);
+                }
+
+                const word& regionName = fluxControllers_[fC]->regionName();
+
+                // directory: case/controllers/poly/fluxControllers/<fluxControllerModel>/<faceZoneName>
+                fileName zonePath(fluxControllerPath/regionName);
+
+                if (!isDir(zonePath))
+                {
+                    mkDir(zonePath);
+                }
+
+                fCFixedPathNames_[fC] = zonePath;
+            }
+        }
+    }
+
+    // creating directories for coupling controllers
+    if(nCouplingControllers_ > 0)
+    {
+        // directory: case/controllers
+        fileName controllersPath(time_.path()/"controllers");
+
+        if( !isDir(controllersPath) )
+        {
+            mkDir(controllersPath);
+        }
+
+        // directory: case/controllers/poly
+        fileName polyControllersPath(controllersPath/"poly");
+
+        if(isDir(polyControllersPath) )
+        {
+            rmDir(polyControllersPath);
+        }
+
+        mkDir(polyControllersPath);
+
+        // directory: case/controllers/poly/couplingControllers
+        fileName couplingControllersPath(polyControllersPath/"couplingControllers");
+
+        if (!isDir(couplingControllersPath))
+        {
+            mkDir(couplingControllersPath);
+        }
+
+        forAll(couplingControllers_, cC)
+        {
+            if(couplingControllers_[cC]->writeInCase())
+            {
+                // directory: case/controllers/poly/couplingControllers/<couplingControllerModel>
+                fileName couplingControllerPath(couplingControllersPath/cCNames_[cC]);
+
+                if (!isDir(couplingControllerPath))
+                {
+                    mkDir(couplingControllerPath);
+                }
+
+                const word& regionName = couplingControllers_[cC]->regionName();
+
+                // directory: case/controllers/poly/couplingControllers/<couplingControllerModel>/<cellZoneName>
+                fileName zonePath(couplingControllerPath/regionName);
+
+                if (!isDir(zonePath))
+                {
+                    mkDir(zonePath);
+                }
+
+                cCFixedPathNames_[cC] = zonePath;
+            }
+        }
+    }
+}
+
 polyControllers::~polyControllers()
 {}
 
@@ -284,6 +591,11 @@ void polyControllers::initialConfig()
     forAll(fluxControllers_, fC)
     {
         fluxControllers_[fC]->initialConfiguration();
+    }
+
+    forAll(couplingControllers_, cC)
+    {
+        couplingControllers_[cC]->initialConfiguration();
     }
 }
 
@@ -357,8 +669,17 @@ void polyControllers::calculateStateProps()
 //         Info << "error: " << sCNames_[sC] << endl;
         fluxControllers_[fC]->calculateProperties();
     }
-}
 
+    forAll(couplingControllers_, cC)
+    {
+        couplingControllers_[cC]->sendCoupling();
+    }
+
+    forAll(couplingControllers_, cC)
+    {
+        couplingControllers_[cC]->receiveCoupling();
+    }
+}
 
 //- output -- call this function at the end of the MD time-step
 void polyControllers::outputStateResults() 
@@ -373,7 +694,7 @@ void polyControllers::outputStateResults()
     
             if(nStateControllers_ > 0)
             {
-                if(Pstream::master())
+                if(!Pstream::parRun() || (Pstream::parRun() && Pstream::master()))
                 {
                     // directory: case/<timeDir>/uniform
                     fileName uniformTimePath(runTime.path()/runTime.timeName()/"uniform");
@@ -452,7 +773,7 @@ void polyControllers::outputStateResults()
     
             if(nFluxControllers_ > 0)
             {
-                if(Pstream::master())
+                if(!Pstream::parRun() || (Pstream::parRun() && Pstream::master()))
                 {
     
                     // directory: case/<timeDir>/uniform
@@ -525,6 +846,86 @@ void polyControllers::outputStateResults()
             }
         }
 
+        // -- creating a set of directories in the current time directory
+        {
+            List<fileName> timePathNames(cCFixedPathNames_.size());
+
+            if(nCouplingControllers_ > 0)
+            {
+                if(!Pstream::parRun() || (Pstream::parRun() && Pstream::master()))
+                {
+                    // directory: case/<timeDir>/uniform
+                    fileName uniformTimePath(runTime.path()/runTime.timeName()/"uniform");
+
+                    if (!isDir(uniformTimePath))
+                    {
+                        mkDir(uniformTimePath);
+                    }
+
+
+                    if(couplingControllers_.size() > 0)
+                    {
+                        // directory: case/<timeDir>/uniform/controllers
+                        fileName controllersTimePath(uniformTimePath/"controllers");
+
+                        if (!isDir(controllersTimePath))
+                        {
+                            mkDir(controllersTimePath);
+                        }
+
+                        // directory: case/<timeDir>/uniform/controllers/poly
+                        fileName polyTimePath(controllersTimePath/"poly");
+
+                        if (!isDir(polyTimePath))
+                        {
+                            mkDir(polyTimePath);
+                        }
+
+                        // directory: case/<timeDir>/uniform/controllers/poly/
+                        fileName polyCouplingControllersTimePath(polyTimePath/"couplingControllers");
+
+                        if (!isDir(polyCouplingControllersTimePath))
+                        {
+                            mkDir(polyCouplingControllersTimePath);
+                        }
+
+                        forAll(couplingControllers_, cC)
+                        {
+                            if(couplingControllers_[cC]->writeInTimeDir())
+                            {
+                                // directory: case/<timeDir>/uniform/controllers/poly/<couplingControllerModel>
+                                fileName cCTimePath(polyCouplingControllersTimePath/cCNames_[cC]);
+
+                                if(!isDir(cCTimePath))
+                                {
+                                    mkDir(cCTimePath);
+                                }
+
+                                //- creating directory for different zones but of the same model
+                                const word& regionName = couplingControllers_[cC]->regionName();
+
+                                // directory: case/<timeDir>/uniform/controllers/poly/<couplingControllerModel>/<cellZoneName>
+                                fileName zoneTimePath(cCTimePath/regionName);
+
+                                if (!isDir(zoneTimePath))
+                                {
+                                    mkDir(zoneTimePath);
+                                }
+
+                                timePathNames[cC] = zoneTimePath;
+                            }
+                        }
+                    }
+                }
+
+                // -- write out data (do not comment this out)
+                forAll(couplingControllers_, cC)
+                {
+                    couplingControllers_[cC]->output(cCFixedPathNames_[cC], timePathNames[cC]);
+                }
+            }
+        }
+
         // RE-READ DICTIONARIES FOR MODIFIED PROPERTIES (RUN-TIME SELECTION)
 
         IOdictionary polyControllersDict
@@ -565,6 +966,20 @@ void polyControllers::outputStateResults()
                 const dictionary& polyControllersIDict = polyControllersI.dict();
     
                 fluxControllers_[fC]->updateProperties(polyControllersIDict);
+            }
+        }
+
+        {
+            couplingControllersList_.clear();
+
+            couplingControllersList_ = polyControllersDict.lookup("polyCouplingControllers");
+
+            forAll(couplingControllers_, cC)
+            {
+                const entry& polyControllersI = couplingControllersList_[cC];
+                const dictionary& polyControllersIDict = polyControllersI.dict();
+
+                couplingControllers_[cC]->updateProperties(polyControllersIDict);
             }
         }
     }

@@ -1,5 +1,5 @@
 //
-// createMesh.H
+// createRandom.H
 // ~~~~~~~~~~~~
 	string inputFile("randomDict_");
 	inputFile.append(argv[0]);

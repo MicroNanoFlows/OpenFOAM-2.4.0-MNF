@@ -1,5 +1,6 @@
 sinclude $(GENERAL_RULES)/mplib$(WM_MPLIB)
 sinclude $(RULES)/mplib$(WM_MPLIB)
+sinclude $(GENERAL_RULES)/MUI
 
-EXE_INC  = $(PFLAGS) $(PINC)
+EXE_INC  = $(PFLAGS) $(PINC) $(MUI_INC)
 LIB_LIBS = $(PLIBS)

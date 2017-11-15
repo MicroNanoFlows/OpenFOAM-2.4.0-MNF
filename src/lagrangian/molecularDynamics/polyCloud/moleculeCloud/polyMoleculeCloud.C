@@ -689,7 +689,10 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     cyclics_(t, mesh_, -1), 
     iL_(mesh, rU, cyclics_, p_.rCutMax(), "poly"),
     ipl_(mesh.nCells()),
-	clock_(t, "evolve", true)
+	clock_(t, "evolve", true),
+    oneDInterfaces_(),
+    twoDInterfaces_(),
+    threeDInterfaces_()
 {
     polyMolecule::readFields(*this);
 
@@ -728,7 +731,70 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     writeReferredCloud();
 }
 
+//- Use for running MD (mdFoam) with MUI coupling
+Foam::polyMoleculeCloud::polyMoleculeCloud
+(
+    Time& t,
+    const polyMesh& mesh,
+    const reducedUnits& rU,
+    const constantMoleculeProperties& cP,
+    cachedRandomMD& rndGen,
+    couplingInterface1d& oneDInterfaces,
+    couplingInterface2d& twoDInterfaces,
+    couplingInterface3d& threeDInterfaces
+)
+:
+    Cloud<polyMolecule>(mesh, "polyMoleculeCloud", false),
+    mesh_(mesh),
+    redUnits_(rU),
+    cP_(cP),
+    rndGen_(rndGen),
+    int_(t, mesh_, *this),
+    p_(mesh, *this, rU, cP),
+    cellOccupancy_(mesh_.nCells()),
+    fields_(t, mesh_, *this),
+    boundaries_(t, mesh, *this),
+    oneDInterfaces_(oneDInterfaces),
+    twoDInterfaces_(twoDInterfaces),
+    threeDInterfaces_(threeDInterfaces),
+    controllers_(t, mesh, *this, oneDInterfaces_, twoDInterfaces_, threeDInterfaces_),
+    trackingInfo_(mesh, *this),
+    moleculeTracking_(),
+    cyclics_(t, mesh_, -1),
+    iL_(mesh, rU, cyclics_, p_.rCutMax(), "poly"),
+    ipl_(mesh.nCells()),
+    clock_(t, "evolve", true)
+{
+    polyMolecule::readFields(*this);
 
+    rndGen.initialise(this->size() != 0 ? this->size() : 10000); //Initialise the random number cache (initialise to 10000 if size is zero)
+
+    setSiteSizesAndPositions();
+
+    checkMoleculesInMesh();
+
+    // read in tracking numbers
+    updateTrackingNumbersAfterRead();
+    p_.pairPots().initialiseExclusionModels();
+
+    int_.integrator()->init();
+
+    //check and remove high energy overlaps
+    checkForOverlaps();
+
+    buildCellOccupancy();
+
+    fields_.createFields();
+    boundaries_.setInitialConfig();
+    controllers_.initialConfig();
+
+    clearLagrangianFields();
+    calculateForce();
+    updateAcceleration();
+
+    // TESTS
+    writeReferredCloud();
+}
 
 //- general constructor
 Foam::polyMoleculeCloud::polyMoleculeCloud
@@ -760,7 +826,10 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     cyclics_(t, mesh_, -1),
     iL_(mesh, rU, cyclics_, p_.rCutMax(), "poly"),
     ipl_(mesh.nCells()),
-	clock_(t, "evolve", true)
+	clock_(t, "evolve", true),
+    oneDInterfaces_(),
+    twoDInterfaces_(),
+    threeDInterfaces_()
 {
     polyMolecule::readFields(*this);
 
@@ -848,12 +917,15 @@ Foam::autoPtr<Foam::polyMoleculeCloud> Foam::polyMoleculeCloud::New
     const polyMesh& mesh,
     const reducedUnits& rU,
     const constantMoleculeProperties& cP, 
-    cachedRandomMD& rndGen
+    cachedRandomMD& rndGen,
+    couplingInterface1d& oneDInterfaces,
+    couplingInterface2d& twoDInterfaces,
+    couplingInterface3d& threeDInterfaces
 )
 {
     return autoPtr<polyMoleculeCloud>
     (
-        new polyMoleculeCloud(t, mesh, rU, cP, rndGen)
+        new polyMoleculeCloud(t, mesh, rU, cP, rndGen, oneDInterfaces, twoDInterfaces, threeDInterfaces)
     );
 }
 

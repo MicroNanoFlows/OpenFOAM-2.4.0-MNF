@@ -1,0 +1,45 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.4.0-MNF                             |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+
+    class           dictionary;
+    object          couplingDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+couplingName mdFoamPlus_2; //MUI domain name
+
+couplingConfigurations
+( 
+    OneD //1D MUI coupling interface names
+    {
+	
+    }
+
+    TwoD //2D MUI coupling interface names
+    {
+        
+    }
+
+    ThreeD //3D MUI coupling interface names
+    {
+        interfaceNames (ifs_1and2 ifs_2and3);
+    }
+);
+
+// ************************************************************************* //

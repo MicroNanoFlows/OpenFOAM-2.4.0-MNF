@@ -1,0 +1,23 @@
+This is a simple coupled example using MUI between three instances of mdFoamPlus, it has no real purpose other than to demonstrate how to use the functionality.
+
+For details on how MUI has been fundamentally integrated into OpenFOAM see the document in the base of the repository called "README-MUI". For details on how MUI has been integrated into mdFoamPlus specifically see the associated document in the base of the mdFoamPlus application directory.
+
+This example case does the following:
+
+1) Runs three instances of mdFOAM simultaneously (either in serial or parallel)
+2) Each instance solves a simple identical equilibrated water cube problem to 0.1s
+3) Each instance is considered to be a seperate domain (named mdFoamPlus_1, mdFoamPlus_2 & mdFoamPlus_3)
+4) The system creates 3 MUI interfaces (ifs_1and2, ifs_1and3, ifs_2and3)
+5) Each instance sends the average molecular mass and density for each cell in its mesh, with the associated point at the centre of each cell to the appropriate 2 interfaces (i.e. for mdFoamPlus_1 this is to ifs_1and2 and ifs_1and3) and also receives the same values from the interfaces sent from the connected domain
+6) The master process for each instance writes out the data receieved to 2 files in the polyCoupling controller folder within the uniform directory in each [time] output folder whenever output occurs (every 0.012 s)
+
+There are a number of scripts in the base of the case to ease running, you should look at these to understand what they are doing, however their descriptions are:
+
+1) coupledCaseCleanCreate: This completely cleans and re-creates the cases in the three case folders for a parallel run (default 2 CPUs per instance)
+2) coupledCaseCleanCreateSerial: As above but running each instance in serial
+3) coupledCaseRun: This runs the coupled case in parallel (default 2 CPUs per instance), by default console output is directed to the console, this can get confusing as all instances output simultaneously, therefore a commented version of the run command can also be found in this file that directs output to a file.
+4) coupledCaseRunSerial: As above but each instance is run in serial
+
+The two pertinent control dictionaries are located at system/couplingDict (this is described in greater detail in the README-MUI document) and system/controllersDict, where an entry for the new "polyCouplingControllers" control type can be found.
+
+For a figurative description of the coupling toplogy created, please see the image "coupledCase_Topology.png", which is located in the same directory as this readme.

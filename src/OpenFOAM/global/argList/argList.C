@@ -42,6 +42,7 @@ bool Foam::argList::bannerEnabled = true;
 Foam::SLList<Foam::string>    Foam::argList::validArgs;
 Foam::HashTable<Foam::string> Foam::argList::validOptions;
 Foam::HashTable<Foam::string> Foam::argList::validParOptions;
+Foam::HashTable<Foam::string> Foam::argList::validCplOptions;
 Foam::HashTable<Foam::string> Foam::argList::optionUsage;
 Foam::SLList<Foam::string>    Foam::argList::notes;
 Foam::string::size_type Foam::argList::usageMin = 20;
@@ -71,6 +72,11 @@ Foam::argList::initValidTables::initValidTables()
     );
 
     Pstream::addValidParOptions(validParOptions);
+
+#ifdef USE_MUI
+    argList::addBoolOption("coupled", "use MUI coupling");
+    validCplOptions.set("coupled", "");
+#endif
 }
 
 
@@ -380,6 +386,24 @@ Foam::argList::argList
     args_(argc),
     options_(argc)
 {
+#ifdef USE_MUI //Only perform check if MUI library included, otherwise coupling always disabled
+    // Check if this run is coupled by searching for any coupling option
+    // If found call runCpl
+    for (int argI = 0; argI < argc; ++argI)
+    {
+        if (argv[argI][0] == '-')
+        {
+            const char *optionName = &argv[argI][1];
+
+            if (validCplOptions.found(optionName))
+            {
+                cplRunControl_.runCpl();
+                break;
+            }
+        }
+    }
+#endif
+
     // Check if this run is a parallel run by searching for any parallel option
     // If found call runPar which might filter argv
     for (int argI = 0; argI < argc; ++argI)
@@ -390,7 +414,7 @@ Foam::argList::argList
 
             if (validParOptions.found(optionName))
             {
-                parRunControl_.runPar(argc, argv);
+                parRunControl_.runPar(argc, argv, cplRunControl_.cplRun());
                 break;
             }
         }

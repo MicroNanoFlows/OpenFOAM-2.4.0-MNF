@@ -32,7 +32,7 @@ void Foam::UPstream::addValidParOptions(HashTable<string>& validParOptions)
 {}
 
 
-bool Foam::UPstream::init(int& argc, char**& argv)
+bool Foam::UPstream::init(int& argc, char**& argv, bool coupled)
 {
     FatalErrorIn("UPstream::init(int& argc, char**& argv)")
         << "Trying to use the dummy Pstream library." << nl
