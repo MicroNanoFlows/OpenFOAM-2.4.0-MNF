@@ -968,10 +968,15 @@ void dsmcVolFields::calculateField()
                 {
                     const label& cell = p.cell();
                     const scalar& mass = cloud_.constProps(p.typeId()).mass();
+                    const scalar& massByMagUsq = mass*sqr(mag(p.U()));
                     const scalarList& electronicEnergies = 
                         cloud_.constProps(typeIds_[iD]).electronicEnergyList();
                     const scalar& rotationalDof = 
                     cloud_.constProps(p.typeId()).rotationalDegreesOfFreedom();
+                    const scalar& xVel = p.U().x();
+                    const scalar& yVel = p.U().y();
+                    const scalar& zVel = p.U().z();
+                    const vector& U = p.U();
 
                     scalarList EVib
                     (
@@ -998,14 +1003,14 @@ void dsmcVolFields::calculateField()
                     rhoNMean_[cell] += 1.0;
                     rhoNInstantaneous_[cell] += 1.0;
                     rhoMMean_[cell] += mass;
-                    linearKEMean_[cell] += mass*(p.U() & p.U());
-                    momentumMean_[cell] += mass*p.U();
+                    linearKEMean_[cell] += mass*(U & U);
+                    momentumMean_[cell] += mass*U;
                     rotationalEMean_[cell] += p.ERot();
                     rotationalDofMean_[cell] += rotationalDof;
                     electronicETotal_[iD][cell] += 
                                         electronicEnergies[p.ELevel()];
                     nParcels_[iD][cell] += 1.0;
-                    mccSpecies_[iD][cell] += mass*mag(p.U())*mag(p.U());
+                    mccSpecies_[iD][cell] += massByMagUsq;
                     
                     if(cloud_.axisymmetric())
                     {
@@ -1022,9 +1027,9 @@ void dsmcVolFields::calculateField()
                         rhoNMeanXnParticle_[cell] += (RWF*nParticle);
                         rhoMMeanXnParticle_[cell] += (mass*RWF*nParticle);
                         momentumMeanXnParticle_[cell] += 
-                                    (mass*(p.U())*RWF*nParticle);
-                        linearKEMeanXnParticle_[cell] += (mass*(p.U() & 
-                                                        p.U())*RWF*nParticle);
+                                    (mass*(U)*RWF*nParticle);
+                        linearKEMeanXnParticle_[cell] += (mass*(U & 
+                                                        U)*RWF*nParticle);
                     }
                     else
                     {
@@ -1032,22 +1037,22 @@ void dsmcVolFields::calculateField()
                         rhoNMeanXnParticle_[cell] += nParticle;
                         rhoMMeanXnParticle_[cell] += (mass*nParticle);
                         momentumMeanXnParticle_[cell] += 
-                                                (mass*(p.U())*nParticle);
-                        linearKEMeanXnParticle_[cell] += (mass*(p.U() & 
-                                                        p.U())*nParticle);
+                                                (mass*(U)*nParticle);
+                        linearKEMeanXnParticle_[cell] += (mass*(U & 
+                                                        U)*nParticle);
                     }
                     
-                    muu_[cell] += mass*sqr(p.U().x());
-                    muv_[cell] += mass*( (p.U().x()) * (p.U().y()) );
-                    muw_[cell] += mass*( (p.U().x()) * (p.U().z()) );
-                    mvv_[cell] += mass*sqr(p.U().y());
-                    mvw_[cell] += mass*( (p.U().y()) * (p.U().z()) );
-                    mww_[cell] += mass*sqr(p.U().z());
+                    muu_[cell] += mass*sqr(xVel);
+                    muv_[cell] += mass*( xVel * yVel );
+                    muw_[cell] += mass*( xVel * zVel );
+                    mvv_[cell] += mass*sqr(yVel);
+                    mvw_[cell] += mass*( yVel * zVel );
+                    mww_[cell] += mass*sqr(zVel);
                     
-                    mcc_[cell] += mass*mag(p.U())*mag(p.U());
-                    mccu_[cell] += mass*mag(p.U())*mag(p.U())*(p.U().x());
-                    mccv_[cell] += mass*mag(p.U())*mag(p.U())*(p.U().y());
-                    mccw_[cell] += mass*mag(p.U())*mag(p.U())*(p.U().z());
+                    mcc_[cell] += massByMagUsq;
+                    mccu_[cell] += massByMagUsq*(xVel);
+                    mccv_[cell] += massByMagUsq*(yVel);
+                    mccw_[cell] += massByMagUsq*(xVel);
                     
                     scalar vibEn = 0.0;
                     
@@ -1059,9 +1064,9 @@ void dsmcVolFields::calculateField()
                         }
                     }
                     
-                    eu_[cell] += ( p.ERot() + vibEn )*(p.U().x());
-                    ev_[cell] += ( p.ERot() + vibEn )*(p.U().y());
-                    ew_[cell] += ( p.ERot() + vibEn )*(p.U().z());
+                    eu_[cell] += ( p.ERot() + vibEn )*(xVel);
+                    ev_[cell] += ( p.ERot() + vibEn )*(yVel);
+                    ew_[cell] += ( p.ERot() + vibEn )*(zVel);
                     e_[cell] += ( p.ERot() + vibEn );
                     
                     if(rotationalDof > VSMALL)

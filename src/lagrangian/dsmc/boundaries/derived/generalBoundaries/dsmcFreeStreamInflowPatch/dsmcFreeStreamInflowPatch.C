@@ -377,7 +377,7 @@ void dsmcFreeStreamInflowPatch::controlParcelsBeforeMove()
                 label stuckToWall = 0;
                 scalarField wallTemperature(4, 0.0);
                 vectorField wallVectors(4, vector::zero);
-              
+                
                 cloud_.addNewParcel
                 (
                     p,
