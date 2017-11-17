@@ -524,11 +524,18 @@ void dsmcZone::calculateField()
                 {
                     EVib[i] = p->vibLevel()[i]*physicoChemical::k.value()*cloud_.constProps(p->typeId()).thetaV()[i];
                 }
+                
+                scalar vibE = 0;
+                    
+                forAll(EVib, i)
+                {
+                    vibE += EVib[i];
+                }
 
-                eu_ += nParticle*( p->ERot() + gSum(EVib) )*(p->U().x());
-                ev_ += nParticle*( p->ERot() + gSum(EVib) )*(p->U().y());
-                ew_ += nParticle*( p->ERot() + gSum(EVib) )*(p->U().z());
-                e_ += nParticle*( p->ERot() + gSum(EVib) );
+                eu_ += nParticle*( p->ERot() + vibE )*(p->U().x());
+                ev_ += nParticle*( p->ERot() + vibE )*(p->U().y());
+                ew_ += nParticle*( p->ERot() + vibE )*(p->U().z());
+                e_ += nParticle*( p->ERot() + vibE );
                  
                 vibrationalETotal_[iD] += EVib;
                 electronicETotal_[iD] += electronicEnergies[p->ELevel()];
