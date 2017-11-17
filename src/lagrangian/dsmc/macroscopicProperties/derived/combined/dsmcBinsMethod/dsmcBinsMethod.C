@@ -507,6 +507,7 @@ void dsmcBinsMethod::createField()
 
 void dsmcBinsMethod::calculateField()
 {
+    
     averagingCounter_ += 1.0;
       
     const List< DynamicList<dsmcParcel*> >& cellOccupancy
@@ -516,6 +517,7 @@ void dsmcBinsMethod::calculateField()
 
     forAll(cells, c)
     {
+      
         const label& cellI = cells[c];
         
         if(averagingCounter_ < SMALL+1.0)
@@ -602,10 +604,17 @@ void dsmcBinsMethod::calculateField()
                         EVib[i] = p->vibLevel()[i]*physicoChemical::k.value()*cloud_.constProps(p->typeId()).thetaV()[i];
                     }
                     
-                    eu_[n] += nParticle*( p->ERot() + gSum(EVib) )*(p->U().x());
-                    ev_[n] += nParticle*( p->ERot() + gSum(EVib) )*(p->U().y());
-                    ew_[n] += nParticle*( p->ERot() + gSum(EVib) )*(p->U().z());
-                    e_[n] += nParticle*( p->ERot() + gSum(EVib) );
+                    scalar vibE = 0;
+                    
+                    forAll(EVib, i)
+                    {
+                        vibE += EVib[i];
+                    }
+                    
+                    eu_[n] += nParticle*( p->ERot() + vibE )*(p->U().x());
+                    ev_[n] += nParticle*( p->ERot() + vibE )*(p->U().y());
+                    ew_[n] += nParticle*( p->ERot() + vibE )*(p->U().z());
+                    e_[n] += nParticle*( p->ERot() + vibE );
 
                     vibrationalETotal_[n][iD] += EVib;
                     electronicETotal_[n][iD] += electronicEnergies[p->ELevel()];

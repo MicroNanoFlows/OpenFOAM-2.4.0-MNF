@@ -1018,23 +1018,25 @@ void Foam::dsmcCloud::info() const
 {
     label nDsmcParticles = this->size();
     reduce(nDsmcParticles, sumOp<label>());
+    
+    const scalarList& iM = infoMeasurements();
 
-    scalar nMol = infoMeasurements()[6];
+    scalar nMol = iM[6];
     reduce(nMol, sumOp<scalar>());
     
-    scalar linearKineticEnergy = infoMeasurements()[1];
+    scalar linearKineticEnergy = iM[1];
     reduce(linearKineticEnergy, sumOp<scalar>());
     
-    scalar rotationalEnergy = infoMeasurements()[2];
+    scalar rotationalEnergy = iM[2];
     reduce(rotationalEnergy, sumOp<scalar>());
     
-    scalar vibrationalEnergy = infoMeasurements()[3];
+    scalar vibrationalEnergy = iM[3];
     reduce(vibrationalEnergy, sumOp<scalar>());
     
-    scalar electronicEnergy = infoMeasurements()[4];
+    scalar electronicEnergy = iM[4];
     reduce(electronicEnergy, sumOp<scalar>());
     
-    scalar stuckMolecules = infoMeasurements()[5];
+    scalar stuckMolecules = iM[5];
     reduce(stuckMolecules, sumOp<scalar>());
 
 //     vector linearMomentum = linearMomentumOfSystem();

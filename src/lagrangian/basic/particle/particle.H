@@ -160,7 +160,7 @@ protected:
     // Private Member Functions
 
         //- Find the tet tri faces between position and tet centre
-        void findTris
+        inline void findTris
         (
             const vector& position,
             DynamicList<label>& faceList,
@@ -230,14 +230,14 @@ protected:
 
         //- Overridable function to handle the particle hitting a face
         template<class TrackData>
-        void hitFace(TrackData& td);
+        inline void hitFace(TrackData& td);
 
         //- Overridable function to handle the particle hitting a
         //  patch.  Executed before other patch-hitting functions.
         //  trackFraction is passed in to allow mesh motion to
         //  interpolate in time to the correct face state.
         template<class TrackData>
-        bool hitPatch
+        inline bool hitPatch
         (
             const polyPatch&,
             TrackData& td,
@@ -248,12 +248,12 @@ protected:
 
         //- Overridable function to handle the particle hitting a wedgePatch
         template<class TrackData>
-        void hitWedgePatch(const wedgePolyPatch&, TrackData& td);
+        inline void hitWedgePatch(const wedgePolyPatch&, TrackData& td);
 
         //- Overridable function to handle the particle hitting a
         //  symmetryPlanePatch
         template<class TrackData>
-        void hitSymmetryPlanePatch
+        inline void hitSymmetryPlanePatch
         (
             const symmetryPlanePolyPatch&,
             TrackData& td
@@ -262,15 +262,15 @@ protected:
         //- Overridable function to handle the particle hitting a
         //  symmetryPatch
         template<class TrackData>
-        void hitSymmetryPatch(const symmetryPolyPatch&, TrackData& td);
+        inline void hitSymmetryPatch(const symmetryPolyPatch&, TrackData& td);
 
         //- Overridable function to handle the particle hitting a cyclicPatch
         template<class TrackData>
-        void hitCyclicPatch(const cyclicPolyPatch&, TrackData& td);
+        inline void hitCyclicPatch(const cyclicPolyPatch&, TrackData& td);
 
         //- Overridable function to handle the particle hitting a cyclicAMIPatch
         template<class TrackData>
-        void hitCyclicAMIPatch
+        inline void hitCyclicAMIPatch
         (
             const cyclicAMIPolyPatch&,
             TrackData& td,
@@ -280,11 +280,11 @@ protected:
         //- Overridable function to handle the particle hitting a
         //  processorPatch
         template<class TrackData>
-        void hitProcessorPatch(const processorPolyPatch&, TrackData& td);
+        inline void hitProcessorPatch(const processorPolyPatch&, TrackData& td);
 
         //- Overridable function to handle the particle hitting a wallPatch
         template<class TrackData>
-        void hitWallPatch
+        inline void hitWallPatch
         (
             const wallPolyPatch&,
             TrackData& td,
@@ -294,7 +294,7 @@ protected:
         //- Overridable function to handle the particle hitting a
         //  general patch
         template<class TrackData>
-        void hitPatch(const polyPatch&, TrackData& td);
+        inline void hitPatch(const polyPatch&, TrackData& td);
 
 
 public:
@@ -503,7 +503,7 @@ public:
             //  Returns the boundary face index if the track stops at the
             //  boundary, -1 otherwise.
             template<class TrackData>
-            label track(const vector& endPosition, TrackData& td);
+            inline label track(const vector& endPosition, TrackData& td);
 
             //- Track particle to end of trajectory
             //  or until it hits the boundary.
@@ -513,7 +513,8 @@ public:
             //  Returns the boundary face index if the track stops at the
             //  boundary, -1 otherwise.
             template<class TrackData>
-            label track(const vector& endPosition, TrackData& td, bool DSMC/*, const indexedOctree<treeDataFace> faceTree*/);
+            inline label track(const vector& endPosition, TrackData& td, 
+                                                                bool DSMC);
 
             //- Track particle to a given position and returns 1.0 if the
             //  trajectory is completed without hitting a face otherwise
@@ -522,7 +523,7 @@ public:
             //  on entry 'stepFraction()' should be set to the fraction of the
             //  time-step at which the tracking starts.
             template<class TrackData>
-            scalar trackToFace(const vector& endPosition, TrackData& td);
+            inline scalar trackToFace(const vector& endPosition, TrackData& td);
 
             //- Track particle to a given position and returns 1.0 if the
             //  trajectory is completed without hitting a face otherwise
@@ -531,7 +532,8 @@ public:
             //  on entry 'stepFraction()' should be set to the fraction of the
             //  time-step at which the tracking starts.
             template<class TrackData>
-            scalar trackToFace(const vector& endPosition, TrackData& td, bool DSMC/*, const indexedOctree<treeDataFace> faceTree*/);
+            inline scalar trackToFace(const vector& endPosition, TrackData& td, 
+                                                                bool DSMC);
 
             //- Return the index of the face to be used in the interpolation
             //  routine
