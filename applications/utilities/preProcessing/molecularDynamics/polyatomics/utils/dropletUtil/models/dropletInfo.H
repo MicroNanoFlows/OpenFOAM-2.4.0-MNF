@@ -47,6 +47,7 @@ SourceFiles
 #include "writeTimeData.H"
 #include "boundedBox.H" 
 
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
@@ -76,7 +77,7 @@ private:
         fileName nameFile4_; 
         fileName nameFile5_; 
  
-        word translate_;
+//         word translate_;
 
         vectorField positions_;
         scalarField energies_;
@@ -84,11 +85,26 @@ private:
         scalarField nPairs_;
         List<bool> fluidMols_; 
 
-        List<bool> newMolsToPick_;
+        
+        // create artificial mesh
+
+        // mesh box
+        boundedBox box_;
+        scalar binWidthMeshX_;
+        scalar binWidthMeshY_;
+        label nBinsMeshX_;
+        label nBinsMeshY_;
+        scalar volumeMeshCell_;
+        scalar rhoThreshold_;
+        
+        List<scalarField> rhoMesh_;
+        List<scalarField> cellOcc_;        
+        
+//         List<bool> newMolsToPick_;
         
         label nFluidMols_;
         
-        label nSelectedMols_;
+//         label nSelectedMols_;
         
         scalar startTime_;
         scalar endTime_;
@@ -98,37 +114,41 @@ private:
 
         scalar mass_;
         
-        scalar maxR_;
+//         scalar maxR_;
         
-        label nSegs_;
+//         label nSegs_;
 
-        label val_;
+//         label val_;
         
-        vector translationVector_;
+//         vector translationVector_;
         
         DynamicList<vector> dropletMolPositions_;
         DynamicList<label> dropletMolIds_;
         
         
-        // mesh box
-        boundedBox box_;
+
         
         
         scalar averagingCounter_;
         
-        // final density 2D contour measured averaged over specified period
+        // final density 2D contour measured averaged over specified period (half droplet)
         
         List<scalarField> nMols_;
         List<scalarField> pE_;        
 
 
+        
         // 1D plot of potential energy
+        label nBinsY1D_;
+        scalar binWidthY1D_;
         scalarField nMolsY_;
         scalarField pEY_;
         
         // dynamic measurement of droplets
         bool dynamic_;
         List<scalarField> nMols2_;
+                
+        List<scalarField> nMols3_; // average full droplet
         scalar averagingCounter2_;
         
         label nBinsX2_;
@@ -168,11 +188,22 @@ private:
         
         void reconstructDroplet();
         
+        void initialiseMesh();
+        
         void initialiseBins();
         
         void calculateBinnedProperties();
 
         void outputDynamicContourPlot();
+        
+        
+//         void initialCircleFitbyTaubin(Data& data);
+//         
+//         scalar Sigma
+//         (
+//             Data& data,
+//             Circle& circle
+//         );
         
  public:
 
