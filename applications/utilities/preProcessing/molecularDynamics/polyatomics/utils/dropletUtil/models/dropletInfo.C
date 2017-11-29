@@ -541,11 +541,11 @@ void dropletInfo::calculateBinnedProperties()
     {
         const vector& rI = dropletMolPositions_[i];
         
-        if(box1.contains(rI))
+//         if(box1.contains(rI))
         {
             vector rSI = rI - C1;
-            scalar rDx = rSI & unitVectorX_;
-            scalar rDy = rSI & unitVectorY_;
+            scalar rDx = mag(rSI & unitVectorX_);
+            scalar rDy = mag(rSI & unitVectorY_);
             label nX = label(rDx/binWidthX_);
             label nY = label(rDy/binWidthY_);
             
@@ -844,7 +844,7 @@ void dropletInfo::writeField()
             
             forAll(rho[i], j)
             {
-                rho[i][j] = rU_.refMassDensity()*nMols_[i][j]*mass_/(volume*averagingCounter_);
+                rho[i][j] = rU_.refMassDensity()*nMols_[i][j]*mass_/(2.0*volume*averagingCounter_);
                 
                 if(nMols_[i][j] > 0.0)
                 {    
