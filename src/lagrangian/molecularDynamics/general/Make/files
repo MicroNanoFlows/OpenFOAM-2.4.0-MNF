@@ -124,7 +124,7 @@ davesInterpolant/davesInterpolant.C
 
 trackingNumber/trackingNumber.C
 
-randomPointsInSquareZone/randomPointsInSquareZone.C
+/*randomPointsInSquareZone/randomPointsInSquareZone.C*/
 
 
 multiscale/boundaryConditions/mixedFixedValueSlipFvPatchFields.C
