@@ -189,11 +189,11 @@ void newCellZone::setZone()
     //- TEST: computing the size of the square
 
     scalar minX = GREAT;
-    scalar maxX = 0.0;
+    scalar maxX = -GREAT;
     scalar minY = GREAT;
-    scalar maxY = 0.0;
+    scalar maxY = -GREAT;
     scalar minZ = GREAT;
-    scalar maxZ = 0.0;
+    scalar maxZ = -GREAT;
 
 
     forAll(cells_, c)
