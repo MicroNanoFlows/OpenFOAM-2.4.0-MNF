@@ -23,24 +23,24 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    dsmcStickingDiffuseWallPatch
+    dsmcAbsorbingWallPatch
 
-Description
-    Wall interaction setting microscopic velocity to a random one
-    drawn from a Maxwellian distribution corresponding to a specified
-    temperature
+Description    
+    Wall interaction where a particle can be absorbed according to a 
+    probability. Othwerwise, its properties are drawn from a Maxwellian 
+    distribution corresponding to a specified temperature
 
     SINGLE VALUE: temperature and velocity required in boundariesDict
 
 
 SourceFiles
-    dsmcStickingDiffuseWallPatch.C
+    dsmcAbsorbingWallPatch.C
 
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef dsmcStickingDiffuseWallPatch_H
-#define dsmcStickingDiffuseWallPatch_H
+#ifndef dsmcAbsorbingWallPatch_H
+#define dsmcAbsorbingWallPatch_H
 
 #include "dsmcPatchBoundary.H"
 #include "vector.H"
@@ -56,12 +56,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class dsmcStickingDiffuseWallPatch Declaration
+                           Class dsmcAbsorbingWallPatch Declaration
 \*---------------------------------------------------------------------------*/
 
-class dsmcStickingDiffuseWallPatch
+class dsmcAbsorbingWallPatch
 :
-	public dsmcPatchBoundary
+    public dsmcPatchBoundary
 {
 
 private:
@@ -69,29 +69,25 @@ private:
     // Private data
         dictionary propsDict_;
         
-         //- typeIds to be adsorbed
+         //- typeIds to be absorbed
         labelList typeIds_;
         
-        //- probability of adsorbtion for each species in typeIds_
-        List<scalar> adsorptionProbs_;
+        //- probability of absorbtion for each species in typeIds_
+        scalarList absorptionProbs_;
 
         void setProperties();
         
         void diffuseReflection(dsmcParcel& p);
-        
-//         scalar residenceTime_;
-
-
 
 public:
 
     //- Runtime type information
-    TypeName("dsmcStickingDiffuseWallPatch");
+    TypeName("dsmcAbsorbingWallPatch");
 
     // Constructors
 
         //- Construct from components
-        dsmcStickingDiffuseWallPatch
+        dsmcAbsorbingWallPatch
         (
             Time& t,
             const polyMesh& mesh,
@@ -101,7 +97,7 @@ public:
 
     // Destructor
 
-        ~dsmcStickingDiffuseWallPatch();
+        ~dsmcAbsorbingWallPatch();
 
 
     // Member Functions
@@ -127,13 +123,7 @@ public:
         void updateProperties(const dictionary&);
 
 
-
         // Access
-
-
-
-
-
 };
 
 
