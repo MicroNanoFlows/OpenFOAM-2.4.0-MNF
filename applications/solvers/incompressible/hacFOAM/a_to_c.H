@@ -1,45 +1,40 @@
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-//  adjust_BC.H
-//
-// Adjust boundary conditions to values from MD
-//
-//  Ian Cosden (cosden@seas.upenn.edu)
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+/*---------------------------------------------------------------------------*\
+a_to_c.H
 
+impose MD average velocity as boundary condition in CFD
+\*---------------------------------------------------------------------------*/
 
-
-	// Get index of patch
-	label inletPatchID = mesh.boundaryMesh().findPatchID("movingWall");
+// Get index of patch
+label inletPatchID = mesh.boundaryMesh().findPatchID(ioHelp.OverlapInterface());
 	
-	// Get reference to boundary value
-	const vectorField& faceCenters = mesh.Cf().boundaryField()[inletPatchID];
-	fvPatchVectorField& hsiWallU = U.boundaryField()[inletPatchID];
+// Get reference to boundary value
+//const vectorField& faceCenters = mesh.Cf().boundaryField()[inletPatchID];
+fvPatchVectorField& hsiWallU = U.boundaryField()[inletPatchID];
 
-//   int num_AC_bins=10;
-//   scalarField vx;
-	// loop over all hub faces
-	forAll(hsiWallU, faceI)
-	{
-		// get coordinate for face center
-		const vector& c = faceCenters[faceI];
-		vector p;
-		
-		int offset;
-		int out=0;
-		// for(int i=0; i<num_AC_bins; i++) {
-		// 	offset = i*6;
-		// 	//check x location of face center
-		// 	if (c[0]>AC_bin_limits[offset] && c[0]<AC_bin_limits[offset+1]) {		
-		// 		//check  y location
-		// 		if(c[1]>AC_bin_limits[offset+2] && c[1]<AC_bin_limits[offset+3]) {
-		// 			//check z location
-		// 			if(c[2]>AC_bin_limits[offset+4] && c[2]<AC_bin_limits[offset+5]) {
-		// 				p = vector(vx[i]*eta_vec[0], vy[i]*eta_vec[1], vz[i]*eta_vec[2]);
-		// 				hsiWallU[faceI] = p;
-		// 			}
-		// 		}
-		// 	}  
-			
-		// }//end for num_AC_bins loop
-		
-	}//end wall face loop
+vector dV;
+// loop over all faces
+forAll(hsiWallU, faceI)
+{
+  vel=a_2_c_velMap[nA2CDataPts_p1-1];  
+  dV=vel-hsiWallU[faceI];
+  Info << "adjust BC " << vel << " " << hsiWallU[faceI] << " " << dV  << endl;
+  hsiWallU[faceI] = vector(vel[0],vel[1],0);
+  //hsiWallU[faceI] += vector(dV[0],dV[1],0);
+}
+
+/*
+for (int i=0; i<nInterfaces; i++)
+{
+  for (int j=0; j<nA2CDataPts_p1; j++)
+  {
+    for(int k=0; k< A2C_Cells[j].size(); k++)
+    {
+      int ind=A2C_Cells[j][k];
+
+      int ij=i*nA2CDataPts_p1+j;
+      U[ind].component(0)=a_2_c_velMap_x[ij];
+      //Info << " TEST CFD fetch " << ind << " " << a_2_c_velMap_x[ij] << endl;
+    }
+  }
+}
+*/
