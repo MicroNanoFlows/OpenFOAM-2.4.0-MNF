@@ -1,3 +1,4 @@
+ioHelper.C
 hacFoam.C
 
 EXE = $(FOAM_APPBIN)/hacFoam
