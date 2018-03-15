@@ -26,26 +26,27 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "polyCNT.H"
+#include "polyCNNT.H"
 #include "addToRunTimeSelectionTable.H"
 #include "IFstream.H"
 #include "graph.H"
+#include "SortableList.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
-defineTypeNameAndDebug(polyCNT, 0);
+defineTypeNameAndDebug(polyCNNT, 0);
 
-addToRunTimeSelectionTable(polyConfiguration, polyCNT, dictionary);
+addToRunTimeSelectionTable(polyConfiguration, polyCNNT, dictionary);
 
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-polyCNT::polyCNT
+polyCNNT::polyCNNT
 (
     polyMoleculeCloud& molCloud,
     const dictionary& dict
@@ -55,14 +56,15 @@ polyCNT::polyCNT
     polyConfiguration(molCloud, dict/*, name*/)
 //     propsDict_(dict.subDict(typeName + "Properties"))
 {
-
+    nCarbon_ = 0;
+    nNitrogen_ = 0;
 }
 
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-polyCNT::~polyCNT()
+polyCNNT::~polyCNNT()
 {}
 
 
@@ -70,8 +72,10 @@ polyCNT::~polyCNT()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 
-void polyCNT::setInitialConfiguration()
+void polyCNNT::setInitialConfiguration()
 {
+    
+
     const reducedUnits& rU = molCloud_.redUnits();
     
     // READ IN PROPERTIES
@@ -91,16 +95,28 @@ void polyCNT::setInitialConfiguration()
     scalar n = scalar(N);
     scalar m = scalar(M);
 
-    word molIdName(mdInitialiseDict_.lookup("molId"));
+    word molIdNName(mdInitialiseDict_.lookup("molIdNitrogen"));
+    
+    word molIdCName(mdInitialiseDict_.lookup("molIdCarbon"));
 
     const List<word>& idList(molCloud_.cP().molIds());
 
-    label molId = findIndex(idList, molIdName);
+    label molIdN = findIndex(idList, molIdNName);
 
-    if(molId == -1)
+    if(molIdN == -1)
     {
-        FatalErrorIn("polyCNTId::setInitialConfiguration()")
-            << "Cannot find molecule id: " << molIdName 
+        FatalErrorIn("polyCNNTId::setInitialConfiguration()")
+            << "Cannot find molecule id: " << molIdNName 
+            << nl << "in moleculeProperties/idList."
+            << exit(FatalError);
+    }
+
+    label molIdC = findIndex(idList, molIdCName);
+
+    if(molIdC == -1)
+    {
+        FatalErrorIn("polyCNNTId::setInitialConfiguration()")
+            << "Cannot find molecule id: " << molIdCName 
             << nl << "in moleculeProperties/idList."
             << exit(FatalError);
     }
@@ -199,7 +215,7 @@ void polyCNT::setInitialConfiguration()
     scalar D = mag(cH)/constant::mathematical::pi;
 
     // information 
-    Info << nl << "Creating polyCNT. " << nl << endl;
+    Info << nl << "Creating polyCNNT. " << nl << endl;
 
     Info<< "CNT INFORMATION: "<< nl
         << "Radius: " << D*0.5 << nl
@@ -343,7 +359,7 @@ void polyCNT::setInitialConfiguration()
                 cell,
                 tetFace,
                 tetPt,
-                molId,
+                molIdC,
                 tethered,
                 frozen,
                 temperature,
@@ -489,7 +505,7 @@ void polyCNT::setInitialConfiguration()
                     cell,
                     tetFace,
                     tetPt,
-                    molId,
+                    molIdC,
                     tethered,
                     frozen,
                     temperature,
@@ -505,11 +521,15 @@ void polyCNT::setInitialConfiguration()
                      << nl
                      << endl;
             }
-            
-            
         }
-    
         
+        Info << tab << " No of initial carbon added: " << noCatomsCreated << endl;        
+        
+        
+        // Delete molecules at edge for periodicity
+        
+                 
+        DynamicList<polyMolecule*> edgeMoleculesRaw;
         
         {
             vector max = vector
@@ -532,14 +552,23 @@ void polyCNT::setInitialConfiguration()
                     ++mol
             )
             {
-                if(mol().id() == molId)
+                if(mol().id() == molIdC)
                 {
                     if(!bbMesh.contains(mol().position()))
                     {
                         polyMolecule* molI = &mol();
                         molsToDel.append(molI);
                     }
-                 }
+                    else
+                    {
+                        nCarbon_++;
+                        
+                        if(mol().position().x() < 0.15)
+                        {
+                            edgeMoleculesRaw.append(&mol());
+                        }
+                    }
+                }
             }
                         
             label nDeletedstage1 = molsToDel.size();
@@ -550,17 +579,189 @@ void polyCNT::setInitialConfiguration()
             }                    
 
             Info << "no of carbon atoms deleted due to periodicity "<< nDeletedstage1 << endl;
-        }    
-    
-        if (Pstream::parRun())
-        {
-            reduce(noCatomsCreated, sumOp<label>());
         }
-    
-        Info << tab << " CNT molecules added: " << noCatomsCreated << endl;
+        
+        // order edge molecules 
+        
+        DynamicList<polyMolecule*> edgeMolecules;
+        
+        label index = 0;
+        edgeMolecules.append(edgeMoleculesRaw[index]);
+        
+        {
+            DynamicList<polyMolecule*> edgeMoleculesTemp;
+            
+            forAll(edgeMoleculesRaw, i)
+            {
+                if(i != index)
+                {
+                    edgeMoleculesTemp.append(edgeMoleculesRaw[i]);
+                }
+            }
+            edgeMoleculesRaw.clear();
+            edgeMoleculesRaw.transfer(edgeMoleculesTemp);
+        }
+        
+        while(edgeMoleculesRaw.size() != 0)
+        {
+            vector rI = edgeMolecules[index]->position();
+            scalar rD = GREAT;
+            label idR = -1;
+
+            forAll(edgeMoleculesRaw, i)
+            {
+                vector rJ = edgeMoleculesRaw[i]->position();
+                
+                scalar rIJMag = mag(rI- rJ);
+                
+                if(rIJMag <  rD)
+                {
+                    idR = i;
+                    rD = rIJMag;
+                }
+            }
+            
+            edgeMolecules.append(edgeMoleculesRaw[idR]);
+            
+            {
+                DynamicList<polyMolecule*> edgeMoleculesTemp;
+                
+                forAll(edgeMoleculesRaw, i)
+                {
+                    if(i != idR)
+                    {
+                        edgeMoleculesTemp.append(edgeMoleculesRaw[i]);
+                    }
+                }
+                edgeMoleculesRaw.clear();
+                edgeMoleculesRaw.transfer(edgeMoleculesTemp);
+            }
+            
+            index++;
+        }
+        
+        // order molecules into a 2D matrix 
+        
+        List<DynamicList<polyMolecule*> > orderedList(edgeMolecules.size());
+
+        Info << "starting molecules = "<< edgeMolecules.size() << endl;
+
+        forAll(edgeMolecules, i)
+        {
+            Info << edgeMolecules[i]->position() << endl;
+        }
+        scalar tres=0.5;
+        
+        forAll(orderedList, i)
+        {
+            vector rI = edgeMolecules[i]->position();
+            DynamicList<polyMolecule*> selectList;
+            
+            vector min = vector
+                         (
+                            rI.x()-1,
+                            rI.y()-bo*tres,
+                            rI.z()-bo*tres
+                        );
+                         
+            vector max = vector
+                         (
+                           mesh_.bounds().max().x()+1,
+                           rI.y()+bo*tres,
+                           rI.z()+bo*tres                         
+                          );
+            
+            boundedBox bb(min, max);
+            
+            IDLList<polyMolecule>::iterator mol(molCloud_.begin());
+            
+            
+            for
+            (
+                    mol = molCloud_.begin();
+                    mol != molCloud_.end();
+                    ++mol
+            )
+            {
+                if(mol().id() == molIdC)
+                {
+                    if(bb.contains(mol().position()))
+                    {
+                        polyMolecule* molI = &mol();
+                        selectList.append(molI);
+                    }
+                }
+            }
+            
+            // order list
+            
+            SortableList<scalar> toSortList(selectList.size());
+            
+            forAll(toSortList, j)
+            {
+                toSortList[j]=selectList[j]->position().x();
+            }
+
+//             Info << "toSortList = " << toSortList << endl;
+            
+            toSortList.sort();
+            
+//             Info << " (after sort) toSortList = " << toSortList << endl;
+            
+            labelList indices = toSortList.indices();
+
+//             Info << " indices = " << indices << endl;
+            
+            forAll(indices, j)
+            {
+                orderedList[i].append(selectList[indices[j]]);
+            }
+        }
+        
+        
+        
+        bool change1 = false;
+        
+        forAll(orderedList, i)
+        {
+            bool change2 = change1;
+            
+            forAll(orderedList[i], j)
+            {
+                if(change2)
+                {
+                    nCarbon_--;
+                    nNitrogen_++;
+                    orderedList[i][j]->id() = molIdN;
+                    change2 = false;
+                }
+                else
+                {
+                    change2 = true;
+                }
+            }
+            
+            if(change1)
+            {
+                change1 = false;
+            }
+            else
+            {
+                change1 = true;
+            }
+        }
+        
+
+        scalar nC = scalar(nCarbon_);
+        scalar nN = scalar(nNitrogen_);
+        scalar nTotalAtoms = nC + nN;
+        
+        Info << "total number of atoms = " << scalar(nTotalAtoms) << nl
+             << "no. carbon atoms = " << nCarbon_ << "( " << (nC/nTotalAtoms)*100 << "% total)" << nl
+             << "no. nitrogen atoms = " << nNitrogen_ << "( " << (nN/nTotalAtoms)*100 << "% total)"
+             << endl;
     }
 }
-
 
 
 

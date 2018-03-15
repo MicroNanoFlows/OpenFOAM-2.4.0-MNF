@@ -93,6 +93,7 @@ initialiseMolecules/derived/polyPDBreader/polyPDBreader.C
 initialiseMolecules/derived/polySphere/polySphere.C
 initialiseMolecules/derived/polyGrapheneSheetPeriodic/polyGrapheneSheetPeriodic.C
 initialiseMolecules/derived/polyCNT/polyCNT.C
+initialiseMolecules/derived/polyCNNT/polyCNNT.C
 initialiseMolecules/derived/polyGrapheneSheetPeriodicSkew/polyGrapheneSheetPeriodicSkew.C
 initialiseMolecules/derived/polyBCC/polyBCC.C
 initialiseMolecules/derived/polyCrystal/polyCrystal.C
@@ -102,6 +103,7 @@ initialiseMolecules/derived/grapheneHydrogenFunctionalisation/grapheneHydrogenFu
 initialiseMolecules/derived/freezeMolecules/freezeMolecules.C
 initialiseMolecules/derived/simpleLattice/simpleLattice.C
 initialiseMolecules/derived/polyCylinder/polyCylinder.C
+initialiseMolecules/derived/polyReplaceMoleculesRandomly/polyReplaceMoleculesRandomly.C
 
 /* Deletion */
 
@@ -119,7 +121,7 @@ molsToDel/derived/polyDelListOfAtoms/polyDelListOfAtoms.C
 molsToDel/derived/polyDelFromCosineWave/polyDelFromCosineWave.C
 molsToDel/derived/polyClosestDistance/polyClosestDistance.C
 molsToDel/derived/polySwitchMolecules/polySwitchMolecules.C
-
+molsToDel/derived/polySwitchMoleculesRandomly/polySwitchMoleculesRandomly.C
 
 /* Mapping */
 
