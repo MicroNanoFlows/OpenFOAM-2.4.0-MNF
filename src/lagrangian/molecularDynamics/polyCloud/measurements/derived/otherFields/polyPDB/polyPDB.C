@@ -154,7 +154,7 @@ polyPDB::polyPDB
     
     if (propsDict_.found("writeFirstTimeStep"))
     {    
-        writeFirstTimeStep_ = readScalar(propsDict_.lookup("writeFirstTimeStep"));
+        writeFirstTimeStep_ = propsDict_.lookup("writeFirstTimeStep");
     }    
 }
 

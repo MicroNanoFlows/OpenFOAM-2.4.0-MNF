@@ -72,6 +72,42 @@ private:
         label nCarbon_;
         label nNitrogen_;
 
+        label nQ_;
+        label nP_;
+        
+        void removeMolecule
+        (
+            DynamicList<polyMolecule*>& molsToDel,
+            DynamicList<polyMolecule*>& atomsInPyridinic,
+            const List<DynamicList<polyMolecule*> >& orderedList,
+            label idI,
+            label idJ
+        );
+        
+        void switchBackToCarbon
+        (
+            const List<DynamicList<polyMolecule*> >& orderedList,
+            label idI,
+            label idJ,
+            label molIdC
+        );
+        
+        void highlightPyridinicAtoms
+        (
+            DynamicList<polyMolecule*>& atomsInPyridinic,
+            const List<DynamicList<polyMolecule*> >& orderedList,
+            label idI,
+            label idJ
+        );
+
+        vector neighbouringAtom
+        (
+            const List<DynamicList<polyMolecule*> >& orderedList,
+            label idI,
+            label idJ,
+            label molIdC
+        );         
+        
 public:
 
     //- Runtime type information
