@@ -910,8 +910,10 @@ Foam::dsmcCloud::dsmcCloud
     if(axisymmetric_)
     {
         radialExtent_ = readScalar(particleProperties_.lookup("radialExtentOfDomain"));
-        maxRWF_ = readScalar(particleProperties_.lookup("maxRadialWeightingFactor"));
-    }
+        maxRWF_ = 
+            readScalar(particleProperties_.lookup("maxRadialWeightingFactor"));
+        maxRWF_ -= 1.0;
+    }  
 
     buildConstProps();
     dsmcAllConfigurations conf(dsmcInitialiseDict, *this);
@@ -1546,15 +1548,17 @@ void Foam::dsmcCloud::axisymmetricWeighting()
     forAll(cellOccupancy_, c)
     {
         const DynamicList<dsmcParcel*>& molsInCell = cellOccupancy_[c];
+        
+        point cC = mesh_.cellCentres()[c];
+        scalar radius = cC.y();
 
         forAll(molsInCell, mIC)
         {
             dsmcParcel* p = molsInCell[mIC];
-                        
-            point cC = mesh_.cellCentres()[c];
-            scalar radius = cC.y();
-//             scalar radius = sqrt(sqr(p->position().y()) + sqr(p->position().z()));
-            
+                       
+//             scalar radius = sqrt(sqr(p->position().y()) 
+//                                             + sqr(p->position().z()));
+                       
             scalar oldRadialWeight = p->RWF();
             
             scalar newRadialWeight = 1.0;
@@ -1572,26 +1576,35 @@ void Foam::dsmcCloud::axisymmetricWeighting()
                 while(prob > 1.0)
                 {
                     //add a particle and reduce prob by 1.0
-                    
-                    label cellI = p->cell();
+                   
                     vector position = p->position();
-                    label tetFaceI = p->tetFace();
-                    label tetPtI = p->tetPt();
                     
-                    vector U = p->U();
+                    label cell = -1;
+                    label tetFace = -1;
+                    label tetPt = -1;
+
+                    mesh_.findCellFacePt
+                    (
+                        position,
+                        cell,
+                        tetFace,
+                        tetPt
+                    );
                     
-                    U.z() *= -1.0;
+                    //vector U = p->U();
+                    
+                    //U.z() *= -1.0;
 
                     addNewParcel
                     (
                         position,
-                        U,
+                        p->U(),
                         p->RWF(),
                         p->ERot(),
                         p->ELevel(),
-                        cellI,
-                        tetFaceI,
-                        tetPtI,
+                        cell,
+                        tetFace,
+                        tetPt,
                         p->typeId(),
                         p->newParcel(),
                         p->classification(),
@@ -1606,25 +1619,34 @@ void Foam::dsmcCloud::axisymmetricWeighting()
                 
                 if(prob > rndGen_.scalar01())
                 {
-                    label cellI = p->cell();
                     vector position = p->position();
-                    label tetFaceI = p->tetFace();
-                    label tetPtI = p->tetPt();
                     
-                    vector U = p->U();
+                    label cell = -1;
+                    label tetFace = -1;
+                    label tetPt = -1;
+
+                    mesh_.findCellFacePt
+                    (
+                        position,
+                        cell,
+                        tetFace,
+                        tetPt
+                    );
                     
-                    U.z() *= -1.0;
+                   // vector U = p->U();
+                    
+                   // U.z() *= -1.0;
 
                     addNewParcel
                     (
                         position,
-                        U,
+                        p->U(),
                         p->RWF(),
                         p->ERot(),
                         p->ELevel(),
-                        cellI,
-                        tetFaceI,
-                        tetPtI,
+                        cell,
+                        tetFace,
+                        tetPt,
                         p->typeId(),
                         p->newParcel(),
                         p->classification(),

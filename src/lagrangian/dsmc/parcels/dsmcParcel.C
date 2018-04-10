@@ -61,7 +61,7 @@ bool Foam::dsmcParcel::move
         vector Utracking = U_;
             
         while (td.keepParticle && !td.switchProcessor && tEnd > ROOTVSMALL)
-        {
+        {           
             Utracking = U_;
 
             if(!td.cloud().axisymmetric())
@@ -78,7 +78,7 @@ bool Foam::dsmcParcel::move
             // Set the Lagrangian time-step
             scalar dt = min(dtMax, tEnd);
 
-            dt *= trackToFace(position() + dt*Utracking, td, true/*, td.cloud().faceTree()*/);
+            dt *= trackToFace(position() + dt*Utracking, td, true);
 
             tEnd -= dt;
 
