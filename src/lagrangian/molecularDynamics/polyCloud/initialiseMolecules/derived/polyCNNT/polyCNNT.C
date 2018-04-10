@@ -529,7 +529,7 @@ void polyCNNT::setInitialConfiguration()
         
         
         // Delete molecules at edge for periodicity
-        
+  
                  
         DynamicList<polyMolecule*> edgeMoleculesRaw;
         
@@ -724,6 +724,11 @@ void polyCNNT::setInitialConfiguration()
         
         bool change1 = false;
         
+        if (mdInitialiseDict_.found("change"))
+        {
+            change1 = Switch(mdInitialiseDict_.lookup("change"));
+        }
+        
         forAll(orderedList, i)
         {
             bool change2 = change1;
@@ -758,180 +763,152 @@ void polyCNNT::setInitialConfiguration()
         nQ_ = nNitrogen_;
              
         // number of molecules to add 
-             
-        List<vector> pLocations = List<vector>(mdInitialiseDict_.lookup("pyridinicLocations"));    
-//         label p = 3;
-        
         DynamicList<polyMolecule*> molsToDel;        
         DynamicList<polyMolecule*> atomsInPyridinic; 
         
-//         if(p==3)
         {
-            forAll(pLocations, k)
+            List<vector> pLocations = List<vector>(mdInitialiseDict_.lookup("pyridinicLocations"));    
+            List<List<label> > choices = List<List<label> >(mdInitialiseDict_.lookup("choices"));             
+            
             {
-                label idI = -1;
-                label idJ = -1;
-                scalar rD = GREAT;
-                
-                // find the closest nitrogen atom
-                
-                forAll(orderedList, i)
+                forAll(pLocations, k)
                 {
-                    forAll(orderedList[i], j)
+                    label idI = -1;
+                    label idJ = -1;
+                    scalar rD = GREAT;
+                    
+                    // find the closest nitrogen atom
+                    
+                    forAll(orderedList, i)
                     {
-                        if (orderedList[i][j]->id() == molIdN)
+                        forAll(orderedList[i], j)
                         {
-                            vector rI = orderedList[i][j]->position();
-                            
-                            scalar rIJMAG = mag(rI - pLocations[k]);
-                            
-                            if(rIJMAG < rD)
+                            if (orderedList[i][j]->id() == molIdN)
                             {
-                                rD = rIJMAG;
-                                idI = i;
-                                idJ = j;
+                                vector rI = orderedList[i][j]->position();
+                                
+                                scalar rIJMAG = mag(rI - pLocations[k]);
+                                
+                                if(rIJMAG < rD)
+                                {
+                                    rD = rIJMAG;
+                                    idI = i;
+                                    idJ = j;
+                                }
                             }
                         }
                     }
-                }
-                
-                // test which way we should go?
-                
-                
-                vector vC1=neighbouringAtom(orderedList, idI, idJ+1, molIdC);
-                vector vC2=neighbouringAtom(orderedList, idI, idJ-1, molIdC);
-                vector vN = orderedList[idI][idJ]->position();
-                vector c = (vC1+vC2+vN)/3.0;
-                
-                if( ((vC1-vN) & (c-vN)) > 0 )
-                {
+                    /*
+                    // test which way we should go?
+                   
+                    vector vC1=neighbouringAtom(orderedList, idI, idJ+1, molIdC);
+                    vector vC2=neighbouringAtom(orderedList, idI, idJ-1, molIdC);
+                    vector vN = orderedList[idI][idJ]->position();
+                    vector c = (vC1+vC2+vN)/3.0;
                     
-                    // rm ring 1 (top)
-                    removeMolecule(molsToDel, atomsInPyridinic, orderedList, idI+1, idJ); 
-                    removeMolecule(molsToDel, atomsInPyridinic, orderedList, idI+2, idJ); 
-                    removeMolecule(molsToDel, atomsInPyridinic, orderedList, idI+2, idJ-1);
-                    removeMolecule(molsToDel, atomsInPyridinic, orderedList, idI+2, idJ+1);
+                    if( ((vC1-vN) & (c-vN)) > 0 )
+                    {*/
+                       
+                    List<label> ringI(4);
+                    List<label> ringJ(4);
+                    
+                    ringI[0]=1;ringJ[0]=0;
+                    ringI[1]=2;ringJ[1]=0;
+                    ringI[2]=2;ringJ[2]=-1;
+                    ringI[3]=2;ringJ[3]=1;
 
+                    List<label> ringPI(18);
+                    List<label> ringPJ(18);
+                    
+                    ringPI[0]=0;ringPJ[0]=0;
+                    ringPI[1]=1;ringPJ[1]=-1;
+                    ringPI[2]=1;ringPJ[2]=1;
+                    ringPI[3]=2;ringPJ[3]=-2;
+                    ringPI[4]=2;ringPJ[4]=2;
+                    ringPI[5]=3;ringPJ[5]=-3;
+                    ringPI[6]=3;ringPJ[6]=-1;
+                    ringPI[7]=3;ringPJ[7]=1;
+                    ringPI[8]=3;ringPJ[8]=3;
+                    
+                    ringPI[9]=0;ringPJ[9]=-1;
+                    ringPI[10]=0;ringPJ[10]=1;
+                    ringPI[11]=1;ringPJ[11]=-2;
+                    ringPI[12]=1;ringPJ[12]=2;
+                    ringPI[13]=2;ringPJ[13]=-3;
+                    ringPI[14]=2;ringPJ[14]=3;
+                    ringPI[15]=3;ringPJ[15]=0;
+                    ringPI[16]=3;ringPJ[16]=-2;
+                    ringPI[17]=3;ringPJ[17]=2;
                     
                     
-                    nCarbon_-= 3; nNitrogen_--; nP_+=6; nQ_-=7;
-    
-                    
-                    // rm ring 2 (bottom left)
-                    removeMolecule(molsToDel, atomsInPyridinic, orderedList, idI-1, idJ-2);
-                    removeMolecule(molsToDel, atomsInPyridinic, orderedList, idI-1, idJ-3);
-                    removeMolecule(molsToDel, atomsInPyridinic, orderedList, idI-1, idJ-4);
-                    removeMolecule(molsToDel, atomsInPyridinic, orderedList, idI-2, idJ-3);
-                
-                    nCarbon_-= 3; nNitrogen_--; nP_+=6; nQ_-=7;                
-                    
-                    // rm ring 3 (bottom right)
-                    removeMolecule(molsToDel, atomsInPyridinic, orderedList, idI-1, idJ+2);
-                    removeMolecule(molsToDel, atomsInPyridinic, orderedList, idI-1, idJ+3);
-                    removeMolecule(molsToDel, atomsInPyridinic, orderedList, idI-1, idJ+4);
-                    removeMolecule(molsToDel, atomsInPyridinic, orderedList, idI-2, idJ+3);
-                    
-                    nCarbon_-= 3; nNitrogen_--; nP_+=6; nQ_-=7;                
-
-                    
-                    // central atom
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI, idJ);
-                    
-                    // bottom left
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI, idJ-2);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI, idJ-4);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI, idJ-6);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI-1, idJ-1);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI-1, idJ-5);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI-2, idJ-2);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI-2, idJ-4);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI-3, idJ-3);
-                    
-                    //bottom right
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI, idJ+2);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI, idJ+4);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI, idJ+6);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI-1, idJ+1);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI-1, idJ+5);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI-2, idJ+2);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI-2, idJ+4);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI-3, idJ+3);
-                    
-                    // top
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI+1, idJ+1);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI+1, idJ-1);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI+2, idJ+2);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI+2, idJ-2);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI+3, idJ-3);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI+3, idJ-1);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI+3, idJ+1);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI+3, idJ+3);
-                    
-                }
-                else
-                {
-                    // rm ring 1 (bottom)
-                    removeMolecule(molsToDel, atomsInPyridinic, orderedList, idI-1, idJ); 
-                    removeMolecule(molsToDel, atomsInPyridinic, orderedList, idI-2, idJ); 
-                    removeMolecule(molsToDel, atomsInPyridinic, orderedList, idI-2, idJ-1);
-                    removeMolecule(molsToDel, atomsInPyridinic, orderedList, idI-2, idJ+1);
-                    
-                    nCarbon_-= 3; nNitrogen_--; nP_+=6; nQ_-=7;
-    
-                    
-                    // rm ring 2 (top left)
-                    removeMolecule(molsToDel, atomsInPyridinic, orderedList, idI+1, idJ-2);
-                    removeMolecule(molsToDel, atomsInPyridinic, orderedList, idI+1, idJ-3);
-                    removeMolecule(molsToDel, atomsInPyridinic, orderedList, idI+1, idJ-4);
-                    removeMolecule(molsToDel, atomsInPyridinic, orderedList, idI+2, idJ-3);
-                
-                    nCarbon_-= 3; nNitrogen_--; nP_+=6; nQ_-=7;                
-                    
-                    // rm ring 3 (top right)
-                    removeMolecule(molsToDel, atomsInPyridinic, orderedList, idI+1, idJ+2);
-                    removeMolecule(molsToDel, atomsInPyridinic, orderedList, idI+1, idJ+3);
-                    removeMolecule(molsToDel, atomsInPyridinic, orderedList, idI+1, idJ+4);
-                    removeMolecule(molsToDel, atomsInPyridinic, orderedList, idI+2, idJ+3);
-                    
-                    nCarbon_-= 3; nNitrogen_--; nP_+=6; nQ_-=7;     
-
-                    
-                    // central atom
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI, idJ);
-                    
-                    // top left
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI, idJ-2);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI, idJ-4);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI, idJ-6);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI+1, idJ-1);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI+1, idJ-5);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI+2, idJ-2);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI+2, idJ-4);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI+3, idJ-3);
-                    
-                    // top right
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI, idJ+2);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI, idJ+4);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI, idJ+6);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI+1, idJ+1);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI+1, idJ+5);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI+2, idJ+2);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI+2, idJ+4);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI+3, idJ+3);
-                    
-                    // bottom
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI-1, idJ+1);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI-1, idJ-1);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI-2, idJ+2);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI-2, idJ-2);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI-3, idJ-3);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI-3, idJ-1);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI-3, idJ+1);
-                    highlightPyridinicAtoms(atomsInPyridinic, orderedList, idI-3, idJ+3);                    
+                    if(findIndex(choices[k], 2) != -1)
+                    {
+                        label dI = 0;
+                        label dJ = 0;
+                        
+                        setPyridinic(molsToDel, atomsInPyridinic, orderedList, ringI, ringJ, ringPI, ringPJ, idI, idJ, dI, dJ);
+                    }
+                    if(findIndex(choices[k], 1) != -1)
+                    {
+                        label dI = 0;
+                        label dJ = -6;
+                        
+                        setPyridinic(molsToDel, atomsInPyridinic, orderedList, ringI, ringJ, ringPI, ringPJ, idI, idJ, dI, dJ);
+                    }                    
+                    if(findIndex(choices[k], 3) != -1)
+                    {
+                        label dI = 0;
+                        label dJ = 6;
+                        
+                        setPyridinic(molsToDel, atomsInPyridinic, orderedList, ringI, ringJ, ringPI, ringPJ, idI, idJ, dI, dJ);
+                    }
+                    if(findIndex(choices[k], 4) != -1)
+                    {
+                        label dI = -3;
+                        label dJ = -3;
+                        
+                        setPyridinic(molsToDel, atomsInPyridinic, orderedList, ringI, ringJ, ringPI, ringPJ, idI, idJ, dI, dJ);
+                    }
+                    if(findIndex(choices[k], 5) != -1)
+                    {
+                        label dI = -3;
+                        label dJ = 3;
+                        
+                        setPyridinic(molsToDel, atomsInPyridinic, orderedList, ringI, ringJ, ringPI, ringPJ, idI, idJ, dI, dJ);
+                    }
+                    if(findIndex(choices[k], 6) != -1)
+                    {
+                        label dI = -6;
+                        label dJ = 0;
+                        
+                        setPyridinic(molsToDel, atomsInPyridinic, orderedList, ringI, ringJ, ringPI, ringPJ, idI, idJ, dI, dJ);
+                    }                    
                 }
             }
         }
         
+        // get a ring of molecules surrounding the pyridinic rings to avoid switching those with carbon atoms
+        
+        DynamicList<polyMolecule*> temp;
+        
+        forAll(orderedList, i)
+        {
+            forAll(orderedList[i], j)
+            {
+                if(findIndex(atomsInPyridinic, orderedList[i][j]) != -1)
+                {
+                    highlightAtomsAroundPyridinic(temp, atomsInPyridinic, orderedList, i, j+1);
+                    highlightAtomsAroundPyridinic(temp, atomsInPyridinic, orderedList, i, j-1);
+                    highlightAtomsAroundPyridinic(temp, atomsInPyridinic, orderedList, i+1, j);
+                    highlightAtomsAroundPyridinic(temp, atomsInPyridinic, orderedList, i-1, j);
+                }
+            }
+        }
+        
+        forAll(temp, i)
+        {
+            atomsInPyridinic.append(temp[i]);
+        }
         
         // bring back carbon atoms 
         label nCBack = readLabel(mdInitialiseDict_.lookup("noOfCarbonAtoms"));
@@ -974,14 +951,138 @@ void polyCNNT::setInitialConfiguration()
         }
         
         Info << "count = "  << count << endl;
+
+        bool outputCharges = false;     
         
+        if (mdInitialiseDict_.found("outputCharges"))
+        {
+            outputCharges = Switch(mdInitialiseDict_.lookup("outputCharges"));
+        }
         
+        if(outputCharges)
+        {
+//             scalar e = 1.60218e-19;
+            DynamicList<vector> chargePositionsC1;
+
+            DynamicList<vector> chargePositionsC2;
+
+            DynamicList<vector> chargePositionsC3;
+
+            DynamicList<vector> chargePositionsN1;
             
+            DynamicList<vector> chargePositionsN2;            
+
+            
+            forAll(orderedList, i)
+            {
+                forAll(orderedList[i], j)
+                {
+                    if(findIndex(molsToDel, orderedList[i][j]) == -1) // mol is not to be deleted
+                    {
+                        label molIdI =  orderedList[i][j]->id();
+                        
+//                         scalar molCharge = 0.0;
+                        
+                        DynamicList<label> selMolIds;
+                        
+                        label molId1 = getCharge(molsToDel, orderedList, bo, i, j, i, j+1);
+                        label molId2 = getCharge(molsToDel, orderedList, bo, i, j, i, j-1);
+                        label molId3 = getCharge(molsToDel, orderedList, bo, i, j, i+1, j);
+                        label molId4 = getCharge(molsToDel, orderedList, bo, i, j, i-1, j);
+
+                        if(molId1 > 0)
+                        {
+                            selMolIds.append(molId1);
+                        }
+
+                        if(molId2 > 0)
+                        {
+                            selMolIds.append(molId2);
+                        }
+
+                        if(molId3 > 0)
+                        {
+                            selMolIds.append(molId3);
+                        }
+
+                        if(molId4 > 0)
+                        {
+                            selMolIds.append(molId4);
+                        }                        
+                        
+                        if( (selMolIds.size() > 3) || (selMolIds.size() < 2) )
+                        {
+                            Info << "ERROR; ERROR; ERROR; ERROR " << endl;
+                        }
+                        
+                        if(molIdI == molIdC)
+                        {
+                            if
+                            (
+                                (selMolIds[0] == selMolIds[1]) &&
+                                (selMolIds[1] == selMolIds[2])
+                            )
+                            {
+                                if(selMolIds[2] == molIdC)
+                                {
+                                    chargePositionsC1.append(orderedList[i][j]->position());
+//                                     molCharge = 0.0;
+                                }
+                                else if (selMolIds[2] == molIdN)
+                                {
+                                    chargePositionsC3.append(orderedList[i][j]->position());
+//                                     molCharge = 0.57*e;
+                                }
+                            }
+                            else
+                            {
+                                chargePositionsC2.append(orderedList[i][j]->position());
+//                                 molCharge = 0.17*e;
+                            }
+                        }
+                        else if(molIdI == molIdN)
+                        {
+                            if(selMolIds.size() == 2)
+                            {
+                                   chargePositionsN2.append(orderedList[i][j]->position());
+//                                 molCharge = -0.44*e;
+//                                    Info << "N2: selMolIds = " << selMolIds << endl;
+                            }
+                            else
+                            {
+                                chargePositionsN1.append(orderedList[i][j]->position());
+                                //molCharge = -0.54*e;
+                                
+//                                 Info << "N1: selMolIds = " << selMolIds << endl;
+                            }
+                        }
+                    }
+                }
+            }            
+            
+//             Info << "N1 = " << nl << chargePositionsN1 << nl << endl;
+//             Info << "N2 = " << nl << chargePositionsN2 << nl << endl;
+//             Info << "C1 = " << nl << chargePositionsC1 << nl << endl;
+//             Info << "C2 = " << nl << chargePositionsC2 << nl << endl;
+//             Info << "C3 = " << nl << chargePositionsC3 << nl << endl;
+
+            Info << "number N1 = " << chargePositionsN1.size() << endl;
+            Info << "number N2 = " << chargePositionsN2.size() << endl;
+            Info << "number C1 = " << chargePositionsC1.size() << endl;
+            Info << "number C2 = " << chargePositionsC2.size() << endl;
+            Info << "number C3 = " << chargePositionsC3.size() << endl;
+
+//             Info << "positions = " << chargePositions << endl;
+//             Info << "charges = " << charges << endl;            
+        }
+
+        Info<< " no of nitrogen atoms in pyridinic = " << atomsInPyridinic.size() << endl;
+        
+        
         forAll(molsToDel, m)
         {
             molCloud_.deleteParticle(*molsToDel[m]);
         }  
-            
         
         scalar nC = scalar(nCarbon_);
         scalar nN = scalar(nNitrogen_);
@@ -997,8 +1098,201 @@ void polyCNNT::setInitialConfiguration()
              << "no. P struct = " << nP  << "( " << (nP/nTN)*40 << "% total)" << nl
              << "no. Q struct = " << nQ  << "( " << (nQ/nTN)*40 << "% total)" << nl
              << endl;
-                     
+             
+
+             
+        bool addHydrogen = false;     
         
+        if (mdInitialiseDict_.found("addHydrogen"))
+        {
+            addHydrogen = Switch(mdInitialiseDict_.lookup("addHydrogen"));
+        }
+        
+        if(addHydrogen)
+        {
+            
+            word molIdHName(mdInitialiseDict_.lookup("molIdHydrogen"));
+
+            label molIdH = findIndex(idList, molIdHName);
+
+            if(molIdH == -1)
+            {
+                FatalErrorIn("polyCNNTId::setInitialConfiguration()")
+                    << "Cannot find molecule id: " << molIdHName 
+                    << nl << "in moleculeProperties/idList."
+                    << exit(FatalError);
+            }
+
+            // search through atoms at edges and add hydrogens 
+            
+            DynamicList<vector> hydrogenPositions;         
+            
+            scalar d=1e-10/rU.refLength();
+            
+            {
+                vector max = vector
+                            (
+                                0.2,
+                                mesh_.bounds().max().y(),
+                                mesh_.bounds().max().z()
+                            );
+                
+                boundedBox bbMesh( mesh_.bounds().min(), max);
+                
+                        
+                IDLList<polyMolecule>::iterator mol(molCloud_.begin());
+                DynamicList<polyMolecule*> molsToDel;
+                
+                for
+                (
+                        mol = molCloud_.begin();
+                        mol != molCloud_.end();
+                        ++mol
+                )
+                {
+
+                    {
+                        if(bbMesh.contains(mol().position()))
+                        {
+                            polyMolecule* molI = &mol();
+                            
+                            vector hPos = vector
+                            (
+                                molI->position().x()-d,
+                                molI->position().y(), 
+                                molI->position().z()
+                            );
+                            
+                            hydrogenPositions.append(hPos);
+  
+                        }
+                    }
+                }
+                            
+            }
+            
+            
+            {
+                vector min = vector
+                            (
+                                mesh_.bounds().max().x()-0.4,
+                                mesh_.bounds().min().y(),
+                                mesh_.bounds().min().z()
+                            );
+                
+                boundedBox bbMesh(min, mesh_.bounds().max());
+                
+                        
+                IDLList<polyMolecule>::iterator mol(molCloud_.begin());
+                DynamicList<polyMolecule*> molsToDel;
+                
+                for
+                (
+                        mol = molCloud_.begin();
+                        mol != molCloud_.end();
+                        ++mol
+                )
+                {
+
+                    {
+                        if(bbMesh.contains(mol().position()))
+                        {
+                            polyMolecule* molI = &mol();
+                            
+                            vector hPos = vector
+                            (
+                                molI->position().x()+d,
+                                molI->position().y(), 
+                                molI->position().z()
+                            );
+                            
+                            hydrogenPositions.append(hPos);
+  
+                        }
+                    }
+                }
+                            
+            }
+            
+            label noHAtoms=0;
+            forAll(hydrogenPositions, i)
+            {
+                const vector& hydPos = hydrogenPositions[i];
+                label cell = -1;
+                label tetFace = -1;
+                label tetPt = -1;
+
+                mesh_.findCellFacePt
+                (
+                    hydPos,
+                    cell,
+                    tetFace,
+                    tetPt
+                );
+            
+                if (cell != -1)
+                {
+                    insertMolecule
+                    (
+                        hydPos,
+                        cell,
+                        tetFace,
+                        tetPt,
+                        molIdH,
+                        tethered,
+                        frozen,
+                        temperature,
+                        bulkVelocity
+                    );
+
+                    noHAtoms += 1;
+                }
+                else
+                {
+                    Info << "WARNING - Atom at specified position " << hydPos
+                        << ", does not correspond to a mesh cell.... deleting"
+                        << nl
+                        << endl;
+                }
+            }
+            Info << "number of hydrogen atoms added " << noHAtoms << endl;
+        
+        }
+        
+    }
+}
+
+
+void polyCNNT::setPyridinic
+(
+    DynamicList<polyMolecule*>& molsToDel,    
+    DynamicList<polyMolecule*>& atomsInPyridinic,
+    const List<DynamicList<polyMolecule*> >& orderedList,
+    const List<label>& ringI,
+    const List<label>& ringJ,
+    const List<label>& ringPI,
+    const List<label>& ringPJ, 
+    label idI,
+    label idJ,
+    label dI,
+    label dJ
+)
+{
+    forAll(ringI, i)
+    {
+        label I=idI+ringI[i]+dI;
+        label J=idJ+ringJ[i]+dJ;
+        removeMolecule(molsToDel, atomsInPyridinic, orderedList, I, J);
+        highlightPyridinicAtoms(atomsInPyridinic, orderedList, I, J);
+    }
+    
+    nCarbon_-= 3; nNitrogen_--; nP_+=6; nQ_-=7;
+    
+    forAll(ringPI, i)
+    {
+        label I=idI+ringPI[i]+dI;
+        label J=idJ+ringPJ[i]+dJ;                            
+        highlightPyridinicAtoms(atomsInPyridinic, orderedList, I, J);
     }
 }
 
@@ -1019,8 +1313,7 @@ void polyCNNT::highlightPyridinicAtoms
     {
        i += nSizeX;
     }
-
-    if(i >= nSizeX)
+    else if(i >= nSizeX)
     {
        i -= nSizeX;
     }
@@ -1031,15 +1324,62 @@ void polyCNNT::highlightPyridinicAtoms
     {
        j += nSizeY;
     }
-
-    if(j >= nSizeY)
+    else if(j >= nSizeY)
     {
        j -= nSizeY;
     }       
     
 //     orderedList[i][j]->fraction()=0.5;
-    atomsInPyridinic.append(orderedList[i][j]);
+    if(findIndex(atomsInPyridinic, orderedList[i][j]) == -1)
+    {
+        atomsInPyridinic.append(orderedList[i][j]);
+    }
 }
+
+void polyCNNT::highlightAtomsAroundPyridinic
+(
+    DynamicList<polyMolecule*>& atomsAroundPyridinic,
+    DynamicList<polyMolecule*>& atomsInPyridinic,
+    const List<DynamicList<polyMolecule*> >& orderedList,
+    label idI,
+    label idJ
+)
+{
+    label i = idI;
+    label j = idJ;
+    
+    label nSizeX=orderedList.size();
+    
+    if(i < 0)
+    {
+       i += nSizeX;
+    }
+    else if(i >= nSizeX)
+    {
+       i -= nSizeX;
+    }
+    
+    label nSizeY = orderedList[i].size();
+    
+    if(j < 0)
+    {
+       j += nSizeY;
+    }
+    else if(j >= nSizeY)
+    {
+       j -= nSizeY;
+    }       
+    
+//     orderedList[i][j]->fraction()=0.5;
+    if(findIndex(atomsInPyridinic, orderedList[i][j]) == -1)
+    {
+        if(findIndex(atomsAroundPyridinic, orderedList[i][j]) == -1)
+        {
+            atomsAroundPyridinic.append(orderedList[i][j]);
+        }
+    }
+}
+
 
 void polyCNNT::removeMolecule
 (
@@ -1174,6 +1514,86 @@ vector polyCNNT::neighbouringAtom
     
     return v;
 }
+
+
+label polyCNNT::getCharge
+(
+    DynamicList<polyMolecule*>& molsToDel,    
+    const List<DynamicList<polyMolecule*> >& orderedList,
+    scalar bo,
+    label idIo,
+    label idJo, 
+    label idI,
+    label idJ
+)
+{
+    label i = idI;
+    label j = idJ;
+    
+    label nSizeX=orderedList.size();
+    
+    bool change = false;
+    
+    if(i < 0)
+    {
+       i += nSizeX;
+       change = true;
+    }
+    else if(i >= nSizeX)
+    {
+       i -= nSizeX;
+       change = true;
+    }
+    
+    label nSizeY = orderedList[i].size();
+    
+    if(j < 0)
+    {
+       j += nSizeY;
+       change = true;
+    }
+    else if(j >= nSizeY)
+    {
+       j -= nSizeY;
+       change = true;
+    }    
+    
+
+    label molId = -1;
+
+    if(findIndex(molsToDel, orderedList[i][j]) == -1) 
+    {
+        const vector& rI = orderedList[idIo][idJo]->position();
+        const vector& rJ = orderedList[i][j]->position();
+        
+        if(mag(rI - rJ) < 1.2*bo)
+        {
+            molId = orderedList[i][j]->id();
+            
+            if(change)
+            {
+//                 Info << "boundary; mol centre = " << rI
+//                      << ", id = " << orderedList[idIo][idJo]->id()
+//                     << " idIo = " <<  idIo
+//                      << " idJo = " <<  idJo
+//                      << " nSize X = " << nSizeX 
+//                      << " nSize Y = " << nSizeY
+//                      << " i = " <<  idI
+//                      << " j = " <<  idJ                   
+//                      << " iNew = " <<  i
+//                      << " jNew = " <<  j
+//                     << ", mol adjacent = " << rJ
+//                      << ", id = " << orderedList[i][j]->id()
+//                     << endl;
+            }            
+        }
+        
+        
+    }
+    
+    return molId;
+}
+
 
 } // End namespace Foam
 

@@ -100,6 +100,16 @@ private:
             label idJ
         );
 
+        void highlightAtomsAroundPyridinic
+        (
+            DynamicList<polyMolecule*>& atomsAroundPyridinic,
+            DynamicList<polyMolecule*>& atomsInPyridinic,
+            const List<DynamicList<polyMolecule*> >& orderedList,
+            label idI,
+            label idJ
+        );    
+        
+
         vector neighbouringAtom
         (
             const List<DynamicList<polyMolecule*> >& orderedList,
@@ -107,6 +117,32 @@ private:
             label idJ,
             label molIdC
         );         
+        
+        void setPyridinic
+        (
+            DynamicList<polyMolecule*>& molsToDel,    
+            DynamicList<polyMolecule*>& atomsInPyridinic,
+            const List<DynamicList<polyMolecule*> >& orderedList,
+            const List<label>& ringI,
+            const List<label>& ringJ,
+            const List<label>& ringPI,
+            const List<label>& ringPJ,
+            label idI,
+            label idJ,
+            label dI,
+            label dJ
+        );
+        
+        label getCharge
+        (
+            DynamicList<polyMolecule*>& molsToDel,
+            const List<DynamicList<polyMolecule*> >& orderedList,
+            scalar bo,
+            label idIo,
+            label idJo,         
+            label idI,
+            label idJ
+        );
         
 public:
 
