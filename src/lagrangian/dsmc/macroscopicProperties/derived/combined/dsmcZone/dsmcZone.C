@@ -86,6 +86,7 @@ dsmcZone::dsmcZone
     mccu_(0.0),
     mccv_(0.0),
     mccw_(0.0),
+    nColls_(0),
 
     eu_(0.0),
     ev_(0.0),
@@ -233,6 +234,7 @@ dsmcZone::dsmcZone
     meanCollisionRate_.setSize(nBins, 0.0);
     meanCollisionTime_.setSize(nBins, 0.0);
     meanCollisionTimeTimeStepRatio_.setSize(nBins, 0.0);
+    measuredCollisionRate_.setSize(nBins, 0.0);
     Ma_.setSize(nBins, 0.0);
     
     speciesMols_.setSize(typeIds_.size(), 0.0);
@@ -367,6 +369,7 @@ void dsmcZone::readIn()
     dict.readIfPresent("mccu", mccu_);  
     dict.readIfPresent("mccv", mccv_);  
     dict.readIfPresent("mccw", mccw_);  
+    dict.readIfPresent("nColls", nColls_);  
     dict.readIfPresent("eu", eu_);  
     dict.readIfPresent("ev", ev_);      
     dict.readIfPresent("ew", ew_);      
@@ -421,6 +424,7 @@ void dsmcZone::writeOut()
         dict.add("mccu", mccu_);  
         dict.add("mccv", mccv_);  
         dict.add("mccw", mccw_);  
+        dict.add("nColls", nColls_);  
         dict.add("eu", eu_);  
         dict.add("ev", ev_);      
         dict.add("ew", ew_);      
@@ -477,6 +481,8 @@ void dsmcZone::calculateField()
             
             nParticle *= RWF;
         }
+       
+        nColls_ += cloud_.cellPropMeasurements().nColls()[cellI]*nParticle;
 
         forAll(molsInCell, mIC)
         {
@@ -1051,6 +1057,8 @@ void dsmcZone::calculateField()
                 meanCollisionTime_[n] = GREAT;
                 meanCollisionTimeTimeStepRatio_[n] = GREAT;
             }
+            
+            measuredCollisionRate_ = nColls_/(volume*deltaT*averagingCounter_);
 
             mfp_ = scalar(0.0);
             mcr_ = scalar(0.0);
@@ -1125,6 +1133,7 @@ void dsmcZone::calculateField()
             mccv_ = 0.0;
             mccw_ = 0.0;
             mcc_ = 0.0;
+            nColls_ = 0.0;
             eu_ = 0.0;
             ev_ = 0.0;
             ew_ = 0.0;
@@ -1376,6 +1385,15 @@ void dsmcZone::writeField()
                     "zone_"+regionName_+"_"+fieldName_+"_meanCollisionTimeTimeStepRatio.xyz",
                     timeField,
                     meanCollisionTimeTimeStepRatio_,
+                    true
+                );
+                
+                writeTimeData
+                (
+                    casePath_,                
+                "zone_"+regionName_+"_"+fieldName_+"_measuredCollisionRate.xyz",
+                    timeField,
+                    measuredCollisionRate_,
                     true
                 );
                 
