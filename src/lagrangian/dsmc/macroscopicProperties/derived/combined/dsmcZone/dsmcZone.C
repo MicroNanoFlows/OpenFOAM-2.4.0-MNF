@@ -597,6 +597,7 @@ void dsmcZone::calculateField()
         scalar mccu = mccu_;
         scalar mccv = mccv_;
         scalar mccw = mccw_;
+        scalar nColls = nColls_;
 
         scalar eu = eu_;
         scalar ev = ev_;
@@ -634,6 +635,7 @@ void dsmcZone::calculateField()
             reduce(mccu, sumOp<scalar>());
             reduce(mccv, sumOp<scalar>());
             reduce(mccw, sumOp<scalar>());
+            reduce(nColls, sumOp<scalar>());
 
             reduce(eu, sumOp<scalar>());
             reduce(ev, sumOp<scalar>());
@@ -1058,7 +1060,7 @@ void dsmcZone::calculateField()
                 meanCollisionTimeTimeStepRatio_[n] = GREAT;
             }
             
-            measuredCollisionRate_ = nColls_/(volume*deltaT*averagingCounter_);
+            measuredCollisionRate_[n] = nColls/(volume*deltaT*averagingCounter_);
 
             mfp_ = scalar(0.0);
             mcr_ = scalar(0.0);
