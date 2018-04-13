@@ -280,7 +280,7 @@ Foam::scalar Foam::particle::trackToFace
     //    the triangle opposite basePt.  This is the triangle opposite
     //    pA.
 
-    // 4) tri joining a tet to the tet that is in the same cell, but
+    // 3) tri joining a tet to the tet that is in the same cell, but
     //    belongs to the face that shares the tet-edge (basePt - pA).
     //    This may be on the same face, or a different one.  This is
     //    the triangle opposite basePt.  This is the triangle opposite
@@ -385,6 +385,13 @@ Foam::scalar Foam::particle::trackToFace
         tetAreas[1] = tet.Sb();
         tetAreas[2] = tet.Sc();
         tetAreas[3] = tet.Sd();
+        
+//         //******
+//         for (label i = 0; i < 4; i++)
+//         {
+//             tetAreas[i] /= (mag(tetAreas[i]) + VSMALL);
+//         }
+//         //******
 
         FixedList<label, 4> tetPlaneBasePtIs;
 
@@ -733,439 +740,707 @@ Foam::scalar Foam::particle::trackToFace
     TrackData& td,
     bool DSMC
 )
-{    
-//     std::clock_t time1 = std::clock();
-    
+{
     typedef typename TrackData::cloudType cloudType;
     typedef typename cloudType::particleType particleType;
-
+    
     cloudType& cloud = td.cloud();
-
-    const faceList& pFaces = mesh_.faces();
-    const pointField& pPts = mesh_.points();
-    const vectorField& pC = mesh_.cellCentres();
+    
+    DynamicList<label>& faces = cloud.labels();
+    findFaces(endPosition, faces, td);
 
     faceI_ = -1;
-
     scalar trackFraction = 0.0;
 
-    // Which tri (0..3) of the tet has been crossed
-    label triI = -1;
+    if (faces.empty())  // inside cell
+    {
+        trackFraction = 1.0;
+        position_ = endPosition;
+    }
+    else // hit face
+    {
+        scalar lambdaMin = GREAT;
 
-    // Determine which face was actually crossed.  lambdaMin < SMALL
-    // is considered a trigger for a tracking correction towards the
-    // current tet centre.
-    scalar lambdaMin = VGREAT;
-
-    DynamicList<label>& tris = cloud.labels();
-
-    // Tet indices that will be set by hitWallFaces if a wall face is
-    // to be hit, or are set when any wall tri of a tet is hit.
-    // Carries the description of the tet on which the cell face has
-    // been hit.  For the case of being set in hitWallFaces, this may
-    // be a different tet to the one that the particle occupies.
-    tetIndices faceHitTetIs;
-
-    // What tolerance is appropriate the minimum lambda numerator and
-    // denominator for tracking in this cell.
-    scalar lambdaDistanceTolerance =
-        lambdaDistanceToleranceCoeff*mesh_.cellVolumes()[cellI_];
-        
-//     std::clock_t time2 = std::clock();
-//         
-//     Info << "1-2, time = " 
-//          << double( time2 - time1 ) / double(CLOCKS_PER_SEC)
-//          << endl;
-        
-    do
-    {           
-        if (triI != -1)
+        if (faces.size() == 1)
         {
-            // Change tet ownership because a tri face has been crossed
-            tetNeighbour(triI);
-        }
-
-        const Foam::face& f = pFaces[tetFaceI_];
-
-        bool own = (mesh_.faceOwner()[tetFaceI_] == cellI_);
-
-        label tetBasePtI = mesh_.tetBasePtIs()[tetFaceI_];
-
-        label basePtI = f[tetBasePtI];
-
-        label facePtI = (tetPtI_ + tetBasePtI) % f.size();
-        label otherFacePtI = f.fcIndex(facePtI);
-
-        label fPtAI = -1;
-        label fPtBI = -1;
-
-        if (own)
-        {
-            fPtAI = facePtI;
-            fPtBI = otherFacePtI;
+            lambdaMin = 
+                lambda(position_, endPosition, faces[0], stepFraction_, td);
+            faceI_ = faces[0];
         }
         else
         {
-            fPtAI = otherFacePtI;
-            fPtBI = facePtI;
-        }
-
-        tetPointRef tet
-        (
-            pC[cellI_],
-            pPts[basePtI],
-            pPts[f[fPtAI]],
-            pPts[f[fPtBI]]
-        );
-
-        if (lambdaMin < SMALL)
-        {
-            // Apply tracking correction towards tet centre
-
-            position_ += trackingCorrectionTol*(tet.centre() - position_);
-
-            cloud.trackingRescue();
-
-            return trackFraction;
-        }
-
-        if (triI != -1 && mesh_.moving())
-        {
-            // Mesh motion requires stepFraction to be correct for
-            // each tracking portion, so trackToFace must return after
-            // every lambda calculation.
-            return trackFraction;
-        }
-
-        FixedList<vector, 4> tetAreas;
-
-        tetAreas[0] = tet.Sa();
-        tetAreas[1] = tet.Sb();
-        tetAreas[2] = tet.Sc();
-        tetAreas[3] = tet.Sd();
-
-        //******
-        for (label i = 0; i < 4; i++)
-        {
-            tetAreas[i] /= (mag(tetAreas[i]) + VSMALL);
-        }
-        //******
-
-        FixedList<label, 4> tetPlaneBasePtIs;
-
-        tetPlaneBasePtIs[0] = basePtI;
-        tetPlaneBasePtIs[1] = f[fPtAI];
-        tetPlaneBasePtIs[2] = basePtI;
-        tetPlaneBasePtIs[3] = basePtI;
-
-        findTris
-        (
-            endPosition,
-            tris,
-            tet,
-            tetAreas,
-            tetPlaneBasePtIs,
-            lambdaDistanceTolerance
-        );
-
-        // Reset variables for new track
-        triI = -1;
-        lambdaMin = VGREAT;
-
-        // Pout<< "tris " << tris << endl;
-
-        // Sets a value for lambdaMin and faceI_ if a wall face is hit
-        // by the track.
-        hitWallFaces
-        (
-            cloud,
-            position_,
-            endPosition,
-            lambdaMin,
-            faceHitTetIs
-        );
-
-        // Did not hit any tet tri faces, and no wall face has been
-        // found to hit.
-        if (tris.empty() && faceI_ < 0)
-        {
-            position_ = endPosition;
-
-            return 1.0;
-        }
-        else
-        {
-            // Loop over all found tris and see if any of them find a
-            // lambda value smaller than that found for a wall face.
-            forAll(tris, i)
+            // If the particle has to cross more than one cell to reach the
+            // endPosition, we check which way to go.
+            // If one of the faces is a boundary face and the particle is
+            // outside, we choose the boundary face.
+            // The particle is outside if one of the lambda's is > 1 or < 0
+            forAll(faces, i)
             {
-                label tI = tris[i];
-
-                scalar lam = tetLambda
-                (
-                    position_,
-                    endPosition,
-                    tI,
-                    tetAreas[tI],
-                    tetPlaneBasePtIs[tI],
-                    cellI_,
-                    tetFaceI_,
-                    tetPtI_,
-                    lambdaDistanceTolerance
-                );
+                scalar lam =
+                    lambda(position_, endPosition, faces[i], stepFraction_, td);
 
                 if (lam < lambdaMin)
                 {
                     lambdaMin = lam;
-
-                    triI = tI;
+                    faceI_ = faces[i];
                 }
             }
         }
 
-        if (triI == 0)
-        {
-            // This must be a cell face crossing
-            faceI_ = tetFaceI_;
+//         bool internalFace = internalFace(faceI_);
 
-            // Set the faceHitTetIs to those for the current tet in case a
-            // wall interaction is required with the cell face
-            faceHitTetIs = tetIndices
-            (
-                cellI_,
-                tetFaceI_,
-                tetBasePtI,
-                fPtAI,
-                fPtBI,
-                tetPtI_
-            );
-        }
-        else if (triI > 0)
-        {
-            // A tri was found to be crossed before a wall face was hit (if any)
-            faceI_ = -1;
-        }
-
-        // The particle can be 'outside' the tet.  This will yield a
-        // lambda larger than 1, or smaller than 0.  For values < 0,
-        // the particle travels away from the tet and we don't move
-        // the particle, only change tet/cell.  For values larger than
-        // 1, we move the particle to endPosition before the tet/cell
-        // change.
-        if (lambdaMin > SMALL)
+        // For warped faces the particle can be 'outside' the cell.
+        // This will yield a lambda larger than 1, or smaller than 0
+        // For values < 0, the particle travels away from the cell
+        // and we don't move the particle, only change cell.
+        // For values larger than 1, we move the particle to endPosition only.
+        if (lambdaMin > 0.0)
         {
             if (lambdaMin <= 1.0)
             {
-                trackFraction += lambdaMin*(1 - trackFraction);
-                position_ += lambdaMin*(endPosition - position_);
+                trackFraction = lambdaMin;
+                position_ += trackFraction*(endPosition - position_);
             }
             else
             {
+                trackFraction = 1.0;
                 position_ = endPosition;
-
-                return 1.0;
             }
         }
-        else
+//         else if (static_cast<ParticleType&>(*this).softImpact())
+//         {
+//             // Soft-sphere particles can travel outside the domain
+//             // but we don't use lambda since this the particle
+//             // is going away from face
+//             trackFraction = 1.0;
+//             position_ = endPosition;
+//         }
+
+        // change cell
+        if (internalFace(faceI_)) // Internal face
         {
-            // Set lambdaMin to zero to force a towards-tet-centre
-            // correction.
-            lambdaMin = 0.0;
-        }
-
-    } while (faceI_ < 0);
-    
-//     std::clock_t time3 = std::clock();
-//         
-//     Info << "2-3, time = " 
-//          << double( time3 - time2 ) / double(CLOCKS_PER_SEC)
-//          << endl;
-
-    particleType& p = static_cast<particleType&>(*this);
-    p.hitFace(td);
-
-    if (internalFace(faceI_))
-    {
-        // Change cell ownership because an internal (non-boundary) face
-        // has been crossed.
-
-        if (cellI_ == mesh_.faceOwner()[faceI_])
-        {
-            cellI_ = mesh_.faceNeighbour()[faceI_];
-        }
-        else if (cellI_ == mesh_.faceNeighbour()[faceI_])
-        {
-            cellI_ = mesh_.faceOwner()[faceI_];
-        }
-        else
-        {
-            FatalErrorIn(
-                "Particle::trackToFace(const vector&, TrackData&, bool)"
-                        )
-                << "addressing failure" << abort(FatalError);
-        }
-    }
-    else
-    {
-        label origFaceI = faceI_;
-        label patchI = patch(faceI_);
-
-        // No action taken for tetPtI_ for tetFaceI_ here, handled by
-        // patch interaction call or later during processor transfer.
-
-        if
-        (
-            !p.hitPatch
-            (
-                mesh_.boundaryMesh()[patchI],
-                td,
-                patchI,
-                trackFraction,
-                faceHitTetIs
-            )
-        )
-        {
-            // Did patch interaction model switch patches?
-            if (faceI_ != origFaceI)
+            if (cellI_ == mesh_.faceOwner()[faceI_])
             {
-                patchI = patch(faceI_);
+                cellI_ = mesh_.faceNeighbour()[faceI_];
             }
-
-            const polyPatch& patch = mesh_.boundaryMesh()[patchI];
-            
-            if (isA<processorPolyPatch>(patch))
+            else if (cellI_ == mesh_.faceNeighbour()[faceI_])
             {
-                p.hitProcessorPatch
-                (
-                    static_cast<const processorPolyPatch&>(patch), td
-                );
-            }
-            else if (isA<wallPolyPatch>(patch))
-            {
-                p.hitWallPatch
-                (
-                    static_cast<const wallPolyPatch&>(patch), td, faceHitTetIs
-                );
-            }
-            else if (isA<symmetryPlanePolyPatch>(patch))
-            {
-                p.hitSymmetryPlanePatch
-                (
-                    static_cast<const symmetryPlanePolyPatch&>(patch), td
-                );
-            }
-            else if (isA<symmetryPolyPatch>(patch))
-            {
-                p.hitSymmetryPatch
-                (
-                    static_cast<const symmetryPolyPatch&>(patch), td
-                );
-            }
-            else if (isA<wedgePolyPatch>(patch))
-            {
-                p.hitWedgePatch
-                (
-                    static_cast<const wedgePolyPatch&>(patch), td
-                );
-            }
-            else if (isA<cyclicPolyPatch>(patch))
-            {
-                p.hitCyclicPatch
-                (
-                    static_cast<const cyclicPolyPatch&>(patch), td
-                );
-            }
-            else if (isA<cyclicAMIPolyPatch>(patch))
-            {
-                p.hitCyclicAMIPatch
-                (
-                    static_cast<const cyclicAMIPolyPatch&>(patch),
-                    td,
-                    endPosition - position_
-                );
+                cellI_ = mesh_.faceOwner()[faceI_];
             }
             else
             {
-                p.hitPatch(patch, td);
+                FatalErrorIn
+                (
+                    "Particle::trackToFace(const vector&, TrackData&)"
+                )<< "addressing failure" << nl
+                 << abort(FatalError);
             }
         }
-    }
-    
-//     std::clock_t time4 = std::clock();
-//         
-//     Info << "3-4, time = " 
-//          << double( time4 - time3 ) / double(CLOCKS_PER_SEC)
-//          << endl;
-
-    if (lambdaMin < SMALL)
-    {
-        // Apply tracking correction towards tet centre.
-        // Generate current tet to find centre to apply correction.
-
-        tetPointRef tet = currentTet();
-
-        position_ += trackingCorrectionTol*(tet.centre() - position_);
-
-        if
-        (
-            cloud.hasWallImpactDistance()
-        && !internalFace(faceHitTetIs.face())
-        && cloud.cellHasWallFaces()[faceHitTetIs.cell()]
-        )
+        else
         {
-            const polyBoundaryMesh& patches = mesh_.boundaryMesh();
+            particleType& p = static_cast<particleType&>(*this);
 
-            label fI = faceHitTetIs.face();
+            // Soft-sphere algorithm ignores the boundary
+//             if (p.softImpact())
+//             {
+//                 trackFraction = 1.0;
+//                 position_ = endPosition;
+//             }
 
-            label patchI = patches.patchID()[fI - mesh_.nInternalFaces()];
+            label patchi = patch(faceI_);
+            const polyPatch& patch = mesh_.boundaryMesh()[patchi];
 
-            if (isA<wallPolyPatch>(patches[patchI]))
+            if (!p.hitPatch(patch, td, patchi))
             {
-                // In the case of collision with a wall where there is
-                // a non-zero wallImpactDistance, it is possible for
-                // there to be a tracking correction required to bring
-                // the particle into the domain, but the position of
-                // the particle is further from the wall than the tet
-                // centre, in which case the normal correction can be
-                // counter-productive, i.e. pushes the particle
-                // further out of the domain.  In this case it is the
-                // position that hit the wall that is in need of a
-                // rescue correction.
-
-                triPointRef wallTri = faceHitTetIs.faceTri(mesh_);
-
-                tetPointRef wallTet = faceHitTetIs.tet(mesh_);
-
-                vector nHat = wallTri.normal();
-                nHat /= mag(nHat);
-
-                const scalar r = p.wallImpactDistance(nHat);
-
-                // Removing (approximately) the wallTri normal
-                // component of the existing correction, to avoid the
-                // situation where the existing correction in the wall
-                // normal direction is larger towards the wall than
-                // the new correction is away from it.
-                position_ +=
-                    trackingCorrectionTol
-                *(
-                        (wallTet.centre() - (position_ + r*nHat))
-                    - (nHat & (tet.centre() - position_))*nHat
+                if (isA<wedgePolyPatch>(patch))
+                {
+                    p.hitWedgePatch
+                    (
+                        static_cast<const wedgePolyPatch&>(patch), td
                     );
+                }
+                else if (isA<symmetryPolyPatch>(patch))
+                {
+                    p.hitSymmetryPatch
+                    (
+                        static_cast<const symmetryPolyPatch&>(patch), td
+                    );
+                }
+                else if (isA<cyclicPolyPatch>(patch))
+                {
+                    p.hitCyclicPatch
+                    (
+                        static_cast<const cyclicPolyPatch&>(patch), td
+                    );
+                }
+                else if (isA<processorPolyPatch>(patch))
+                {
+                    p.hitProcessorPatch
+                    (
+                        static_cast<const processorPolyPatch&>(patch), td
+                    );
+                }
+                else if (isA<wallPolyPatch>(patch))
+                {
+                    p.hitWallPatch
+                    (
+                        static_cast<const wallPolyPatch&>(patch), td
+                    );
+                }
+                else
+                {
+                    p.hitPatch(patch, td);
+                }
             }
         }
-
-        cloud.trackingRescue();
     }
-    
-//     std::clock_t time5 = std::clock();
-        
-//     Info << "4-5, time = " 
-//          << double( time5 - time4 ) / double(CLOCKS_PER_SEC)
-//          << endl;
-    
+
+    // If the trackFraction = 0 something went wrong.
+    // Either the particle is flipping back and forth across a face perhaps
+    // due to velocity interpolation errors or it is in a "hole" in the mesh
+    // caused by face warpage.
+    // In both cases resolve the positional ambiguity by moving the particle
+    // slightly towards the cell-centre.
+    if (trackFraction < SMALL)
+    {
+        position_ += 1.0e-3*(mesh_.cellCentres()[cellI_] - position_);
+    }
+
     return trackFraction;
 }
+
+template<class TrackData>
+void Foam::particle::findFaces
+(
+    const vector& position,
+    DynamicList<label>& faceList,
+    TrackData& td
+) const
+{
+    const labelList& faces = mesh_.cells()[cellI_];
+    const vector& C = mesh_.cellCentres()[cellI_];
+
+    faceList.clear();
+    forAll(faces, i)
+    {
+        label faceI = faces[i];
+        scalar lam = lambda(C, position, faceI, td);
+
+        if ((lam > 0) && (lam < 1.0))
+        {
+            faceList.append(faceI);
+        }
+    }
+}
+
+template<class TrackData>
+Foam::scalar Foam::particle::lambda
+(
+    const vector& from,
+    const vector& to,
+    const label faceI,
+    TrackData& td
+) const
+{
+    typedef typename TrackData::cloudType cloudType;
+    typedef typename cloudType::particleType particleType;
+    
+    vector Sf = mesh_.faceAreas()[faceI];
+    Sf /= mag(Sf);
+    vector Cf = mesh_.faceCentres()[faceI];
+
+    // move reference point for wall
+    if (!internalFace(faceI))
+    {
+        label patchI = patch(faceI);
+        const polyPatch& patch = mesh_.boundaryMesh()[patchI];
+
+        // move reference point for wall
+        if (isA<wallPolyPatch>(patch))
+        {
+            const vector& C = mesh_.cellCentres()[cellI_];
+            scalar CCf = mag((C - Cf) & Sf);
+            // check if distance between cell centre and face centre
+            // is larger than wallImpactDistance
+            particleType& p = static_cast<particleType&>(*this);
+            if (CCf > p.wallImpactDistance(Sf))
+            {
+                Cf -=p.wallImpactDistance(Sf)*Sf;
+            }
+        }
+    }
+
+    scalar lambdaNominator = (Cf - from) & Sf;
+    scalar lambdaDenominator = (to - from) & Sf;
+
+    // check if trajectory is parallel to face
+    if (mag(lambdaDenominator) < SMALL)
+    {
+        if (lambdaDenominator < 0.0)
+        {
+            lambdaDenominator = -SMALL;
+        }
+        else
+        {
+            lambdaDenominator = SMALL;
+        }
+    }
+
+    return lambdaNominator/lambdaDenominator;
+}
+
+
+// template<class TrackData>
+// Foam::scalar Foam::particle::trackToFace
+// (
+//     const vector& endPosition,
+//     TrackData& td,
+//     bool DSMC
+// )
+// {    
+// //     std::clock_t time1 = std::clock();
+//     
+//     typedef typename TrackData::cloudType cloudType;
+//     typedef typename cloudType::particleType particleType;
+// 
+//     cloudType& cloud = td.cloud();
+// 
+//     const faceList& pFaces = mesh_.faces();
+//     const pointField& pPts = mesh_.points();
+//     const vectorField& pC = mesh_.cellCentres();
+// 
+//     faceI_ = -1;
+// 
+//     scalar trackFraction = 0.0;
+// 
+//     // Which tri (0..3) of the tet has been crossed
+//     label triI = -1;
+// 
+//     // Determine which face was actually crossed.  lambdaMin < SMALL
+//     // is considered a trigger for a tracking correction towards the
+//     // current tet centre.
+//     scalar lambdaMin = VGREAT;
+// 
+//     DynamicList<label>& tris = cloud.labels();
+// 
+//     // Tet indices that will be set by hitWallFaces if a wall face is
+//     // to be hit, or are set when any wall tri of a tet is hit.
+//     // Carries the description of the tet on which the cell face has
+//     // been hit.  For the case of being set in hitWallFaces, this may
+//     // be a different tet to the one that the particle occupies.
+//     tetIndices faceHitTetIs;
+// 
+//     // What tolerance is appropriate the minimum lambda numerator and
+//     // denominator for tracking in this cell.
+//     scalar lambdaDistanceTolerance =
+//         lambdaDistanceToleranceCoeff*mesh_.cellVolumes()[cellI_];
+//         
+// //     std::clock_t time2 = std::clock();
+// //         
+// //     Info << "1-2, time = " 
+// //          << double( time2 - time1 ) / double(CLOCKS_PER_SEC)
+// //          << endl;
+//         
+//     do
+//     {           
+//         if (triI != -1)
+//         {
+//             // Change tet ownership because a tri face has been crossed
+//             tetNeighbour(triI);
+//         }
+// 
+//         const Foam::face& f = pFaces[tetFaceI_];
+// 
+//         bool own = (mesh_.faceOwner()[tetFaceI_] == cellI_);
+// 
+//         label tetBasePtI = mesh_.tetBasePtIs()[tetFaceI_];
+// 
+//         label basePtI = f[tetBasePtI];
+// 
+//         label facePtI = (tetPtI_ + tetBasePtI) % f.size();
+//         label otherFacePtI = f.fcIndex(facePtI);
+// 
+//         label fPtAI = -1;
+//         label fPtBI = -1;
+// 
+//         if (own)
+//         {
+//             fPtAI = facePtI;
+//             fPtBI = otherFacePtI;
+//         }
+//         else
+//         {
+//             fPtAI = otherFacePtI;
+//             fPtBI = facePtI;
+//         }
+// 
+//         tetPointRef tet
+//         (
+//             pC[cellI_],
+//             pPts[basePtI],
+//             pPts[f[fPtAI]],
+//             pPts[f[fPtBI]]
+//         );
+// 
+// //         if (lambdaMin < SMALL)
+// //         {
+// //             // Apply tracking correction towards tet centre
+// // 
+// //             position_ += trackingCorrectionTol*(tet.centre() - position_);
+// // 
+// //             cloud.trackingRescue();
+// // 
+// //             return trackFraction;
+// //         }
+// 
+// //         if (triI != -1 && mesh_.moving())
+// //         {
+// //             // Mesh motion requires stepFraction to be correct for
+// //             // each tracking portion, so trackToFace must return after
+// //             // every lambda calculation.
+// //             return trackFraction;
+// //         }
+// 
+//         FixedList<vector, 4> tetAreas;
+// 
+//         tetAreas[0] = tet.Sa();
+//         tetAreas[1] = tet.Sb();
+//         tetAreas[2] = tet.Sc();
+//         tetAreas[3] = tet.Sd();
+// 
+//         //******
+//         for (label i = 0; i < 4; i++)
+//         {
+//             tetAreas[i] /= (mag(tetAreas[i]) + VSMALL);
+//         }
+//         //******
+// 
+//         FixedList<label, 4> tetPlaneBasePtIs;
+// 
+//         tetPlaneBasePtIs[0] = basePtI;
+//         tetPlaneBasePtIs[1] = f[fPtAI];
+//         tetPlaneBasePtIs[2] = basePtI;
+//         tetPlaneBasePtIs[3] = basePtI;
+// 
+//         findTris
+//         (
+//             endPosition,
+//             tris,
+//             tet,
+//             tetAreas,
+//             tetPlaneBasePtIs,
+//             lambdaDistanceTolerance
+//         );
+// 
+//         // Reset variables for new track
+//         triI = -1;
+//         lambdaMin = VGREAT;
+// 
+//         // Pout<< "tris " << tris << endl;
+// 
+//         // Did not hit any tet tri faces
+//         if (tris.empty() /*&& faceI_ < 0*/)
+//         {
+//             position_ = endPosition;
+// 
+//             return 1.0;
+//         }
+//         else
+//         {
+//             //Find the lambda value for the cell crossing
+// //             forAll(tris, i)
+// //             {
+//                 label tI = tris[0];
+// 
+//                 scalar lam = tetLambda
+//                 (
+//                     position_,
+//                     endPosition,
+//                     tI,
+//                     tetAreas[tI],
+//                     tetPlaneBasePtIs[tI],
+//                     cellI_,
+//                     tetFaceI_,
+//                     tetPtI_,
+//                     lambdaDistanceTolerance
+//                 );
+// 
+//                 if (lam < lambdaMin)
+//                 {
+//                     lambdaMin = lam;
+// 
+//                     triI = tI;
+//                 }
+// //             }
+//         }
+// 
+//         if (triI == 0)
+//         {
+//             // This must be a cell face crossing
+//             faceI_ = tetFaceI_;
+//         }
+// //         else if (triI > 0)
+// //         {
+//             //A tri was found to be crossed before a wall face was hit (if any)
+// //             faceI_ = -1;
+// //         }
+// 
+//         // The particle can be 'outside' the tet.  This will yield a
+//         // lambda larger than 1, or smaller than 0.  For values < 0,
+//         // the particle travels away from the tet and we don't move
+//         // the particle, only change tet/cell.  For values larger than
+//         // 1, we move the particle to endPosition before the tet/cell
+//         // change.
+//         if (lambdaMin > SMALL)
+//         {
+//             if (lambdaMin <= 1.0)
+//             {
+//                 trackFraction += lambdaMin*(1 - trackFraction);
+//                 position_ += lambdaMin*(endPosition - position_);
+//             }
+//             else
+//             {
+//                 position_ = endPosition;
+// 
+//                 return 1.0;
+//             }
+//         }
+// //         else
+// //         {
+// //             // Set lambdaMin to zero to force a towards-tet-centre
+// //             // correction.
+// //             lambdaMin = 0.0;
+// //         }
+// 
+//     } while (faceI_ < 0);
+//     
+// //     std::clock_t time3 = std::clock();
+// //         
+// //     Info << "2-3, time = " 
+// //          << double( time3 - time2 ) / double(CLOCKS_PER_SEC)
+// //          << endl;
+// 
+//     particleType& p = static_cast<particleType&>(*this);
+//     p.hitFace(td);
+// 
+//     if (internalFace(faceI_))
+//     {
+//         // Change cell ownership because an internal (non-boundary) face
+//         // has been crossed.
+// 
+//         if (cellI_ == mesh_.faceOwner()[faceI_])
+//         {
+//             cellI_ = mesh_.faceNeighbour()[faceI_];
+//         }
+//         else if (cellI_ == mesh_.faceNeighbour()[faceI_])
+//         {
+//             cellI_ = mesh_.faceOwner()[faceI_];
+//         }
+//         else
+//         {
+//             FatalErrorIn(
+//                 "Particle::trackToFace(const vector&, TrackData&, bool)"
+//                         )
+//                 << "addressing failure" << abort(FatalError);
+//         }
+//     }
+//     else
+//     {
+//         label origFaceI = faceI_;
+//         label patchI = patch(faceI_);
+// 
+//         // No action taken for tetPtI_ for tetFaceI_ here, handled by
+//         // patch interaction call or later during processor transfer.
+// 
+//         if
+//         (
+//             !p.hitPatch
+//             (
+//                 mesh_.boundaryMesh()[patchI],
+//                 td,
+//                 patchI,
+//                 trackFraction,
+//                 faceHitTetIs
+//             )
+//         )
+//         {
+//             // Did patch interaction model switch patches?
+//             if (faceI_ != origFaceI)
+//             {
+//                 patchI = patch(faceI_);
+//             }
+// 
+//             const polyPatch& patch = mesh_.boundaryMesh()[patchI];
+//             
+//             if (isA<processorPolyPatch>(patch))
+//             {
+//                 p.hitProcessorPatch
+//                 (
+//                     static_cast<const processorPolyPatch&>(patch), td
+//                 );
+//             }
+//             else if (isA<wallPolyPatch>(patch))
+//             {
+//                 const Foam::face& f = pFaces[tetFaceI_];
+// 
+//                 bool own = (mesh_.faceOwner()[tetFaceI_] == cellI_);
+// 
+//                 label tetBasePtI = mesh_.tetBasePtIs()[tetFaceI_];
+// 
+//                 label basePtI = f[tetBasePtI];
+// 
+//                 label facePtI = (tetPtI_ + tetBasePtI) % f.size();
+//                 label otherFacePtI = f.fcIndex(facePtI);
+// 
+//                 label fPtAI = -1;
+//                 label fPtBI = -1;
+// 
+//                 if (own)
+//                 {
+//                     fPtAI = facePtI;
+//                     fPtBI = otherFacePtI;
+//                 }
+//                 else
+//                 {
+//                     fPtAI = otherFacePtI;
+//                     fPtBI = facePtI;
+//                 }
+//                 
+//                 // Sets a value for lambdaMin and faceI_ if a wall face is hit
+//                 // by the track.
+//                 hitWallFaces
+//                 (
+//                     cloud,
+//                     position_,
+//                     endPosition,
+//                     lambdaMin,
+//                     faceHitTetIs
+//                 );
+//                 
+//                 p.hitWallPatch
+//                 (
+//                     static_cast<const wallPolyPatch&>(patch), td, faceHitTetIs
+//                 );
+//             }
+//             else if (isA<symmetryPlanePolyPatch>(patch))
+//             {
+//                 p.hitSymmetryPlanePatch
+//                 (
+//                     static_cast<const symmetryPlanePolyPatch&>(patch), td
+//                 );
+//             }
+//             else if (isA<symmetryPolyPatch>(patch))
+//             {
+//                 p.hitSymmetryPatch
+//                 (
+//                     static_cast<const symmetryPolyPatch&>(patch), td
+//                 );
+//             }
+//             else if (isA<wedgePolyPatch>(patch))
+//             {
+//                 p.hitWedgePatch
+//                 (
+//                     static_cast<const wedgePolyPatch&>(patch), td
+//                 );
+//             }
+//             else if (isA<cyclicPolyPatch>(patch))
+//             {
+//                 p.hitCyclicPatch
+//                 (
+//                     static_cast<const cyclicPolyPatch&>(patch), td
+//                 );
+//             }
+//             else if (isA<cyclicAMIPolyPatch>(patch))
+//             {
+//                 p.hitCyclicAMIPatch
+//                 (
+//                     static_cast<const cyclicAMIPolyPatch&>(patch),
+//                     td,
+//                     endPosition - position_
+//                 );
+//             }
+//             else
+//             {
+//                 p.hitPatch(patch, td);
+//             }
+//         }
+//     }
+//     
+// //     std::clock_t time4 = std::clock();
+// //         
+// //     Info << "3-4, time = " 
+// //          << double( time4 - time3 ) / double(CLOCKS_PER_SEC)
+// //          << endl;
+// 
+// //     if (lambdaMin < SMALL)
+// //     {
+// //         // Apply tracking correction towards tet centre.
+// //         // Generate current tet to find centre to apply correction.
+// // 
+// //         tetPointRef tet = currentTet();
+// // 
+// //         position_ += trackingCorrectionTol*(tet.centre() - position_);
+// // 
+// //         if
+// //         (
+// //             cloud.hasWallImpactDistance()
+// //         && !internalFace(faceHitTetIs.face())
+// //         && cloud.cellHasWallFaces()[faceHitTetIs.cell()]
+// //         )
+// //         {
+// //             const polyBoundaryMesh& patches = mesh_.boundaryMesh();
+// // 
+// //             label fI = faceHitTetIs.face();
+// // 
+// //             label patchI = patches.patchID()[fI - mesh_.nInternalFaces()];
+// // 
+// //             if (isA<wallPolyPatch>(patches[patchI]))
+// //             {
+// //                 // In the case of collision with a wall where there is
+// //                 // a non-zero wallImpactDistance, it is possible for
+// //                 // there to be a tracking correction required to bring
+// //                 // the particle into the domain, but the position of
+// //                 // the particle is further from the wall than the tet
+// //                 // centre, in which case the normal correction can be
+// //                 // counter-productive, i.e. pushes the particle
+// //                 // further out of the domain.  In this case it is the
+// //                 // position that hit the wall that is in need of a
+// //                 // rescue correction.
+// // 
+// //                 triPointRef wallTri = faceHitTetIs.faceTri(mesh_);
+// // 
+// //                 tetPointRef wallTet = faceHitTetIs.tet(mesh_);
+// // 
+// //                 vector nHat = wallTri.normal();
+// //                 nHat /= mag(nHat);
+// // 
+// //                 const scalar r = p.wallImpactDistance(nHat);
+// // 
+// //                 // Removing (approximately) the wallTri normal
+// //                 // component of the existing correction, to avoid the
+// //                 // situation where the existing correction in the wall
+// //                 // normal direction is larger towards the wall than
+// //                 // the new correction is away from it.
+// //                 position_ +=
+// //                     trackingCorrectionTol
+// //                 *(
+// //                         (wallTet.centre() - (position_ + r*nHat))
+// //                     - (nHat & (tet.centre() - position_))*nHat
+// //                     );
+// //             }
+// //         }
+// // 
+// //         cloud.trackingRescue();
+// //     }
+//     
+// //     std::clock_t time5 = std::clock();
+//         
+// //     Info << "4-5, time = " 
+// //          << double( time5 - time4 ) / double(CLOCKS_PER_SEC)
+// //          << endl;
+//     
+//     return trackFraction;
+// }
 
 
 template<class CloudType>

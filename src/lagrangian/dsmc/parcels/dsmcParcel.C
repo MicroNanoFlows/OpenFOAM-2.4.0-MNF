@@ -78,7 +78,7 @@ bool Foam::dsmcParcel::move
             // Set the Lagrangian time-step
             scalar dt = min(dtMax, tEnd);
 
-            dt *= trackToFace(position() + dt*Utracking, td, true);
+            dt *= trackToFace(position() + dt*Utracking, td);
 
             tEnd -= dt;
 
@@ -103,11 +103,13 @@ bool Foam::dsmcParcel::move
 
                 forAll(td.cloud().boundaries().cyclicBoundaryModels(), c)
                 {
-                    const labelList& faces = td.cloud().boundaries().cyclicBoundaryModels()[c]->allFaces();
+                    const labelList& faces =td.cloud().boundaries().             
+                                    cyclicBoundaryModels()[c]->allFaces();
 
                     if(findIndex(faces, this->face()) != -1)
                     {
-                        td.cloud().boundaries().cyclicBoundaryModels()[c]->controlMol(*this, td);
+                        td.cloud().boundaries().
+                            cyclicBoundaryModels()[c]->controlMol(*this, td);
                     }
                 }
             }
@@ -148,10 +150,12 @@ void Foam::dsmcParcel::hitWallPatch
     //-find which patch has been hit
     label patchIndex = wpp.index();
 
-    const label& patchModelId = td.cloud().boundaries().patchToModelIds()[patchIndex];
+    const label& patchModelId = td.cloud().boundaries().
+    patchToModelIds()[patchIndex];
 
     // apply a boundary model when a molecule collides with this poly patch
-    td.cloud().boundaries().patchBoundaryModels()[patchModelId]->controlParticle(*this, td);
+    td.cloud().boundaries().
+    patchBoundaryModels()[patchModelId]->controlParticle(*this, td);
 }
 
 void Foam::dsmcParcel::hitPatch
@@ -163,10 +167,12 @@ void Foam::dsmcParcel::hitPatch
     //-find which patch has been hit
     label patchIndex = pp.index();
 
-    const label& patchModelId = td.cloud().boundaries().patchToModelIds()[patchIndex];
+    const label& patchModelId = td.cloud().boundaries().
+    patchToModelIds()[patchIndex];
 
     // apply a boundary model when a molecule collides with this poly patch
-    td.cloud().boundaries().patchBoundaryModels()[patchModelId]->controlParticle(*this, td);
+    td.cloud().boundaries().
+    patchBoundaryModels()[patchModelId]->controlParticle(*this, td);
 }
 
 

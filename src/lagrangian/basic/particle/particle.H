@@ -157,7 +157,7 @@ protected:
 
 
     // Private Member Functions
-
+       
         //- Find the tet tri faces between position and tet centre
         inline void findTris
         (
@@ -223,6 +223,27 @@ protected:
             scalar& lambdaMin,
             tetIndices& closestTetIs
         );
+        
+        //- Find the faces between position and cell centre
+        template<class TrackData>
+        void findFaces
+        (
+            const vector& position,
+            DynamicList<label>& faceList,
+            TrackData& td
+        ) const;
+        
+        //- Return the 'lambda' value for the position, p, on the face,
+        // where, p = from + lamda*(to - from)
+        // for static meshes
+        template<class TrackData>
+        inline scalar lambda
+        (
+            const vector& from,
+            const vector& to,
+            const label faceI,
+            TrackData& td
+        ) const;
 
 
     // Patch interactions

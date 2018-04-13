@@ -614,23 +614,7 @@ dsmcVolFields::dsmcVolFields
 
         typeIds_[i] = typeId;
     }
-    
-//     n_.setSize(mesh_.boundaryMesh().size());
-//     t1_.setSize(mesh_.boundaryMesh().size());
-//     t2_.setSize(mesh_.boundaryMesh().size());
-//     
-//     forAll(n_, j)
-//     {
-//         const polyPatch& patch = mesh_.boundaryMesh()[j];
-//         
-//         n_[j].setSize(patch.size(), vector::zero);
-//         t1_[j].setSize(patch.size(), vector::zero);
-//         t2_[j].setSize(patch.size(), vector::zero);
-//     }
-    
-//     calculateWallUnitVectors();
-
-    
+       
     // ---------------------------------------------------
     
     // Note; outer list is typeIds, inner list is number of cells on the 
@@ -2213,7 +2197,7 @@ void dsmcVolFields::calculateField()
                         
                         fD_.boundaryField()[j][k] = fDBF_[j][k]/nAvTimeSteps;
                     }
-                    
+
                     p_.boundaryField()[j] = fD_.boundaryField()[j] & n_[j];
                     
                     tau_.boundaryField()[j] = sqrt(
