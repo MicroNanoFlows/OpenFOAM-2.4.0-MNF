@@ -198,21 +198,21 @@ Foam::label Foam::particle::track(const vector& endPosition, TrackData& td)
     return faceI_;
 }
 
-template<class TrackData>
-Foam::label Foam::particle::track(const vector& endPosition, TrackData& td, 
-                                                                    bool DSMC)
-{
-    faceI_ = -1;
-
-    // Tracks to endPosition or stop on boundary
-    while (!onBoundary() && stepFraction_ < 1.0 - SMALL)
-    {
-        stepFraction_ += trackToFace(endPosition, td, DSMC)*(1.0 - 
-                                                        stepFraction_);
-    }
-
-    return faceI_;
-}
+// template<class TrackData>
+// Foam::label Foam::particle::track(const vector& endPosition, TrackData& td, 
+//                                                                     bool DSMC)
+// {
+//     faceI_ = -1;
+// 
+//     // Tracks to endPosition or stop on boundary
+//     while (!onBoundary() && stepFraction_ < 1.0 - SMALL)
+//     {
+//         stepFraction_ += trackToFace(endPosition, td, DSMC)*(1.0 - 
+//                                                         stepFraction_);
+//     }
+// 
+//     return faceI_;
+// }
 
 template<class TrackData>
 Foam::scalar Foam::particle::trackToFace
@@ -733,181 +733,181 @@ Foam::scalar Foam::particle::trackToFace
     return trackFraction;
 }
 
-template<class TrackData>
-Foam::scalar Foam::particle::trackToFace
-(
-    const vector& endPosition,
-    TrackData& td,
-    bool DSMC
-)
-{
-    typedef typename TrackData::cloudType cloudType;
-    typedef typename cloudType::particleType particleType;
-    
-    cloudType& cloud = td.cloud();
-    
-    DynamicList<label>& faces = cloud.labels();
-    findFaces(endPosition, faces, td);
-
-    faceI_ = -1;
-    scalar trackFraction = 0.0;
-
-    if (faces.empty())  // inside cell
-    {
-        trackFraction = 1.0;
-        position_ = endPosition;
-    }
-    else // hit face
-    {
-        scalar lambdaMin = GREAT;
-
-        if (faces.size() == 1)
-        {
-            lambdaMin = 
-                lambda(position_, endPosition, faces[0], stepFraction_, td);
-            faceI_ = faces[0];
-        }
-        else
-        {
-            // If the particle has to cross more than one cell to reach the
-            // endPosition, we check which way to go.
-            // If one of the faces is a boundary face and the particle is
-            // outside, we choose the boundary face.
-            // The particle is outside if one of the lambda's is > 1 or < 0
-            forAll(faces, i)
-            {
-                scalar lam =
-                    lambda(position_, endPosition, faces[i], stepFraction_, td);
-
-                if (lam < lambdaMin)
-                {
-                    lambdaMin = lam;
-                    faceI_ = faces[i];
-                }
-            }
-        }
-
-//         bool internalFace = internalFace(faceI_);
-
-        // For warped faces the particle can be 'outside' the cell.
-        // This will yield a lambda larger than 1, or smaller than 0
-        // For values < 0, the particle travels away from the cell
-        // and we don't move the particle, only change cell.
-        // For values larger than 1, we move the particle to endPosition only.
-        if (lambdaMin > 0.0)
-        {
-            if (lambdaMin <= 1.0)
-            {
-                trackFraction = lambdaMin;
-                position_ += trackFraction*(endPosition - position_);
-            }
-            else
-            {
-                trackFraction = 1.0;
-                position_ = endPosition;
-            }
-        }
-//         else if (static_cast<ParticleType&>(*this).softImpact())
+// template<class TrackData>
+// Foam::scalar Foam::particle::trackToFace
+// (
+//     const vector& endPosition,
+//     TrackData& td,
+//     bool DSMC
+// )
+// {
+//     typedef typename TrackData::cloudType cloudType;
+//     typedef typename cloudType::particleType particleType;
+//     
+//     cloudType& cloud = td.cloud();
+//     
+//     DynamicList<label>& faces = cloud.labels();
+//     findFaces(endPosition, faces, td);
+// 
+//     faceI_ = -1;
+//     scalar trackFraction = 0.0;
+// 
+//     if (faces.empty())  // inside cell
+//     {
+//         trackFraction = 1.0;
+//         position_ = endPosition;
+//     }
+//     else // hit face
+//     {
+//         scalar lambdaMin = GREAT;
+// 
+//         if (faces.size() == 1)
 //         {
-//             // Soft-sphere particles can travel outside the domain
-//             // but we don't use lambda since this the particle
-//             // is going away from face
-//             trackFraction = 1.0;
-//             position_ = endPosition;
+//             lambdaMin = 
+//                 lambda(position_, endPosition, faces[0], stepFraction_, td);
+//             faceI_ = faces[0];
 //         }
-
-        // change cell
-        if (internalFace(faceI_)) // Internal face
-        {
-            if (cellI_ == mesh_.faceOwner()[faceI_])
-            {
-                cellI_ = mesh_.faceNeighbour()[faceI_];
-            }
-            else if (cellI_ == mesh_.faceNeighbour()[faceI_])
-            {
-                cellI_ = mesh_.faceOwner()[faceI_];
-            }
-            else
-            {
-                FatalErrorIn
-                (
-                    "Particle::trackToFace(const vector&, TrackData&)"
-                )<< "addressing failure" << nl
-                 << abort(FatalError);
-            }
-        }
-        else
-        {
-            particleType& p = static_cast<particleType&>(*this);
-
-            // Soft-sphere algorithm ignores the boundary
-//             if (p.softImpact())
+//         else
+//         {
+//             // If the particle has to cross more than one cell to reach the
+//             // endPosition, we check which way to go.
+//             // If one of the faces is a boundary face and the particle is
+//             // outside, we choose the boundary face.
+//             // The particle is outside if one of the lambda's is > 1 or < 0
+//             forAll(faces, i)
+//             {
+//                 scalar lam =
+//                     lambda(position_, endPosition, faces[i], stepFraction_, td);
+// 
+//                 if (lam < lambdaMin)
+//                 {
+//                     lambdaMin = lam;
+//                     faceI_ = faces[i];
+//                 }
+//             }
+//         }
+// 
+// //         bool internalFace = internalFace(faceI_);
+// 
+//         // For warped faces the particle can be 'outside' the cell.
+//         // This will yield a lambda larger than 1, or smaller than 0
+//         // For values < 0, the particle travels away from the cell
+//         // and we don't move the particle, only change cell.
+//         // For values larger than 1, we move the particle to endPosition only.
+//         if (lambdaMin > 0.0)
+//         {
+//             if (lambdaMin <= 1.0)
+//             {
+//                 trackFraction = lambdaMin;
+//                 position_ += trackFraction*(endPosition - position_);
+//             }
+//             else
 //             {
 //                 trackFraction = 1.0;
 //                 position_ = endPosition;
 //             }
-
-            label patchi = patch(faceI_);
-            const polyPatch& patch = mesh_.boundaryMesh()[patchi];
-
-            if (!p.hitPatch(patch, td, patchi))
-            {
-                if (isA<wedgePolyPatch>(patch))
-                {
-                    p.hitWedgePatch
-                    (
-                        static_cast<const wedgePolyPatch&>(patch), td
-                    );
-                }
-                else if (isA<symmetryPolyPatch>(patch))
-                {
-                    p.hitSymmetryPatch
-                    (
-                        static_cast<const symmetryPolyPatch&>(patch), td
-                    );
-                }
-                else if (isA<cyclicPolyPatch>(patch))
-                {
-                    p.hitCyclicPatch
-                    (
-                        static_cast<const cyclicPolyPatch&>(patch), td
-                    );
-                }
-                else if (isA<processorPolyPatch>(patch))
-                {
-                    p.hitProcessorPatch
-                    (
-                        static_cast<const processorPolyPatch&>(patch), td
-                    );
-                }
-                else if (isA<wallPolyPatch>(patch))
-                {
-                    p.hitWallPatch
-                    (
-                        static_cast<const wallPolyPatch&>(patch), td
-                    );
-                }
-                else
-                {
-                    p.hitPatch(patch, td);
-                }
-            }
-        }
-    }
-
-    // If the trackFraction = 0 something went wrong.
-    // Either the particle is flipping back and forth across a face perhaps
-    // due to velocity interpolation errors or it is in a "hole" in the mesh
-    // caused by face warpage.
-    // In both cases resolve the positional ambiguity by moving the particle
-    // slightly towards the cell-centre.
-    if (trackFraction < SMALL)
-    {
-        position_ += 1.0e-3*(mesh_.cellCentres()[cellI_] - position_);
-    }
-
-    return trackFraction;
-}
+//         }
+// //         else if (static_cast<ParticleType&>(*this).softImpact())
+// //         {
+// //             // Soft-sphere particles can travel outside the domain
+// //             // but we don't use lambda since this the particle
+// //             // is going away from face
+// //             trackFraction = 1.0;
+// //             position_ = endPosition;
+// //         }
+// 
+//         // change cell
+//         if (internalFace(faceI_)) // Internal face
+//         {
+//             if (cellI_ == mesh_.faceOwner()[faceI_])
+//             {
+//                 cellI_ = mesh_.faceNeighbour()[faceI_];
+//             }
+//             else if (cellI_ == mesh_.faceNeighbour()[faceI_])
+//             {
+//                 cellI_ = mesh_.faceOwner()[faceI_];
+//             }
+//             else
+//             {
+//                 FatalErrorIn
+//                 (
+//                     "Particle::trackToFace(const vector&, TrackData&)"
+//                 )<< "addressing failure" << nl
+//                  << abort(FatalError);
+//             }
+//         }
+//         else
+//         {
+//             particleType& p = static_cast<particleType&>(*this);
+// 
+//             // Soft-sphere algorithm ignores the boundary
+// //             if (p.softImpact())
+// //             {
+// //                 trackFraction = 1.0;
+// //                 position_ = endPosition;
+// //             }
+// 
+//             label patchi = patch(faceI_);
+//             const polyPatch& patch = mesh_.boundaryMesh()[patchi];
+// 
+//             if (!p.hitPatch(patch, td, patchi))
+//             {
+//                 if (isA<wedgePolyPatch>(patch))
+//                 {
+//                     p.hitWedgePatch
+//                     (
+//                         static_cast<const wedgePolyPatch&>(patch), td
+//                     );
+//                 }
+//                 else if (isA<symmetryPolyPatch>(patch))
+//                 {
+//                     p.hitSymmetryPatch
+//                     (
+//                         static_cast<const symmetryPolyPatch&>(patch), td
+//                     );
+//                 }
+//                 else if (isA<cyclicPolyPatch>(patch))
+//                 {
+//                     p.hitCyclicPatch
+//                     (
+//                         static_cast<const cyclicPolyPatch&>(patch), td
+//                     );
+//                 }
+//                 else if (isA<processorPolyPatch>(patch))
+//                 {
+//                     p.hitProcessorPatch
+//                     (
+//                         static_cast<const processorPolyPatch&>(patch), td
+//                     );
+//                 }
+//                 else if (isA<wallPolyPatch>(patch))
+//                 {
+//                     p.hitWallPatch
+//                     (
+//                         static_cast<const wallPolyPatch&>(patch), td
+//                     );
+//                 }
+//                 else
+//                 {
+//                     p.hitPatch(patch, td);
+//                 }
+//             }
+//         }
+//     }
+// 
+//     // If the trackFraction = 0 something went wrong.
+//     // Either the particle is flipping back and forth across a face perhaps
+//     // due to velocity interpolation errors or it is in a "hole" in the mesh
+//     // caused by face warpage.
+//     // In both cases resolve the positional ambiguity by moving the particle
+//     // slightly towards the cell-centre.
+//     if (trackFraction < SMALL)
+//     {
+//         position_ += 1.0e-3*(mesh_.cellCentres()[cellI_] - position_);
+//     }
+// 
+//     return trackFraction;
+// }
 
 template<class TrackData>
 void Foam::particle::findFaces

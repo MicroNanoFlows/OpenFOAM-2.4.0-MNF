@@ -72,7 +72,10 @@ bool Foam::dsmcParcel::move
                 
                 // Apply correction to velocity to constrain tracking for
                 // reduced-D cases,  but not axisymmetric cases
-                meshTools::constrainDirection(mesh, mesh.solutionD(), Utracking);
+                meshTools::constrainDirection
+                (
+                    mesh, mesh.solutionD(), Utracking
+                );
             }
 
             // Set the Lagrangian time-step

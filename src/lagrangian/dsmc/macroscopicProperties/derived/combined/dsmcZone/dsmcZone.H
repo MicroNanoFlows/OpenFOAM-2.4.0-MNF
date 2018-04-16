@@ -157,6 +157,8 @@ private:
         
         bool averagingAcrossManyRuns_;
         
+        bool measureCollisionRateOnly_;
+        
         
     // Private Member Functions
 
