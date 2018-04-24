@@ -1,0 +1,5 @@
+This case will run a single cell, periodic box, filled with oxygen at a number density of 1e19 m^-3 and a temperature of 10000 K.
+
+It is set up (in system/dsmcFieldProperties) to only measure the collision rate, which will be written to the fieldMeasurements/zone_dsmcZone_O2_measuredCollisionRate.xyz file.
+
+The measured collision rate can be compared to the analytical solution, i.e. equation 4.78 from Bird's 1994 monologue, with the symmetry factor 1/2 since this is a single species gas.

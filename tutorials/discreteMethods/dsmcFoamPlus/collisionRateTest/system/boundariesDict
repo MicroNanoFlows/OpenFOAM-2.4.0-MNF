@@ -1,0 +1,190 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.3                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      boundariesDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dsmcPatchBoundaries
+(
+
+/*    boundary*/
+/*    {*/
+/*        patchBoundaryProperties*/
+/*        {*/
+/*            patchName                           wall;*/
+/*        }*/
+
+/*        boundaryModel   dsmcSpecularWallPatch;*/
+
+/*        dsmcSpecularWallPatchProperties*/
+/*        {*/
+/*        }*/
+/*    }*/
+
+
+//     boundary
+//     {
+//         patchBoundaryProperties
+//         {
+//             patchName                           leftWall;
+//         }
+// 
+//         boundaryModel   dsmcDeletionPatch;
+// 
+//         dsmcDeletionPatchProperties
+//         {
+// 	      allSpecies		yes;
+// //               typeIds                  (N2);
+//         }
+//     }
+
+//     boundary
+//     {
+//         patchBoundaryProperties
+//         {
+//             patchName                           rightWall;
+//         }
+// 
+//         boundaryModel   dsmcDeletionPatch;
+// 
+//         dsmcDeletionPatchProperties
+//         {
+// 	      allSpecies		yes;
+// //               typeIds                  (N2 O2);
+//         }
+//     }
+//     boundary
+//     {
+//         patchBoundaryProperties
+//         {
+//             patchName                           rightWall;
+//         }
+// 
+//         boundaryModel   dsmcSpecularWallPatch;
+// 
+//         dsmcSpecularWallPatchProperties
+//         {
+//         }
+//     }
+
+//     boundary
+//     {
+//         patchBoundaryProperties
+//         {
+//             patchName                           leftWall;
+//         }
+// 
+//         boundaryModel   dsmcDiffuseWallPatch;
+// 
+//         dsmcDiffuseWallPatchProperties
+//         {
+// 	    velocity 			(0 0 0);
+// 	    temperature			300;  
+//         }
+//     }
+// 
+//     boundary
+//     {
+//         patchBoundaryProperties
+//         {
+//             patchName                           rightWall;
+//         }
+// 
+//         boundaryModel   dsmcDiffuseWallPatch;
+// 
+//         dsmcDiffuseWallPatchProperties
+//         {
+// 	    velocity 			(0 0 0);
+// 	    temperature			300;  
+//         }
+//     }
+//     boundary
+//     {
+//         patchBoundaryProperties
+//         {
+//             patchName                           rightWall;
+//         }
+// 
+//         boundaryModel   dsmcDiffuseWallFieldPatch;
+// 
+//         dsmcDiffuseWallFieldPatchProperties
+//         {
+// 
+//         }
+//     }
+
+//     boundary
+//     {
+//         patchBoundaryProperties
+//         {
+//             patchName                           rightWall;
+//         }
+// 
+//         boundaryModel   dsmcMixedWallPatch;
+// 
+//         dsmcMixedWallPatchProperties
+//         {
+// 	    velocity 			(-1500 0 0);
+// 	    temperature			300;
+// 	    diffuseFraction		0.5;
+//         }
+//     }
+);
+
+dsmcCyclicBoundaries
+(
+//     boundary
+//     {
+//         cyclicBoundaryProperties
+//         {
+//             patchName                           xPeriodic_half1;
+//         }
+// 
+//         boundaryModel   				dsmcReflectiveParticleMembranePatch;
+// 
+//         dsmcReflectiveParticleMembranePatchProperties
+//         {
+// 	    reflectionProbability	0.5;
+//         }
+//     }
+);
+
+dsmcGeneralBoundaries
+(
+//     boundary
+//     {
+//         generalBoundaryProperties
+//         {
+//             patchName                           leftWall;
+//         }
+// 
+//         boundaryModel   dsmcInflowPatch;
+// 
+//         dsmcInflowPatchProperties
+//         {
+//               typeIds                   (N2 O2);
+// 	      velocity			(1950 0 0);
+// 	      temperature		300;
+// 
+// 	      massDensities
+// 	      {
+// 		  N2     	3.613e-6;
+// 		  O2     	1.238e-6;
+// 	      };
+//         }
+//     }
+);
+
+
+// ************************************************************************* //

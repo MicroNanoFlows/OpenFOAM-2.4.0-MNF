@@ -1,0 +1,68 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.6                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+
+    class           dictionary;
+    object          molConfigDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+deleteMols
+(
+//   del
+//   {
+//       molsToDeleteModel		delFromZone;
+// 
+//       delFromZoneProperties
+//       {
+// 	zoneName	clearZone;
+// 	oneSpecie	yes;
+// 	molId		Ar;
+//       }
+//   }
+
+//   del
+//   {
+//       molsToDeleteModel		delFromSphere;
+// 
+//       delFromSphereProperties
+//       {
+// 	startPoint	(0 0 0);
+// 	radius 		10;
+// 	oneSpecie	yes;
+// 	molId		Ar;
+//       }
+//   }
+
+  del
+  {
+      molsToDeleteModel		delFromCylinder;
+
+      delFromCylinderProperties
+      {
+	startPoint	(-0.05 0 0);
+	endPoint	(0.05 0 0);
+	radius 		0.03;
+	typeIds		(O2 N2);
+      }
+  }
+
+);
+
+
+// ************************************************************************* //

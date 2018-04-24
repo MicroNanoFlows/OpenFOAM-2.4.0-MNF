@@ -20,6 +20,8 @@ FoamFile
 // ~~~~~~~~~~~~~~~~~~
 
 nEquivalentParticles            10.6;
+chargedParticles                false;
+adsorption                      false;
 
 
 // Axisymmetric Properties
