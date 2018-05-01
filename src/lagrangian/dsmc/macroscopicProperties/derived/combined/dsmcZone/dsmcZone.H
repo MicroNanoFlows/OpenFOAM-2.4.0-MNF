@@ -107,6 +107,7 @@ private:
         scalar mccu_;
         scalar mccv_;
         scalar mccw_;
+        scalar nColls_;
 
         scalar eu_;
         scalar ev_;
@@ -145,6 +146,7 @@ private:
         scalarField meanCollisionRate_;
         scalarField meanCollisionTime_;
         scalarField meanCollisionTimeTimeStepRatio_;
+        scalarField measuredCollisionRate_;
         scalarField Ma_;
         
         List<scalarField> vibrationalETotal_;
@@ -154,6 +156,8 @@ private:
         bool instantaneous_;
         
         bool averagingAcrossManyRuns_;
+        
+        bool measureCollisionRateOnly_;
         
         
     // Private Member Functions

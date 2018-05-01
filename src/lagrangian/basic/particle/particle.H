@@ -42,7 +42,6 @@ Description
 #include "FixedList.H"
 #include "polyMeshTetDecomposition.H"
 #include "particleMacros.H"
-#include "treeDataFace.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -121,7 +120,7 @@ public:
             }
     };
 
-
+    
 protected:
 
     // Protected data
@@ -158,7 +157,7 @@ protected:
 
 
     // Private Member Functions
-
+       
         //- Find the tet tri faces between position and tet centre
         inline void findTris
         (
@@ -224,20 +223,41 @@ protected:
             scalar& lambdaMin,
             tetIndices& closestTetIs
         );
+        
+        //- Find the faces between position and cell centre
+        template<class TrackData>
+        void findFaces
+        (
+            const vector& position,
+            DynamicList<label>& faceList,
+            TrackData& td
+        ) const;
+        
+        //- Return the 'lambda' value for the position, p, on the face,
+        // where, p = from + lamda*(to - from)
+        // for static meshes
+        template<class TrackData>
+        inline scalar lambda
+        (
+            const vector& from,
+            const vector& to,
+            const label faceI,
+            TrackData& td
+        ) const;
 
 
     // Patch interactions
 
         //- Overridable function to handle the particle hitting a face
         template<class TrackData>
-        inline void hitFace(TrackData& td);
+        void hitFace(TrackData& td);
 
         //- Overridable function to handle the particle hitting a
         //  patch.  Executed before other patch-hitting functions.
         //  trackFraction is passed in to allow mesh motion to
         //  interpolate in time to the correct face state.
         template<class TrackData>
-        inline bool hitPatch
+        bool hitPatch
         (
             const polyPatch&,
             TrackData& td,
@@ -248,12 +268,12 @@ protected:
 
         //- Overridable function to handle the particle hitting a wedgePatch
         template<class TrackData>
-        inline void hitWedgePatch(const wedgePolyPatch&, TrackData& td);
+        void hitWedgePatch(const wedgePolyPatch&, TrackData& td);
 
         //- Overridable function to handle the particle hitting a
         //  symmetryPlanePatch
         template<class TrackData>
-        inline void hitSymmetryPlanePatch
+        void hitSymmetryPlanePatch
         (
             const symmetryPlanePolyPatch&,
             TrackData& td
@@ -262,15 +282,15 @@ protected:
         //- Overridable function to handle the particle hitting a
         //  symmetryPatch
         template<class TrackData>
-        inline void hitSymmetryPatch(const symmetryPolyPatch&, TrackData& td);
+        void hitSymmetryPatch(const symmetryPolyPatch&, TrackData& td);
 
         //- Overridable function to handle the particle hitting a cyclicPatch
         template<class TrackData>
-        inline void hitCyclicPatch(const cyclicPolyPatch&, TrackData& td);
+        void hitCyclicPatch(const cyclicPolyPatch&, TrackData& td);
 
         //- Overridable function to handle the particle hitting a cyclicAMIPatch
         template<class TrackData>
-        inline void hitCyclicAMIPatch
+        void hitCyclicAMIPatch
         (
             const cyclicAMIPolyPatch&,
             TrackData& td,
@@ -280,11 +300,11 @@ protected:
         //- Overridable function to handle the particle hitting a
         //  processorPatch
         template<class TrackData>
-        inline void hitProcessorPatch(const processorPolyPatch&, TrackData& td);
+        void hitProcessorPatch(const processorPolyPatch&, TrackData& td);
 
         //- Overridable function to handle the particle hitting a wallPatch
         template<class TrackData>
-        inline void hitWallPatch
+        void hitWallPatch
         (
             const wallPolyPatch&,
             TrackData& td,
@@ -294,7 +314,7 @@ protected:
         //- Overridable function to handle the particle hitting a
         //  general patch
         template<class TrackData>
-        inline void hitPatch(const polyPatch&, TrackData& td);
+        void hitPatch(const polyPatch&, TrackData& td);
 
 
 public:
@@ -503,7 +523,7 @@ public:
             //  Returns the boundary face index if the track stops at the
             //  boundary, -1 otherwise.
             template<class TrackData>
-            inline label track(const vector& endPosition, TrackData& td);
+            label track(const vector& endPosition, TrackData& td);
 
             //- Track particle to end of trajectory
             //  or until it hits the boundary.
@@ -512,9 +532,9 @@ public:
             //  the fraction of the time-step completed.
             //  Returns the boundary face index if the track stops at the
             //  boundary, -1 otherwise.
-            template<class TrackData>
-            inline label track(const vector& endPosition, TrackData& td, 
-                                                                bool DSMC);
+//             template<class TrackData>
+//             label track(const vector& endPosition, TrackData& td, 
+//                                                                 bool DSMC);
 
             //- Track particle to a given position and returns 1.0 if the
             //  trajectory is completed without hitting a face otherwise
@@ -523,7 +543,7 @@ public:
             //  on entry 'stepFraction()' should be set to the fraction of the
             //  time-step at which the tracking starts.
             template<class TrackData>
-            inline scalar trackToFace(const vector& endPosition, TrackData& td);
+            scalar trackToFace(const vector& endPosition, TrackData& td);
 
             //- Track particle to a given position and returns 1.0 if the
             //  trajectory is completed without hitting a face otherwise
@@ -531,9 +551,9 @@ public:
             //  completed.
             //  on entry 'stepFraction()' should be set to the fraction of the
             //  time-step at which the tracking starts.
-            template<class TrackData>
-            inline scalar trackToFace(const vector& endPosition, TrackData& td, 
-                                                                bool DSMC);
+//             template<class TrackData>
+//             scalar trackToFace(const vector& endPosition, TrackData& td, 
+//                                                                 bool DSMC);
 
             //- Return the index of the face to be used in the interpolation
             //  routine

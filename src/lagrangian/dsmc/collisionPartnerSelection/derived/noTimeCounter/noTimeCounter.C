@@ -39,8 +39,8 @@ namespace Foam
 
 defineTypeNameAndDebug(noTimeCounter, 0);
 
-addToRunTimeSelectionTable(collisionPartnerSelection, noTimeCounter, dictionary);
-
+addToRunTimeSelectionTable
+(collisionPartnerSelection, noTimeCounter, dictionary);
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -95,7 +95,8 @@ void noTimeCounter::collide()
 
     label collisions = 0;
 
-    const List<DynamicList<dsmcParcel*> >& cellOccupancy = cloud_.cellOccupancy();
+    const List<DynamicList<dsmcParcel*> >& cellOccupancy = 
+                                                cloud_.cellOccupancy();
 
     const polyMesh& mesh = cloud_.mesh();
 
@@ -152,7 +153,8 @@ void noTimeCounter::collide()
                 {
                     const dsmcParcel& p = *cellParcels[i];
                     
-                    scalar radius = sqrt(sqr(p.position().y()) + sqr(p.position().z()));
+                    scalar radius = sqrt(sqr(p.position().y()) 
+                                        + sqr(p.position().z()));
 
                     RWF += 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
                     
@@ -160,6 +162,13 @@ void noTimeCounter::collide()
                 }
                 
                 RWF /= nMols;
+                
+//                 const point& cC = mesh.cellCentres()[cellI];
+                
+//                 scalar radius = cC.y();
+                
+//                 RWF = 1.0 + cloud_.maxRWF()
+//                                         *(radius/cloud_.radialExtent());
                 
                 selectedPairs =
                 cloud_.collisionSelectionRemainder()[cellI]
@@ -176,7 +185,8 @@ void noTimeCounter::collide()
 
             label nCandidates(selectedPairs);
 
-            cloud_.collisionSelectionRemainder()[cellI] = selectedPairs - nCandidates;
+            cloud_.collisionSelectionRemainder()[cellI] = selectedPairs 
+                                                                - nCandidates;
 
             collisionCandidates += nCandidates;
 
@@ -191,7 +201,8 @@ void noTimeCounter::collide()
                 // Declare the second collision candidate
                 label candidateQ = -1;
 
-                const List<label>& subCellPs = subCells[whichSubCell[candidateP]];
+                const List<label>& subCellPs = 
+                                        subCells[whichSubCell[candidateP]];
 
                 label nSC = subCellPs.size();
 
@@ -259,8 +270,9 @@ void noTimeCounter::collide()
                     
 
                     // Update the maximum value of sigmaTcR stored, but use the
-                    // initial value in the acceptance-rejection criteria because
-                    // the number of collision candidates selected was based on this
+                    // initial value in the acceptance-rejection criteria 
+                    // because the number of collision candidates selected was 
+                    // based on this
 
 
                     if (sigmaTcR > cloud_.sigmaTcRMax()[cellI])
@@ -273,38 +285,18 @@ void noTimeCounter::collide()
                         // chemical reactions
 
                         // find which reaction model parcel p and q should use
-                        label rMId = cloud_.reactions().returnModelId(parcelP, parcelQ);
-
-    //                             Info << " parcelP id: " <<  parcelP.typeId() 
-    //                                 << " parcelQ id: " << parcelQ.typeId()
-    //                                 << " reaction model: " << rMId
-    //                                 << endl;
+                        label rMId = cloud_.reactions().returnModelId
+                                                        (parcelP, parcelQ);
 
                         if(rMId != -1)
                         {
-                            // try to react molecules
-    //                         if(cloud_.reactions().reactions()[rMId]->reactWithLists())
-    //                         {
-                                // so far for recombination only
-    //                                     reactions_.reactions()[rMId]->reaction
-    //                                     (
-    //                                         parcelP,
-    //                                         parcelQ,
-    //                                         candidateList,
-    //                                         candidateSubList,
-    //                                         candidateP,
-    //                                         whichSubCell
-    //                                     );
-    //                         }
-    //                         else
-    //                         {
                                 cloud_.reactions().reactions()[rMId]->reaction
                                 (
                                     parcelP,
                                     parcelQ
-                                );                                    
-    //                         }
-                            // if reaction unsuccessful use conventional collision model
+                                );                                   
+                            // if reaction unsuccessful use conventional
+                            //    collision model
                             if(cloud_.reactions().reactions()[rMId]->relax())
                             {
                                 cloud_.binaryCollision().collide
@@ -315,7 +307,9 @@ void noTimeCounter::collide()
                                 );
                             }
                         }
-                        else // if reaction model not found, use conventional collision model
+                        // if reaction model not found, use conventional 
+                        // collision model
+                        else 
                         {
                             cloud_.binaryCollision().collide
                             (

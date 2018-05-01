@@ -112,6 +112,16 @@ private:
         //- simulations
         scalar maxRWF_;
         
+        //- Bool to identify is this simulation will include charged particles
+        //- More efficient to have it turned off it not, because it results in
+        // fewer calls of buildCellOccupancy()
+        bool charged_;
+        
+        //- Bool to identify is this simulation will include adsorption
+        //- More efficient to have it turned off it not, because it saves
+        // looping over particles checking for release from wall
+        bool adsorption_;
+        
         //- Write out the information to terminal every nTerminalOutputs
         label nTerminalOutputs_;
 

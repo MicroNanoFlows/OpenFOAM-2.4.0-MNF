@@ -91,7 +91,8 @@ dsmcLiouFangPressureOutletSpecifiedMolarFraction::dsmcLiouFangPressureOutletSpec
         
     forAll(cellVolume_, c)
     {
-        cellVolume_[c] = mesh_.cellVolumes()[cells_[c]];  //get volume of each boundary cell
+        //get volume of each boundary cell
+        cellVolume_[c] = mesh_.cellVolumes()[cells_[c]];  
     }
 
 }

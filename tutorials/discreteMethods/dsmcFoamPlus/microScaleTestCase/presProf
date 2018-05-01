@@ -33,5 +33,6 @@ set tics nomirror
 set xrange [0:1]
 set yrange [1:2.52]
 
-plot "4.02824e-07/uniform/bins_OneDim_channelRegion_N2_p.xy" u ($1/2e-06):($2/100000) w p ls 1 t "{/Times-Roman-Italic dsmcFoam}"
+plot "4.02824e-07/uniform/bins_OneDim_channelRegion_N2_p.xy" \
+u ($1/2e-06):($2/100000) w p ls 1 t "{/Times-Roman-Italic dsmcFoam}"
 

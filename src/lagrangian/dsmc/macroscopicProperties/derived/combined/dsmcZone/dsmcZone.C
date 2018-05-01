@@ -86,6 +86,7 @@ dsmcZone::dsmcZone
     mccu_(0.0),
     mccv_(0.0),
     mccw_(0.0),
+    nColls_(0),
 
     eu_(0.0),
     ev_(0.0),
@@ -125,7 +126,8 @@ dsmcZone::dsmcZone
     
     outputField_(4, true),
     instantaneous_(false),
-    averagingAcrossManyRuns_(false)
+    averagingAcrossManyRuns_(false),
+    measureCollisionRateOnly_(false)
     
 {
     const cellZoneMesh& cellZones = mesh_.cellZones();
@@ -233,6 +235,7 @@ dsmcZone::dsmcZone
     meanCollisionRate_.setSize(nBins, 0.0);
     meanCollisionTime_.setSize(nBins, 0.0);
     meanCollisionTimeTimeStepRatio_.setSize(nBins, 0.0);
+    measuredCollisionRate_.setSize(nBins, 0.0);
     Ma_.setSize(nBins, 0.0);
     
     speciesMols_.setSize(typeIds_.size(), 0.0);
@@ -247,12 +250,28 @@ dsmcZone::dsmcZone
     
     if (propsDict_.found("averagingAcrossManyRuns"))
     {
-        averagingAcrossManyRuns_ = Switch(propsDict_.lookup("averagingAcrossManyRuns"));
+        averagingAcrossManyRuns_ = 
+                        Switch(propsDict_.lookup("averagingAcrossManyRuns"));
         
         // read in stored data from dictionary
         if(averagingAcrossManyRuns_)
         {
             Info << nl << "Averaging across many runs initiated." << nl << endl;
+
+            readIn();
+        }         
+    }
+    
+    if (propsDict_.found("measureCollisionRateOnly"))
+    {
+        measureCollisionRateOnly_ = 
+            Switch(propsDict_.lookup("measureCollisionRateOnly"));
+        
+        // read in stored data from dictionary
+        if(measureCollisionRateOnly_)
+        {
+            Info << nl << "Only measuring and outputting" 
+            << " collision rate. " << nl << endl;
 
             readIn();
         }         
@@ -367,6 +386,7 @@ void dsmcZone::readIn()
     dict.readIfPresent("mccu", mccu_);  
     dict.readIfPresent("mccv", mccv_);  
     dict.readIfPresent("mccw", mccw_);  
+    dict.readIfPresent("nColls", nColls_);  
     dict.readIfPresent("eu", eu_);  
     dict.readIfPresent("ev", ev_);      
     dict.readIfPresent("ew", ew_);      
@@ -421,6 +441,7 @@ void dsmcZone::writeOut()
         dict.add("mccu", mccu_);  
         dict.add("mccv", mccv_);  
         dict.add("mccw", mccw_);  
+        dict.add("nColls", nColls_);  
         dict.add("eu", eu_);  
         dict.add("ev", ev_);      
         dict.add("ew", ew_);      
@@ -459,7 +480,7 @@ void dsmcZone::calculateField()
             = cloud_.cellOccupancy();
             
     const labelList& cells = mesh_.cellZones()[regionId_];
-
+   
     forAll(cells, c)
     {
         const label& cellI = cells[c];
@@ -477,6 +498,8 @@ void dsmcZone::calculateField()
             
             nParticle *= RWF;
         }
+       
+        nColls_ += cloud_.cellPropMeasurements().nColls()[cellI]*nParticle;
 
         forAll(molsInCell, mIC)
         {
@@ -591,6 +614,7 @@ void dsmcZone::calculateField()
         scalar mccu = mccu_;
         scalar mccv = mccv_;
         scalar mccw = mccw_;
+        scalar nColls = nColls_;
 
         scalar eu = eu_;
         scalar ev = ev_;
@@ -628,6 +652,7 @@ void dsmcZone::calculateField()
             reduce(mccu, sumOp<scalar>());
             reduce(mccv, sumOp<scalar>());
             reduce(mccw, sumOp<scalar>());
+            reduce(nColls, sumOp<scalar>());
 
             reduce(eu, sumOp<scalar>());
             reduce(ev, sumOp<scalar>());
@@ -1051,6 +1076,8 @@ void dsmcZone::calculateField()
                 meanCollisionTime_[n] = GREAT;
                 meanCollisionTimeTimeStepRatio_[n] = GREAT;
             }
+            
+            measuredCollisionRate_[n] = nColls/(volume*deltaT*averagingCounter_);
 
             mfp_ = scalar(0.0);
             mcr_ = scalar(0.0);
@@ -1125,6 +1152,7 @@ void dsmcZone::calculateField()
             mccv_ = 0.0;
             mccw_ = 0.0;
             mcc_ = 0.0;
+            nColls_ = 0.0;
             eu_ = 0.0;
             ev_ = 0.0;
             ew_ = 0.0;
@@ -1165,12 +1193,6 @@ void dsmcZone::writeField()
         
         if(Pstream::master())
         {
-//             fileName timePath(runTime.path()/runTime.timeName()/"uniform");
-
-//             scalarField bins = binModel_->binPositions();
-//             vectorField vectorBins = binModel_->bins();
-            
-//             const scalarField& timeField = time_.averagingTimesInOneWriteInterval();
             scalarField timeField(N_.size(), 0.0);
             const scalar& deltaT = time_.mdTimeInterval().deltaT();
             
@@ -1178,215 +1200,251 @@ void dsmcZone::writeField()
             {
                 timeField[N_.size()-t-1] = runTime.timeOutputValue() - deltaT*t; 
             }
-
             
+            if(measureCollisionRateOnly_)
+            {
+                                    writeTimeData
+                    (
+                        casePath_,               
+                        "zone_"+regionName_+"_"
+                            +fieldName_+"_measuredCollisionRate.xyz",
+                        timeField,
+                        measuredCollisionRate_,
+                        true
+                    );
+            }
+            else
+            {
+                // output densities
+                if(outputField_[0])
+                {
+                    writeTimeData
+                    (
+                        casePath_,
+                        "zone_"+regionName_+"_"+fieldName_+"_N.xy",
+                        timeField,
+                        N_,
+                        true
+                    );
+        
+                    writeTimeData
+                    (
+                        casePath_,
+                        "zone_"+regionName_+"_"+fieldName_+"_rhoN.xy",
+                        timeField,
+                        rhoN_,
+                        true
+                    );
+        
+                    writeTimeData
+                    (
+                        casePath_,
+                        "zone_"+regionName_+"_"+fieldName_+"_rhoM.xy",
+                        timeField,
+                        rhoM_,
+                        true
+                    );
+                }
+
+                // output velocities
+                if(outputField_[1])
+                {
+                    writeTimeData
+                    (
+                        casePath_,
+                        "zone_"+regionName_+"_"+fieldName_+"_U_SAM.xyz",
+                        timeField,
+                        UMean_,
+                        true
+                    );
+
+
+                    writeTimeData
+                    (
+                        casePath_,
+                        "zone_"+regionName_+"_"+fieldName_+"_U_CAM.xyz",
+                        timeField,
+                        UCAM_,
+                        true
+                    );
+    
+                }
+
+                // output temperature
+                if(outputField_[2])
+                {
+                    writeTimeData
+                    (
+                        casePath_,
+                        "zone_"+regionName_+"_"+fieldName_
+                                +"_translationalTemperature.xy",
+                        timeField,
+                        translationalTemperature_,
+                        true
+                    );
             
-            // output densities
-            if(outputField_[0])
-            {
-                writeTimeData
-                (
-                    casePath_,
-                    "zone_"+regionName_+"_"+fieldName_+"_N.xy",
-                    timeField,
-                    N_,
-                    true
-                );
-    
-                writeTimeData
-                (
-                    casePath_,
-                    "zone_"+regionName_+"_"+fieldName_+"_rhoN.xy",
-                    timeField,
-                    rhoN_,
-                    true
-                );
-    
-                writeTimeData
-                (
-                    casePath_,
-                    "zone_"+regionName_+"_"+fieldName_+"_rhoM.xy",
-                    timeField,
-                    rhoM_,
-                    true
-                );
-            }
+                    
+                    writeTimeData
+                    (
+                        casePath_,
+                        "zone_"+regionName_+"_"+fieldName_
+                                    +"_rotationalTemperature.xy",
+                        timeField,
+                        rotationalTemperature_,
+                        true
+                    );
+                    
+                    writeTimeData
+                    (
+                        casePath_,
+                        "zone_"+regionName_+"_"+fieldName_
+                                +"_vibrationalTemperature.xy",
+                        timeField,
+                        vibrationalTemperature_,
+                        true
+                    );
+                    
+                    writeTimeData
+                    (
+                        casePath_,
+                        "zone_"+regionName_+"_"+fieldName_
+                                    +"_electronicTemperature.xy",
+                        timeField,
+                        electronicTemperature_,
+                        true
+                    );
+                    
+                    writeTimeData
+                    (
+                        casePath_,
+                        "zone_"+regionName_+"_"+fieldName_
+                                        +"_overallTemperature.xy",
+                        timeField,
+                        overallTemperature_,
+                        true
+                    );
+                }
 
-            // output velocities
-            if(outputField_[1])
-            {
-                writeTimeData
-                (
-                    casePath_,
-                    "zone_"+regionName_+"_"+fieldName_+"_U_SAM.xyz",
-                    timeField,
-                    UMean_,
-                    true
-                );
+                // output pressure
+                if(outputField_[3])
+                {
+                    writeTimeData
+                    (
+                        casePath_, 
+                        "zone_"+regionName_+"_"+fieldName_
+                                    +"_pressureTensor.xyz",
+                        timeField,
+                        pField_,
+                        true
+                    );
 
+                    writeTimeData
+                    (
+                        casePath_,
+                        "zone_"+regionName_+"_"+fieldName_+"_p.xy",
+                        timeField,
+                        scalarPressure_,
+                        true
+                    );
+                    
+                    writeTimeData
+                    (
+                        casePath_,
+                        "zone_"+regionName_+"_"+fieldName_+"_stressTensor.xyz",
+                        timeField,
+                        tauField_,
+                        true
+                    );
 
-                writeTimeData
-                (
-                    casePath_,
-                    "zone_"+regionName_+"_"+fieldName_+"_U_CAM.xyz",
-                    timeField,
-                    UCAM_,
-                    true
-                );
-  
-            }
-
-            // output temperature
-            if(outputField_[2])
-            {
-                writeTimeData
-                (
-                    casePath_,
-                    "zone_"+regionName_+"_"+fieldName_+"_translationalTemperature.xy",
-                    timeField,
-                    translationalTemperature_,
-                    true
-                );
-           
-                
-                writeTimeData
-                (
-                    casePath_,
-                    "zone_"+regionName_+"_"+fieldName_+"_rotationalTemperature.xy",
-                    timeField,
-                    rotationalTemperature_,
-                    true
-                );
-                
-                writeTimeData
-                (
-                    casePath_,
-                    "zone_"+regionName_+"_"+fieldName_+"_vibrationalTemperature.xy",
-                    timeField,
-                    vibrationalTemperature_,
-                    true
-                );
-                
-                writeTimeData
-                (
-                    casePath_,
-                    "zone_"+regionName_+"_"+fieldName_+"_electronicTemperature.xy",
-                    timeField,
-                    electronicTemperature_,
-                    true
-                );
-                
-                writeTimeData
-                (
-                    casePath_,
-                    "zone_"+regionName_+"_"+fieldName_+"_overallTemperature.xy",
-                    timeField,
-                    overallTemperature_,
-                    true
-                );
-            }
-
-            // output pressure
-            if(outputField_[3])
-            {
-                writeTimeData
-                (
-                    casePath_,
-                    "zone_"+regionName_+"_"+fieldName_+"_pressureTensor.xyz",
-                    timeField,
-                    pField_,
-                    true
-                );
-
-                writeTimeData
-                (
-                    casePath_,
-                    "zone_"+regionName_+"_"+fieldName_+"_p.xy",
-                    timeField,
-                    scalarPressure_,
-                    true
-                );
-                
-                writeTimeData
-                (
-                    casePath_,
-                    "zone_"+regionName_+"_"+fieldName_+"_stressTensor.xyz",
-                    timeField,
-                    tauField_,
-                    true
-                );
-
-                writeTimeData
-                (
-                    casePath_,
-                    "zone_"+regionName_+"_"+fieldName_+"_heatFluxVector.xyz",
-                    timeField,
-                    qField_,
-                    true
-                );
-                
-                writeTimeData
-                (
-                    casePath_,
-                    "zone_"+regionName_+"_"+fieldName_+"_internalHeatFluxVector.xyz",
-                    timeField,
-                    qInternalField_,
-                    true
-                );
-                
-                writeTimeData
-                (
-                    casePath_,
-                    "zone_"+regionName_+"_"+fieldName_+"_translationalHeatFluxVector.xyz",
-                    timeField,
-                    qTranslationalField_,
-                    true
-                );
-                
-                writeTimeData
-                (
-                    casePath_,
-                    "zone_"+regionName_+"_"+fieldName_+"_variableHardSphereMeanFreePath.xyz",
-                    timeField,
-                    meanFreePath_,
-                    true
-                );
-                
-                writeTimeData
-                (
-                    casePath_,
-                    "zone_"+regionName_+"_"+fieldName_+"_meanCollisionRate.xyz",
-                    timeField,
-                    meanCollisionRate_,
-                    true
-                );
-                
-                writeTimeData
-                (
-                    casePath_,
-                    "zone_"+regionName_+"_"+fieldName_+"_meanCollisionTime.xyz",
-                    timeField,
-                    meanCollisionTime_,
-                    true
-                );
-                
-                writeTimeData
-                (
-                    casePath_,
-                    "zone_"+regionName_+"_"+fieldName_+"_meanCollisionTimeTimeStepRatio.xyz",
-                    timeField,
-                    meanCollisionTimeTimeStepRatio_,
-                    true
-                );
-                
-                writeTimeData
-                (
-                    casePath_,
-                    "zone_"+regionName_+"_"+fieldName_+"_Ma.xyz",
-                    timeField,
-                    Ma_,
-                    true
-                );
+                    writeTimeData
+                    (
+                        casePath_, 
+                        "zone_"+regionName_+"_"+fieldName_
+                                        +"_heatFluxVector.xyz",
+                        timeField,
+                        qField_,
+                        true
+                    );
+                    
+                    writeTimeData
+                    (
+                        casePath_,
+                        "zone_"+regionName_+"_"+fieldName_
+                                    +"_internalHeatFluxVector.xyz",
+                        timeField,
+                        qInternalField_,
+                        true
+                    );
+                    
+                    writeTimeData
+                    (
+                        casePath_,
+                        "zone_"+regionName_+"_"+fieldName_
+                                +"_translationalHeatFluxVector.xyz",
+                        timeField,
+                        qTranslationalField_,
+                        true
+                    );
+                    
+                    writeTimeData
+                    (
+                        casePath_,
+                        "zone_"+regionName_+"_"+fieldName_
+                                +"_variableHardSphereMeanFreePath.xyz",
+                        timeField,
+                        meanFreePath_,
+                        true
+                    );
+                    
+                    writeTimeData
+                    (
+                        casePath_,
+                        "zone_"+regionName_+"_"+fieldName_
+                                        +"_meanCollisionRate.xyz",
+                        timeField,
+                        meanCollisionRate_,
+                        true
+                    );
+                    
+                    writeTimeData
+                    (
+                        casePath_,
+                        "zone_"+regionName_+"_"+fieldName_
+                                        +"_meanCollisionTime.xyz",
+                        timeField,
+                        meanCollisionTime_,
+                        true
+                    );
+                    
+                    writeTimeData
+                    (
+                        casePath_,
+                        "zone_"+regionName_+"_"+fieldName_
+                                +"_meanCollisionTimeTimeStepRatio.xyz",
+                        timeField,
+                        meanCollisionTimeTimeStepRatio_,
+                        true
+                    );
+                    
+                    writeTimeData
+                    (
+                        casePath_,               
+                        "zone_"+regionName_+"_"+fieldName_
+                                    +"_measuredCollisionRate.xyz",
+                        timeField,
+                        measuredCollisionRate_,
+                        true
+                    );
+                    
+                    writeTimeData
+                    (
+                        casePath_,
+                        "zone_"+regionName_+"_"+fieldName_+"_Ma.xyz",
+                        timeField,
+                        Ma_,
+                        true
+                    );
+                }
             }
         }
     }

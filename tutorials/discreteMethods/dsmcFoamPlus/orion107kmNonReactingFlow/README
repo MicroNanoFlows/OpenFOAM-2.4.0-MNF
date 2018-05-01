@@ -1,0 +1,1 @@
+This case will run a flow over the Orion capsule at 107 km altidue, showing how to use snappyHexMesh. The cell size is not intended to meet good DSMC practice by default and should be refined to do so.
