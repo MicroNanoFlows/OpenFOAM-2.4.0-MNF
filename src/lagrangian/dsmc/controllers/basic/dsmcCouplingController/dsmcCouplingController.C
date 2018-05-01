@@ -1,0 +1,212 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+
+Description
+
+\*---------------------------------------------------------------------------*/
+
+#include "dsmcCouplingController.H"
+
+#include "IFstream.H"
+#include "graph.H"
+#include "dsmcCloud.H"
+
+
+namespace Foam
+{
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+defineTypeNameAndDebug(dsmcCouplingController, 0);
+
+defineRunTimeSelectionTable(dsmcCouplingController, dictionary);
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+// Construct from components
+dsmcCouplingController::dsmcCouplingController
+(
+    Time& t,
+    dsmcCloud& cloud,
+    const dictionary& dict,
+    couplingInterface1d &oneDInterfaces,
+    couplingInterface2d &twoDInterfaces,
+    couplingInterface3d &threeDInterfaces
+)
+:
+    mesh_(cloud.mesh()),
+    cloud_(cloud),
+    rndGen_(cloud_.rndGen()),
+    controllerDict_(dict.subDict("controllerProperties")),
+    timeDict_(controllerDict_.subDict("timeProperties")),
+    time_(t, timeDict_),
+    timePeriod_(readScalar(timeDict_.lookup("initialTimePeriod"))), //temp
+    initialTime_(time_.time().startTime().value()),
+    regionName_(controllerDict_.lookup("zoneName")),
+    regionId_(-1),
+    control_(true),
+    readStateFromFile_(true),
+    singleValueController_(false),
+    density_(0.0),
+    velocity_(vector::zero),
+    temperature_(0.0),
+    pressure_(0.0),
+    strainRate_(tensor::zero),
+    tempGradient_(vector::zero),
+    fieldController_(false),
+    densities_(),
+    velocities_(),
+    temperatures_(),
+    pressures_(),
+    writeInTimeDir_(true),
+    writeInCase_(true),
+    oneDInterfaces_(oneDInterfaces),
+    twoDInterfaces_(twoDInterfaces),
+    threeDInterfaces_(threeDInterfaces)
+{
+    const cellZoneMesh& cellZones = mesh_.cellZones();
+    regionId_ = cellZones.findZoneID(regionName_);
+
+    if(regionId_ == -1)
+    {
+        FatalErrorIn("dsmcCouplingController::dsmcCouplingController()")
+            << "Cannot find region: " << regionName_ << nl << "in: "
+            << time_.time().system()/"controllersDict"
+            << exit(FatalError);
+    }
+
+    control_ = Switch(controllerDict_.lookup("controlSwitch"));
+    readStateFromFile_ = Switch(controllerDict_.lookup("readStateFromFile"));
+
+    const scalar& avTimeInterval = time_.averageTimeInterval().deltaT();
+
+    if((timePeriod_ < avTimeInterval) && (timePeriod_ > 0.0))
+    {
+        timePeriod_ = avTimeInterval;
+    }
+}
+
+
+// * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * * //
+
+autoPtr<dsmcCouplingController> dsmcCouplingController::New
+(
+    Time& t,
+    dsmcCloud& cloud,
+    const dictionary& dict,
+    couplingInterface1d &oneDInterfaces,
+    couplingInterface2d &twoDInterfaces,
+    couplingInterface3d &threeDInterfaces
+)
+{
+    word dsmcCouplingControllerName
+    (
+        dict.lookup("couplingControllerModel")
+    );
+
+    Info<< "Selecting dsmcCouplingController "
+         << dsmcCouplingControllerName << endl;
+
+    dictionaryConstructorTable::iterator cstrIter =
+        dictionaryConstructorTablePtr_->find(dsmcCouplingControllerName);
+
+    if (cstrIter == dictionaryConstructorTablePtr_->end())
+    {
+        FatalError
+            << "dsmcCouplingController::New(const dictionary&) : " << endl
+            << "    unknown dsmcCouplingController type "
+            << dsmcCouplingControllerName
+            << ", constructor not in hash table" << endl << endl
+            << "    Valid types are :" << endl;
+        Info<< dictionaryConstructorTablePtr_->toc() << abort(FatalError);
+    }
+
+    return autoPtr<dsmcCouplingController>
+	(
+		cstrIter()(t, cloud, dict, oneDInterfaces, twoDInterfaces, threeDInterfaces)
+	);
+}
+
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+dsmcCouplingController::~dsmcCouplingController()
+{}
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+void dsmcCouplingController::updateCouplingControllerProperties
+(
+    const dictionary& newDict
+)
+{
+    controllerDict_ = newDict.subDict("controllerProperties");
+
+    //- you can reset the controlling zone from here. This essentially
+    //  means that the coupling zone can in fact move arbitrarily. To make
+    //  this happen we probably need to devise a technique for automatically
+    //  changing the cellZone else where, and then calling this function to
+    //  reset the controlling zone in which the controller operates in.
+
+    if (controllerDict_.found("controlSwitch"))
+    {
+        control_ = Switch(controllerDict_.lookup("controlSwitch"));
+    }
+
+    if (controllerDict_.found("readStateFromFile"))
+    {
+        readStateFromFile_ = Switch(controllerDict_.lookup("readStateFromFile"));
+    }
+
+    timeDict_ = controllerDict_.subDict("timeProperties");
+
+    if (timeDict_.found("resetAtOutput"))
+    {
+        time_.resetFieldsAtOutput() = Switch(timeDict_.lookup("resetAtOutput"));
+    }
+}
+
+const labelList& dsmcCouplingController::controlZone() const
+{
+    return mesh_.cellZones()[regionId_];
+}
+
+const word& dsmcCouplingController::regionName() const
+{
+    return regionName_;
+}
+
+const bool& dsmcCouplingController::writeInTimeDir() const
+{
+    return writeInTimeDir_;
+}
+
+const bool& dsmcCouplingController::writeInCase() const
+{
+    return writeInCase_;
+}
+
+} // End namespace Foam
+
+// ************************************************************************* //

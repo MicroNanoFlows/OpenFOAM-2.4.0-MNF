@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    polyStateController
+    polyCouplingController
 
 Description
     Basic/abstract class of a state controller

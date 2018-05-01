@@ -47,6 +47,7 @@ Description
 
 #include "dsmcStateController.H"
 #include "dsmcFluxController.H"
+#include "dsmcCouplingController.H"
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

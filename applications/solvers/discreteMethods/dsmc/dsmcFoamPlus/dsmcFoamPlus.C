@@ -31,7 +31,13 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
+#ifdef USE_MUI // included if the switch -DUSE_MUI included during compilation.
+  #include "fvCoupling.H"
+#endif
 #include "dsmcCloud.H"
+#ifdef USE_MUI // included if the switch -DUSE_MUI included during compilation.
+    #include "mui.h"
+#endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -42,11 +48,51 @@ int main(int argc, char *argv[])
     #include "createMesh.H"
 //     #include "createDynamicFvMesh.H"
 
+#ifdef USE_MUI // included if the switch -DUSE_MUI included during compilation.
+  #   include "createCouplingData.H"
+
+  if (args.cplRunControl().cplRun())
+  {
+    #   include "createCouplings.H"
+  }
+#endif
+
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
     Info<< nl << "Constructing dsmcCloud " << endl;
 
-    dsmcCloud dsmc(runTime, "dsmc", mesh); 
+    dsmcCloud *dsmc; //(runTime, "dsmc", mesh);
+
+#ifdef USE_MUI
+    if (args.cplRunControl().cplRun())
+    {
+        dsmc = new dsmcCloud
+        (
+            runTime,
+            "dsmc",
+            mesh,
+            oneDInterfaces,
+            twoDInterfaces,
+            threeDInterfaces
+        );
+    }
+    else
+    {
+        dsmc = new dsmcCloud
+        (
+            runTime,
+            "dsmc",
+            mesh
+        );
+    }
+#else
+    dsmc = new dsmcCloud
+    (
+        runTime,
+        "dsmc",
+        mesh
+    );
+#endif
 
     Info<< "\nStarting time loop\n" << endl;
     
@@ -56,21 +102,21 @@ int main(int argc, char *argv[])
     {          
         infoCounter++;
         
-        if(infoCounter >= dsmc.nTerminalOutputs())
+        if(infoCounter >= dsmc->nTerminalOutputs())
         {
             Info<< "Time = " << runTime.timeName() << nl << endl;
         }
 
-        dsmc.evolve();
+        dsmc->evolve();
 
-        if(infoCounter >= dsmc.nTerminalOutputs())
+        if(infoCounter >= dsmc->nTerminalOutputs())
         {
-            dsmc.info();   
+            dsmc->info();
         }
 
         runTime.write();
 
-        if(infoCounter >= dsmc.nTerminalOutputs())
+        if(infoCounter >= dsmc->nTerminalOutputs())
         {
             Info<< nl << "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
                 << "  ClockTime = " << runTime.elapsedClockTime() << " s"
@@ -79,7 +125,7 @@ int main(int argc, char *argv[])
             infoCounter = 0;
         }
         
-        dsmc.loadBalanceCheck();
+        dsmc->loadBalanceCheck();
             
 //         scalar timeBeforeMeshUpdate = runTime.elapsedCpuTime();
 // 
@@ -95,7 +141,11 @@ int main(int argc, char *argv[])
 
     Info<< "End\n" << endl;
     
-    dsmc.loadBalance();
+    dsmc->loadBalance();
+
+#ifdef USE_MUI // included if the switch -DUSE_MUI included during compilation.
+    #include "deleteCouplings.H"
+#endif
 
     return(0);
 }

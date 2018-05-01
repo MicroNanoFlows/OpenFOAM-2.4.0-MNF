@@ -170,6 +170,10 @@ private:
         //- boundaries
         dsmcBoundaries boundaries_;
 
+        //- MUI coupling interfaces
+        couplingInterface1d oneDInterfaces_;
+        couplingInterface2d twoDInterfaces_;
+        couplingInterface3d threeDInterfaces_;
 
         // flux-face tracking 
         dsmcFaceTracker trackingInfo_;
@@ -250,6 +254,19 @@ public:
             bool readFields = true
         );
 
+        //- Construct given name and mesh, will read Parcels and fields from
+        //  file with MUI coupling
+        dsmcCloud
+        (
+            Time& t,
+            const word& cloudName,
+            const fvMesh& mesh,
+            couplingInterface1d& oneDInterfaces,
+            couplingInterface2d& twoDInterfaces,
+            couplingInterface3d& threeDInterfaces,
+            bool readFields = true
+        );
+
         //- Construct given name, mesh and initialisation dictionary.
         dsmcCloud
         (
@@ -259,6 +276,21 @@ public:
             const IOdictionary& dsmcInitialiseDict,
             const bool& clearFields
         );
+
+        //- Construct given name, mesh and initialisation dictionary
+        //  with MUI coupling
+        dsmcCloud
+        (
+            Time& t,
+            const word& cloudName,
+            const fvMesh& mesh,
+            const IOdictionary& dsmcInitialiseDict,
+            const bool& clearFields,
+            couplingInterface1d& oneDInterfaces,
+            couplingInterface2d& twoDInterfaces,
+            couplingInterface3d& threeDInterfaces
+        );
+
 
 /*
         //- Construct for deleteParcels

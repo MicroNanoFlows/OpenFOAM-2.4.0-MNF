@@ -140,7 +140,7 @@ public:
 
     // Constructors
 
-        //- Construct for mdFoam
+        //- Construct for mdFoamPlus
         polyMoleculeCloud
         (
             Time& t,
@@ -151,7 +151,7 @@ public:
             cachedRandomMD& rndGen
         );
 
-        //- Construct for mdFoam with MUI coupling
+        //- Construct for mdFoamPlus with MUI coupling
         polyMoleculeCloud
         (
             Time& t,

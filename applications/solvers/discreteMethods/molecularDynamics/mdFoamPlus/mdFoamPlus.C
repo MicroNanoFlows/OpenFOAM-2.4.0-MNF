@@ -79,14 +79,14 @@ int main(int argc, char *argv[])
     }
     else
     {
-      molecules = new polyMoleculeCloud
-      (
-          runTime,
-          mesh,
-          rU,
-          cP,
-          rndGen
-      );
+        molecules = new polyMoleculeCloud
+        (
+            runTime,
+            mesh,
+            rU,
+            cP,
+            rndGen
+        );
     }
 #else
     molecules = new polyMoleculeCloud
@@ -120,11 +120,11 @@ int main(int argc, char *argv[])
             << nl << endl;
     }
 
+    Info << "End\n" << endl;
+
 #ifdef USE_MUI // included if the switch -DUSE_MUI included during compilation.
     #include "deleteCouplings.H"
 #endif
-
-    Info << "End\n" << endl;
 
     return 0;
 }
