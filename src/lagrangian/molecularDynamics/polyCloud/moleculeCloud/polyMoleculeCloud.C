@@ -660,7 +660,7 @@ void Foam::polyMoleculeCloud::checkMoleculesInMesh()
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 
-//- Use for running MD (mdFoam)
+//- Use for running MD (mdFoamPlus)
 Foam::polyMoleculeCloud::polyMoleculeCloud
 (
     Time& t,
