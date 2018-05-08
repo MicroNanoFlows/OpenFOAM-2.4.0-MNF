@@ -546,15 +546,16 @@ void dsmcNewPressureOutletCalculatedMolarFraction::controlParcelsAfterCollisions
             
             scalar faceNormalVelocity = (n & outletVelocity_[c]);
 
-            if(faceNormalVelocity < VSMALL)
+            if(nTimeSteps_ > 100)
             {
-                massDensityCorrection[c] = (outletPressure_ - pressure[c]) / (speedOfSound[c]*speedOfSound[c]);
-                outletMassDensity_[c] = massDensity[c] + massDensityCorrection[c];
+                massDensityCorrection[c] = (outletPressure_ - pressure[c]) / 
+                                        (speedOfSound[c]*speedOfSound[c]);
+                outletMassDensity_[c] = massDensity[c] + 
+                                                massDensityCorrection[c];
             }
             else
             {
-                massDensityCorrection[c] = (pressure[c] - outletPressure_) / (speedOfSound[c]*speedOfSound[c]);
-                outletMassDensity_[c] = massDensity[c] - massDensityCorrection[c];
+                outletMassDensity_[c] = massDensity[c];
             }
             
             outletNumberDensity_[c] = outletMassDensity_[c] / molecularMass[c]; // Liou and Fang, 2000, equation 26 STEP 1
@@ -568,16 +569,17 @@ void dsmcNewPressureOutletCalculatedMolarFraction::controlParcelsAfterCollisions
             outletVelocity_[c] = totalMomentum_[c]/totalMass_[c];
             
             //velocity correction for each boundary cellI
-            if(faceNormalVelocity < VSMALL)
-            {
-                velocityCorrection[c] = (pressure[c] - outletPressure_) / (massDensity[c]*speedOfSound[c]);
+//             if(faceNormalVelocity < VSMALL)
+//             {
+                velocityCorrection[c] = (pressure[c] - outletPressure_) /
+                                            (massDensity[c]*speedOfSound[c]);
                 outletVelocity_[c] += velocityCorrection[c]*n;
-            }
-            else
-            {
-                velocityCorrection[c] = (outletPressure_ - pressure[c]) / (massDensity[c]*speedOfSound[c]);
-                outletVelocity_[c] -= velocityCorrection[c]*n;
-            }
+//             }
+//             else
+//             {
+//                 velocityCorrection[c] = (outletPressure_ - pressure[c]) / (massDensity[c]*speedOfSound[c]);
+//                 outletVelocity_[c] -= velocityCorrection[c]*n;
+//             }
             
 //             if(faceNormalVelocity < VSMALL)
 //             {

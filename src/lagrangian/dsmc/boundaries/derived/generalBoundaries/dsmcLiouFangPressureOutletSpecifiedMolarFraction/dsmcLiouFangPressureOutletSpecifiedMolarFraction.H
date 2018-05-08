@@ -94,6 +94,18 @@ private:
     scalarField nTotalParcels_;
     scalarField nTotalParcelsInt_;
     scalarField mcc_;
+    scalarField velSqrMeanX_;
+    scalarField velSqrMeanY_;
+    scalarField velSqrMeanZ_;
+    scalarField velMeanSqrX_;
+    scalarField velMeanSqrY_;
+    scalarField velMeanSqrZ_;
+    scalarField totalVelSqrMeanX_;
+    scalarField totalVelSqrMeanY_;
+    scalarField totalVelSqrMeanZ_;
+    scalarField totalVelMeanSqrX_;
+    scalarField totalVelMeanSqrY_;
+    scalarField totalVelMeanSqrZ_;
 
     void setProperties();
 

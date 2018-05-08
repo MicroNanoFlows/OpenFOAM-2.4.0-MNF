@@ -381,7 +381,8 @@ void dsmcMassFlowRateInlet::controlParcelsBeforeMove()
 
 void dsmcMassFlowRateInlet::controlParcelsBeforeCollisions()
 {
-    // insert pacels after move, but before collisions - REMINDER: NEW PARCELS MUST BE ADDED TO CELL OCCUPANCY MANUALLY
+    // insert pacels after move, but before collisions - 
+    //REMINDER: NEW PARCELS MUST BE ADDED TO CELL OCCUPANCY MANUALLY
     
    
 }
@@ -438,7 +439,8 @@ void dsmcMassFlowRateInlet::controlParcelsAfterCollisions()
     
     if(faces_.size() > VSMALL)
     {
-        Pout << "dsmcMassFlowRateInlet inlet velocity = " << inletVelocity_[(faces_.size()/2)] << endl;
+        Pout << "dsmcMassFlowRateInlet inlet velocity = " <<
+        inletVelocity_[(faces_.size()/2)] << endl;
     }
     
     scalarField massFractions(typeIds_.size(), 0.0);

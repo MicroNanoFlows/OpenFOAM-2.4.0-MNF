@@ -23,31 +23,32 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    dsmcWangPressureInlet
+    dsmcPorousWallPatch
 
 Description
+    Wall interaction setting microscopic velocity to a random one
+    drawn from a Maxwellian distribution corresponding to a specified
+    temperature
 
-    Fully deletion boundary patch: atomisticMolecules get deleted instantly upon
-    collision with a face on the boundary. (aka vacuum boundary condition)
+    SINGLE VALUE: temperature and velocity required in boundariesDict
 
-    Selective deletion of one specie is possible. Other species get
-    specularly reflected.
 
 SourceFiles
-    dsmcWangPressureInlet.C
+    dsmcPorousWallPatch.C
 
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef dsmcWangPressureInlet_H
-#define dsmcWangPressureInlet_H
+#ifndef dsmcPorousWallPatch_H
+#define dsmcPorousWallPatch_H
 
-#include "dsmcGeneralBoundary.H"
+#include "dsmcPatchBoundary.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
 #include "dsmcCloud.H"
 #include "distribution.H"
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -55,96 +56,75 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class dsmcWangPressureInlet Declaration
+                           Class dsmcPorousWallPatch Declaration
 \*---------------------------------------------------------------------------*/
 
-class dsmcWangPressureInlet
+class dsmcPorousWallPatch
 :
-    public dsmcGeneralBoundary
+	public dsmcPatchBoundary
 {
 
 private:
 
     // Private data
         dictionary propsDict_;
-        
-    labelList typeIds_;  // I Added.
-    scalarField moleFractions_; // I Added.
-    label infoCounter_;
-    scalar inletPressure_;
-    scalar inletTemperature_;               
-    scalar n_; // inlet number density
-    scalarField cellVolume_;
-    List <scalarField> accumulatedParcelsToInsert_;   // I Added.
-    vectorField inletVelocity_;
-    vectorField totalMomentum_;
-    scalarField totalMass_;
-    scalarField nTotalParcels_;
-    scalar nTimeSteps_;
-    scalarField mcc_;
-    scalarField velSqrMeanX_;
-    scalarField velSqrMeanY_;
-    scalarField velSqrMeanZ_;
-    scalarField velMeanSqrX_;
-    scalarField velMeanSqrY_;
-    scalarField velMeanSqrZ_;
-    scalarField totalVelSqrMeanX_;
-    scalarField totalVelSqrMeanY_;
-    scalarField totalVelSqrMeanZ_;
-    scalarField totalVelMeanSqrX_;
-    scalarField totalVelMeanSqrY_;
-    scalarField totalVelMeanSqrZ_;
-    vectorField UMean_;
-    vectorField UCollected_;
 
-    void setProperties();
+        void setProperties();
+        
+        scalar diffuseFraction_;
+
+
 
 public:
 
     //- Runtime type information
-    TypeName("dsmcWangPressureInlet");
+    TypeName("dsmcPorousWallPatch");
 
     // Constructors
 
-    //- Construct from components
-    dsmcWangPressureInlet
-    (
+        //- Construct from components
+        dsmcPorousWallPatch
+        (
             Time& t,
             const polyMesh& mesh,
             dsmcCloud& cloud,
             const dictionary& dict
-    );
+        );
 
     // Destructor
 
-    ~dsmcWangPressureInlet();
+        ~dsmcPorousWallPatch();
 
 
     // Member Functions
 
-    void initialConfiguration();
+        void initialConfiguration();
 
-    //- calculate any required properties
-    void calculateProperties();
+        //- calculate any required properties
+        void calculateProperties();
 
-    //- control the mols
-    void controlParcelsBeforeMove();
-    void controlParcelsBeforeCollisions();
-    void controlParcelsAfterCollisions();
+        //- control the mols
+        void controlParticle(dsmcParcel& p, dsmcParcel::trackingData& td);
 
-    //- output data
-    void output
-    (
-        const fileName& fixedPathName,
-        const fileName& timePath
-    );
+        //- output data
+        void output
+        (
+            const fileName& fixedPathName,
+            const fileName& timePath
+        );
+        
+        void writeField();
 
-    //- update properties from a modified dictionary
-    void updateProperties(const dictionary&);
+        //- update properties from a modified dictionary
+        void updateProperties(const dictionary&);
 
 
 
-    // Access
+        // Access
+
+
+
+
 
 };
 
