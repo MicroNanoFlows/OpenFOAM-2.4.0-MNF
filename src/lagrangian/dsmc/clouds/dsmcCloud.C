@@ -173,10 +173,24 @@ void Foam::dsmcCloud::addElectrons()
                 //electron temperature will be zero if there have been no
                 //electrons in the cell during the simulation
                 
-                label cellI = p->cell();
+//                 label cellI = p->cell();
+//                 vector position = p->position();
+//                 label tetFaceI = p->tetFace();
+//                 label tetPtI = p->tetPt();
+                
                 vector position = p->position();
-                label tetFaceI = p->tetFace();
-                label tetPtI = p->tetPt();
+                
+                label cellI = -1;
+                label tetFaceI = -1;
+                label tetPtI = -1;
+
+                mesh_.findCellFacePt
+                (
+                    position,
+                    cellI,
+                    tetFaceI,
+                    tetPtI
+                );
                 
                 if(electronTemperature_[cellI] < VSMALL)
                 {
