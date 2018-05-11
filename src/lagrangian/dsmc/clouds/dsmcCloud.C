@@ -1070,7 +1070,16 @@ Foam::scalar Foam::dsmcCloud::equipartitionRotationalEnergy
     else if (rotationalDof < 2.0 + SMALL && rotationalDof > 2.0 - SMALL)
     {
         // Special case for rDof = 2, i.e. diatomics;
-        ERot = -log(rndGen_.scalar01())*physicoChemical::k.value()*temperature;
+        
+        scalar rand = -1;
+        
+        do
+        {
+            rand = rndGen_.scalar01();
+
+        } while (rand < VSMALL);
+
+        ERot = -log(rand)*physicoChemical::k.value()*temperature;
     }
     else
     {

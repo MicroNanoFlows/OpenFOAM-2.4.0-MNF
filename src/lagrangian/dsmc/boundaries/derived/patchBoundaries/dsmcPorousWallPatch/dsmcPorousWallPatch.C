@@ -184,30 +184,39 @@ void dsmcPorousWallPatch::controlParticle(dsmcParcel& p,
     }
     else
     {
+        //const scalar deltaT = mesh_.time().deltaTValue();
+        
+        //Move very slightly into next cell
+        //p.position() += p.U()*deltaT*1e-6;
        
-//         Info << "1" << endl;
+        //Info << "1" << endl;
         
-//         label& cellI = p.cell();
-//         
-//         Info << "cellI Before = " << cellI << endl;
-//         
-//         if (cellI == mesh_.faceOwner()[p.face()])
-//         {
+        label& cellI = p.cell();
+        
+        Info << "cellI Before = " << cellI << endl;
+        Info << "p.face() = " << p.face() << endl;
+        
+        if (cellI == mesh_.faceOwner()[p.face()])
+        {
 //             cellI = mesh_.faceNeighbour()[p.face()];
-//         }
-//         else if (cellI == mesh_.faceNeighbour()[p.face()])
-//         {
+            Info << "Owner" << endl;
+            Info << "Neighbour = " << mesh_.faceNeighbour()[p.face()] << endl;
+        }
+        else if (cellI == mesh_.faceNeighbour()[p.face()])
+        {
 //             cellI = mesh_.faceOwner()[p.face()];
-//         }
-//         else
-//         {
-//             FatalErrorIn("Particle::trackToFace(const vector&, TrackData&)")
-//                 << "addressing failure" << abort(FatalError);
-//         }
-//         
-//         Info << "cellI After = " << cellI << endl;
+            Info << "Neighbour" << endl;
+            Info << "Owner = " << mesh_.faceOwner()[p.face()] << endl;
+        }
+        else
+        {
+            FatalErrorIn("Particle::trackToFace(const vector&, TrackData&)")
+                << "addressing failure" << abort(FatalError);
+        }
         
-//         Info << "2" << endl;
+        //Info << "cellI After = " << cellI << endl;
+        
+       // Info << "2" << endl;
     }
 }
 
