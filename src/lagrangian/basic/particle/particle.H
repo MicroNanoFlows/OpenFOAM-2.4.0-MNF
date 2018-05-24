@@ -42,7 +42,6 @@ Description
 #include "FixedList.H"
 #include "polyMeshTetDecomposition.H"
 #include "particleMacros.H"
-#include "treeDataFace.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -121,7 +120,7 @@ public:
             }
     };
 
-
+    
 protected:
 
     // Protected data
@@ -158,9 +157,9 @@ protected:
 
 
     // Private Member Functions
-
+       
         //- Find the tet tri faces between position and tet centre
-        void findTris
+        inline void findTris
         (
             const vector& position,
             DynamicList<label>& faceList,
@@ -224,6 +223,27 @@ protected:
             scalar& lambdaMin,
             tetIndices& closestTetIs
         );
+        
+        //- Find the faces between position and cell centre
+        template<class TrackData>
+        void findFaces
+        (
+            const vector& position,
+            DynamicList<label>& faceList,
+            TrackData& td
+        ) const;
+        
+        //- Return the 'lambda' value for the position, p, on the face,
+        // where, p = from + lamda*(to - from)
+        // for static meshes
+        template<class TrackData>
+        inline scalar lambda
+        (
+            const vector& from,
+            const vector& to,
+            const label faceI,
+            TrackData& td
+        ) const;
 
 
     // Patch interactions
@@ -513,7 +533,8 @@ public:
             //  Returns the boundary face index if the track stops at the
             //  boundary, -1 otherwise.
             template<class TrackData>
-            label track(const vector& endPosition, TrackData& td, bool DSMC/*, const indexedOctree<treeDataFace> faceTree*/);
+            label track(const vector& endPosition, TrackData& td, 
+                                                                bool DSMC);
 
             //- Track particle to a given position and returns 1.0 if the
             //  trajectory is completed without hitting a face otherwise
@@ -531,7 +552,8 @@ public:
             //  on entry 'stepFraction()' should be set to the fraction of the
             //  time-step at which the tracking starts.
             template<class TrackData>
-            scalar trackToFace(const vector& endPosition, TrackData& td, bool DSMC/*, const indexedOctree<treeDataFace> faceTree*/);
+            scalar trackToFace(const vector& endPosition, TrackData& td, 
+                                                                bool DSMC);
 
             //- Return the index of the face to be used in the interpolation
             //  routine

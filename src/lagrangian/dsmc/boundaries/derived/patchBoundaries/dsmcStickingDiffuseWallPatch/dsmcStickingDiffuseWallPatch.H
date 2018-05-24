@@ -68,16 +68,16 @@ private:
 
     // Private data
         dictionary propsDict_;
+        
+         //- typeIds to be adsorbed
+        labelList typeIds_;
+        
+        //- probability of adsorbtion for each species in typeIds_
+        List<scalar> adsorptionProbs_;
 
         void setProperties();
         
-        scalar stickingProbability_;
-        
-        label nStrikes_;
-        
-        scalar strikeRate_;
-        
-        label nSteps_;
+        void diffuseReflection(dsmcParcel& p);
         
 //         scalar residenceTime_;
 

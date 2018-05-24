@@ -1,4 +1,4 @@
-Axisymmetric capability has now been added to dsmcFOAM. The mesh must be a 5 degree wedge, with the y-direction being the radial direction, x-direction being axial, and the z-direction being circumferential. The mesh should be a single cell thick in the circumferential direction, with the wedge patches either being specular walls, symmetry type, or wedge type (all 3 are equivalent).
+Axisymmetric capability has now been added to dsmcFoam+. The mesh must be a 5 degree wedge, with the y-direction being the radial direction, x-direction being axial, and the z-direction being circumferential. The mesh should be a single cell thick in the circumferential direction, with the wedge patches either being specular walls, symmetry type, or wedge type (all 3 are equivalent).
 
 In dsmcProperties there are new entries:
 
@@ -12,4 +12,4 @@ maxRadialWeightingFactor    1000.0;
 
 If the axisymmetricSimulation flag is true, then radial weighting factors will be employed, based on the cell centre radial positions. As particles move in the radial direction they have a probability of being deleted (if moving away from the radial centre), or being duplicated (if moving towards the radial centre). The user gives the simulaton the radial extent of the domain and the radial weighting factor to be used at this extent. The local RWF is calculated as: RWF = 1.0 + maxRadialWeightingFactor(radius/radialExtent).
 
-This tutorial case is the cold surface case of the flat nosed cylinder axisymmetric demonstration case in Bird's 1994 book (page 374-375).
+This tutorial case is the cold surface case of the flat nosed cylinder axisymmetric demonstration case in Bird's 1994 monologue (page 374-375).

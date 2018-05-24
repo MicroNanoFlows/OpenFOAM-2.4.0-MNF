@@ -1,0 +1,128 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.7.1                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     dsmcFoamPlus;
+
+nTerminalOutputs    1;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         1e-4;
+
+deltaT          1e-7;
+
+writeControl    runTime;
+
+writeInterval   1e-6;
+
+purgeWrite      2;
+
+writeFormat     ascii;
+
+writePrecision  10;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable yes;
+
+adjustTimeStep  no;
+
+functions
+(
+/*  dsmcFields1*/
+/*    {*/
+/*        type dsmcFieldsChem;*/
+/*        enabled   on;*/
+/*        functionObjectLibs ( "libutilityFunctionObjects.so" );*/
+/*        outputControl     outputTime;*/
+/*    }*/
+/*    fieldAverage1*/
+/*    {*/
+/*        type fieldAverage;*/
+/*        functionObjectLibs ( "libfieldFunctionObjects.so" );*/
+/*        outputControl     outputTime;*/
+/*        resetOnOutput     off;*/
+/*        fields*/
+/*        (*/
+/*            rhoN*/
+/*            {*/
+/*                 mean on;*/
+/*                 prime2Mean off;*/
+/*                 base time;*/
+/*            }*/
+/*            rhoM*/
+/*            {*/
+/*                mean on;*/
+/*                prime2Mean off;*/
+/*                base time;*/
+/*            }*/
+/*            dsmcRhoN*/
+/*            {*/
+/*                 mean on;*/
+/*                 prime2Mean off;*/
+/*                 base time;*/
+/*            }*/
+/*            momentum*/
+/*            {*/
+/*                mean on;*/
+/*                prime2Mean off;*/
+/*                base time;*/
+/*            }*/
+/*            linearKE*/
+/*            {*/
+/*                mean on;*/
+/*                prime2Mean off;*/
+/*                base time;*/
+/*            }*/
+/*            rotationalE*/
+/*            {*/
+/*                mean on;*/
+/*                prime2Mean off;*/
+/*                base time;*/
+/*            }*/
+/*            rotationalDof*/
+/*            {*/
+/*                mean on;*/
+/*                prime2Mean off;*/
+/*                base time;*/
+/*            }*/
+/*            q*/
+/*            {*/
+/*                 mean on;*/
+/*                 prime2Mean off;*/
+/*                 base time;*/
+/*            }*/
+/*            fD*/
+/*            {*/
+/*                mean on;*/
+/*                prime2Mean off;*/
+/*                base time;*/
+/*            }*/
+/*        );*/
+/*    }*/
+);
+
+
+// ************************************************************************* //

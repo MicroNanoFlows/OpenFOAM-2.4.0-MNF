@@ -20,6 +20,8 @@ FoamFile
 // ~~~~~~~~~~~~~~~~~~
 
 nEquivalentParticles            4.645e9;
+chargedParticles                false;
+adsorption                      false;
 
 
 // Binary Collision Model

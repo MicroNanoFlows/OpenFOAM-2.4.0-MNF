@@ -57,14 +57,22 @@ namespace Foam
 
 class dsmcVolFields
 :
-	public dsmcField
+public dsmcField
 {
 
 private:
 
     // Private data
         dictionary propsDict_;
-        
+       
+        //- Wall unit vectors - temporary storage, should be done in 
+        // boundaries/patch
+        List<vectorField> n_;
+        List<vectorField> t1_;
+        List<vectorField> t2_;
+
+        label sampleInterval_;
+        label sampleCounter_;
         scalar mfpReferenceTemperature_;
         word fieldName_;
         volScalarField dsmcRhoN_;
@@ -79,17 +87,17 @@ private:
         volScalarField overallT_;
         volScalarField q_;
         volScalarField tau_;
-        volScalarField meanFreePath_;
-        volScalarField mfpCellRatio_;
-        volScalarField meanCollisionRate_;
-        volScalarField meanCollisionTime_;
-        volScalarField meanCollisionTimeTimeStepRatio_;
-        volScalarField meanCollisionSeparation_;
+        volScalarField MFP_;
+        volScalarField MFPdX_;
+        volScalarField MCR_;
+        volScalarField MCT_;
+        volScalarField MCTdt_;
+        volScalarField MCS_;
         volScalarField SOF_;
         volScalarField Ma_;
-        volScalarField classIDistribution_;
-        volScalarField classIIDistribution_;
-        volScalarField classIIIDistribution_;
+        volScalarField cIDist_;
+        volScalarField cIIDist_;
+        volScalarField cIIIDist_;
         volScalarField densityError_;
         volScalarField velocityError_;
         volScalarField temperatureError_;
@@ -184,6 +192,8 @@ private:
         void readIn();
 
         void writeOut();
+       
+        void calculateWallUnitVectors();
 
 
 public:

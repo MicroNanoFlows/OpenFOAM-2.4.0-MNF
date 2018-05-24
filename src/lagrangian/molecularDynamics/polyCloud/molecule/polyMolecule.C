@@ -89,7 +89,7 @@ bool Foam::polyMolecule::move
             // set the lagrangian time-step
             scalar dt = min(dtMax, tEnd);
 
-            dt *= trackToFace(position() + dt*v_, td, false);
+            dt *= trackToFace(position() + dt*v_, td);
 
             //- face tracking info
             if( this->face() != -1 )   

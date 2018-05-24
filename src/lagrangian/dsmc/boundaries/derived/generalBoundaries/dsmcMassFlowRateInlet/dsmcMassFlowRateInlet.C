@@ -381,7 +381,8 @@ void dsmcMassFlowRateInlet::controlParcelsBeforeMove()
 
 void dsmcMassFlowRateInlet::controlParcelsBeforeCollisions()
 {
-    // insert pacels after move, but before collisions - REMINDER: NEW PARCELS MUST BE ADDED TO CELL OCCUPANCY MANUALLY
+    // insert pacels after move, but before collisions - 
+    //REMINDER: NEW PARCELS MUST BE ADDED TO CELL OCCUPANCY MANUALLY
     
    
 }
@@ -400,6 +401,7 @@ void dsmcMassFlowRateInlet::controlParcelsAfterCollisions()
     
     forAll(cells_, c)
     {
+       
         const List<dsmcParcel*>& parcelsInCell = cellOccupancy[cells_[c]];
                   
         forAll(parcelsInCell, pIC)
@@ -413,8 +415,12 @@ void dsmcMassFlowRateInlet::controlParcelsAfterCollisions()
 //         newInletVelocity[c] = momentum[c]/mass[c];
             
 //         inletVelocity_[c] = theta_*newInletVelocity[c] + (1.0 - theta_)*previousInletVelocity_[c];
-
-        inletVelocity_[c] = momentum_[c]/mass_[c];
+   
+        
+        if(mass_[c] > VSMALL)
+        {
+            inletVelocity_[c] = momentum_[c]/mass_[c];
+        }
         
         const vector& sF = mesh_.faceAreas()[faces_[c]];
         const scalar fA = mag(sF);
@@ -430,9 +436,11 @@ void dsmcMassFlowRateInlet::controlParcelsAfterCollisions()
 //         }
     }
     
+    
     if(faces_.size() > VSMALL)
     {
-        Pout << "dsmcMassFlowRateInlet inlet velocity = " << inletVelocity_[(faces_.size()/2)] << endl;
+        Pout << "dsmcMassFlowRateInlet inlet velocity = " <<
+        inletVelocity_[(faces_.size()/2)] << endl;
     }
     
     scalarField massFractions(typeIds_.size(), 0.0);

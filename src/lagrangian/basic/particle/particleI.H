@@ -64,7 +64,6 @@ inline void Foam::particle::findTris
     }
 }
 
-
 inline Foam::scalar Foam::particle::tetLambda
 (
     const vector& from,

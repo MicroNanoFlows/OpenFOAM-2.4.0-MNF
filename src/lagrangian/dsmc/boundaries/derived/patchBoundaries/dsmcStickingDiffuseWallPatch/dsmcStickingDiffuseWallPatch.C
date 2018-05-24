@@ -37,7 +37,8 @@ namespace Foam
 
 defineTypeNameAndDebug(dsmcStickingDiffuseWallPatch, 0);
 
-addToRunTimeSelectionTable(dsmcPatchBoundary, dsmcStickingDiffuseWallPatch, dictionary);
+addToRunTimeSelectionTable
+(dsmcPatchBoundary, dsmcStickingDiffuseWallPatch, dictionary);
 
 
 
@@ -54,10 +55,8 @@ dsmcStickingDiffuseWallPatch::dsmcStickingDiffuseWallPatch
 :
     dsmcPatchBoundary(t, mesh, cloud, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
-    stickingProbability_(),
-    nStrikes_(0),
-    strikeRate_(0.0),
-    nSteps_(0)
+    typeIds_(),
+    adsorptionProbs_()
 {
     writeInTimeDir_ = false;
     writeInCase_ = false;
@@ -85,19 +84,16 @@ void dsmcStickingDiffuseWallPatch::calculateProperties()
 
 }
 
-void dsmcStickingDiffuseWallPatch::controlParticle(dsmcParcel& p, dsmcParcel::trackingData& td)
-{
-    nStrikes_++;
+void dsmcStickingDiffuseWallPatch::controlParticle
+(dsmcParcel& p, dsmcParcel::trackingData& td)
+{   
+    measurePropertiesBeforeControl(p);
+    Random& rndGen = cloud_.rndGen();
+    const label& iD = findIndex(typeIds_, p.typeId());
     
-//     measurePropertiesBeforeControl(p);
-    
-    Random& rndGen(cloud_.rndGen());
-
     vector& U = p.U();
 
     scalar& ERot = p.ERot();
-    
-    labelList& vibLevel = p.vibLevel();
 
     label typeId = p.typeId();
     
@@ -139,87 +135,199 @@ void dsmcStickingDiffuseWallPatch::controlParticle(dsmcParcel& p, dsmcParcel::tr
 
     // Other tangential unit vector
     vector tw2 = nw^tw1;
+
     
-    if(stickingProbability_ < rndGen.scalar01())
+    if(iD != -1) //- particle might be assorbed
     {
-//         measurePropertiesBeforeControl(p);
+        scalar adsorbtionProbability = adsorptionProbs_[iD];
         
-        const scalar& T = temperature_;
-
-        scalar mass = cloud_.constProps(typeId).mass();
-
-        scalar rotationalDof = cloud_.constProps(typeId).rotationalDegreesOfFreedom();
-        
-        scalar vibrationalDof = cloud_.constProps(typeId).vibrationalDegreesOfFreedom();
-
-        U =
-            sqrt(physicoChemical::k.value()*T/mass)
-        *(
-                rndGen.GaussNormal()*tw1
-            + rndGen.GaussNormal()*tw2
-            - sqrt(-2.0*log(max(1 - rndGen.scalar01(), VSMALL)))*nw
-            );
-
-        ERot = cloud_.equipartitionRotationalEnergy(T, rotationalDof);
-        
-        vibLevel = cloud_.equipartitionVibrationalEnergyLevel(T, vibrationalDof, typeId);
-        
-        U += velocity_;
-        
-//         measurePropertiesAfterControl(p);
-        
-        
-    }
-    else
-    {
-        //Particle becomes stuck to wall
-        stuckToWall = 1;
-        
-        measurePropertiesBeforeControl(p);
-        
-        scalar preIE = 0.0;
-        vector preIMom = vector::zero;
-        
-        scalar mass = cloud_.constProps(typeId).mass();
-        
-        preIE = 0.5*mass*(U & U) + ERot + cloud_.constProps(typeId).electronicEnergyList()[p.ELevel()];
-        
-        forAll(p.vibLevel(), i)
+        if(adsorbtionProbability > rndGen.scalar01()) //- adsorbed
         {
-           preIE +=  p.vibLevel()[i]*cloud_.constProps(typeId).thetaV()[i]*physicoChemical::k.value();
+            //- Particle becomes stuck to wall
+            stuckToWall = 1;
+            
+            measurePropertiesBeforeControl(p);
+            
+            scalar preIE = 0.0;
+            vector preIMom = vector::zero;
+            
+            scalar mass = cloud_.constProps(typeId).mass();
+            
+            preIE = 0.5*mass*(U & U) + ERot + 
+                cloud_.constProps(typeId).electronicEnergyList()[p.ELevel()];
+            
+            forAll(p.vibLevel(), i)
+            {
+                preIE += p.vibLevel()[i]
+                        *cloud_.constProps(typeId).thetaV()[i]
+                        *physicoChemical::k.value();
+            }
+            
+            preIMom = mass*U;
+            
+            wallTemperature[3] = preIE;
+            wallVectors[3] = preIMom;
+            
+            const scalar& T = temperature_;
+            
+            U = SMALL*
+                sqrt(physicoChemical::k.value()*T/mass)
+            *(
+                    rndGen.GaussNormal()*tw1
+                + rndGen.GaussNormal()*tw2
+                - sqrt(-2.0*log(max(1 - rndGen.scalar01(), VSMALL)))*nw
+                );
+            
+            wallTemperature[0] = temperature_;
+            
+            label wppIndex = patchId_;
+            const polyPatch& wpp = mesh_.boundaryMesh()[wppIndex];
+            label wppLocalFace = wpp.whichFace(p.face());
+            
+            wallTemperature[1] = wppIndex;
+            wallTemperature[2] = wppLocalFace;
+            
+            wallVectors[0] = tw1;
+            wallVectors[1] = tw2;
+            wallVectors[2] = nw;
         }
-        
-        preIMom = mass*U;
-        
-        wallTemperature[3] = preIE;
-        wallVectors[3] = preIMom;
-        
-        const scalar& T = temperature_;
-        
-        U = SMALL*
-            sqrt(physicoChemical::k.value()*T/mass)
-        *(
-                rndGen.GaussNormal()*tw1
-            + rndGen.GaussNormal()*tw2
-            - sqrt(-2.0*log(max(1 - rndGen.scalar01(), VSMALL)))*nw
-            );
-
-//         U = vector::zero;
-        
-        wallTemperature[0] = temperature_;
-        
-        label wppIndex = patchId_;
-        const polyPatch& wpp = mesh_.boundaryMesh()[wppIndex];
-        label wppLocalFace = wpp.whichFace(p.face());
-        
-        wallTemperature[1] = wppIndex;
-        wallTemperature[2] = wppLocalFace;
-        
-        wallVectors[0] = tw1;
-        wallVectors[1] = tw2;
-        wallVectors[2] = nw;
-//         Info << "Stuck" << endl;
+        else //- diffuse reflection
+        {
+            diffuseReflection(p);
+        }   
     }
+    else //- otherwise, it is treated as a diffuse reflection
+    {
+        diffuseReflection(p);
+    }
+    
+//     vector& U = p.U();
+// 
+//     scalar& ERot = p.ERot();
+//     
+//     labelList& vibLevel = p.vibLevel();
+// 
+//     label typeId = p.typeId();
+//     
+//     label& stuckToWall = p.stuckToWall();
+//     
+//     scalarField& wallTemperature = p.wallTemperature();
+//     
+//     vectorField& wallVectors = p.wallVectors();
+// 
+//     vector nw = p.normal();
+//     nw /= mag(nw);
+// 
+//     // Normal velocity magnitude
+//     scalar U_dot_nw = U & nw;
+// 
+//     // Wall tangential velocity (flow direction)
+//     vector Ut = U - U_dot_nw*nw;
+// 
+//     while (mag(Ut) < SMALL)
+//     {
+//         // If the incident velocity is parallel to the face normal, no
+//         // tangential direction can be chosen.  Add a perturbation to the
+//         // incoming velocity and recalculate.
+// 
+//         U = vector
+//         (
+//             U.x()*(0.8 + 0.2*rndGen.scalar01()),
+//             U.y()*(0.8 + 0.2*rndGen.scalar01()),
+//             U.z()*(0.8 + 0.2*rndGen.scalar01())
+//         );
+// 
+//         U_dot_nw = U & nw;
+// 
+//         Ut = U - U_dot_nw*nw;
+//     }
+// 
+//     // Wall tangential unit vector
+//     vector tw1 = Ut/mag(Ut);
+// 
+//     // Other tangential unit vector
+//     vector tw2 = nw^tw1;
+//     
+//     if(stickingProbability_ < rndGen.scalar01())
+//     {
+// //         measurePropertiesBeforeControl(p);
+//         
+//         const scalar& T = temperature_;
+// 
+//         scalar mass = cloud_.constProps(typeId).mass();
+// 
+//         scalar rotationalDof = cloud_.constProps(typeId).rotationalDegreesOfFreedom();
+//         
+//         scalar vibrationalDof = cloud_.constProps(typeId).vibrationalDegreesOfFreedom();
+// 
+//         U =
+//             sqrt(physicoChemical::k.value()*T/mass)
+//         *(
+//                 rndGen.GaussNormal()*tw1
+//             + rndGen.GaussNormal()*tw2
+//             - sqrt(-2.0*log(max(1 - rndGen.scalar01(), VSMALL)))*nw
+//             );
+// 
+//         ERot = cloud_.equipartitionRotationalEnergy(T, rotationalDof);
+//         
+//         vibLevel = cloud_.equipartitionVibrationalEnergyLevel(T, vibrationalDof, typeId);
+//         
+//         U += velocity_;
+//         
+// //         measurePropertiesAfterControl(p);
+//         
+//         
+//     }
+//     else
+//     {
+//         //Particle becomes stuck to wall
+//         stuckToWall = 1;
+//         
+//         measurePropertiesBeforeControl(p);
+//         
+//         scalar preIE = 0.0;
+//         vector preIMom = vector::zero;
+//         
+//         scalar mass = cloud_.constProps(typeId).mass();
+//         
+//         preIE = 0.5*mass*(U & U) + ERot + cloud_.constProps(typeId).electronicEnergyList()[p.ELevel()];
+//         
+//         forAll(p.vibLevel(), i)
+//         {
+//            preIE +=  p.vibLevel()[i]*cloud_.constProps(typeId).thetaV()[i]*physicoChemical::k.value();
+//         }
+//         
+//         preIMom = mass*U;
+//         
+//         wallTemperature[3] = preIE;
+//         wallVectors[3] = preIMom;
+//         
+//         const scalar& T = temperature_;
+//         
+//         U = SMALL*
+//             sqrt(physicoChemical::k.value()*T/mass)
+//         *(
+//                 rndGen.GaussNormal()*tw1
+//             + rndGen.GaussNormal()*tw2
+//             - sqrt(-2.0*log(max(1 - rndGen.scalar01(), VSMALL)))*nw
+//             );
+// 
+// //         U = vector::zero;
+//         
+//         wallTemperature[0] = temperature_;
+//         
+//         label wppIndex = patchId_;
+//         const polyPatch& wpp = mesh_.boundaryMesh()[wppIndex];
+//         label wppLocalFace = wpp.whichFace(p.face());
+//         
+//         wallTemperature[1] = wppIndex;
+//         wallTemperature[2] = wppLocalFace;
+//         
+//         wallVectors[0] = tw1;
+//         wallVectors[1] = tw2;
+//         wallVectors[2] = nw;
+// //         Info << "Stuck" << endl;
+//     }
 }
 
 void dsmcStickingDiffuseWallPatch::output
@@ -239,23 +347,165 @@ void dsmcStickingDiffuseWallPatch::updateProperties(const dictionary& newDict)
     propsDict_ = newDict.subDict(typeName + "Properties");
 
     setProperties();
-    
-    nSteps_++;
-    
-    strikeRate_ = (nStrikes_*cloud_.nParticle())/(patchSurfaceArea_*mesh_.time().deltaTValue()*1000);
-    
-    Info << "strikeRate_ = " << strikeRate_ << endl;
-    
-    nStrikes_ = 0;
-
 }
 
 void dsmcStickingDiffuseWallPatch::setProperties()
 {
     velocity_ = propsDict_.lookup("velocity");
     temperature_ = readScalar(propsDict_.lookup("temperature"));
-    stickingProbability_ = readScalar(propsDict_.lookup("stickingProbability"));
-//     residenceTime_ = readScalar(propsDict_.lookup("residenceTime"));
+
+    //  read in the type ids
+
+    const List<word> molecules (propsDict_.lookup("adsorptionIds"));
+
+    if(molecules.size() == 0)
+    {
+        
+         FatalErrorIn("dsmcStickingiffuseWallPatch::setProperties()")
+            << "Cannot have zero typeIds being adsorbed." << nl << "in: "
+            << mesh_.time().system()/"boundariesDict"
+            << exit(FatalError);
+    }
+
+    DynamicList<word> moleculesReduced(0);
+
+    forAll(molecules, i)
+    {
+        const word& moleculeName(molecules[i]);
+
+        if(findIndex(moleculesReduced, moleculeName) == -1)
+        {
+            moleculesReduced.append(moleculeName);
+        }
+    }
+
+    moleculesReduced.shrink();
+
+    //  set the type ids
+
+    typeIds_.setSize(moleculesReduced.size(), -1);
+
+    forAll(moleculesReduced, i)
+    {
+        const word& moleculeName(moleculesReduced[i]);
+
+        label typeId(findIndex(cloud_.typeIdList(), moleculeName));
+
+        if(typeId == -1)
+        {
+            
+            FatalErrorIn("dsmcStickingiffuseWallPatch::setProperties()")
+                << "Cannot find typeId: " << moleculeName << nl << "in: "
+                << mesh_.time().system()/"boundariesDict"
+                << exit(FatalError);
+        }
+
+        typeIds_[i] = typeId;
+    }
+    
+    const dictionary& adsorptionProbabilitiesDict
+    (
+        propsDict_.subDict("adsorptionProbabilities")
+    );
+    
+    adsorptionProbs_.clear();
+
+    adsorptionProbs_.setSize(typeIds_.size(), 0.0);
+
+    forAll(adsorptionProbs_, i)
+    {
+        adsorptionProbs_[i] = readScalar
+        (
+            adsorptionProbabilitiesDict.lookup(moleculesReduced[i])
+        );
+    }
+}
+
+void dsmcStickingDiffuseWallPatch::diffuseReflection(dsmcParcel& p)
+{
+    vector& U = p.U();
+
+    scalar& ERot = p.ERot();
+    
+    labelList& vibLevel = p.vibLevel();
+    
+    label& ELevel = p.ELevel();
+
+    label typeId = p.typeId();
+
+    vector nw = p.normal();
+    nw /= mag(nw);
+
+    // Normal velocity magnitude
+    scalar U_dot_nw = U & nw;
+
+    // Wall tangential velocity (flow direction)
+    vector Ut = U - U_dot_nw*nw;
+
+    Random& rndGen(cloud_.rndGen());
+
+    while (mag(Ut) < SMALL)
+    {
+        // If the incident velocity is parallel to the face normal, no
+        // tangential direction can be chosen.  Add a perturbation to the
+        // incoming velocity and recalculate.
+
+        U = vector
+        (
+            U.x()*(0.8 + 0.2*rndGen.scalar01()),
+            U.y()*(0.8 + 0.2*rndGen.scalar01()),
+            U.z()*(0.8 + 0.2*rndGen.scalar01())
+        );
+
+        U_dot_nw = U & nw;
+
+        Ut = U - U_dot_nw*nw;
+    }
+
+    // Wall tangential unit vector
+    vector tw1 = Ut/mag(Ut);
+
+    // Other tangential unit vector
+    vector tw2 = nw^tw1;
+
+    const scalar& T = temperature_;
+
+    scalar mass = cloud_.constProps(typeId).mass();
+
+    scalar rotationalDof = 
+                    cloud_.constProps(typeId).rotationalDegreesOfFreedom();
+    
+    scalar vibrationalDof = 
+                    cloud_.constProps(typeId).vibrationalDegreesOfFreedom();
+
+
+    U =
+        sqrt(physicoChemical::k.value()*T/mass)
+       *(
+            rndGen.GaussNormal()*tw1
+          + rndGen.GaussNormal()*tw2
+          - sqrt(-2.0*log(max(1 - rndGen.scalar01(), VSMALL)))*nw
+        );
+
+       
+    ERot = cloud_.equipartitionRotationalEnergy(T, rotationalDof);
+
+    
+    vibLevel = 
+        cloud_.equipartitionVibrationalEnergyLevel(T, vibrationalDof, typeId);
+   
+    
+    ELevel = cloud_.equipartitionElectronicLevel
+                    (
+                        T,
+                        cloud_.constProps(typeId).degeneracyList(),
+                        cloud_.constProps(typeId).electronicEnergyList(),
+                        typeId
+                    );   
+    
+    U += velocity_;
+  
+    measurePropertiesAfterControl(p, 0.0);
 }
 
 } // End namespace Foam

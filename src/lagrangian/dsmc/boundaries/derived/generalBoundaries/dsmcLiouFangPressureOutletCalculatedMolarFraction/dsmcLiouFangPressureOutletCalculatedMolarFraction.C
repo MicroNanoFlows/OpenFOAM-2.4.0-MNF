@@ -78,6 +78,18 @@ dsmcLiouFangPressureOutletCalculatedMolarFraction::dsmcLiouFangPressureOutletCal
     nTotalParcels_(faces_.size(), scalar(0.0)),
     nTotalParcelsInt_(faces_.size(), scalar(0.0)),
     mcc_(faces_.size(), scalar(0.0)),
+    velSqrMeanX_(faces_.size(), scalar(0.0)),
+    velSqrMeanY_(faces_.size(), scalar(0.0)),
+    velSqrMeanZ_(faces_.size(), scalar(0.0)),
+    velMeanSqrX_(faces_.size(), scalar(0.0)),
+    velMeanSqrY_(faces_.size(), scalar(0.0)),
+    velMeanSqrZ_(faces_.size(), scalar(0.0)),
+    totalVelSqrMeanX_(faces_.size(), scalar(0.0)),
+    totalVelSqrMeanY_(faces_.size(), scalar(0.0)),
+    totalVelSqrMeanZ_(faces_.size(), scalar(0.0)),
+    totalVelMeanSqrX_(faces_.size(), scalar(0.0)),
+    totalVelMeanSqrY_(faces_.size(), scalar(0.0)),
+    totalVelMeanSqrZ_(faces_.size(), scalar(0.0)),
     UMean_(faces_.size(), vector::zero),
     UCollected_(faces_.size(), vector::zero),
     nTimeSteps_(scalar(0.0))
@@ -455,6 +467,12 @@ void dsmcLiouFangPressureOutletCalculatedMolarFraction::controlParcelsAfterColli
     scalarField speedOfSound(faces_.size(), scalar(0.0));
     scalarField velocityCorrection(faces_.size(), scalar(0.0));
     scalarField massDensityCorrection(faces_.size(), scalar(0.0));
+    scalarField velSqrMeanX(faces_.size(), scalar(0.0));
+    scalarField velSqrMeanY(faces_.size(), scalar(0.0));
+    scalarField velSqrMeanZ(faces_.size(), scalar(0.0));
+    scalarField velMeanSqrX(faces_.size(), scalar(0.0));
+    scalarField velMeanSqrY(faces_.size(), scalar(0.0));
+    scalarField velMeanSqrZ(faces_.size(), scalar(0.0));
 
     const List<DynamicList<dsmcParcel*> >& cellOccupancy = cloud_.cellOccupancy();
     
@@ -477,6 +495,12 @@ void dsmcLiouFangPressureOutletCalculatedMolarFraction::controlParcelsAfterColli
                 rotationalEnergy[c] += p->ERot();
                 rotationalDof[c] += cloud_.constProps(p->typeId()).rotationalDegreesOfFreedom();
                 UCollected[c] += p->U();
+                velSqrMeanX[c] += sqr(p->U().x());
+                velSqrMeanY[c] += sqr(p->U().y());
+                velSqrMeanZ[c] += sqr(p->U().z());
+                velMeanSqrX[c] += p->U().x();
+                velMeanSqrY[c] += p->U().y();
+                velMeanSqrZ[c] += p->U().z();
                 
                 if(cloud_.constProps(p->typeId()).rotationalDegreesOfFreedom() > VSMALL)
                 {
@@ -510,16 +534,42 @@ void dsmcLiouFangPressureOutletCalculatedMolarFraction::controlParcelsAfterColli
         numberDensity[c] = massDensity[c]/molecularMass[c];
         
         if(nTotalParcels_[c] > 1)
-        {    
+        {
+            velSqrMeanX_[c] += velSqrMeanX[c];
+            velSqrMeanY_[c] += velSqrMeanY[c];
+            velSqrMeanZ_[c] += velSqrMeanZ[c];
+            velMeanSqrX_[c] += velMeanSqrX[c];
+            velMeanSqrY_[c] += velMeanSqrY[c];
+            velMeanSqrZ_[c] += velMeanSqrZ[c];
+            
+            totalVelSqrMeanX_[c] = velSqrMeanX_[c]/nTotalParcels_[c];
+            totalVelSqrMeanY_[c] = velSqrMeanY_[c]/nTotalParcels_[c];
+            totalVelSqrMeanZ_[c] = velSqrMeanZ_[c]/nTotalParcels_[c];
+            totalVelMeanSqrX_[c] = sqr(velMeanSqrX_[c]/nTotalParcels_[c]);
+            totalVelMeanSqrY_[c] = sqr(velMeanSqrY_[c]/nTotalParcels_[c]);
+            totalVelMeanSqrZ_[c] = sqr(velMeanSqrZ_[c]/nTotalParcels_[c]);
+            
             UMean_[c] = UCollected_[c]/nTotalParcels_[c];
+            
+            translationalTemperature[c] =
+                                (0.5*molecularMass[c])
+                                *(2.0/(3.0*physicoChemical::k.value()))
+                        *(       
+                                totalVelSqrMeanX_[c]+
+                                totalVelSqrMeanY_[c]+
+                                totalVelSqrMeanZ_[c]-
+                                totalVelMeanSqrX_[c]-
+                                totalVelMeanSqrY_[c]-
+                                totalVelMeanSqrZ_[c]
+                            );
 
-            translationalTemperature[c] = (1.0/(3.0*physicoChemical::k.value()))
-                                                *(
-                                                    ((mcc_[c]/(nTotalParcels_[c]*cloud_.nParticle())))
-                                                    - (
-                                                        (mass[c]/(nTotalParcels_[c]*cloud_.nParticle())
-                                                      )*mag(UMean_[c])*mag(UMean_[c]))
-                                                );
+//             translationalTemperature[c] = (1.0/(3.0*physicoChemical::k.value()))
+//                                                 *(
+//                                                     ((mcc_[c]/(nTotalParcels_[c]*cloud_.nParticle())))
+//                                                     - (
+//                                                         (mass[c]/(nTotalParcels_[c]*cloud_.nParticle())
+//                                                       )*mag(UMean_[c])*mag(UMean_[c]))
+//                                                 );
 
              
             if(translationalTemperature[c] < VSMALL)
@@ -539,16 +589,10 @@ void dsmcLiouFangPressureOutletCalculatedMolarFraction::controlParcelsAfterColli
             
             if(nTimeSteps_ > 100)
             {
-//                 if(faceNormalVelocity < VSMALL)
-//                 {
-                    massDensityCorrection[c] = (outletPressure_ - pressure[c]) / (speedOfSound[c]*speedOfSound[c]);
-                    outletMassDensity_[c] = massDensity[c] + massDensityCorrection[c];
-//                 }
-//                 else
-//                 {
-//                     massDensityCorrection[c] = (pressure[c] - outletPressure_) / (speedOfSound[c]*speedOfSound[c]);
-//                     outletMassDensity_[c] = massDensity[c] - massDensityCorrection[c];
-//                 }
+                    massDensityCorrection[c] = (outletPressure_ - pressure[c]) /
+                                            (speedOfSound[c]*speedOfSound[c]);
+                    outletMassDensity_[c] = massDensity[c] + 
+                                                massDensityCorrection[c];
             }
             else
             {
@@ -568,7 +612,8 @@ void dsmcLiouFangPressureOutletCalculatedMolarFraction::controlParcelsAfterColli
 //                 if(faceNormalVelocity < VSMALL)
 //                 {
                 
-                    velocityCorrection[c] = (pressure[c] - outletPressure_) / (massDensity[c]*speedOfSound[c]);
+                    velocityCorrection[c] = (pressure[c] - outletPressure_) /
+                                              (massDensity[c]*speedOfSound[c]);
                     outletVelocity_[c] += velocityCorrection[c]*n;
 //                 }
 //                 else
@@ -579,17 +624,7 @@ void dsmcLiouFangPressureOutletCalculatedMolarFraction::controlParcelsAfterColli
             }
         }
     }
-        
-//     if(faces_.size() > VSMALL)
-//     {
-//         Pout << "dsmcLiouFangPressureOutletCalculatedMolarFraction outlet velocity correction = " << velocityCorrection[(faces_.size()/2)] << endl;
-//     }
-//     
-//     if(faces_.size() > VSMALL)
-//     {
-//         Pout << "dsmcLiouFangPressureOutletCalculatedMolarFraction outlet velocity = " << outletVelocity_[(faces_.size()/2)] << endl;
-//     }
-    
+          
     forAll(accumulatedParcelsToInsert_, iD)
     {
         const label& typeId = typeIds_[iD];
@@ -618,18 +653,6 @@ void dsmcLiouFangPressureOutletCalculatedMolarFraction::controlParcelsAfterColli
             scalar sCosTheta = (outletVelocity_[f] & -sF/fA )/mostProbableSpeed;
             
             // From Bird eqn 4.22
-            
-/*            accumulatedParcelsToInsert_[iD][f] += 
-            moleFractions_[iD][f]*
-            (
-                fA*outletNumberDensity_[f]*deltaT*mostProbableSpeed
-                *
-                (
-                   exp(-sqr(sCosTheta)) + sqrtPi*sCosTheta*(1 + erf(sCosTheta))
-                )
-            )
-            /(2.0*sqrtPi*cloud_.nParticle());   */   
-
             if(cloud_.axisymmetric())
             {
                 const point& fC = cloud_.mesh().faceCentres()[faces_[f]];
@@ -754,13 +777,6 @@ void dsmcLiouFangPressureOutletCalculatedMolarFraction::setProperties()
     {
         vDof_[m].setSize(nFaces_, 0.0);
     }
-   
-//     totalVibrationalEnergy_.setSize(typeIds_.size());
-// 
-//     forAll(totalVibrationalEnergy_, m)
-//     {
-//         totalVibrationalEnergy_[m].setSize(nFaces_, 0.0);
-//     }
     
     nTotalParcelsSpecies_.setSize(typeIds_.size());
 
