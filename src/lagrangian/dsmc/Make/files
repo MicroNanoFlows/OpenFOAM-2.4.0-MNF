@@ -158,7 +158,7 @@ controllers/basic/dsmcFluxController/dsmcFluxController.C
 controllers/basic/dsmcCouplingController/dsmcCouplingController.C
 
 /*  MUI COUPLING  */
-controllers/derived/coupling/dsmcMassDensityCoupling/dsmcMassDensityCoupling.C
+/* controllers/derived/coupling/dsmcMassDensityCoupling/dsmcMassDensityCoupling.C */
 
 /* DENSITY*/
 controllers/derived/density/densityController/densityController.C

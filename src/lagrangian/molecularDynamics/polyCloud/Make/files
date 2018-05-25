@@ -187,7 +187,7 @@ controllers/basic/polyStateController/polyStateController.C
 controllers/basic/polyFluxController/polyFluxController.C
 
 /*  MUI COUPLING  */
-controllers/derived/coupling/mdTempMassCoupling/mdTempMassCoupling.C
+controllers/derived/coupling/mdMassDensityCoupling/mdMassDensityCoupling.C
 
 /*  - VELOCITY  */
 

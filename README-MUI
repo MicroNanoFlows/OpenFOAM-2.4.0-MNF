@@ -1,4 +1,4 @@
-The MUI coupling library* has been integrated fundamentally into OpenFOAM (and can therefore be used in any application) and a new controller architecture has been created for mdFOAM to allow its use.
+The MUI coupling library* has been integrated fundamentally into OpenFOAM (and can therefore be used in any application) and a new controller architecture has been created for mdFoamPlus and dsmcFoamPlus to allow its use.
 
 General MUI coupling is achieved using the following new source files:
 
@@ -42,7 +42,7 @@ To use MUI in an OpenFOAM application, the general additions are as follows:
 					#include "createCouplings.H"
 				}
 		     #endif
-	5) Important final step: Include the coupling delletion header at the END of the application. Without this the MUi interface objects will not be deleted on application exit, meaning MPI_Finalize will never be called if MUI is handling that. This should be called before the final "return 0" of the application:
+	5) Important final step: Include the coupling delletion header at the END of the application. Without this the MUI interface objects will not be deleted on application exit, meaning MPI_Finalize will never be called if MUI is handling that. This should be called before the final "return 0" of the application:
 		5.1) #ifdef USE_MUI
 			 	#include "deleteCouplings.H"
 			 #endif
