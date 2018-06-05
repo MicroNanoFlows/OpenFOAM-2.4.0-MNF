@@ -1,0 +1,41 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.4.0-MNF                             |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      combineRegionsDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+//- list zones to combine together. These zones will also be subtracted from the global zone
+
+squares
+(
+    square
+    {
+        name            leftRegion;
+        startPoint      (-0.05 0.04 0.04);
+        endPoint        (0 -0.04 -0.04);
+        writeCellSets   no;
+    }
+
+    square
+    {
+        name            rightRegion;
+        startPoint      (0.05 0.04 0.04);
+        endPoint        (0 -0.04 -0.04);
+        writeCellSets   no;
+    }
+);
+
+// ************************************************************************* //

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+if [ -d "Logs" ]; then
+  rm -rf Logs
+fi
+
+# clean case 1
+cd dsmcDomain1
+./Allclean
+cd ..
+
+# clean case 2
+cd dsmcDomain2
+./Allclean
+cd ..
+
+# clean case 3
+cd mdDomain
+./Allclean
+cd ..
+

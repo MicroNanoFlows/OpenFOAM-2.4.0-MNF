@@ -1,0 +1,35 @@
+#!/bin/sh
+cd ${0%/*} || exit 1    # run from this directory
+
+# Source tutorial clean functions
+. $WM_PROJECT_DIR/bin/tools/CleanFunctions
+
+rm -rf 0 > /dev/null 2>&1
+
+cleanCase
+
+if [ -d "fieldMeasurements" ]; then
+  rm -rf fieldMeasurements
+fi
+
+if [ -d "potentials" ]; then
+  rm -rf potentials
+fi
+
+if [ -d "timings" ]; then
+  rm -rf timings
+fi
+
+if [ -d "boundaries" ]; then
+  rm -rf boundaries
+fi
+
+if [ -f "random_mdInitialiseField" ]; then
+  rm -f random_mdInitialiseField
+fi
+
+if [ -f "random_mdFoamPlus" ]; then
+  rm -f random_mdFoamPlus
+fi
+
+# ----------------------------------------------------------------- end-of-file

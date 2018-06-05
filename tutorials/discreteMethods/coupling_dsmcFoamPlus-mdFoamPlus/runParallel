@@ -1,0 +1,13 @@
+#!/bin/bash
+
+case1Dir=${PWD}/dsmcDomain1
+case2Dir=${PWD}/dsmcDomain2
+case3Dir=${PWD}/mdDomain
+
+application1="dsmcFoamPlus"
+application2="mdFoamPlus"
+
+numCPU=2 #MPI ranks per domain (3 domains = 6 ranks in total)
+
+# Console output to files (1 per rank, so file .1.0 output from dsmcDomain1, file .1.2 output from dsmcDomain2 and file 1.4 output from mdDomain)
+mpirun -np ${numCPU} --output-filename Logs/coupledOutput ${application1} -case ${case1Dir} -parallel -coupled : -np ${numCPU} ${application1} -case ${case2Dir} -parallel -coupled : -np ${numCPU} ${application2} -case ${case3Dir} -parallel -coupled

@@ -1,0 +1,61 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.4.0-MNF                             |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      boundariesDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+polyPatchBoundaries
+(
+);
+
+polyCyclicBoundaries
+(
+    boundary
+    {
+        boundaryModel  polyStandardCyclic;
+        patchName      periodicX_half0;
+    }
+    boundary
+    {
+        boundaryModel  polyStandardCyclic;
+        patchName      periodicX_half1;
+    }
+    boundary
+    {
+        boundaryModel  polyStandardCyclic;
+        patchName        periodicY_half0;
+    }
+    boundary
+    {
+        boundaryModel  polyStandardCyclic;
+        patchName      periodicY_half1;
+    }
+    boundary
+    {
+        boundaryModel  polyStandardCyclic;
+        patchName        periodicZ_half0;
+    }
+    boundary
+    {
+        boundaryModel  polyStandardCyclic;
+        patchName      periodicZ_half1;
+    }
+);
+
+polyGeneralBoundaries
+(
+);
+
+// ************************************************************************* //

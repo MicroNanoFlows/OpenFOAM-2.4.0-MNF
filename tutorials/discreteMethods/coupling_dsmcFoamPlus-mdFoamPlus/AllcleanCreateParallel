@@ -1,0 +1,24 @@
+#!/bin/bash
+
+if [ -d "Logs" ]; then
+  rm -rf Logs
+fi
+
+# clean and create case 1
+cd dsmcDomain1
+./Allclean
+./caseCreateParallel
+cd ..
+
+# clean and create case 2
+cd dsmcDomain2
+./Allclean
+./caseCreateParallel
+cd ..
+
+# clean and create case 3
+cd mdDomain
+./Allclean
+./caseCreateParallel
+
+
