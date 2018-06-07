@@ -23,7 +23,7 @@ cyclicBoundaries
         {
             patchName			periodicX_half0;
             neighbourPatchName		periodicX_half1;
-            nFaces			484;
+            nFaces			400;
             normal			(1 0 0);
             boundaryPoints
             (
@@ -43,7 +43,7 @@ cyclicBoundaries
         {
             patchName			periodicX_half1;
             neighbourPatchName		periodicX_half0;
-            nFaces			484;
+            nFaces			400;
             normal			(-1 0 0);
             boundaryPoints
             (
@@ -63,7 +63,7 @@ cyclicBoundaries
         {
             patchName			periodicY_half0;
             neighbourPatchName		periodicY_half1;
-            nFaces			484;
+            nFaces			400;
             normal			(0 1 0);
             boundaryPoints
             (
@@ -83,7 +83,7 @@ cyclicBoundaries
         {
             patchName			periodicY_half1;
             neighbourPatchName		periodicY_half0;
-            nFaces			484;
+            nFaces			400;
             normal			(0 -1 0);
             boundaryPoints
             (
@@ -103,7 +103,7 @@ cyclicBoundaries
         {
             patchName			periodicZ_half0;
             neighbourPatchName		periodicZ_half1;
-            nFaces			484;
+            nFaces			400;
             normal			(0 0 1);
             boundaryPoints
             (
@@ -123,7 +123,7 @@ cyclicBoundaries
         {
             patchName			periodicZ_half1;
             neighbourPatchName		periodicZ_half0;
-            nFaces			484;
+            nFaces			400;
             normal			(0 0 -1);
             boundaryPoints
             (

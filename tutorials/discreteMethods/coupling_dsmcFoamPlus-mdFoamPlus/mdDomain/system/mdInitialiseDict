@@ -35,7 +35,7 @@ polyConfigurations
         }
     
         unitCellSize	1.1;
-        N		3354;
+        N		3293;
     }
 );
 
