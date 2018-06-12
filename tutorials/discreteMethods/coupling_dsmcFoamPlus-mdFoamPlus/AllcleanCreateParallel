@@ -4,21 +4,13 @@ if [ -d "Logs" ]; then
   rm -rf Logs
 fi
 
-# clean and create case 1
-cd dsmcDomain1
+# clean and create dsmc
+cd dsmcDomain
 ./Allclean
 ./caseCreateParallel
 cd ..
 
-# clean and create case 2
-cd dsmcDomain2
-./Allclean
-./caseCreateParallel
-cd ..
-
-# clean and create case 3
+# clean and create md
 cd mdDomain
 ./Allclean
 ./caseCreateParallel
-
-

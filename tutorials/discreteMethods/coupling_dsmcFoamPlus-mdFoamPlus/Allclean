@@ -4,17 +4,12 @@ if [ -d "Logs" ]; then
   rm -rf Logs
 fi
 
-# clean case 1
-cd dsmcDomain1
+# clean dsmc
+cd dsmcDomain
 ./Allclean
 cd ..
 
-# clean case 2
-cd dsmcDomain2
-./Allclean
-cd ..
-
-# clean case 3
+# clean md
 cd mdDomain
 ./Allclean
 cd ..

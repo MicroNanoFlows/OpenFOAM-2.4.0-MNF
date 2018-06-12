@@ -30,11 +30,11 @@ polyConfigurations
     
         boundBox
         {
-          startPoint	(0.9 0.9 0.9);
-          endPoint	(147.058824 147.058824 147.058824);   
+          startPoint	(294.117647 0 0);
+          endPoint	(441.176471 147.058824 147.058824);   
         }
     
-        unitCellSize	1.1;
+        unitCellSize	1;
         N		3293;
     }
 );

@@ -17,7 +17,7 @@ FoamFile
 
 6
 (
-    periodicX_half0
+    periodicX_right
     {
         type            cyclic;
         inGroups        1(cyclic);
@@ -25,9 +25,9 @@ FoamFile
         startFace       22800;
         matchTolerance  0.0001;
         transform       unknown;
-        neighbourPatch  periodicX_half1;
+        neighbourPatch  periodicX_left;
     }
-    periodicX_half1
+    periodicX_left
     {
         type            cyclic;
         inGroups        1(cyclic);
@@ -35,9 +35,9 @@ FoamFile
         startFace       23200;
         matchTolerance  0.0001;
         transform       unknown;
-        neighbourPatch  periodicX_half0;
+        neighbourPatch  periodicX_right;
     }
-    periodicY_half0
+    periodicY_back
     {
         type            cyclic;
         inGroups        1(cyclic);
@@ -45,9 +45,9 @@ FoamFile
         startFace       23600;
         matchTolerance  0.0001;
         transform       unknown;
-        neighbourPatch  periodicY_half1;
+        neighbourPatch  periodicY_front;
     }
-    periodicY_half1
+    periodicY_front
     {
         type            cyclic;
         inGroups        1(cyclic);
@@ -55,9 +55,9 @@ FoamFile
         startFace       24000;
         matchTolerance  0.0001;
         transform       unknown;
-        neighbourPatch  periodicY_half0;
+        neighbourPatch  periodicY_back;
     }
-    periodicZ_half0
+    periodicZ_top
     {
         type            cyclic;
         inGroups        1(cyclic);
@@ -65,9 +65,9 @@ FoamFile
         startFace       24400;
         matchTolerance  0.0001;
         transform       unknown;
-        neighbourPatch  periodicZ_half1;
+        neighbourPatch  periodicZ_bottom;
     }
-    periodicZ_half1
+    periodicZ_bottom
     {
         type            cyclic;
         inGroups        1(cyclic);
@@ -75,7 +75,7 @@ FoamFile
         startFace       24800;
         matchTolerance  0.0001;
         transform       unknown;
-        neighbourPatch  periodicZ_half0;
+        neighbourPatch  periodicZ_top;
     }
 )
 

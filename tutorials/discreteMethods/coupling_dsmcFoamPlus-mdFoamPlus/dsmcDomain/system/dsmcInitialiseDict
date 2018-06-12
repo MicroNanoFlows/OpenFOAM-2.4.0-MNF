@@ -2,7 +2,7 @@
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
 |  \\    /   O peration     | Version:  2.4.0-MNF                             |
-|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -11,13 +11,27 @@ FoamFile
     format      ascii;
     class       dictionary;
     location    "system";
-    object      balanceParDict;
+    object      dsmcInitialiseDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-numberOfSubdomains 4;
+configurations
+(
+    configuration
+    {
+        type	dsmcMeshFill;
 
-method          scotch;
-weightField     dsmcRhoN_mixture;
+	numberDensities
+	{
+		Ar	2.68835e25;
+	};
+
+	translationalTemperature	273;
+	rotationalTemperature		0;
+	vibrationalTemperature		0;
+    	electronicTemperature		0;
+	velocity					(0 0 0);
+    }
+);
 
 // ************************************************************************* //

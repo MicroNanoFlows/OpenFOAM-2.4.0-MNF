@@ -21,16 +21,16 @@ cyclicBoundaries
     {
         cyclicBoundaryProperties
         {
-            patchName			periodicX_half0;
-            neighbourPatchName		periodicX_half1;
+            patchName			periodicX_right;
+            neighbourPatchName		periodicX_left;
             nFaces			400;
             normal			(1 0 0);
             boundaryPoints
             (
-                (147.058824 0 0)
-                (147.058824 0 147.058824)
-                (147.058824 147.058824 147.058824)
-                (147.058824 147.058824 0)
+                (441.176471 0 0)
+                (441.176471 0 147.058824)
+                (441.176471 147.058824 147.058824)
+                (441.176471 147.058824 0)
             );
         }
 	
@@ -41,16 +41,16 @@ cyclicBoundaries
     {
         cyclicBoundaryProperties
         {
-            patchName			periodicX_half1;
-            neighbourPatchName		periodicX_half0;
+            patchName			periodicX_left;
+            neighbourPatchName		periodicX_right;
             nFaces			400;
             normal			(-1 0 0);
             boundaryPoints
             (
-                (0 0 0)
-                (0 0 147.058824)
-                (0 147.058824 147.058824)
-                (0 147.058824 0)
+                (294.117647 0 0)
+                (294.117647 0 147.058824)
+                (294.117647 147.058824 147.058824)
+                (294.117647 147.058824 0)
             );
         }
 	
@@ -61,16 +61,16 @@ cyclicBoundaries
     {
         cyclicBoundaryProperties
         {
-            patchName			periodicY_half0;
-            neighbourPatchName		periodicY_half1;
+            patchName			periodicY_back;
+            neighbourPatchName		periodicY_front;
             nFaces			400;
             normal			(0 1 0);
             boundaryPoints
             (
-                (0 147.058824 0)
-                (147.058824 147.058824 0)
-                (147.058824 147.058824 147.058824)
-                (0 147.058824 147.058824)
+                (294.117647 147.058824 0)
+                (441.176471 147.058824 0)
+                (441.176471 147.058824 147.058824)
+                (294.117647 147.058824 147.058824)
             );
         }
 	
@@ -81,16 +81,16 @@ cyclicBoundaries
     {
         cyclicBoundaryProperties
         {
-            patchName			periodicY_half1;
-            neighbourPatchName		periodicY_half0;
+            patchName			periodicY_front;
+            neighbourPatchName		periodicY_back;
             nFaces			400;
             normal			(0 -1 0);
             boundaryPoints
             (
-                (0 0 0)
-                (147.058824 0 0)
-                (147.058824 0 147.058824)
-                (0 0 147.058824)
+                (294.117647 0 0)
+                (441.176471 0 0)
+                (441.176471 0 147.058824)
+                (294.117647 0 147.058824)
             );
         }
 
@@ -101,16 +101,16 @@ cyclicBoundaries
     {
         cyclicBoundaryProperties
         {
-            patchName			periodicZ_half0;
-            neighbourPatchName		periodicZ_half1;
+            patchName			periodicZ_top;
+            neighbourPatchName		periodicZ_bottom;
             nFaces			400;
             normal			(0 0 1);
             boundaryPoints
             (
-                (0 0 147.058824)
-                (147.058824 0 147.058824)
-                (147.058824 147.058824 147.058824)
-                (0 147.058824 147.058824)
+                (294.117647 0 147.058824)
+                (441.176471 0 147.058824)
+                (441.176471 147.058824 147.058824)
+                (294.117647 147.058824 147.058824)
             );
         }
 	
@@ -121,16 +121,16 @@ cyclicBoundaries
     {
         cyclicBoundaryProperties
         {
-            patchName			periodicZ_half1;
-            neighbourPatchName		periodicZ_half0;
+            patchName			periodicZ_bottom;
+            neighbourPatchName		periodicZ_top;
             nFaces			400;
             normal			(0 0 -1);
             boundaryPoints
             (
-                (0 0 0)
-                (147.058824 0 0)
-                (147.058824 147.058824 0)
-                (0 147.058824 0)
+                (294.117647 0 0)
+                (441.176471 0 0)
+                (441.176471 147.058824 0)
+                (294.117647 147.058824 0)
             );
         }
 	

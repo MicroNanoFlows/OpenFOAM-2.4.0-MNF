@@ -19,18 +19,18 @@ FoamFile
 
 convertToMeters 1;
 
-// Channel size in nm (50 50 50)
+// MD domain size in nm (50 50 50) (total channel size (300 50 50)
 
 vertices
 (
-    (0 0 0)
-    (147.058824 0 0)
-    (147.058824 147.058824 0)
-    (0 147.058824 0)
-    (0 0 147.058824)
-    (147.058824 0 147.058824)
-    (147.058824 147.058824 147.058824)
-    (0 147.058824 147.058824)
+    (294.117647 0 0)
+    (441.176471 0 0)
+    (441.176471 147.058824 0)
+    (294.117647 147.058824 0)
+    (294.117647 0 147.058824)
+    (441.176471 0 147.058824)
+    (441.176471 147.058824 147.058824)
+    (294.117647 147.058824 147.058824)
 );
 
 blocks
@@ -40,46 +40,47 @@ blocks
 
 boundary
 (
-    periodicX_half0
+    // All of these boundaries need replacing with coupling type 
+    periodicX_right
     {
         type cyclic;
         faces ((1 2 6 5));
-        neighbourPatch periodicX_half1;
+        neighbourPatch periodicX_left;
     }
 
-    periodicX_half1
+    periodicX_left
     {
         type cyclic;
         faces ((0 4 7 3));
-        neighbourPatch periodicX_half0;
+        neighbourPatch periodicX_right;
     }
 
-    periodicY_half0
+    periodicY_back
     {
         type cyclic;
         faces ((2 3 7 6));
-        neighbourPatch periodicY_half1;
+        neighbourPatch periodicY_front;
     }
 
-    periodicY_half1
+    periodicY_front
     {
         type cyclic;
         faces ((0 1 5 4));
-        neighbourPatch periodicY_half0;
+        neighbourPatch periodicY_back;
     }
 
-    periodicZ_half0
+    periodicZ_top
     {
         type cyclic;
         faces ((4 5 6 7));
-        neighbourPatch periodicZ_half1;
+        neighbourPatch periodicZ_bottom;
     }
 
-    periodicZ_half1
+    periodicZ_bottom
     {
         type cyclic;
         faces ((0 3 2 1));
-        neighbourPatch periodicZ_half0;
+        neighbourPatch periodicZ_top;
     }
 );
 
