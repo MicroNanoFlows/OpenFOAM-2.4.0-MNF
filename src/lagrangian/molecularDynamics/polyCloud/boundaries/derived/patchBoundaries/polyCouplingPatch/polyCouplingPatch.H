@@ -23,25 +23,25 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    mdMassDensityCoupling
+    polyCouplingPatch
 
 Description
 
-
 SourceFiles
-    mdMassDensityCoupling.C
+    polyCouplingPatch.C
+
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef mdMassDensityCoupling_H
-#define mdMassDensityCoupling_H
+#ifndef polyCouplingPatch_H
+#define polyCouplingPatch_H
 
-#include "polyCouplingController.H"
+#include "polyPatchBoundary.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
 #include "polyMoleculeCloud.H"
-#include "binModel.H"
+#include "distribution.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -49,103 +49,74 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class mdMassDensityCoupling Declaration
+                           Class polyCouplingPatch Declaration
 \*---------------------------------------------------------------------------*/
 
-class mdMassDensityCoupling
+class polyCouplingPatch
 :
-    public polyCouplingController
+	public polyPatchBoundary
 {
 
 private:
 
     // Private data
-
-        //- subDictionarys containing the properties
         dictionary propsDict_;
-        dictionary propsDictSend_;
-        dictionary propsDictRecv_;
 
-        List<label> molIds_;
+        scalar elapsedTime_;
 
-        bool output_;
+        scalar writeInterval_;
 
-        //- MUI coupling interfaces (1D & 2D unused in this controller derivation)
-        couplingInterface1d oneDInterfaces_;
-        couplingInterface2d twoDInterfaces_;
-        couplingInterface3d threeDInterfaces_;
+        scalar startTime_;
 
-#ifdef USE_MUI
-        //- Calculated cell centres
-        List<mui::point3d> cellCentres_;
-#endif
-        //- Sending properties
-#ifdef USE_MUI
-        List<mui::uniface<mui::config_3d>* > sendInterfaces_; //- 3D MUI interfaces to send through
-#endif
-        bool sending_;          //- Determine whether this interface will send
-        List<Foam::word> sendInterfaceNames_;
-        bool sendMass_;
-        bool sendDensity_;
+        scalar molFlux_;
+        scalar massFlux_;
 
-        //- Receiving properties
-#ifdef USE_MUI
-        List<mui::uniface<mui::config_3d>* > recvInterfaces_; //- 3D MUI interfaces to receive from
-#endif
-        bool receiving_;        //- Determine whether this interface will receive
-        List<Foam::word> recvInterfaceNames_;
-        bool recvMass_;
-        bool recvDensity_;
-        Foam::List<List<Foam::scalar> > recvMassValues_;
-        Foam::List<List<Foam::scalar> > recvDensityValues_;
-
-    // Private Member Functions
-
-        template<int cplType>
-        void initConfig();
+        scalar cumulMolFlux_;
+        scalar cumulMassFlux_;
 
 public:
 
     //- Runtime type information
-    TypeName("mdTempMassCoupling");
+    TypeName("polyCouplingPatch");
 
     // Constructors
 
         //- Construct from components
-        mdMassDensityCoupling
-        (
+        polyCouplingPatch
+		(
             Time& t,
+            const polyMesh& mesh,
             polyMoleculeCloud& molCloud,
-            const dictionary& dict,
-            couplingInterface1d &oneDInterfaces,
-            couplingInterface2d &twoDInterfaces,
-            couplingInterface3d &threeDInterfaces
-        );
+            const dictionary& dict
+		);
 
     // Destructor
 
-        ~mdMassDensityCoupling();
+ 		~polyCouplingPatch();
 
 
     // Member Functions
 
-        //- create an initial configuration
         void initialConfiguration();
 
-        //- send any coupled data to the MUI interface (end of time-step)
-        void sendCoupling();
+        //- calculate any required properties
+        void calculateProperties();
 
-        //- receive any coupled data to the MUI interface (end of time-step after sendCoupling)
-        void receiveCoupling();
+        //- control the mols
+        void controlMol
+        (
+            polyMolecule& mol,
+            polyMolecule::trackingData& td
+        );
 
-        //- output data (optional)
+        //- output data
         void output
         (
             const fileName& fixedPathName,
             const fileName& timePath
         );
 
-        //- update properties from a modified dictionary (optional)
+        //- update properties from a modified dictionary
         void updateProperties(const dictionary&);
 };
 

@@ -17,6 +17,33 @@ FoamFile
 
 dsmcPatchBoundaries
 (
+    boundary
+    {
+        patchBoundaryProperties
+        {
+            patchName	couplingX_middle_left;
+        }
+        
+        boundaryModel	dsmcSpecularWallPatch;
+
+        dsmcSpecularWallPatchProperties
+        {
+        }
+    }
+
+    boundary
+    {
+        patchBoundaryProperties
+        {
+            patchName	couplingX_middle_right;
+        }
+        
+        boundaryModel	dsmcSpecularWallPatch;
+
+        dsmcSpecularWallPatchProperties
+        {
+        }
+    }
 );
 
 dsmcCyclicBoundaries

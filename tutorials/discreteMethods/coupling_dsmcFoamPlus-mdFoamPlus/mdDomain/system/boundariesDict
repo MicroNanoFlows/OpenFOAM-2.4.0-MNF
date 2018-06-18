@@ -18,20 +18,38 @@ FoamFile
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 polyPatchBoundaries
 (
+    boundary
+    {
+        boundaryModel  polyCouplingPatch;
+                
+        patchBoundaryProperties
+        {
+            patchName      couplingX_left;
+        }
+
+        polyCouplingPatchProperties
+        {
+
+        }
+    }
+    boundary
+    {
+        boundaryModel  polyCouplingPatch;
+        
+        patchBoundaryProperties
+        {
+            patchName      couplingX_right;
+        }
+
+        polyCouplingPatchProperties
+        {
+
+        }
+    }
 );
 
 polyCyclicBoundaries
-(
-    boundary
-    {
-        boundaryModel  polyStandardCyclic;
-        patchName      periodicX_left;
-    }
-    boundary
-    {
-        boundaryModel  polyStandardCyclic;
-        patchName      periodicX_right;
-    }
+(    
     boundary
     {
         boundaryModel  polyStandardCyclic;

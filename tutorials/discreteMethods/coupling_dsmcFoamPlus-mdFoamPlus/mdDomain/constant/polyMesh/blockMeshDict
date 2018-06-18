@@ -40,19 +40,16 @@ blocks
 
 boundary
 (
-    // All of these boundaries need replacing with coupling type 
-    periodicX_right
+    couplingX_right
     {
-        type cyclic;
+        type patch;
         faces ((1 2 6 5));
-        neighbourPatch periodicX_left;
     }
 
-    periodicX_left
+    couplingX_left
     {
-        type cyclic;
+        type patch;
         faces ((0 4 7 3));
-        neighbourPatch periodicX_right;
     }
 
     periodicY_back

@@ -26,6 +26,39 @@ polyFluxControllers
 
 polyCouplingControllers
 (
+    controller
+    {
+ 	zoneName                    mdZone;
+        stateControllerModel        mdDsmcCoupling;
+
+        mdDsmcCouplingProperties
+        { 	   
+            molIds			(Ar);
+
+            binModel			exactBins;
+
+            cuboidBinsProperties
+            {
+                startPoint		(294.117647 0 0);
+                endPoint		(441.176471 147.058824 147.058824);
+                nBins			(20 20 20);           
+            } 
+        }
+
+	mdDsmcCouplingSending
+	{
+	    sendingInterfaces       (ifs_1 ifs_2);	    
+	    mass		    no;
+	    density		    no;
+	}
+
+	mdDsmcCouplingReceiving
+	{
+	    receivingInterfaces     (ifs_1 ifs_2);
+	    mass		    no;
+	    density		    no;
+	}
+    }
 );    
 
 

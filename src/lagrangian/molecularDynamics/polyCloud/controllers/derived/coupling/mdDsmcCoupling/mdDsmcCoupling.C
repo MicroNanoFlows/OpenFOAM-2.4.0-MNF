@@ -26,7 +26,7 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "mdMassDensityCoupling.H"
+#include "mdDsmcCoupling.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -34,14 +34,14 @@ Description
 namespace Foam
 {
 
-defineTypeNameAndDebug(mdMassDensityCoupling, 0);
+defineTypeNameAndDebug(mdDsmcCoupling, 0);
 
-addToRunTimeSelectionTable(polyCouplingController, mdMassDensityCoupling, dictionary);
+addToRunTimeSelectionTable(polyCouplingController, mdDsmcCoupling, dictionary);
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-mdMassDensityCoupling::mdMassDensityCoupling
+mdDsmcCoupling::mdDsmcCoupling
 (
     Time& t,
     polyMoleculeCloud& molCloud,
@@ -109,13 +109,13 @@ mdMassDensityCoupling::mdMassDensityCoupling
         {
             if(sendInterfaces_[i] == NULL)
             {
-                FatalErrorIn("mdMassDensityCoupling::mdMassDensityCoupling()")
+                FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
                             << "Could not find 3D MUI coupling interface (" << interfaces[i]
                             << ") to send for domain " << threeDInterfaces.domainName << exit(FatalError);
             }
             else
             {
-                Info << "mdMassDensityCoupling::mdMassDensityCoupling(): Found 3D MUI coupling interface ("
+                Info << "mdDsmcCoupling::mdDsmcCoupling(): Found 3D MUI coupling interface ("
                      << interfaces[i] << ") to send for domain " << threeDInterfaces.domainName << endl;
             }
         }
@@ -152,19 +152,19 @@ mdMassDensityCoupling::mdMassDensityCoupling
         {
             if(recvInterfaces_[i] == NULL)
             {
-                FatalErrorIn("mdMassDensityCoupling::mdMassDensityCoupling()")
+                FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
                             << "Could not find 3D MUI coupling interface (" << interfaces[i]
                             << ") to receive for domain " << threeDInterfaces.domainName << exit(FatalError);
             }
             else
             {
-                Info << "mdMassDensityCoupling::mdMassDensityCoupling(): Found 3D MUI coupling interface ("
+                Info << "mdDsmcCoupling::mdDsmcCoupling(): Found 3D MUI coupling interface ("
                      << interfaces[i] << ") to receive for domain " << threeDInterfaces.domainName << endl;
             }
         }
     }
 #else
-    FatalErrorIn("mdMassDensityCoupling::mdMassDensityCoupling()")
+    FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
                 << "MUI library not enabled at compilation" << exit(FatalError);
 #endif
 
@@ -215,6 +215,11 @@ mdMassDensityCoupling::mdMassDensityCoupling
 
     molIds_ = ids.molIds();
 
+    binModel_ =  autoPtr<binModel>
+    (
+        binModel::New(mesh_, propsDict_)
+    );
+
     if (propsDict_.found("output"))
     {
         output_ = Switch(propsDict_.lookup("output"));
@@ -224,12 +229,12 @@ mdMassDensityCoupling::mdMassDensityCoupling
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-mdMassDensityCoupling::~mdMassDensityCoupling()
+mdDsmcCoupling::~mdDsmcCoupling()
 {}
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void mdMassDensityCoupling::initialConfiguration()
+void mdDsmcCoupling::initialConfiguration()
 {
 #ifdef USE_MUI
     //- Only send initial data if at least one sending interface is defined
@@ -338,7 +343,13 @@ void mdMassDensityCoupling::initialConfiguration()
 #endif
 }
 
-void mdMassDensityCoupling::sendCoupling()
+void mdDsmcCoupling::calculateProperties()
+{
+    //- Calculate velocity histogram for all molecules in coupling region
+
+}
+
+void mdDsmcCoupling::sendCoupling()
 {
 #ifdef USE_MUI
     //- Only send data if at least one sending interface is defined
@@ -415,7 +426,7 @@ void mdMassDensityCoupling::sendCoupling()
 #endif
 }
 
-void mdMassDensityCoupling::receiveCoupling()
+void mdDsmcCoupling::receiveCoupling()
 {
 #ifdef USE_MUI
     //- Only receive data if at least one receiving interface is defined
@@ -458,7 +469,7 @@ void mdMassDensityCoupling::receiveCoupling()
 #endif
 }
 
-void mdMassDensityCoupling::output
+void mdDsmcCoupling::output
 (
     const fileName& fixedPathName,
     const fileName& timePath
@@ -504,7 +515,7 @@ void mdMassDensityCoupling::output
 #endif
 }
 
-void mdMassDensityCoupling::updateProperties(const dictionary& newDict)
+void mdDsmcCoupling::updateProperties(const dictionary& newDict)
 {
     //- the main controller properties should be updated first
     updateCouplingControllerProperties(newDict);

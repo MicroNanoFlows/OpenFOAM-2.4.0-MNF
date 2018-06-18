@@ -32,4 +32,8 @@ if [ -f "random_mdFoamPlus" ]; then
   rm -f random_mdFoamPlus
 fi
 
+if [ -f "system/cyclicBoundaries" ]; then
+  rm -f system/cyclicBoundaries
+fi
+
 # ----------------------------------------------------------------- end-of-file

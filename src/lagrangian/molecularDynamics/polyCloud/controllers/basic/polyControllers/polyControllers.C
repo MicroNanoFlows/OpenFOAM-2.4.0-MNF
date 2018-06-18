@@ -660,13 +660,11 @@ void polyControllers::calculateStateProps()
 {
     forAll(stateControllers_, sC)
     {
-//         Info << "error: " << sCNames_[sC] << endl;
         stateControllers_[sC]->calculateProperties();
     }
 
     forAll(fluxControllers_, fC)
     {
-//         Info << "error: " << sCNames_[sC] << endl;
         fluxControllers_[fC]->calculateProperties();
     }
 

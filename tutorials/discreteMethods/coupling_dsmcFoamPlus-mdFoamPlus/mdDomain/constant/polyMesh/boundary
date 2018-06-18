@@ -17,25 +17,17 @@ FoamFile
 
 6
 (
-    periodicX_right
+    couplingX_right
     {
-        type            cyclic;
-        inGroups        1(cyclic);
+        type            patch;
         nFaces          400;
         startFace       22800;
-        matchTolerance  0.0001;
-        transform       unknown;
-        neighbourPatch  periodicX_left;
     }
-    periodicX_left
+    couplingX_left
     {
-        type            cyclic;
-        inGroups        1(cyclic);
+        type            patch;
         nFaces          400;
         startFace       23200;
-        matchTolerance  0.0001;
-        transform       unknown;
-        neighbourPatch  periodicX_right;
     }
     periodicY_back
     {

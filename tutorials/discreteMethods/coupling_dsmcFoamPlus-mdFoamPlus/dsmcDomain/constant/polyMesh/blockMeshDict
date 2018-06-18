@@ -61,22 +61,18 @@ boundary
         type cyclic;
         faces ((14 10 9 13));
         neighbourPatch cyclicX_left;
-    }
+    }    
     
-    //This boundary needs to be replaced with the new coupling boundary
-    cyclicX_middle_left
+    couplingX_middle_left
     {
-        type cyclic;
+        type patch;
         faces ((6 2 1 5));
-        neighbourPatch cyclicX_middle_right;
     }
-	
-	//This boundary needs to be replaced with the new coupling boundary
-    cyclicX_middle_right
+
+    couplingX_middle_right
     {
-        type cyclic;
+        type patch;
         faces ((8 11 15 12));
-        neighbourPatch cyclicX_middle_left;
     }
 
     cyclicY_left_back

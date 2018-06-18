@@ -29,9 +29,27 @@ dsmcFields
 
         dsmcZoneProperties
         {
-            zoneName		dsmcZone;
+            zoneName		dsmcZone1;
             fieldName		Ar;
-            typeIds			(Ar);
+            typeIds		(Ar);
+        }
+    }
+
+    field
+    {
+        fieldModel	dsmcZone;
+
+        timeProperties
+        {
+            timeOption		write;
+            resetAtOutput	off;
+        }
+
+        dsmcZoneProperties
+        {
+            zoneName		dsmcZone2;
+            fieldName		Ar;
+            typeIds		(Ar);
         }
     }
 
