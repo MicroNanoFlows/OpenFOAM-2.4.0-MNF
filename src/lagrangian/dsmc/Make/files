@@ -115,6 +115,7 @@ boundaries/derived/generalBoundaries/dsmcWangPressureInlet/dsmcWangPressureInlet
 boundaries/derived/generalBoundaries/dsmcMassFlowRateInlet/dsmcMassFlowRateInlet.C
 
 /* CYCLIC BOUNDARY MODELS */
+boundaries/derived/cyclicBoundaries/dsmcReflectiveParticleMembranePatch/dsmcReflectiveParticleMembranePatch.C
 
 
 /* COMBINED */

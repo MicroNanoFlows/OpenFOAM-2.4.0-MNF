@@ -66,6 +66,8 @@ private:
         dictionary propsDict_;
 
         scalar p_;
+        vector velocity_;
+        scalar temperature_;
 
         label nReflections_;
         label nRejections_;
