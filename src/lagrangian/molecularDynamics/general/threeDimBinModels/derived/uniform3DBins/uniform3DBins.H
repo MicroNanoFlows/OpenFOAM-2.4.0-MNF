@@ -28,15 +28,15 @@ Class
 Description
 
 SourceFiles
-    exactBins.C
+    uniform3DBins.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef exactBins_H
-#define exactBins_H
+#ifndef uniform3DBins_H
+#define uniform3DBins_H
 
 
-#include "binModel.H"
+#include "threeDimBinModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -44,12 +44,12 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class exactBins Declaration
+                           Class uniform3DBins Declaration
 \*---------------------------------------------------------------------------*/
 
-class exactBins
+class uniform3DBins
 :
-    public binModel
+    public threeDimBinModel
 {
 
 private:
@@ -66,19 +66,19 @@ private:
 
         vector nBins_;
         vector binWidth_;
-        vector area_;
+        scalar area_;
 
 public:
 
     //- Runtime type information
-    TypeName("exactBins");
+    TypeName("uniform3DBins");
 
     // Static data members
 
     // Constructors
 
         //- construct from components
-        exactBins
+        uniform3DBins
         (
             const polyMesh& mesh,
             const dictionary& dict
@@ -88,7 +88,7 @@ public:
 
     // Destructor
 
-        ~exactBins();
+        ~uniform3DBins();
 
     // Member Functions
 
@@ -98,19 +98,30 @@ public:
 
         // Edit
 
-            label isPointWithinBin
+            List<label> isPointWithinBin
             (
                 const vector& rI,
                 const label& cellI
             );
 
-            scalarField binPositions();
+            vectorField binPositionsX();
+            scalarField binPositionsY();
+            scalarField binPositionsZ();
 
-            vectorField bins();
+            vectorField binPositionsXYZ();
 
-            const label& nBins() const;
+            vectorField position();
+
+            // 0 length, 1 radius, 2 angle
+            List<label> nBins();
 
             scalar binVolume(const label& n);
+
+            void write
+            (
+                const fileName& path,
+                const word& name
+            );
 
             
 

@@ -24,6 +24,10 @@ if [ -d "boundaries" ]; then
   rm -rf boundaries
 fi
 
+if [ -d "controllers" ]; then
+  rm -rf controllers
+fi
+
 if [ -f "random_mdInitialiseField" ]; then
   rm -f random_mdInitialiseField
 fi

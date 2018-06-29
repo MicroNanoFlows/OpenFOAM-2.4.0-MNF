@@ -139,6 +139,7 @@ public:
             vectorField binPositionsX();
             scalarField binPositionsY();
             scalarField binPositionsZ();
+            vectorField binPositionsXYZ();
 
             vector position(const vector&, const scalar&, const scalar&);
 

@@ -121,9 +121,11 @@ public:
             virtual vectorField binPositionsX() = 0;
             virtual scalarField binPositionsY() = 0;
             virtual scalarField binPositionsZ() = 0;
+            virtual vectorField binPositionsXYZ() = 0;
 
 //             virtual vectorField bins() = 0;
 
+            virtual vector position() = 0;
             virtual vector position(const vector&, const scalar&, const scalar&) = 0;
 
             virtual List<label> nBins() = 0;

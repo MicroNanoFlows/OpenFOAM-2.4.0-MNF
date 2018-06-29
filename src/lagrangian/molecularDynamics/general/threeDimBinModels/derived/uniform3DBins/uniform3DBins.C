@@ -23,13 +23,13 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    exatBins
+    uniform3DBins
 
 Description
 
 \*----------------------------------------------------------------------------*/
 
-#include "exactBins.H"
+#include "uniform3DBins.H"
 
 #include "addToRunTimeSelectionTable.H"
 
@@ -38,9 +38,9 @@ namespace Foam
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(exactBins, 0);
+defineTypeNameAndDebug(uniform3DBins, 0);
 
-addToRunTimeSelectionTable(binModel, exactBins, dictionary);
+addToRunTimeSelectionTable(threeDimBinModel, uniform3DBins, dictionary);
 
 
 
@@ -50,13 +50,13 @@ addToRunTimeSelectionTable(binModel, exactBins, dictionary);
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 //- Construct from components
-exactBins::exactBins
+uniform3DBins::uniform3DBins
 (
     const polyMesh& mesh,
     const dictionary& dict
 )
 :
-    binModel(mesh, dict),
+    threeDimBinModel(mesh, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
     startPoint_(propsDict_.lookup("startPoint")),
     endPoint_(propsDict_.lookup("endPoint")),
@@ -70,80 +70,123 @@ exactBins::exactBins
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-exactBins::~exactBins()
+uniform3DBins::~uniform3DBins()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 // cellI is a dummy variable
-label exactBins::isPointWithinBin
+List<label> uniform3DBins::isPointWithinBin
 (
     const vector& rI,
     const label& cellI
 )
 {
-    vector binNumber(-1, -1, -1);
-
+    List<label> binNumbers(3, -1);
+/*
     vector rSI = rI - startPoint_;
     scalar rD = rSI & unitVector_;
-    vector n(label(rD/binWidth_(0)), label(rD/binWidth_(1)), label(rD/binWidth_(2)));
+    vector n(label(rD/binWidth_[0]), label(rD/binWidth_[1]), label(rD/binWidth_[2]));
     
     if
     (
         (rD <= rSEMag_) && (rD >= 0.0)
     )
     {
-      forAll()
-        if( == nBins_(0))
+      forAll(n, i)
+      {
+        if(n[i] == nBins_[i])
         {
-            n--;
+            n[i]--;
         }
 
-        if( (n >=0) && (n < nBins_) )
+        if( (n[i] >= 0) && (n[i] < nBins_[i]) )
         {
-            binNumber = n;
+            binNumber[i] = n[i];
         }
+      }
     }
-
-    return binNumber;
+*/
+    return binNumbers;
 }
 
+vectorField uniform3DBins::binPositionsX()
+{}
 
-scalarField exactBins::binPositions()
+scalarField uniform3DBins::binPositionsY()
+{}
+
+scalarField uniform3DBins::binPositionsZ()
+{}
+
+vectorField uniform3DBins::binPositionsXYZ()
 {
-    scalarField positions(nBins_, 0.0);
+    scalar totalBins = nBins_[0]*nBins_[1]*nBins_[2];
+    vectorField positions(totalBins, vector::zero);
+    label i, j, k;
 
-    forAll(positions, i)
+    for (i = 0; i < nBins_[0]; i++)
     {
-        positions[i] = 0.5*binWidth_ + scalar(i)*binWidth_;
+        for (j = 0; j < nBins_[1]; j++)
+        {
+            for (k = 0; k < nBins_[2]; k++)
+            {
+                scalar pos_x = 0.5*binWidth_[i] + scalar(i)*binWidth_[i];
+                scalar pos_y = 0.5*binWidth_[j] + scalar(j)*binWidth_[j];
+                scalar pos_z = 0.5*binWidth_[k] + scalar(k)*binWidth_[k];
+
+                vector pos(pos_x, pos_y, pos_z);
+
+                positions[i*j*k] = pos;
+            }
+        }
     }
 
     return positions;
 }
 
-vectorField exactBins::bins()
-{
-    vectorField positions(nBins_, vector::zero);
+void uniform3DBins::write
+(
+    const fileName& path,
+    const word& name
+)
+{}
 
+vectorField uniform3DBins::position()
+{
+    vectorField positions(nBins_[0], vector::zero);
+
+    /*
     forAll(positions, i)
     {
         positions[i] = startPoint_ + (0.5 + scalar(i))*binWidth_*unitVector_;
     }
+    */
 
     return positions;
 }
 
-const label& exactBins::nBins() const
+List<label> uniform3DBins::nBins()
 {
-    return nBins_;
+    List<label> nBins(3, -1);
+
+    nBins[0] = nBins_[0];
+    nBins[1] = nBins_[1];
+    nBins[2] = nBins_[2];
+
+    return nBins;
 }
 
-scalar exactBins::binVolume(const label& n)
+scalar uniform3DBins::binVolume(const label& n)
 {
-    scalar volume = area_*binWidth_;
+  /*
+  scalar volume = area_*binWidth_;
 
-    return volume;
+  return volume;
+  */
+
+  return 0;
 }
 
 

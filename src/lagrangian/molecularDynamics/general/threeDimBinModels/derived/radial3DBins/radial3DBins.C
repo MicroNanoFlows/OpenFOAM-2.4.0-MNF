@@ -379,6 +379,10 @@ scalarField radial3DBins::binPositionsZ()
     return positionsA;
 }
 
+// 3D positions for non radial binning types
+vectorField radial3DBins::binPositionsXYZ()
+{}
+
 
 void radial3DBins::write
 (

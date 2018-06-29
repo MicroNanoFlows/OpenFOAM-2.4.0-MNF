@@ -42,6 +42,12 @@ distributions/radialDistribution/derived/rdfTable/rdfTable.C
 distributions/radialDistribution/derived/matteoliAndMansoori/matteoliAndMansoori.C
 distributions/radialDistribution/derived/matteoliAndMansooriMod/matteoliAndMansooriMod.C
 
+/*  THREE DIMENSIONAL BINS*/
+
+threeDimBinModels/basic/threeDimBinModel.C
+threeDimBinModels/derived/radial3DBins/radial3DBins.C
+threeDimBinModels/derived/uniform3DBins/uniform3DBins.C
+
 /*  TWO DIMENSIONAL BINS */
 
 twoDimBinModels/basic/twoDimBinModel.C
@@ -49,11 +55,6 @@ twoDimBinModels/derived/radial2DBins/radial2DBins.C
 twoDimBinModels/derived/twoDimBins/twoDimBins.C
 twoDimBinModels/derived/boundBoxMultiOneDimBins/boundBoxMultiOneDimBins.C
 twoDimBinModels/derived/twoDimBinsII/twoDimBinsII.C
-
-/*  THREE DIMENSIONAL BINS*/
-
-threeDimBinModels/basic/threeDimBinModel.C
-threeDimBinModels/derived/radial3DBins/radial3DBins.C
 
 /*  ONE DIMENSIONAL BINS*/
 
