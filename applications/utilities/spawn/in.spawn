@@ -1,0 +1,44 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:                                    |
+|   \\  /    A nd           | Web:      http://www.OpenFOAM.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     5.0;
+    format      ascii;
+    class       dictionary;
+    object      spawn;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+typeNames           ( carbon );
+
+meshBoundsBox
+{
+    startPoint      (0 0 0);
+    endPoint        (100 100 100);
+}
+
+models
+(
+    model
+    {
+        model             lattice;
+        types               ( carbon );
+        latticeType         SC;
+        unitCellSize        1.5;
+        boundsBox
+        {
+            startPoint      (0 0 0);
+            endPoint        (100 10 100);
+        }
+    }
+    
+    
+);
+
+// ************************************************************************* //

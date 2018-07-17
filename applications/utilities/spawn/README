@@ -1,0 +1,9 @@
+move this folder to 
+
+/home/lap06150/OpenFOAM/OpenFOAM-2.4.0-MNF/applications/utilities/spawn
+
+compile
+
+./compile.sh
+
+use in.spawn where ever you want

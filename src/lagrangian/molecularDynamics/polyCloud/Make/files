@@ -104,6 +104,8 @@ initialiseMolecules/derived/freezeMolecules/freezeMolecules.C
 initialiseMolecules/derived/simpleLattice/simpleLattice.C
 initialiseMolecules/derived/polyCylinder/polyCylinder.C
 initialiseMolecules/derived/polyReplaceMoleculesRandomly/polyReplaceMoleculesRandomly.C
+initialiseMolecules/derived/polyCNGraphenePeriodic/polyCNGraphenePeriodic.C
+
 
 /* Deletion */
 
