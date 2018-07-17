@@ -59,7 +59,7 @@ allConfigurations::allConfigurations
     configurations_(configurationList_.size())
 {
 
-    Info << nl << "Reading in all instructions" << nl << endl;
+    Info << nl << "Reading in all instructions from Earthlings" << nl << endl;
     
     if (configurations_.size() > 0)
     {
@@ -108,11 +108,12 @@ void allConfigurations::spawn()
 {
     if(configurations_.size() > 0 )
     {
-        Info << nl << "Let the spawning of molecules begin..." << nl << endl;
+        Info << nl << "Let the spawning of matter begin..." << nl << endl;
         
         forAll(configurations_, c)
         {
-            Info << "Configuration #: " << c+1 << endl;
+            Info << "Configuration #: " << c+1 << ".  " 
+                 <<  configurations_[c]->type() << endl;
             
             configurations_[c]->spawn();
         }

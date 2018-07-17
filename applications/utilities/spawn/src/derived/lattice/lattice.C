@@ -70,8 +70,6 @@ lattice::~lattice()
 
 void lattice::spawn()
 {
-    Info << nl << "Spawning: " << type() << endl;
-    
     const List<word> types(dict_.lookup("types")); 
 
     forAll(types, i)
@@ -177,7 +175,7 @@ void lattice::spawn()
     // check for overlaps here (to add)
     
     
-    
+
     forAll(positions, i)
     {
         cloud_.positions().append(positions[i]);
@@ -195,7 +193,10 @@ void lattice::spawn()
         
         cloud_.charges().append(0.0);
     }
-    
+        
+    Info << nl << "    No. of atoms created = " 
+        << positions.size() << nl
+        << endl;
 }
 
 void lattice::setBoundsBox

@@ -68,6 +68,7 @@ class molecules
         
         boundsBox bMesh_;
         
+
         
     // Private Member Functions
         
@@ -84,7 +85,7 @@ public:
 
     // Constructors
 
-        //- Construct from mesh and timeInfo
+        //- Construct
         molecules
         (
 //             const polyMesh& mesh,

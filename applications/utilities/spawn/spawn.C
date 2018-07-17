@@ -26,8 +26,14 @@ Application
 
 
 Description
-    Deletes molecules based on an input model.
 
+    This is SPAWN.
+    
+    A utility that enables generation, and manipulation of atoms
+    for molecular dynamics simulations (e.g. for LAMMPS). 
+    
+    If only we are able to create matter so easily in real life...
+    
 
 \*---------------------------------------------------------------------------*/
 
@@ -46,18 +52,6 @@ int main(int argc, char *argv[])
 #   include "setRootCase.H"
 #   include "setTime.H"
 #   include "createTime.H"
-// #   include "createMesh.H"
-    
-//     Foam::fvMesh mesh
-//     (
-//         Foam::IOobject
-//         (
-//             Foam::fvMesh::defaultRegion,
-//             "",
-// //             runTime,
-//             Foam::IOobject::NO_READ
-//         )
-//     );
     
     IOdictionary dict
     (
@@ -89,10 +83,17 @@ int main(int argc, char *argv[])
 
     cloud.write();
 
-//     Info << nl << "ClockTime = " << runTime.elapsedClockTime() << " s" << nl << endl; 
+    Info << nl << "In this session, total number of atoms created = "
+         << cloud.size() << endl;
+         
+    Info << nl << "ClockTime = " << runTime.elapsedClockTime() << " s" << nl << endl; 
 
     Info << nl << "End\n" << endl;
 
+    // remove system directory
+    
+    rmDir(systemDir);
+    
     return 0;
 }
 

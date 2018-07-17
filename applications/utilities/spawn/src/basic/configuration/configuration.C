@@ -65,7 +65,7 @@ autoPtr<configuration> configuration::New
         dict.lookup("model")
     );
 
-    Info<< "Selecting configuration " << configurationName << endl;
+    Info<< "Creating new configuration model: " << configurationName << endl;
 
     dictionaryConstructorTable::iterator cstrIter =
         dictionaryConstructorTablePtr_->find(configurationName);

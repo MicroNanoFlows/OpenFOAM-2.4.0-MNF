@@ -5,6 +5,9 @@ boundsBox/boundsBox.C
 basic/allConfigurations/allConfigurations.C
 basic/configuration/configuration.C
 
+/* derived models */
+
 derived/lattice/lattice.C
+derived/unitCell/unitCell.C
 
 LIB = $(FOAM_LIBBIN)/libspawn

@@ -23,24 +23,25 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    lattice
+    unitCell
 
 Description
 
 
 SourceFiles
-    latticeI.H
-    lattice.C
-
+    unitCellI.H
+    unitCell.C
 
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef lattice_H
-#define lattice_H
+#ifndef unitCell_H
+#define unitCell_H
 
 #include "configuration.H"
 #include "molecules.H"
+#include "IFstream.H"
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -48,10 +49,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class lattice Declaration
+                           Class unitCell Declaration
 \*---------------------------------------------------------------------------*/
 
-class lattice
+class unitCell
 :
 	public configuration
 {
@@ -73,12 +74,12 @@ private:
 public:
 
     //- Runtime type information
-    TypeName("lattice");
+    TypeName("unitCell");
 
     // Constructors
 
         //- Construct from components
-        lattice
+        unitCell
         (
             molecules& cloud,
             const dictionary& dict
@@ -86,7 +87,7 @@ public:
 
     // Destructor
 
-        ~lattice();
+        ~unitCell();
 
 
     // Member Functions
