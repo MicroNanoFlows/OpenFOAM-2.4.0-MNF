@@ -138,7 +138,6 @@ inline Foam::scalar Foam::particle::tetLambda
     return lambdaNumerator/lambdaDenominator;
 }
 
-
 inline Foam::scalar Foam::particle::movingTetLambda
 (
     const vector& from,

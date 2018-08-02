@@ -437,9 +437,9 @@ public:
             (
                 const polyPatch&,
                 trackingData& td,
-                const label patchI,
-                const scalar trackFraction,
-                const tetIndices& tetIs
+                const label patchI
+//                 const scalar trackFraction
+//                 const tetIndices& tetIs
             );
 
             //- Overridable function to handle the particle hitting a processorPatch
@@ -453,8 +453,8 @@ public:
             void hitWallPatch
             (
                 const wallPolyPatch&,
-                trackingData& td,
-                const tetIndices&
+                trackingData& td
+//                 const tetIndices&
             );
             
             //- Overridable function to handle the particle hitting a polyPatch

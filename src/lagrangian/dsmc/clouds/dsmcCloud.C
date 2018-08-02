@@ -68,7 +68,7 @@ void Foam::dsmcCloud::buildCellOccupancy()
         cellOccupancy_[cO].clear();
     }
 
-   forAllIter(dsmcCloud, *this, iter)
+    forAllIter(dsmcCloud, *this, iter)
     {
         if(iter().stuckToWall() != 1)
         {

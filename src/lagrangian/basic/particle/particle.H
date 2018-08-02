@@ -552,8 +552,8 @@ public:
             //  on entry 'stepFraction()' should be set to the fraction of the
             //  time-step at which the tracking starts.
             template<class TrackData>
-            scalar trackToFace(const vector& endPosition, TrackData& td, 
-                                                                bool DSMC);
+            scalar trackToFace(const vector& startPosition, const vector& 
+                            endPosition, TrackData& td, bool DSMC);
 
             //- Return the index of the face to be used in the interpolation
             //  routine
