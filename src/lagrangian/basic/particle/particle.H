@@ -265,6 +265,14 @@ protected:
             const scalar trackFraction,
             const tetIndices& tetIs
         );
+        
+        template<class TrackData>
+        bool hitPatch
+        (
+            const polyPatch&,
+            TrackData& td,
+            const label patchI
+        );
 
         //- Overridable function to handle the particle hitting a wedgePatch
         template<class TrackData>
@@ -309,6 +317,14 @@ protected:
             const wallPolyPatch&,
             TrackData& td,
             const tetIndices& tetIs
+        );
+        
+        //- Overridable function to handle the particle hitting a wallPatch
+        template<class TrackData>
+        void hitWallPatch
+        (
+            const wallPolyPatch&,
+            TrackData& td
         );
 
         //- Overridable function to handle the particle hitting a

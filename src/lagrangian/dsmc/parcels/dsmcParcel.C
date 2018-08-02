@@ -87,7 +87,7 @@ bool Foam::dsmcParcel::move
 //             initPos.y() += VSMALL;
 //             initPos.z() += VSMALL;
 
-            dt *= trackToFace(initPos, position() + dt*Utracking, td, true);
+            dt *= trackToFace(position(), position() + dt*Utracking, td, true);
 
             tEnd -= dt;
 
@@ -132,9 +132,9 @@ bool Foam::dsmcParcel::hitPatch
 (
     const polyPatch&,
     trackingData& td,
-    const label
-//     const scalar
-//     const tetIndices&
+    const label,
+    const scalar,
+    const tetIndices&
 )
 {
     return false;
@@ -152,8 +152,8 @@ void Foam::dsmcParcel::hitProcessorPatch
 void Foam::dsmcParcel::hitWallPatch
 (
     const wallPolyPatch& wpp,
-    trackingData& td
-//     const tetIndices& tetIs
+    trackingData& td,
+    const tetIndices& tetIs
 )
 {
     //-find which patch has been hit
