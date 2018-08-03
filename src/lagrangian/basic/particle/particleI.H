@@ -704,6 +704,11 @@ inline Foam::label& Foam::particle::face()
     return faceI_;
 }
 
+inline Foam::vector Foam::particle::faceNormal() const
+{
+    return mesh_.faceAreas()[faceI_];
+}
+
 
 inline void Foam::particle::initCellFacePt()
 {

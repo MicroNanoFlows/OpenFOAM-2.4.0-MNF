@@ -140,6 +140,17 @@ bool Foam::dsmcParcel::hitPatch
     return false;
 }
 
+bool Foam::dsmcParcel::hitPatch
+(
+    const polyPatch&,
+    trackingData& td,
+    const label
+)
+{
+    return false;
+}
+
+
 void Foam::dsmcParcel::hitProcessorPatch
 (
     const processorPolyPatch&,
@@ -162,7 +173,25 @@ void Foam::dsmcParcel::hitWallPatch
     const label& patchModelId = td.cloud().boundaries().
     patchToModelIds()[patchIndex];
 
-    // apply a boundary model when a molecule collides with this poly patch
+    // apply a boundary model when a particle collides with this poly patch
+    td.cloud().boundaries().
+    patchBoundaryModels()[patchModelId]->controlParticle(*this, td);
+}
+
+void Foam::dsmcParcel::hitWallPatch
+(
+    const wallPolyPatch& wpp,
+    trackingData& td
+)
+{
+//     Info << "PERFORMING WALL CODE" << endl;
+    //-find which patch has been hit
+    label patchIndex = wpp.index();
+
+    const label& patchModelId = td.cloud().boundaries().
+    patchToModelIds()[patchIndex];
+
+    // apply a boundary model when a particle collides with this poly patch
     td.cloud().boundaries().
     patchBoundaryModels()[patchModelId]->controlParticle(*this, td);
 }
@@ -179,7 +208,7 @@ void Foam::dsmcParcel::hitPatch
     const label& patchModelId = td.cloud().boundaries().
     patchToModelIds()[patchIndex];
 
-    // apply a boundary model when a molecule collides with this poly patch
+    // apply a boundary model when a particle collides with this poly patch
     td.cloud().boundaries().
     patchBoundaryModels()[patchModelId]->controlParticle(*this, td);
 }

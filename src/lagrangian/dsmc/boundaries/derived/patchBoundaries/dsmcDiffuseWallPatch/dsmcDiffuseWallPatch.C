@@ -99,7 +99,7 @@ void dsmcDiffuseWallPatch::controlParticle(dsmcParcel& p, dsmcParcel::trackingDa
 
     label typeId = p.typeId();
 
-    vector nw = p.normal();
+    vector nw = p.faceNormal();
     nw /= mag(nw);
 
     // Normal velocity magnitude
