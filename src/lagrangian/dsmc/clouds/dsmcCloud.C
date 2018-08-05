@@ -651,6 +651,7 @@ Foam::dsmcCloud::dsmcCloud
     axisymmetric_(Switch(particleProperties_.lookup("axisymmetricSimulation"))),
     radialExtent_(0.0),
     maxRWF_(1.0),
+    chemReact_(Switch(particleProperties_.lookup("chemicalReactions"))),
     charged_(Switch(particleProperties_.lookup("chargedParticles"))),
     adsorption_(Switch(particleProperties_.lookup("adsorption"))),
     nTerminalOutputs_(readLabel(controlDict_.lookup("nTerminalOutputs"))),
@@ -677,7 +678,8 @@ Foam::dsmcCloud::dsmcCloud
     ),
     collisionSelectionRemainder_(mesh_.nCells(), 0),
     constProps_(),
-    rndGen_(label(clock::getTime()) + 7183*Pstream::myProcNo()),
+//     rndGen_(label(clock::getTime()) + 7183*Pstream::myProcNo()),
+    rndGen_(label(971501) + 1526*Pstream::myProcNo()),
     controllers_(t, mesh, *this),
     dynamicLoadBalancing_(t, mesh, *this),
     fields_(t, mesh, *this),
@@ -712,8 +714,17 @@ Foam::dsmcCloud::dsmcCloud
         maxRWF_ -= 1.0;
     }
 
+//     forAll(mesh_.cells(), c)
+//     {
+//         const labelList& cellFaces = mesh_.cells()[c];
+//         
+//         Info << "cellFaces = " << cellFaces << endl;
+//     }
 
-    reactions_.initialConfiguration();
+    if(chemReact_)
+    {
+        reactions_.initialConfiguration();
+    }
 
     buildCellOccupancy();
 
@@ -778,6 +789,7 @@ Foam::dsmcCloud::dsmcCloud
     axisymmetric_(Switch(particleProperties_.lookup("axisymmetricSimulation"))),
     radialExtent_(0.0),
     maxRWF_(1.0),
+    chemReact_(Switch(particleProperties_.lookup("chemicalReactions"))),
     charged_(Switch(particleProperties_.lookup("chargedParticles"))),
     adsorption_(Switch(particleProperties_.lookup("adsorption"))),
     nTerminalOutputs_(readLabel(controlDict_.lookup("nTerminalOutputs"))),
@@ -929,13 +941,19 @@ void Foam::dsmcCloud::evolve()
     // Calculate new velocities via stochastic collisions
     collisions();
     
-     // Update cell occupancy (reactions may have changed it)
-    buildCellOccupancy();
+    if(chemReact_)
+    {
+        // Update cell occupancy (reactions may have changed it)
+        buildCellOccupancy();
+    }
 
     controllers_.controlAfterCollisions();//****
     boundaries_.controlAfterCollisions();//****
 
-    reactions_.outputData();
+    if(chemReact_)
+    {
+        reactions_.outputData();
+    }
 
     fields_.calculateFields();//****
     fields_.writeFields();//****

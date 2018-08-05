@@ -199,7 +199,7 @@ Foam::label Foam::particle::track(const vector& endPosition, TrackData& td)
 
 template<class TrackData>
 Foam::label Foam::particle::track(const vector& endPosition, TrackData& td, 
-                                                                    bool DSMC)
+                                                                    bool DSMC) 
 {
     faceI_ = -1;
 
@@ -483,7 +483,8 @@ Foam::scalar Foam::particle::trackToFace
         }
         else if (triI > 0)
         {
-            // A tri was found to be crossed before a wall face was hit (if any)
+            // A tri was found to be crossed before a wall face was hit
+            // (if any)
             faceI_ = -1;
         }
 
@@ -748,167 +749,141 @@ Foam::scalar Foam::particle::trackToFace
     cloudType& cloud = td.cloud();
 
     const labelList& cellFaces = mesh_.cells()[cellI_];
-    vectorField faceNormals(cellFaces.size(), vector::zero);
-    vectorField faceCentres(cellFaces.size(), vector::zero);
-    const vector particleLine = endPosition - startPosition;
+    const vector particleRay = endPosition - startPosition;
     vector nearestContactPoint = Foam::vector(GREAT,GREAT,GREAT);
     vector contactPoint(vector::zero);
     bool faceHit = false;
+    scalar tMax = GREAT;
    
     faceI_ = -1;
       
     scalar trackFraction = 0.0;
-    
+            
     forAll(cellFaces, f)
     {
-        faceNormals[f] = mesh_.faceAreas()[cellFaces[f]]
-                                    /mag(mesh_.faceAreas()[cellFaces[f]]);
+        vector faceCentre = mesh_.faceCentres()[cellFaces[f]];
+        vector faceNormal = mesh_.faceAreas()[cellFaces[f]];
+        faceNormal /= mag(faceNormal);
         
-        //orient face normals appropriately for ray-trace                          
-        if(faceNormals[f].x() > 0)
+        //- Check that line (particle displacement) and plane (cell face) 
+        //- are not parallel. This would cause a division by zero
+        //- and physically means that the line and plane will never intersect
+        if((faceNormal & particleRay) != 0.0)
         {
-            faceNormals[f].x() *= -1.0;
-        }
-        if(faceNormals[f].y() > 0)
-        {
-            faceNormals[f].y() *= -1.0;
-        }
-        if(faceNormals[f].z() > 0)
-        {
-            faceNormals[f].z() *= -1.0;
-        }
-                                    
-        faceCentres[f] = mesh_.faceCentres()[cellFaces[f]];
-    }
-    
-//     Info << "cellI_ = " << cellI_ << endl;
-//     Info << "cellFaces = " << cellFaces << endl;
-//     Info << "faceNormals = " << faceNormals << endl;
-//     Info << "faceCentres = " << faceCentres << endl;
-//     Info << "particleLine = " << particleLine << endl;
-//     Info << "position_ = " << position_ << endl;
-    
-    forAll(cellFaces, f)
-    {
-        //- Check that line and plane are not parallel
-        if((faceNormals[f] & particleLine) != 0)
-        {
-            //- Plane
-            scalar d = faceNormals[f] & faceCentres[f];
-            
-            //- Fraction of move until contact
-            scalar t = (d - (faceNormals[f] & startPosition))
-                                        /(faceNormals[f] & particleLine);
-            
-//             Info << "t = " << t << endl;
-            
-            //- Ignore very small values of t
-            //- These usually relate to particles on the boundary (from inflow models),
-            //- and particles that have just undergone a patch interaction
-            if (t > 1e-4 && t <= 1.0) 
-            {
-                faceHit = true;
+            //- t is the fraction of the particle velocity until interaction
+            //- with the current face
+            scalar t = (faceNormal & (faceCentre - startPosition))
+                /(faceNormal & particleRay);
+             
                 
-                contactPoint = startPosition + t*particleLine;
-                                    
-                if(mag(contactPoint - startPosition) < mag(nearestContactPoint))
+            //- Tracking rescue for particles very near faces,
+            //- usually ones just introduced at inflow boundaries
+            if(t >= 0.0 && t < 1.0e-8)
+            {
+                position_ += 1.0e-3*(mesh_.cellCentres()[cellI_] - position_);
+                
+                return 0.0;
+            }
+
+            if(t > 1.0e-8 && t <= 1.0) 
+            {              
+                if(t < tMax)
                 {
+                    faceHit = true;
+                    tMax = t;
+                    contactPoint = startPosition + t*particleRay;
                     nearestContactPoint = contactPoint;
                     faceI_ = cellFaces[f];
-                    p.normal() = faceNormals[f];
                 }
             }
-            
-//             Info << "nearestContactPoint = " << nearestContactPoint << endl;
-//             Info << "faceI_ = " << faceI_ << endl;
         }
     }
-    
-//     Info << "faceHit = " << faceHit << endl;
     
     if(faceHit)
     {
-        trackFraction = mag(contactPoint - startPosition)
+        trackFraction = mag(nearestContactPoint - startPosition)
                                         /mag(endPosition - startPosition);
-                                        
-//         Info << "trackFraction = " << trackFraction << endl;
         
-        position_ = contactPoint;
-    }
-    else
-    {
-        position_ = endPosition;
-
-        return 1.0;
-    }
-    
-    p.hitFace(td);
-
-    if (internalFace(faceI_))
-    {
-        if (cellI_ == mesh_.faceOwner()[faceI_])
+        position_ = nearestContactPoint;
+        
+        if (internalFace(faceI_))
         {
-            cellI_ = mesh_.faceNeighbour()[faceI_];
-        }
-        else if (cellI_ == mesh_.faceNeighbour()[faceI_])
-        {
-            cellI_ = mesh_.faceOwner()[faceI_];
-        }
-        else
-        {
-            FatalErrorIn("Particle::trackToFace(const vector&, TrackData&)")
-                << "addressing failure" << abort(FatalError);
-        }
-    }
-    else
-    {
-        label origFaceI = faceI_;
-        label patchI = patch(faceI_);
-        const polyPatch& patch = mesh_.boundaryMesh()[patchI];
-
-        if (!p.hitPatch(patch, td, patchI))
-        {
-            if (isA<wedgePolyPatch>(patch))
+            if (cellI_ == mesh_.faceOwner()[faceI_])
             {
-                p.hitWedgePatch
-                (
-                    static_cast<const wedgePolyPatch&>(patch), td
-                );
+                cellI_ = mesh_.faceNeighbour()[faceI_];
             }
-            else if (isA<symmetryPolyPatch>(patch))
+            else if (cellI_ == mesh_.faceNeighbour()[faceI_])
             {
-                p.hitSymmetryPatch
-                (
-                    static_cast<const symmetryPolyPatch&>(patch), td
-                );
-            }
-            else if (isA<cyclicPolyPatch>(patch))
-            {
-                p.hitCyclicPatch
-                (
-                    static_cast<const cyclicPolyPatch&>(patch), td
-                );
-            }
-            else if (isA<processorPolyPatch>(patch))
-            {
-                p.hitProcessorPatch
-                (
-                    static_cast<const processorPolyPatch&>(patch), td
-                );
-            }
-            else if (isA<wallPolyPatch>(patch))
-            {
-//                 Info << "HIT WALL PATCH" << endl;
-                p.hitWallPatch
-                (
-                    static_cast<const wallPolyPatch&>(patch), td
-                );
+                cellI_ = mesh_.faceOwner()[faceI_];
             }
             else
             {
-                p.hitPatch(patch, td);
+                FatalErrorIn("Particle::trackToFace()")
+                    << "addressing failure" << abort(FatalError);
             }
         }
+        else
+        {
+            label origFaceI = faceI_;
+            label patchI = patch(faceI_);
+
+            if (!p.hitPatch(mesh_.boundaryMesh()[patchI], td, patchI))
+            {
+                // Did patch interaction model switch patches?
+                if (faceI_ != origFaceI)
+                {
+                    patchI = patch(faceI_);
+                }
+                
+                const polyPatch& patch = mesh_.boundaryMesh()[patchI];
+                
+                if (isA<wedgePolyPatch>(patch))
+                {
+                    p.hitWedgePatch
+                    (
+                        static_cast<const wedgePolyPatch&>(patch), td
+                    );
+                }
+                else if (isA<symmetryPolyPatch>(patch))
+                {
+                    p.hitSymmetryPatch
+                    (
+                        static_cast<const symmetryPolyPatch&>(patch), td
+                    );
+                }
+                else if (isA<cyclicPolyPatch>(patch))
+                {
+                    p.hitCyclicPatch
+                    (
+                        static_cast<const cyclicPolyPatch&>(patch), td
+                    );
+                }
+                else if (isA<processorPolyPatch>(patch))
+                {
+                    p.hitProcessorPatch
+                    (
+                        static_cast<const processorPolyPatch&>(patch), td
+                    );
+                }
+                else if (isA<wallPolyPatch>(patch))
+                {
+                    p.hitWallPatch
+                    (
+                        static_cast<const wallPolyPatch&>(patch), td
+                    );
+                }
+                else
+                {
+                    p.hitPatch(patch, td);
+                }
+            }
+        }
+    }
+    else
+    {              
+        position_ = endPosition;
+
+        return 1.0;
     }
     
     return trackFraction;
@@ -1170,7 +1145,8 @@ Foam::scalar Foam::particle::trackToFace
 //         }
 //         else if (triI > 0)
 //         {
-//             // A tri was found to be crossed before a wall face was hit (if any)
+//             // A tri was found to be crossed before a wall face was hit 
+//             // (if any)
 //             faceI_ = -1;
 //         }
 // 
@@ -1232,7 +1208,6 @@ Foam::scalar Foam::particle::trackToFace
 // 
 //     } while (faceI_ < 0);
 // 
-//     particleType& p = static_cast<particleType&>(*this);
 //     p.hitFace(td);
 // 
 //     if (internalFace(faceI_))
@@ -1334,7 +1309,7 @@ Foam::scalar Foam::particle::trackToFace
 //             {
 //                 p.hitWallPatch
 //                 (
-//                     static_cast<const wallPolyPatch&>(patch), td, faceHitTetIs
+//                    static_cast<const wallPolyPatch&>(patch), td, faceHitTetIs
 //                 );
 //             }
 //             else

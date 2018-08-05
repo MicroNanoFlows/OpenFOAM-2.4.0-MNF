@@ -81,12 +81,6 @@ bool Foam::dsmcParcel::move
             // Set the Lagrangian time-step
             scalar dt = min(dtMax, tEnd);
             
-            //requried for particles introduced at boundary
-//             vector initPos = position();
-//             initPos.x() += VSMALL;
-//             initPos.y() += VSMALL;
-//             initPos.z() += VSMALL;
-
             dt *= trackToFace(position(), position() + dt*Utracking, td, true);
 
             tEnd -= dt;
