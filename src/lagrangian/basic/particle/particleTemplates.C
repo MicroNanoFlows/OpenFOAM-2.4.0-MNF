@@ -198,22 +198,6 @@ Foam::label Foam::particle::track(const vector& endPosition, TrackData& td)
 }
 
 template<class TrackData>
-Foam::label Foam::particle::track(const vector& endPosition, TrackData& td, 
-                                                                    bool DSMC) 
-{
-    faceI_ = -1;
-
-    // Tracks to endPosition or stop on boundary
-    while (!onBoundary() && stepFraction_ < 1.0 - SMALL)
-    {
-        stepFraction_ += trackToFace(endPosition, td, DSMC)*(1.0 - 
-                                                        stepFraction_);
-    }
-
-    return faceI_;
-}
-
-template<class TrackData>
 Foam::scalar Foam::particle::trackToFace
 (
     const vector& endPosition,
@@ -736,7 +720,6 @@ Foam::scalar Foam::particle::trackToFace
 template<class TrackData>
 Foam::scalar Foam::particle::trackToFace
 (
-    const vector& startPosition,
     const vector& endPosition,
     TrackData& td,
     bool DSMC
@@ -746,10 +729,8 @@ Foam::scalar Foam::particle::trackToFace
     typedef typename cloudType::particleType particleType;
     particleType& p = static_cast<particleType&>(*this);
 
-    cloudType& cloud = td.cloud();
-
     const labelList& cellFaces = mesh_.cells()[cellI_];
-    const vector particleRay = endPosition - startPosition;
+    const vector particleRay = endPosition - position_;
     vector nearestContactPoint = Foam::vector(GREAT,GREAT,GREAT);
     vector contactPoint(vector::zero);
     bool faceHit = false;
@@ -765,33 +746,33 @@ Foam::scalar Foam::particle::trackToFace
         vector faceNormal = mesh_.faceAreas()[cellFaces[f]];
         faceNormal /= mag(faceNormal);
         
+        scalar normalDotRay = faceNormal & particleRay;
+        
         //- Check that line (particle displacement) and plane (cell face) 
         //- are not parallel. This would cause a division by zero
         //- and physically means that the line and plane will never intersect
-        if((faceNormal & particleRay) != 0.0)
+        if(normalDotRay != 0.0)
         {
             //- t is the fraction of the particle velocity until interaction
             //- with the current face
-            scalar t = (faceNormal & (faceCentre - startPosition))
-                /(faceNormal & particleRay);
-             
-                
+            scalar t = (faceNormal & (faceCentre - position_))/normalDotRay;
+            
             //- Tracking rescue for particles very near faces,
             //- usually ones just introduced at inflow boundaries
-            if(t >= 0.0 && t < 1.0e-8)
+            if(t >= 0.0 && t < 1.0e-6)
             {
-                position_ += 1.0e-3*(mesh_.cellCentres()[cellI_] - position_);
+                position_ += 1.0e-4*(mesh_.cellCentres()[cellI_] - position_);
                 
                 return 0.0;
             }
 
-            if(t > 1.0e-8 && t <= 1.0) 
+            if(t > 1.0e-6 && t <= 1.0) 
             {              
                 if(t < tMax)
                 {
                     faceHit = true;
                     tMax = t;
-                    contactPoint = startPosition + t*particleRay;
+                    contactPoint = position_ + t*particleRay;
                     nearestContactPoint = contactPoint;
                     faceI_ = cellFaces[f];
                 }
@@ -801,26 +782,26 @@ Foam::scalar Foam::particle::trackToFace
     
     if(faceHit)
     {
-        trackFraction = mag(nearestContactPoint - startPosition)
-                                        /mag(endPosition - startPosition);
+        trackFraction = mag(nearestContactPoint - position_)/mag(particleRay);
         
         position_ = nearestContactPoint;
-        
+               
         if (internalFace(faceI_))
         {
             if (cellI_ == mesh_.faceOwner()[faceI_])
             {
                 cellI_ = mesh_.faceNeighbour()[faceI_];
             }
-            else if (cellI_ == mesh_.faceNeighbour()[faceI_])
+//             else if (cellI_ == mesh_.faceNeighbour()[faceI_])
+            else
             {
                 cellI_ = mesh_.faceOwner()[faceI_];
             }
-            else
-            {
-                FatalErrorIn("Particle::trackToFace()")
-                    << "addressing failure" << abort(FatalError);
-            }
+//             else
+//             {
+//                 FatalErrorIn("Particle::trackToFace()")
+//                     << "addressing failure" << abort(FatalError);
+//             }
         }
         else
         {
@@ -878,6 +859,9 @@ Foam::scalar Foam::particle::trackToFace
                 }
             }
         }
+        
+        // Move very slighly off boundary to prevent a tracking correction
+        position_ += 1.0e-4*(mesh_.cellCentres()[cellI_] - position_);
     }
     else
     {              

@@ -81,8 +81,8 @@ bool Foam::dsmcParcel::move
             // Set the Lagrangian time-step
             scalar dt = min(dtMax, tEnd);
             
-            dt *= trackToFace(position(), position() + dt*Utracking, td, true);
-
+            dt *= trackToFace(position() + dt*Utracking, td, true);
+            
             tEnd -= dt;
 
             stepFraction() = 1.0 - tEnd/trackTime;
