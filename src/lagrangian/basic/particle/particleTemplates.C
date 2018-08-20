@@ -723,7 +723,7 @@ Foam::scalar Foam::particle::rayTrace
     const vector& endPosition,
     TrackData& td
 )
-{    
+{       
     const labelList& cellFaces = mesh_.cells()[cellI_];
     const vector particleRay = endPosition - position_;
     vector nearestContactPoint = Foam::vector(GREAT,GREAT,GREAT);
@@ -734,6 +734,9 @@ Foam::scalar Foam::particle::rayTrace
     faceI_ = -1;
       
     scalar trackFraction = 0.0;
+    
+    // Move very slighly off boundary
+    position_ += 1.0e-4*(mesh_.cellCentres()[cellI_] - position_);
             
     forAll(cellFaces, f)
     {
@@ -861,9 +864,6 @@ void Foam::particle::faceInteraction(TrackData& td)
             }
         }
     }
-
-    // Move very slighly off boundary
-    position_ += 1.0e-4*(mesh_.cellCentres()[cellI_] - position_);
 }
 
 template<class TrackData>

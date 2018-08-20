@@ -20,6 +20,7 @@ FoamFile
 // ~~~~~~~~~~~~~~~~~~
 
 nEquivalentParticles            1e12;
+chemicalReactions				false;
 chargedParticles                false;
 adsorption                      false;
 
