@@ -1479,12 +1479,6 @@ void dsmcVolFields::calculateField()
                     
                     dsmcRhoNMean_[cell] = rhoNMean_[cell]/(nAvTimeSteps);
                     
-                    Pout << "cell = " << cell << endl;
-                    Pout << "mesh_.nCells() = " << mesh_.nCells() << endl;
-                    Pout << "rhoNMean_.size() = " << rhoNMean_.size() << endl;
-                    Pout << "nAvTimeSteps = " << nAvTimeSteps << endl;
-                    Pout << "cellVolume = " << cellVolume << endl;
-                    
                     rhoN_[cell] = 
                         (rhoNMeanXnParticle_[cell])/(nAvTimeSteps*cellVolume);
                     
