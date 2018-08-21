@@ -832,7 +832,6 @@ dsmcVolFields::dsmcVolFields
         if(averagingAcrossManyRuns_)
         {
             Info << nl << "Averaging across many runs initiated." << nl << endl;
-
             readIn();
         }         
     }
@@ -847,82 +846,175 @@ dsmcVolFields::~dsmcVolFields()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void dsmcVolFields::readIn()
-{
-    IOdictionary dict
-    (
-        IOobject
+{    
+    if(Pstream::parRun())
+    {
+        IOdictionary dict
         (
-            "volFieldsMethod_"+fieldName_,
-            time_.time().timeName(),
-            "uniform",
-            time_.time(),
-            IOobject::READ_IF_PRESENT,
-            IOobject::NO_WRITE,
-            false
-        )
-    );
-
-    dict.readIfPresent("nTimeSteps", nTimeSteps_);
-    dict.readIfPresent("rhoNMean", rhoNMean_);
-    dict.readIfPresent("rhoNInstantaneous", rhoNInstantaneous_);
-    dict.readIfPresent("rhoNMeanXnParticle", rhoNMeanXnParticle_);
-    dict.readIfPresent("rhoNMeanInt", rhoNMeanInt_);
-    dict.readIfPresent("molsElec", molsElec_);
-    dict.readIfPresent("rhoMMean", rhoMMean_);
-    dict.readIfPresent("rhoMMeanXnParticle", rhoMMeanXnParticle_);
-    dict.readIfPresent("linearKEMean", linearKEMean_);
-    dict.readIfPresent("linearKEMeanXnParticle", linearKEMeanXnParticle_);
-    dict.readIfPresent("rotationalEMean", rotationalEMean_);
-    dict.readIfPresent("rotationalDofMean", rotationalDofMean_);
-    dict.readIfPresent("muu", muu_);
-    dict.readIfPresent("muv", muv_);
-    dict.readIfPresent("muw", muw_);
-    dict.readIfPresent("mvv", mvv_);
-    dict.readIfPresent("mvw", mvw_);
-    dict.readIfPresent("mww", mww_);
-    dict.readIfPresent("eu", eu_);
-    dict.readIfPresent("ev", ev_);
-    dict.readIfPresent("ew", ew_);
-    dict.readIfPresent("e", e_);
-    dict.readIfPresent("totalvDof", totalvDof_);
-    dict.readIfPresent("nClassI", nClassI_);
-    dict.readIfPresent("nClassII", nClassII_);
-    dict.readIfPresent("nClassIII", nClassIII_);
-    dict.readIfPresent("collisionSeparation", collisionSeparation_);
-    dict.readIfPresent("nColls", nColls_);
-    dict.readIfPresent("momentumMean", momentumMean_);
-    dict.readIfPresent("momentumMeanXnParticle", momentumMeanXnParticle_);
-    dict.readIfPresent("vibrationalETotal", vibrationalETotal_);
-    dict.readIfPresent("electronicETotal", electronicETotal_);
-    dict.readIfPresent("nParcels", nParcels_); 
-    dict.readIfPresent("nParcelsXnParticle", nParcelsXnParticle_);
-    dict.readIfPresent("mccSpecies", mccSpecies_);
-    dict.readIfPresent("vibT", vibT_);
-    dict.readIfPresent("nGroundElectronicLevel", nGroundElectronicLevel_);
-    dict.readIfPresent("nFirstElectronicLevel", nFirstElectronicLevel_);
-    dict.readIfPresent("vDof", vDof_);
-    dict.readIfPresent("mfp", mfp_);
-    dict.readIfPresent("mcr", mcr_);
-    
-    dict.readIfPresent("rhoNBF", rhoNBF_);
-    dict.readIfPresent("rhoMBF", rhoMBF_);
-    dict.readIfPresent("linearKEBF", linearKEBF_);
-    dict.readIfPresent("rotationalEBF", rotationalEBF_);
-    dict.readIfPresent("rotationalDofBF", rotationalDofBF_);
-    dict.readIfPresent("qBF", qBF_);
-    dict.readIfPresent("vibTxvDofBF", vibTxvDofBF_);
-    dict.readIfPresent("totalvDofBF", totalvDofBF_);
-    dict.readIfPresent("speciesRhoNIntBF", speciesRhoNIntBF_);
-    dict.readIfPresent("speciesRhoNElecBF", speciesRhoNElecBF_);
-    dict.readIfPresent("momentumBF", momentumBF_);
-    dict.readIfPresent("fDBF", fDBF_);
-    
-    dict.readIfPresent("vibrationalEBF", vibrationalEBF_);
-    dict.readIfPresent("electronicEBF", electronicEBF_);
-    dict.readIfPresent("speciesRhoNBF", speciesRhoNBF_);
-    dict.readIfPresent("mccSpeciesBF", mccSpeciesBF_);
-    dict.readIfPresent("vibTBF", vibTBF_);
-    dict.readIfPresent("vDofBF_", vDofBF_);
+            IOobject
+            (
+                "volFieldsMethod_"+fieldName_,
+                "processer"+Pstream::myProcNo()/time_.time().timeName(),
+                "uniform",
+                time_.time(),
+                IOobject::READ_IF_PRESENT,
+                IOobject::NO_WRITE,
+                false
+            )
+        );
+        
+        dict.readIfPresent("nTimeSteps", nTimeSteps_);
+        dict.readIfPresent("rhoNMean", rhoNMean_);
+        dict.readIfPresent("rhoNInstantaneous", rhoNInstantaneous_);
+        dict.readIfPresent("rhoNMeanXnParticle", rhoNMeanXnParticle_);
+        dict.readIfPresent("rhoNMeanInt", rhoNMeanInt_);
+        dict.readIfPresent("molsElec", molsElec_);
+        dict.readIfPresent("rhoMMean", rhoMMean_);
+        dict.readIfPresent("rhoMMeanXnParticle", rhoMMeanXnParticle_);
+        dict.readIfPresent("linearKEMean", linearKEMean_);
+        dict.readIfPresent("linearKEMeanXnParticle", linearKEMeanXnParticle_);
+        dict.readIfPresent("rotationalEMean", rotationalEMean_);
+        dict.readIfPresent("rotationalDofMean", rotationalDofMean_);
+        dict.readIfPresent("muu", muu_);
+        dict.readIfPresent("muv", muv_);
+        dict.readIfPresent("muw", muw_);
+        dict.readIfPresent("mvv", mvv_);
+        dict.readIfPresent("mvw", mvw_);
+        dict.readIfPresent("mww", mww_);
+        dict.readIfPresent("mcc", mcc_);
+        dict.readIfPresent("mccu", mccu_);
+        dict.readIfPresent("mccv", mccv_);
+        dict.readIfPresent("mccw", mccw_);
+        dict.readIfPresent("eu", eu_);
+        dict.readIfPresent("ev", ev_);
+        dict.readIfPresent("ew", ew_);
+        dict.readIfPresent("e", e_);
+        dict.readIfPresent("totalvDof", totalvDof_);
+        dict.readIfPresent("nClassI", nClassI_);
+        dict.readIfPresent("nClassII", nClassII_);
+        dict.readIfPresent("nClassIII", nClassIII_);
+        dict.readIfPresent("collisionSeparation", collisionSeparation_);
+        dict.readIfPresent("nColls", nColls_);
+        dict.readIfPresent("momentumMean", momentumMean_);
+        dict.readIfPresent("momentumMeanXnParticle", momentumMeanXnParticle_);
+        dict.readIfPresent("vibrationalETotal", vibrationalETotal_);
+        dict.readIfPresent("electronicETotal", electronicETotal_);
+        dict.readIfPresent("nParcels", nParcels_); 
+        dict.readIfPresent("nParcelsXnParticle", nParcelsXnParticle_);
+        dict.readIfPresent("mccSpecies", mccSpecies_);
+        dict.readIfPresent("vibT", vibT_);
+        dict.readIfPresent("nGroundElectronicLevel", nGroundElectronicLevel_);
+        dict.readIfPresent("nFirstElectronicLevel", nFirstElectronicLevel_);
+        
+        
+        dict.readIfPresent("vDof", vDof_);
+        dict.readIfPresent("mfp", mfp_);
+        dict.readIfPresent("mcr", mcr_);
+        
+        dict.readIfPresent("rhoNBF", rhoNBF_);
+        dict.readIfPresent("rhoMBF", rhoMBF_);
+        dict.readIfPresent("linearKEBF", linearKEBF_);
+        dict.readIfPresent("rotationalEBF", rotationalEBF_);
+        dict.readIfPresent("rotationalDofBF", rotationalDofBF_);
+        dict.readIfPresent("qBF", qBF_);
+        dict.readIfPresent("vibTxvDofBF", vibTxvDofBF_);
+        dict.readIfPresent("totalvDofBF", totalvDofBF_);
+        dict.readIfPresent("speciesRhoNIntBF", speciesRhoNIntBF_);
+        dict.readIfPresent("speciesRhoNElecBF", speciesRhoNElecBF_);
+        dict.readIfPresent("momentumBF", momentumBF_);
+        dict.readIfPresent("fDBF", fDBF_);
+        
+        dict.readIfPresent("vibrationalEBF", vibrationalEBF_);
+        dict.readIfPresent("electronicEBF", electronicEBF_);
+        dict.readIfPresent("speciesRhoNBF", speciesRhoNBF_);
+        dict.readIfPresent("mccSpeciesBF", mccSpeciesBF_);
+        dict.readIfPresent("vibTBF", vibTBF_);
+        dict.readIfPresent("vDofBF", vDofBF_);
+    } 
+    else
+    {
+        IOdictionary dict
+        (
+            IOobject
+            (
+                "volFieldsMethod_"+fieldName_,
+                time_.time().timeName(),
+                "uniform",
+                time_.time(),
+                IOobject::READ_IF_PRESENT,
+                IOobject::NO_WRITE,
+                false
+            )
+        );
+        
+        dict.readIfPresent("nTimeSteps", nTimeSteps_);
+        dict.readIfPresent("rhoNMean", rhoNMean_);
+        dict.readIfPresent("rhoNInstantaneous", rhoNInstantaneous_);
+        dict.readIfPresent("rhoNMeanXnParticle", rhoNMeanXnParticle_);
+        dict.readIfPresent("rhoNMeanInt", rhoNMeanInt_);
+        dict.readIfPresent("molsElec", molsElec_);
+        dict.readIfPresent("rhoMMean", rhoMMean_);
+        dict.readIfPresent("rhoMMeanXnParticle", rhoMMeanXnParticle_);
+        dict.readIfPresent("linearKEMean", linearKEMean_);
+        dict.readIfPresent("linearKEMeanXnParticle", linearKEMeanXnParticle_);
+        dict.readIfPresent("rotationalEMean", rotationalEMean_);
+        dict.readIfPresent("rotationalDofMean", rotationalDofMean_);
+        dict.readIfPresent("muu", muu_);
+        dict.readIfPresent("muv", muv_);
+        dict.readIfPresent("muw", muw_);
+        dict.readIfPresent("mvv", mvv_);
+        dict.readIfPresent("mvw", mvw_);
+        dict.readIfPresent("mww", mww_);
+        dict.readIfPresent("mcc", mcc_);
+        dict.readIfPresent("mccu", mccu_);
+        dict.readIfPresent("mccv", mccv_);
+        dict.readIfPresent("mccw", mccw_);
+        dict.readIfPresent("eu", eu_);
+        dict.readIfPresent("ev", ev_);
+        dict.readIfPresent("ew", ew_);
+        dict.readIfPresent("e", e_);
+        dict.readIfPresent("totalvDof", totalvDof_);
+        dict.readIfPresent("nClassI", nClassI_);
+        dict.readIfPresent("nClassII", nClassII_);
+        dict.readIfPresent("nClassIII", nClassIII_);
+        dict.readIfPresent("collisionSeparation", collisionSeparation_);
+        dict.readIfPresent("nColls", nColls_);
+        dict.readIfPresent("momentumMean", momentumMean_);
+        dict.readIfPresent("momentumMeanXnParticle", momentumMeanXnParticle_);
+        dict.readIfPresent("vibrationalETotal", vibrationalETotal_);
+        dict.readIfPresent("electronicETotal", electronicETotal_);
+        dict.readIfPresent("nParcels", nParcels_); 
+        dict.readIfPresent("nParcelsXnParticle", nParcelsXnParticle_);
+        dict.readIfPresent("mccSpecies", mccSpecies_);
+        dict.readIfPresent("vibT", vibT_);
+        dict.readIfPresent("nGroundElectronicLevel", nGroundElectronicLevel_);
+        dict.readIfPresent("nFirstElectronicLevel", nFirstElectronicLevel_);
+        
+        
+        dict.readIfPresent("vDof", vDof_);
+        dict.readIfPresent("mfp", mfp_);
+        dict.readIfPresent("mcr", mcr_);
+        
+        dict.readIfPresent("rhoNBF", rhoNBF_);
+        dict.readIfPresent("rhoMBF", rhoMBF_);
+        dict.readIfPresent("linearKEBF", linearKEBF_);
+        dict.readIfPresent("rotationalEBF", rotationalEBF_);
+        dict.readIfPresent("rotationalDofBF", rotationalDofBF_);
+        dict.readIfPresent("qBF", qBF_);
+        dict.readIfPresent("vibTxvDofBF", vibTxvDofBF_);
+        dict.readIfPresent("totalvDofBF", totalvDofBF_);
+        dict.readIfPresent("speciesRhoNIntBF", speciesRhoNIntBF_);
+        dict.readIfPresent("speciesRhoNElecBF", speciesRhoNElecBF_);
+        dict.readIfPresent("momentumBF", momentumBF_);
+        dict.readIfPresent("fDBF", fDBF_);
+        
+        dict.readIfPresent("vibrationalEBF", vibrationalEBF_);
+        dict.readIfPresent("electronicEBF", electronicEBF_);
+        dict.readIfPresent("speciesRhoNBF", speciesRhoNBF_);
+        dict.readIfPresent("mccSpeciesBF", mccSpeciesBF_);
+        dict.readIfPresent("vibTBF", vibTBF_);
+        dict.readIfPresent("vDofBF", vDofBF_);
+    }
 }
 
 void dsmcVolFields::writeOut()
@@ -942,19 +1034,7 @@ void dsmcVolFields::writeOut()
                 false
             )
         );
-
-//         dict.add("rhoNMean", rhoNMean_);
-//         dict.add("rhoMMean", rhoMMean_);
-//         dict.add("linearKEMean", linearKEMean_);
-//         dict.add("momentumMean", momentumMean_);
-//         dict.add("rotationalEMean", rotationalEMean_);
-//         dict.add("rotationalDofMean", rotationalDofMean_);
-//         dict.add("vibrationalETotal", vibrationalETotal_);
-//         dict.add("nParcels", nParcels_);     
-//         dict.add("rhoNMeanInt", rhoNMeanInt_);     
-//         
-//         dict.add("nTimeSteps", nTimeSteps_); 
-        
+               
         dict.add("nTimeSteps", nTimeSteps_);
         dict.add("rhoNMean", rhoNMean_);
         dict.add("rhoNInstantaneous", rhoNInstantaneous_);
@@ -973,6 +1053,10 @@ void dsmcVolFields::writeOut()
         dict.add("mvv", mvv_);
         dict.add("mvw", mvw_);
         dict.add("mww", mww_);
+        dict.add("mcc", mcc_);
+        dict.add("mccu", mccu_);
+        dict.add("mccv", mccv_);
+        dict.add("mccw", mccw_);
         dict.add("eu", eu_);
         dict.add("ev", ev_);
         dict.add("ew", ew_);
@@ -993,6 +1077,8 @@ void dsmcVolFields::writeOut()
         dict.add("vibT", vibT_);
         dict.add("nGroundElectronicLevel", nGroundElectronicLevel_);
         dict.add("nFirstElectronicLevel", nFirstElectronicLevel_);
+        
+        
         dict.add("vDof", vDof_);
         dict.add("mfp", mfp_);
         dict.add("mcr", mcr_);
@@ -1015,7 +1101,7 @@ void dsmcVolFields::writeOut()
         dict.add("speciesRhoNBF", speciesRhoNBF_);
         dict.add("mccSpeciesBF", mccSpeciesBF_);
         dict.add("vibTBF", vibTBF_);
-        dict.add("vDofBF_", vDofBF_);
+        dict.add("vDofBF", vDofBF_);
         
         IOstream::streamFormat fmt = time_.time().writeFormat();
         IOstream::versionNumber ver = time_.time().writeVersion();
@@ -1388,10 +1474,16 @@ void dsmcVolFields::calculateField()
             forAll(rhoNMean_, cell)
             {                
                 if(rhoNMean_[cell] > VSMALL)
-                {                  
+                {                                     
                     const scalar& cellVolume = mesh_.cellVolumes()[cell];
                     
                     dsmcRhoNMean_[cell] = rhoNMean_[cell]/(nAvTimeSteps);
+                    
+                    Pout << "cell = " << cell << endl;
+                    Pout << "mesh_.nCells() = " << mesh_.nCells() << endl;
+                    Pout << "rhoNMean_.size() = " << rhoNMean_.size() << endl;
+                    Pout << "nAvTimeSteps = " << nAvTimeSteps << endl;
+                    Pout << "cellVolume = " << cellVolume << endl;
                     
                     rhoN_[cell] = 
                         (rhoNMeanXnParticle_[cell])/(nAvTimeSteps*cellVolume);
@@ -1539,37 +1631,7 @@ void dsmcVolFields::calculateField()
                 }
 
                 vibrationalT_[cell] = vibT[cell];
-                
-//                 forAll(vibrationalETotal_, iD)
-//                 {
-//                     if(vibrationalETotal_[iD][cell] > VSMALL && 
-//nParcels_[iD][cell] > VSMALL)
-//                     {        
-//                         const scalar& thetaV = 
-//cloud_.constProps(typeIds_[iD]).thetaV();
-//                         
-//                         scalar vibrationalEMean = 
-//(vibrationalETotal_[iD][cell]/nParcels_[iD][cell]);
-//                         
-//                         scalar iMean = 
-//vibrationalEMean/(physicoChemical::k.value()*thetaV);
-//                         
-//                         vibT_[iD][cell] = thetaV / log(1.0 + (1.0/iMean));
-//                         
-//                         scalar fraction = 
-//nParcels_[iD][cell]/rhoNMeanInt_[cell];
-//                         
-//                         vibT[cell] += vibT_[iD][cell]*fraction;
-//                         
-//                         vDof_[iD][cell] = 
-//fraction*(2.0*thetaV/vibT_[iD][cell]) / (exp(thetaV/vibT_[iD][cell]) - 1.0);
-//                         
-//                         totalvDof_[cell] += vDof_[iD][cell];
-//                     }
-//                 }
-// 
-//                 vibrationalT_[cell] = vibT[cell];
-                
+                                
                 // electronic temperature
                 scalar totalEDof = 0.0;
                 scalar elecT = 0.0;
@@ -1612,70 +1674,6 @@ void dsmcVolFields::calculateField()
 
                         totalEDof += fraction*eDof;
                     }
-                    
-    //                 label nElectronicLevels = 
-//cloud_.constProps(typeIds_[iD]).numberOfElectronicLevels();
-    //                 
-    //                 if(nElectronicLevels > 1 && nParcels_[iD][cell] > VSMALL 
-//&& molsElec_[cell] > VSMALL)
-    //                 {
-    //                     const scalarList& electronicEnergies = 
-//cloud_.constProps(typeIds_[iD]).electronicEnergyList();
-    //                     const labelList& degeneracies = 
-//cloud_.constProps(typeIds_[iD]).degeneracyList();
-    //                     
-    //                     scalar speciesTransT = 
-//(1.0/(3.0*physicoChemical::k.value()))
-    //                                             *(
-    //                                                 
-//(mccSpecies_[iD][cell]/(nParcels_[iD][cell]))
-    //                                                 - (
-    //                                                     
-//cloud_.constProps(typeIds_[iD]).mass()*mag(UMean_[cell])*mag(UMean_[cell])
-    //                                                 )
-    //                                             );
-    //                     
-    //                     scalar fraction = 
-//nParcels_[iD][cell]/molsElec_[cell];
-    //                     
-    //                     if(speciesTransT > SMALL && 
-//electronicETotal_[iD][cell] > VSMALL)
-    //                     {
-    //                         scalar sum1 = 0.0;
-    //                         scalar sum2 = 0.0;
-    //                         
-    //                         forAll(electronicEnergies, ii)
-    //                         {
-    //                             sum1 += 
-// degeneracies[ii]*exp(-electronicEnergies[ii]/(physicoChemical::k.value()*
-// speciesTransT));
-    //                             sum2 += 
-// degeneracies[ii]*(electronicEnergies[ii]/(physicoChemical::k.value()*
-// speciesTransT))
-    //                                         
-// *exp(-electronicEnergies[ii]/(physicoChemical::k.value()*speciesTransT));
-    //                         }
-    //                         
-    //                         if(sum2 > VSMALL && sum1 > VSMALL)
-    //                         {
-    //                             scalar elecTID = 
-// 
-// (electronicETotal_[iD][cell]/(physicoChemical::k.value()*nParcels_[iD][cell]))*( 
-// sum1/sum2);
-    //                             
-    //                             if(elecTID > SMALL && elecTID < GREAT)
-    //                             {
-    //                                 elecT += fraction*elecTID;
-    //                                 
-    //                                 scalar eDof = 
-// (2.0*(electronicETotal_[iD][cell]/nParcels_[iD][cell]))/(physicoChemical::k.
-// value()*speciesTransT);
-    //                                 
-    //                                 totalEDof += fraction*eDof;
-    //                             }
-    //                         }
-    //                     }
-    //                 }
                 }
 
                 electronicT_[cell] = elecT;
@@ -1694,7 +1692,7 @@ void dsmcVolFields::calculateField()
                                     + (totalEDof*electronicT_[cell])
                                    ) /
                                     (3.0 + nRotDof + totalvDof_[cell] + 
-                                        totalEDof);
+                                        totalEDof);                 
                                     
                 if(measureHeatFluxShearStress_)
                 {                    
@@ -1861,16 +1859,18 @@ void dsmcVolFields::calculateField()
                             scalar dPQ = 
                                 0.5*(cloud_.constProps(typeIds_[iD]).d() + 
                                 cloud_.constProps(typeIds_[qspec]).d());
+
                             scalar omegaPQ = 
                                 0.5*(cloud_.constProps(typeIds_[iD]).omega() + 
                                 cloud_.constProps(typeIds_[qspec]).omega());
+
                             scalar massRatio = 
                                 cloud_.constProps(typeIds_[iD]).mass()/
                                 cloud_.constProps(typeIds_[qspec]).mass();
-                            
+                                
                             if(nParcels_[qspec][cell] > VSMALL && 
                                         translationalT_[cell] > VSMALL)
-                            {
+                            {                                
                                 scalar nDensQ = 
                                     (nParcelsXnParticle_[qspec][cell])/
                                     (mesh_.cellVolumes()[cell]*nTimeSteps_);
@@ -2111,140 +2111,11 @@ void dsmcVolFields::calculateField()
                         {
                             rotationalT_.boundaryField()[j][k] = 0.0;
                         }
-                        
-//                         forAll(vibrationalEBF_, i)
-//                         {
-//                             if(rhoNBF_[j][k] > VSMALL)
-//                             {                       
-//                                 molMassBoundary[j][k] +=  
-//cloud_.constProps(typeIds_[i]).mass()
-//                                             
-//*(speciesRhoNBF_[i][j][k]/rhoNBF_[j][k]);
-//                                             
-//                                 
-// CpBoundary[j][k] += (5.0 + 
-// cloud_.constProps(typeIds_[i]).rotationalDegreesOfFreedom())
-//                                             
-// *(speciesRhoNBF_[i][j][k]/rhoNBF_[j][k]);
-//                                             
-//                                 
-// CvBoundary[j][k] += (3.0 + 
-// cloud_.constProps(typeIds_[i]).rotationalDegreesOfFreedom())
-//                                             
-// *(speciesRhoNBF_[i][j][k]/rhoNBF_[j][k]);
-//                             }
-//                             
-//                             if(vibrationalEBF_[i][j][k] > VSMALL && 
-// speciesRhoNBF_[i][j][k] > VSMALL && speciesRhoNIntBF_[j][k] > VSMALL)
-//                             {        
-//                                 const scalar& thetaV = 
-// cloud_.constProps(typeIds_[i]).thetaV();
-//                                 
-//                                 scalar vibrationalEMean = 
-// (vibrationalEBF_[i][j][k]/speciesRhoNBF_[i][j][k]);
-//                                 
-//                                 scalar iMean = 
-// vibrationalEMean/(physicoChemical::k.value()*thetaV);
-//                                 
-//                                 vibTBF_[i][j][k] = thetaV / log(1.0 + 
-// (1.0/iMean));
-//                                 
-//                                 scalar fraction = 
-// speciesRhoNBF_[i][j][k]/speciesRhoNIntBF_[j][k];
-//                                 
-//                                 vDofBF_[i][j][k] = 
-// fraction*(2.0*thetaV/vibTBF_[i][j][k]) / (exp(thetaV/vibTBF_[i][j][k]) - 
-// 1.0);
-//                                 
-//                                 vibTBF[j][k] += fraction*vibTBF_[i][j][k];
-//                                 
-//                                 totalvDofBF_[j][k] += vDofBF_[i][j][k];
-//                             }
-// 
-//                         }
-//                         
-//                         if(totalvDofBF_[j][k] > VSMALL)
-//                         {
-//                             vibrationalT_.boundaryField()[j][k] = 
-// vibTBF[j][k];
-//                         }
-//                         else
-//                         {
-//                             vibrationalT_.boundaryField()[j][k] = 0.0;
-//                         }
-                        
+                                                
                         // electronic temperature
                         scalar totalEDof = 0.0;
                         scalar elecT = 0.0;
                             
-    //                     forAll(electronicEBF_, i)
-    //                     {
-    //                         label nElectronicLevels = 
-// cloud_.constProps(typeIds_[i]).numberOfElectronicLevels();
-    //                         
-    //                         if(nElectronicLevels > 1 && 
-// speciesRhoNBF_[i][j][k] > VSMALL && speciesRhoNElecBF_[j][k] > VSMALL)
-    //                         {
-    //                             const scalarList& electronicEnergies = 
-// cloud_.constProps(typeIds_[i]).electronicEnergyList();
-    //                             const labelList& degeneracies = 
-// cloud_.constProps(typeIds_[i]).degeneracyList();
-    //                             
-    //                             scalar speciesTransT = 
-// (1.0/(3.0*physicoChemical::k.value()))
-    //                                                     *(
-    //                                                         
-// ((mccSpeciesBF_[i][j][k]/(speciesRhoNBF_[i][j][k])))
-    //                                                         - (
-    //                                                             
-// (cloud_.constProps(typeIds_[i]).mass()
-    //                                                             
-// )*mag(UMean_.boundaryField()[j][k])*mag(UMean_.boundaryField()[j][k]))
-    //                                                     );
-    //                             
-    //                             scalar fraction = 
-// speciesRhoNBF_[i][j][k]/speciesRhoNElecBF_[j][k];
-    //                             
-    //                             if(speciesTransT > VSMALL)
-    //                             {
-    //                                 scalar sum1 = 0.0;
-    //                                 scalar sum2 = 0.0;
-    //                                 
-    //                                 forAll(electronicEnergies, ii)
-    //                                 {
-    //                                     sum1 += 
-// degeneracies[ii]*exp(-electronicEnergies[ii]/(physicoChemical::k.value()*
-// speciesTransT));
-    //                                     sum2 += 
-// degeneracies[ii]*(electronicEnergies[ii]/(physicoChemical::k.value()*
-// speciesTransT))
-    //                                                 
-// *exp(-electronicEnergies[ii]/(physicoChemical::k.value()*speciesTransT));
-    //                                 }
-    //                                 
-    //                                 if(sum2 > VSMALL && sum1> VSMALL)
-    //                                 {
-    //                                     scalar elecTID = 
-// 
-// 
-//(electronicEBF_[i][j][k]/(physicoChemical::k.value()*speciesRhoNBF_[i][j][k]))
-//* ( // sum1/sum2);
-    //                                     
-    //                                     if(elecTID > SMALL && elecTID < 
-// GREAT)
-    //                                     {
-    //                                         elecT += fraction*elecTID;
-    //                                         
-    //                                         scalar eDof = 
-// (2.0*(electronicEBF_[i][j][k]/speciesRhoNBF_[i][j][k]))/(physicoChemical::k.
-// value()*speciesTransT);
-    //                                         
-    //                                         totalEDof += fraction*eDof;
-    //                                     }
-    //                                 }
-    //                             }
-    //                         }
-    //                     }
                         
                         electronicT_.boundaryField()[j][k] = elecT;
                         
@@ -2396,73 +2267,6 @@ void dsmcVolFields::calculateField()
                         }
                     }
                 }
-//                 if(measureMeanFreePath_)
-//                 {
-//                     if(!isA<emptyPolyPatch>(patch))
-//                     {
-//                         if(!isA<cyclicPolyPatch>(patch))
-//                         {
-//                             forAll(boundaryCells_[j], k)
-//                             {
-//                                 MFP_.boundaryField()[j][k] = 
-//MFP_[boundaryCells_[j][k]];
-//                                 SOF_.boundaryField()[j][k] = 
-//SOF_[boundaryCells_[j][k]];
-//                                 MFPdX_.boundaryField()[j][k] = 
-//MFPdX_[boundaryCells_[j][k]];
-//                                 MCR_.boundaryField()[j][k] = 
-//MCR_[boundaryCells_[j][k]];
-//                                 MCT_.boundaryField()[j][k] = 
-//MCT_[boundaryCells_[j][k]];
-//                                 
-//MCTdt_.boundaryField()[j][k] = 
-//MCTdt_[boundaryCells_[j][k]];
-//                             }
-//                         }
-//                     }
-//                 }
-//                 if(measureClassifications_)
-//                 {
-//                     if(isA<polyPatch>(patch))
-//                     {
-//                         if(!isA<emptyPolyPatch>(patch))
-//                         {
-//                             if(!isA<cyclicPolyPatch>(patch))
-//                             {
-//                                 forAll(boundaryCells_[j], k)
-//                                 {
-//                                     cIDist_.boundaryField()[j][k] = 
-// cIDist_[boundaryCells_[j][k]];
-//                                     cIIDist_.boundaryField()[j][k] = 
-// cIIDist_[boundaryCells_[j][k]];
-//                                     cIIIDist_.boundaryField()[j][k] 
-// = cIIIDist_[boundaryCells_[j][k]];
-//                                 }
-//                             }
-//                         }
-//                     }
-//                 }
-//                 if(measureHeatFluxShearStress_)
-//                 { 
-//                     if(isA<polyPatch>(patch))
-//                     {
-//                         if(!isA<emptyPolyPatch>(patch))
-//                         {
-//                             if(!isA<cyclicPolyPatch>(patch))
-//                             {
-//                                 forAll(boundaryCells_[j], k)
-//                                 {
-//                                     shearStressTensor_.boundaryField()[j][k] 
-//= shearStressTensor_[boundaryCells_[j][k]];
-//                                     heatFluxVector_.boundaryField()[j][k] = 
-// heatFluxVector_[boundaryCells_[j][k]];
-//                                     pressureTensor_.boundaryField()[j][k] = 
-// pressureTensor_[boundaryCells_[j][k]];
-//                                 }
-//                             }
-//                         }
-//                     }
-//                 }
             }
             
             if(measureMeanFreePath_)
