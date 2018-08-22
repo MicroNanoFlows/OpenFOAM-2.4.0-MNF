@@ -846,175 +846,96 @@ dsmcVolFields::~dsmcVolFields()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void dsmcVolFields::readIn()
-{    
-    if(Pstream::parRun())
-    {
-        IOdictionary dict
+{   
+//     scalar startTime = time_.time().startTime().value();
+//     Pout << "startTime = " << startTime << endl;
+//     
+//     word startTimeName(name(startTime));
+        
+    IOdictionary volFieldsStorage
+    (
+        IOobject
         (
-            IOobject
-            (
-                "volFieldsMethod_"+fieldName_,
-                "processer"+Pstream::myProcNo()/time_.time().timeName(),
-                "uniform",
-                time_.time(),
-                IOobject::READ_IF_PRESENT,
-                IOobject::NO_WRITE,
-                false
-            )
-        );
-        
-        dict.readIfPresent("nTimeSteps", nTimeSteps_);
-        dict.readIfPresent("rhoNMean", rhoNMean_);
-        dict.readIfPresent("rhoNInstantaneous", rhoNInstantaneous_);
-        dict.readIfPresent("rhoNMeanXnParticle", rhoNMeanXnParticle_);
-        dict.readIfPresent("rhoNMeanInt", rhoNMeanInt_);
-        dict.readIfPresent("molsElec", molsElec_);
-        dict.readIfPresent("rhoMMean", rhoMMean_);
-        dict.readIfPresent("rhoMMeanXnParticle", rhoMMeanXnParticle_);
-        dict.readIfPresent("linearKEMean", linearKEMean_);
-        dict.readIfPresent("linearKEMeanXnParticle", linearKEMeanXnParticle_);
-        dict.readIfPresent("rotationalEMean", rotationalEMean_);
-        dict.readIfPresent("rotationalDofMean", rotationalDofMean_);
-        dict.readIfPresent("muu", muu_);
-        dict.readIfPresent("muv", muv_);
-        dict.readIfPresent("muw", muw_);
-        dict.readIfPresent("mvv", mvv_);
-        dict.readIfPresent("mvw", mvw_);
-        dict.readIfPresent("mww", mww_);
-        dict.readIfPresent("mcc", mcc_);
-        dict.readIfPresent("mccu", mccu_);
-        dict.readIfPresent("mccv", mccv_);
-        dict.readIfPresent("mccw", mccw_);
-        dict.readIfPresent("eu", eu_);
-        dict.readIfPresent("ev", ev_);
-        dict.readIfPresent("ew", ew_);
-        dict.readIfPresent("e", e_);
-        dict.readIfPresent("totalvDof", totalvDof_);
-        dict.readIfPresent("nClassI", nClassI_);
-        dict.readIfPresent("nClassII", nClassII_);
-        dict.readIfPresent("nClassIII", nClassIII_);
-        dict.readIfPresent("collisionSeparation", collisionSeparation_);
-        dict.readIfPresent("nColls", nColls_);
-        dict.readIfPresent("momentumMean", momentumMean_);
-        dict.readIfPresent("momentumMeanXnParticle", momentumMeanXnParticle_);
-        dict.readIfPresent("vibrationalETotal", vibrationalETotal_);
-        dict.readIfPresent("electronicETotal", electronicETotal_);
-        dict.readIfPresent("nParcels", nParcels_); 
-        dict.readIfPresent("nParcelsXnParticle", nParcelsXnParticle_);
-        dict.readIfPresent("mccSpecies", mccSpecies_);
-        dict.readIfPresent("vibT", vibT_);
-        dict.readIfPresent("nGroundElectronicLevel", nGroundElectronicLevel_);
-        dict.readIfPresent("nFirstElectronicLevel", nFirstElectronicLevel_);
-        
-        
-        dict.readIfPresent("vDof", vDof_);
-        dict.readIfPresent("mfp", mfp_);
-        dict.readIfPresent("mcr", mcr_);
-        
-        dict.readIfPresent("rhoNBF", rhoNBF_);
-        dict.readIfPresent("rhoMBF", rhoMBF_);
-        dict.readIfPresent("linearKEBF", linearKEBF_);
-        dict.readIfPresent("rotationalEBF", rotationalEBF_);
-        dict.readIfPresent("rotationalDofBF", rotationalDofBF_);
-        dict.readIfPresent("qBF", qBF_);
-        dict.readIfPresent("vibTxvDofBF", vibTxvDofBF_);
-        dict.readIfPresent("totalvDofBF", totalvDofBF_);
-        dict.readIfPresent("speciesRhoNIntBF", speciesRhoNIntBF_);
-        dict.readIfPresent("speciesRhoNElecBF", speciesRhoNElecBF_);
-        dict.readIfPresent("momentumBF", momentumBF_);
-        dict.readIfPresent("fDBF", fDBF_);
-        
-        dict.readIfPresent("vibrationalEBF", vibrationalEBF_);
-        dict.readIfPresent("electronicEBF", electronicEBF_);
-        dict.readIfPresent("speciesRhoNBF", speciesRhoNBF_);
-        dict.readIfPresent("mccSpeciesBF", mccSpeciesBF_);
-        dict.readIfPresent("vibTBF", vibTBF_);
-        dict.readIfPresent("vDofBF", vDofBF_);
-    } 
-    else
-    {
-        IOdictionary dict
-        (
-            IOobject
-            (
-                "volFieldsMethod_"+fieldName_,
-                time_.time().timeName(),
-                "uniform",
-                time_.time(),
-                IOobject::READ_IF_PRESENT,
-                IOobject::NO_WRITE,
-                false
-            )
-        );
-        
-        dict.readIfPresent("nTimeSteps", nTimeSteps_);
-        dict.readIfPresent("rhoNMean", rhoNMean_);
-        dict.readIfPresent("rhoNInstantaneous", rhoNInstantaneous_);
-        dict.readIfPresent("rhoNMeanXnParticle", rhoNMeanXnParticle_);
-        dict.readIfPresent("rhoNMeanInt", rhoNMeanInt_);
-        dict.readIfPresent("molsElec", molsElec_);
-        dict.readIfPresent("rhoMMean", rhoMMean_);
-        dict.readIfPresent("rhoMMeanXnParticle", rhoMMeanXnParticle_);
-        dict.readIfPresent("linearKEMean", linearKEMean_);
-        dict.readIfPresent("linearKEMeanXnParticle", linearKEMeanXnParticle_);
-        dict.readIfPresent("rotationalEMean", rotationalEMean_);
-        dict.readIfPresent("rotationalDofMean", rotationalDofMean_);
-        dict.readIfPresent("muu", muu_);
-        dict.readIfPresent("muv", muv_);
-        dict.readIfPresent("muw", muw_);
-        dict.readIfPresent("mvv", mvv_);
-        dict.readIfPresent("mvw", mvw_);
-        dict.readIfPresent("mww", mww_);
-        dict.readIfPresent("mcc", mcc_);
-        dict.readIfPresent("mccu", mccu_);
-        dict.readIfPresent("mccv", mccv_);
-        dict.readIfPresent("mccw", mccw_);
-        dict.readIfPresent("eu", eu_);
-        dict.readIfPresent("ev", ev_);
-        dict.readIfPresent("ew", ew_);
-        dict.readIfPresent("e", e_);
-        dict.readIfPresent("totalvDof", totalvDof_);
-        dict.readIfPresent("nClassI", nClassI_);
-        dict.readIfPresent("nClassII", nClassII_);
-        dict.readIfPresent("nClassIII", nClassIII_);
-        dict.readIfPresent("collisionSeparation", collisionSeparation_);
-        dict.readIfPresent("nColls", nColls_);
-        dict.readIfPresent("momentumMean", momentumMean_);
-        dict.readIfPresent("momentumMeanXnParticle", momentumMeanXnParticle_);
-        dict.readIfPresent("vibrationalETotal", vibrationalETotal_);
-        dict.readIfPresent("electronicETotal", electronicETotal_);
-        dict.readIfPresent("nParcels", nParcels_); 
-        dict.readIfPresent("nParcelsXnParticle", nParcelsXnParticle_);
-        dict.readIfPresent("mccSpecies", mccSpecies_);
-        dict.readIfPresent("vibT", vibT_);
-        dict.readIfPresent("nGroundElectronicLevel", nGroundElectronicLevel_);
-        dict.readIfPresent("nFirstElectronicLevel", nFirstElectronicLevel_);
-        
-        
-        dict.readIfPresent("vDof", vDof_);
-        dict.readIfPresent("mfp", mfp_);
-        dict.readIfPresent("mcr", mcr_);
-        
-        dict.readIfPresent("rhoNBF", rhoNBF_);
-        dict.readIfPresent("rhoMBF", rhoMBF_);
-        dict.readIfPresent("linearKEBF", linearKEBF_);
-        dict.readIfPresent("rotationalEBF", rotationalEBF_);
-        dict.readIfPresent("rotationalDofBF", rotationalDofBF_);
-        dict.readIfPresent("qBF", qBF_);
-        dict.readIfPresent("vibTxvDofBF", vibTxvDofBF_);
-        dict.readIfPresent("totalvDofBF", totalvDofBF_);
-        dict.readIfPresent("speciesRhoNIntBF", speciesRhoNIntBF_);
-        dict.readIfPresent("speciesRhoNElecBF", speciesRhoNElecBF_);
-        dict.readIfPresent("momentumBF", momentumBF_);
-        dict.readIfPresent("fDBF", fDBF_);
-        
-        dict.readIfPresent("vibrationalEBF", vibrationalEBF_);
-        dict.readIfPresent("electronicEBF", electronicEBF_);
-        dict.readIfPresent("speciesRhoNBF", speciesRhoNBF_);
-        dict.readIfPresent("mccSpeciesBF", mccSpeciesBF_);
-        dict.readIfPresent("vibTBF", vibTBF_);
-        dict.readIfPresent("vDofBF", vDofBF_);
-    }
+            "volFieldsMethod_"+fieldName_,
+            time_.time().timeName(),
+            //startTimeName,
+            "uniform",
+            time_.time(),
+            IOobject::READ_IF_PRESENT,
+            IOobject::NO_WRITE,
+            false
+        )
+    );
+    
+    dictionary dict(volFieldsStorage.readStream(volFieldsStorage.filePath()));
+
+    dict.readIfPresent("nTimeSteps", nTimeSteps_);
+    dict.readIfPresent("rhoNMean", rhoNMean_);
+    dict.readIfPresent("rhoNInstantaneous", rhoNInstantaneous_);
+    dict.readIfPresent("rhoNMeanXnParticle", rhoNMeanXnParticle_);
+    dict.readIfPresent("rhoNMeanInt", rhoNMeanInt_);
+    dict.readIfPresent("molsElec", molsElec_);
+    dict.readIfPresent("rhoMMean", rhoMMean_);
+    dict.readIfPresent("rhoMMeanXnParticle", rhoMMeanXnParticle_);
+    dict.readIfPresent("linearKEMean", linearKEMean_);
+    dict.readIfPresent("linearKEMeanXnParticle", linearKEMeanXnParticle_);
+    dict.readIfPresent("rotationalEMean", rotationalEMean_);
+    dict.readIfPresent("rotationalDofMean", rotationalDofMean_);
+    dict.readIfPresent("muu", muu_);
+    dict.readIfPresent("muv", muv_);
+    dict.readIfPresent("muw", muw_);
+    dict.readIfPresent("mvv", mvv_);
+    dict.readIfPresent("mvw", mvw_);
+    dict.readIfPresent("mww", mww_);
+    dict.readIfPresent("mcc", mcc_);
+    dict.readIfPresent("mccu", mccu_);
+    dict.readIfPresent("mccv", mccv_);
+    dict.readIfPresent("mccw", mccw_);
+    dict.readIfPresent("eu", eu_);
+    dict.readIfPresent("ev", ev_);
+    dict.readIfPresent("ew", ew_);
+    dict.readIfPresent("e", e_);
+    dict.readIfPresent("totalvDof", totalvDof_);
+    dict.readIfPresent("nClassI", nClassI_);
+    dict.readIfPresent("nClassII", nClassII_);
+    dict.readIfPresent("nClassIII", nClassIII_);
+    dict.readIfPresent("collisionSeparation", collisionSeparation_);
+    dict.readIfPresent("nColls", nColls_);
+    dict.readIfPresent("momentumMean", momentumMean_);
+    dict.readIfPresent("momentumMeanXnParticle", momentumMeanXnParticle_);
+    dict.readIfPresent("vibrationalETotal", vibrationalETotal_);
+    dict.readIfPresent("electronicETotal", electronicETotal_);
+    dict.readIfPresent("nParcels", nParcels_); 
+    dict.readIfPresent("nParcelsXnParticle", nParcelsXnParticle_);
+    dict.readIfPresent("mccSpecies", mccSpecies_);
+    dict.readIfPresent("vibT", vibT_);
+    dict.readIfPresent("nGroundElectronicLevel", nGroundElectronicLevel_);
+    dict.readIfPresent("nFirstElectronicLevel", nFirstElectronicLevel_);
+    
+    
+    dict.readIfPresent("vDof", vDof_);
+    dict.readIfPresent("mfp", mfp_);
+    dict.readIfPresent("mcr", mcr_);
+    
+    dict.readIfPresent("rhoNBF", rhoNBF_);
+    dict.readIfPresent("rhoMBF", rhoMBF_);
+    dict.readIfPresent("linearKEBF", linearKEBF_);
+    dict.readIfPresent("rotationalEBF", rotationalEBF_);
+    dict.readIfPresent("rotationalDofBF", rotationalDofBF_);
+    dict.readIfPresent("qBF", qBF_);
+    dict.readIfPresent("vibTxvDofBF", vibTxvDofBF_);
+    dict.readIfPresent("totalvDofBF", totalvDofBF_);
+    dict.readIfPresent("speciesRhoNIntBF", speciesRhoNIntBF_);
+    dict.readIfPresent("speciesRhoNElecBF", speciesRhoNElecBF_);
+    dict.readIfPresent("momentumBF", momentumBF_);
+    dict.readIfPresent("fDBF", fDBF_);
+    
+    dict.readIfPresent("vibrationalEBF", vibrationalEBF_);
+    dict.readIfPresent("electronicEBF", electronicEBF_);
+    dict.readIfPresent("speciesRhoNBF", speciesRhoNBF_);
+    dict.readIfPresent("mccSpeciesBF", mccSpeciesBF_);
+    dict.readIfPresent("vibTBF", vibTBF_);
+    dict.readIfPresent("vDofBF", vDofBF_);
 }
 
 void dsmcVolFields::writeOut()
@@ -1166,7 +1087,7 @@ void dsmcVolFields::calculateField()
     
     const scalar& nParticle = cloud_.nParticle();
     rhoNInstantaneous_ = 0.0;
-    
+        
     if(sampleInterval_ <= sampleCounter_)
     {
         nTimeSteps_ += 1.0;
@@ -1424,7 +1345,7 @@ void dsmcVolFields::calculateField()
     if(time_.time().outputTime())
     {
         const scalar& nAvTimeSteps = nTimeSteps_;
-        
+                
         if(densityOnly_)
         {
             forAll(rhoNMean_, cell)
