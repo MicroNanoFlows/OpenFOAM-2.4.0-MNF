@@ -793,35 +793,56 @@ dsmcVolFields::dsmcVolFields
     {
         measureClassifications_ = 
             Switch(propsDict_.lookup("measureClassifications"));
+            
+        if(measureClassifications_)
+        {
+            Info << "measureClassifications initiated" << endl;
+        }
     }
     
     if (propsDict_.found("measureErrors"))
     {
         measureErrors_ = Switch(propsDict_.lookup("measureErrors"));
+        
+        if(measureErrors_)
+        {
+            Info << "measureErrors initiated" << endl;
+        }
     }
     
     if (propsDict_.found("densityOnly"))
     {
         densityOnly_ = Switch(propsDict_.lookup("densityOnly"));
+        
+        if(densityOnly_)
+        {
+            Info << "densityOnly initiated" << endl;
+        }
     }
     
     if (propsDict_.found("measureHeatFluxShearStress"))
     {
         measureHeatFluxShearStress_ = 
             Switch(propsDict_.lookup("measureHeatFluxShearStress"));
+            
+        if(measureHeatFluxShearStress_)
+        {
+            Info << "measureHeatFluxShearStress initiated" << endl;
+        }
     }
     
     if(propsDict_.found("measureMeanFreePath"))
     {
         measureMeanFreePath_ = Switch(propsDict_.lookup("measureMeanFreePath"));
-    }
-    
-    if(measureMeanFreePath_)
-    {
-        mfpReferenceTemperature_ = 
+        
+        if(measureMeanFreePath_)
+        {
+            Info << "measureMeanFreePath initiated" << endl;
+            
+            mfpReferenceTemperature_ = 
             readScalar(propsDict_.lookup("mfpReferenceTemperature"));
-    }
-    
+        }
+    }   
     
     if (propsDict_.found("averagingAcrossManyRuns"))
     {
@@ -831,7 +852,7 @@ dsmcVolFields::dsmcVolFields
         // read in stored data from dictionary
         if(averagingAcrossManyRuns_)
         {
-            Info << nl << "Averaging across many runs initiated." << nl << endl;
+            Info << nl << "averagingAcrossManyRuns initiated." << nl << endl;
             readIn();
         }         
     }
@@ -846,19 +867,13 @@ dsmcVolFields::~dsmcVolFields()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void dsmcVolFields::readIn()
-{   
-//     scalar startTime = time_.time().startTime().value();
-//     Pout << "startTime = " << startTime << endl;
-//     
-//     word startTimeName(name(startTime));
-        
+{           
     IOdictionary volFieldsStorage
     (
         IOobject
         (
             "volFieldsMethod_"+fieldName_,
             time_.time().timeName(),
-            //startTimeName,
             "uniform",
             time_.time(),
             IOobject::READ_IF_PRESENT,
@@ -2333,6 +2348,74 @@ void dsmcVolFields::updateProperties(const dictionary& newDict)
 {
     //- the main properties should be updated first
     updateBasicFieldProperties(newDict);
+    
+    propsDict_ = newDict.subDict(typeName + "Properties");
+    
+    if (propsDict_.found("measureClassifications"))
+    {
+        measureClassifications_ = 
+            Switch(propsDict_.lookup("measureClassifications"));
+        
+        if(measureClassifications_)
+        {
+            Info << "measureClassifications initiated." << endl;
+        }
+    }
+    
+    if (propsDict_.found("measureErrors"))
+    {
+        measureErrors_ = Switch(propsDict_.lookup("measureErrors"));
+        
+        if(measureErrors_)
+        {
+            Info << "measureErrors initiated." << endl;
+        }
+    }
+    
+    if (propsDict_.found("densityOnly"))
+    {
+        densityOnly_ = Switch(propsDict_.lookup("densityOnly"));
+        
+        if(densityOnly_)
+        {
+            Info << nl << "densityOnly initiated." << nl << endl;
+        }
+    }
+    
+    if (propsDict_.found("measureHeatFluxShearStress"))
+    {
+        measureHeatFluxShearStress_ = 
+            Switch(propsDict_.lookup("measureHeatFluxShearStress"));
+        
+        if(measureHeatFluxShearStress_)
+        {
+            Info << "measureHeatFluxShearStress initiated." << endl;
+        }
+    }
+    
+    if(propsDict_.found("measureMeanFreePath"))
+    {
+        measureMeanFreePath_ = Switch(propsDict_.lookup("measureMeanFreePath"));
+        
+        if(measureMeanFreePath_)
+        {
+            Info << "measureMeanFreePath initiated." << endl;
+            
+            mfpReferenceTemperature_ = 
+            readScalar(propsDict_.lookup("mfpReferenceTemperature"));
+        }
+    }
+    
+    if (propsDict_.found("averagingAcrossManyRuns"))
+    {
+        averagingAcrossManyRuns_ = 
+            Switch(propsDict_.lookup("averagingAcrossManyRuns"));
+        
+        if(averagingAcrossManyRuns_)
+        {
+            Info << "averagingAcrossManyRuns initiated." << endl;
+        }         
+    }
 
 }
 
