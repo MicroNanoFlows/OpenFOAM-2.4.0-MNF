@@ -65,7 +65,9 @@ private:
 
         //- subDictionary containing the properties
 //         dictionary propsDict_;
-        fileName timePath_;
+//         fileName timePath_;
+        
+        word option_;
 
     // Private Member Functions
 
@@ -86,6 +88,13 @@ private:
             const vector& velocity
         );
 
+        void fixedPropertiesFromDict();
+        
+        void fixedPropertiesFromFile();
+        
+        void multiIdFixedProperties();
+        
+        
 public:
 
     //- Runtime type information

@@ -88,6 +88,12 @@ void polyDelListOfAtoms::findMolsToDel()
 
     label initialSize = molCloud_.size();
     label deletedMols = 0;
+    
+    Info << nl << "Deleting the following molecules... " << nl << endl;
+
+    DynamicList<vector> positions;
+    DynamicList<scalar> rMinCollect;    
+    
     forAll(molPoints_, i)
     {    
         DynamicList<polyMolecule*> molsToDel;
@@ -117,19 +123,37 @@ void polyDelListOfAtoms::findMolsToDel()
                 }
             }
         }
+        
+       
 
         forAll(molsToDel, m)
         {
-            Info << "Deleting molecule at position = "
-                << molsToDel[m]->position()
-                << ", requested position = " << molPoints_[i]
-                << ", residual = " << rMin
-                << endl;
+            positions.append(molsToDel[m]->position());
+            rMinCollect.append(rMin);     
+            
+            Info << molsToDel[m]->position()
+                << endl;            
+
+
                 
             deletedMols++;
             deleteMolFromMoleculeCloud(*molsToDel[m]);
         }
     }
+    
+    Info << nl << "more details ... " << nl << endl;
+    
+    forAll(molPoints_, i)
+    {
+
+        Info << "Deleting molecule at position = "
+                << positions[i]
+                << ", requested position = " << molPoints_[i]
+                << ", residual = " << rMinCollect[i]
+                << endl;        
+        
+    }
+    
 
     label molsKept = initialSize - deletedMols;
 

@@ -131,6 +131,11 @@ public:
             scalar refCharge
         );
 
+        reducedUnits
+        (
+            label unity
+        );        
+        
         //- Construct from dictionary
         reducedUnits(const IOdictionary& reducedUnitsDict);
         reducedUnits(Time& runTime, const polyMesh& mesh);

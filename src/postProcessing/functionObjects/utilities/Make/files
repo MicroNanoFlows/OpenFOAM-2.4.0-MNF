@@ -18,9 +18,6 @@ blendingFactor/blendingFactorFunctionObject.C
 DESModelRegions/DESModelRegions.C
 DESModelRegions/DESModelRegionsFunctionObject.C
 
-dsmcFields/dsmcFields.C
-dsmcFields/dsmcFieldsFunctionObject.C
-
 pressureTools/pressureTools.C
 pressureTools/pressureToolsFunctionObject.C
 

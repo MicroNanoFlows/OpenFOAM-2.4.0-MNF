@@ -134,7 +134,7 @@ cyclicBoundary::cyclicBoundary
     
     patchNameN_ = neighbPatchName;
     
-    label patchNId_ = mesh_.boundaryMesh().findPatchID(patchNameN_);    
+    patchNId_ = mesh_.boundaryMesh().findPatchID(patchNameN_);    
 
     if(patchNId_ == -1)
     {
@@ -142,6 +142,9 @@ cyclicBoundary::cyclicBoundary
             << "Cannot find neighbouring patch on mesh: " << patchNameN_ 
             << exit(FatalError);
     }
+    
+    Info << "neighbour patch name = " << patchNameN_ << endl;
+    Info << "neighbour patch id = " << patchNId_ << endl;
     
 //     const polyPatch& patchN = mesh_.boundaryMesh()[patchNId_];
 
@@ -277,6 +280,16 @@ bool cyclicBoundary::isPatchNeighbour(const word& patchNameNeighbour)
     {
         return false;
     }
+}
+
+const word& cyclicBoundary::patchNameN() const
+{
+    return patchNameN_;
+}
+
+const label& cyclicBoundary::patchIdN() const 
+{
+    return patchNId_;
 }
 
 /*

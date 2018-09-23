@@ -1,0 +1,3 @@
+mdInitialiseField.C
+
+EXE = $(FOAM_APPBIN)/mdInitialiseField

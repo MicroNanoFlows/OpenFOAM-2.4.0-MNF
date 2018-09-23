@@ -26,7 +26,7 @@ Class
     polyDelFromEnclosedPoints
 
 Description
-    Assume 2D only 
+    Apply 2D points 
 
 SourceFiles
     polyDelFromEnclosedPointsI.H
@@ -83,6 +83,24 @@ private:
         // radians
         scalar theta_;
         
+        
+        word option_;
+        
+        
+        List<vector> centreLine_;
+        
+        // outer list = size of points_;
+        // inner list = 3 neighbours
+        // inner list = centreLine_;
+        List<List<vector> > c_;
+        
+        
+        
+        // local search
+//         bool local_;
+//         scalar radius_;
+        
+        
     // Private Member Functions
 
         void findMolsToDel();
@@ -91,6 +109,7 @@ private:
         
         bool isPointWithinTriangle
         (
+            const vector& centre,
             const vector& r1,
             const vector& r2,
             const vector& rI

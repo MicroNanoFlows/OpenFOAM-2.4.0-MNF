@@ -59,6 +59,10 @@ protected:
 
         Time& time_;
 
+        bool spaceVarying_;
+        
+        bool timeVarying_;
+        
 private:
 
     // Private Member Functions
@@ -112,11 +116,16 @@ public:
         // Access
 
             virtual vector force(const vector& position) = 0;
+            
             virtual vector force(const scalar& time) = 0;
+            
             virtual void updateForce() = 0;
 
         // Check
-
+            bool spaceVarying();
+            
+            bool timeVarying();
+            
         // Edit
 
         // Write

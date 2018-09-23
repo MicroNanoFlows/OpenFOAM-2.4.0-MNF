@@ -31,6 +31,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
+#include "fvIOoptionList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -40,8 +41,9 @@ int main(int argc, char *argv[])
     #include "createTime.H"
     #include "createMesh.H"
     #include "readThermodynamicProperties.H"
-//    #include "readTransportProperties.H"
+	//#include "readTransportProperties.H"
     #include "createFields.H"
+	#include "createFvOptions.H"
     #include "initContinuityErrs.H"
 
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -79,7 +81,8 @@ int main(int argc, char *argv[])
                fvc::interpolate(psi)
                *(
                     (fvc::interpolate(U) & mesh.Sf())
-                  + fvc::ddtPhiCorr(rUA, rho, U, phi)
+					+fvc::ddtCorr(rho, U, phi)
+                  	//+ fvc::ddtCorr(rUA, rho, U, phi)
                 )
             );
 

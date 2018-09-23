@@ -59,7 +59,7 @@ oscillatingForce::oscillatingForce
 :
     gravityForce(time, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
-    force_(propsDict_.lookup("initialForce")),
+//     force_(propsDict_.lookup("initialForce")),
     unitVector_(propsDict_.lookup("unitVector")),
     period_(readScalar(propsDict_.lookup("period"))),
     amplitude_(readScalar(propsDict_.lookup("amplitude"))),
@@ -68,6 +68,8 @@ oscillatingForce::oscillatingForce
 //     elapsedTime_(0.0)
 //     deltaT_(readScalar(propsDict_.lookup("deltaT")))
 {
+    timeVarying_ = true;
+    
     unitVector_ /= mag(unitVector_);
 
 //     scalar initialForce = (readScalar(propsDict_.lookup("force")));
@@ -95,7 +97,7 @@ oscillatingForce::~oscillatingForce()
 
 vector oscillatingForce::force(const vector& position)
 {
-    return force_;
+    return vector::zero;
 }
 
 void oscillatingForce::updateForce()

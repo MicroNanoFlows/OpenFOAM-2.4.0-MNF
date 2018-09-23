@@ -95,6 +95,11 @@ void potentials::readPotentialDict()
             << abort(FatalError);        
         
     }
+    
+    if (potentialsDict.found("checkOverlaps"))
+    {
+        checkPotentialOverlaps_ = Switch(potentialsDict.lookup("checkOverlaps"));  
+    }
 }
 
 
@@ -116,7 +121,8 @@ potentials::potentials
     redUnits_(rU),
     cP_(cP),
     pairPotentials_(mesh, molCloud, cP, rU),
-    rCutMax_(pairPotentials_.maxRCut())
+    rCutMax_(pairPotentials_.maxRCut()),
+    checkPotentialOverlaps_(true)
 {
     readPotentialDict();
     
@@ -159,6 +165,11 @@ const scalar& potentials::rCutMax() const
     return rCutMax_;
 }
 
+
+bool potentials::checkPotentialOverlaps()
+{
+    return checkPotentialOverlaps_;
+}
 
 // pairPotentials& potentials::pairPots()
 // {

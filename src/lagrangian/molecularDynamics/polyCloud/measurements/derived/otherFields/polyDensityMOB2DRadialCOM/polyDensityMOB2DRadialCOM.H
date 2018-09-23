@@ -26,14 +26,7 @@ Class
     polyDensityMOB2DRadialCOM
 
 Description
-    The method of bins: measuring 2D distribution of velocity.
 
-    Parallelised.
-
-    Only applicable for cuboid or cubic domains or domains with a constant cross-sectional area.
-
-    Two methods for measuring velocity are used, 
-    see Tysanner and Garcia J. Comp. Phys. 2004.
 
 SourceFiles
     polyDensityMOB2DRadialCOMI.H
@@ -80,7 +73,7 @@ private:
         word regionName_;
         label regionId_;
 	
-        // added by Jun Zhang for polyMolecules
+        // added by Jun Zhang for polymolecules	
 	    List<label> molIds_;
 
         vector startPoint_;
@@ -111,13 +104,13 @@ private:
         // for searching
         scalar minBinWidth_;
         labelField n_;
-
+//         vector COM_;
         scalar nAvTimeSteps_;
         bool resetAtOutput_;
-
     // Private Member Functions
 
         label findBin(const scalar& r);
+
 
 public:
 
@@ -139,6 +132,7 @@ public:
 
         ~polyDensityMOB2DRadialCOM();
 
+
     // Member Functions
 
         //- create initial field
@@ -153,6 +147,12 @@ public:
             polyMolecule* molJ
         );
 
+//         void measureDuringForceComputation
+//         (
+//             polyMolecule* molReal,
+//             polyReferredMolecule* molRef
+//         );
+
         void measureDuringForceComputationSite
         (
             polyMolecule* molI,
@@ -161,11 +161,23 @@ public:
             label sJ
         );
 
+//         void measureDuringForceComputationSite
+//         (
+//             polyMolecule* molReal,
+//             polyReferredMolecule* molRef,
+//             label sReal,
+//             label sRef
+//         );
+
+
         //- return field
+//         const volVectorField& velocityField() const;
         const propertyField& fields() const;
 
         //- write field
         void writeField();
+
+        void updateProperties(const dictionary&);
 };
 
 

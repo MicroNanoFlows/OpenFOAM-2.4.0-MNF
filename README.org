@@ -1,8 +1,8 @@
 #                            -*- mode: org; -*-
 #
-#+TITLE:            OpenFOAM README for version 2.4.0
+#+TITLE:            OpenFOAM README for version 2.4.0 (plus Micro & Nano Flows for Engineering codes)
 #+AUTHOR:               The OpenFOAM Foundation
-#+DATE:                      22nd May 2015
+#+DATE:                      22nd May 2015 (edited April 2016)
 #+LINK:                  http://www.openfoam.org
 #+OPTIONS: author:nil ^:{}
 # Copyright (c) 2015 OpenFOAM Foundation.
@@ -22,7 +22,10 @@
   version.  See the file =COPYING= in this directory or
   [[http://www.gnu.org/licenses/]], for a description of the GNU General Public
   License terms under which you can copy the files.
-
+  
+* About Micro & Nano Flows Codes
+  The Micro & Nano Flows (MNF) Group are the original authors of the mdFoam and dsmcFoam applications. This repository provides up to date versions of these applications (name mdFOAM and dsmcFOAM), with the groups most recent developments included along with documentation and new tutorial cases.
+  
 * [[http://www.OpenFOAM.org/git.php][Download and installation instructions]]
 * [[http://www.OpenFOAM.org/docs][Documentation]]
 * [[http://www.OpenFOAM.org/bugs][Reporting bugs in OpenFOAM]]

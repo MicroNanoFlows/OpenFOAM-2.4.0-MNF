@@ -155,7 +155,9 @@ void polyDelFromCylinder::findMolsToDelInside()
     //molsToDel.shrink();
 
     forAll(molsToDel, m)
-    {
+    {        
+        Info <<  molsToDel[m]->position() << endl;
+        
         deleteMolFromMoleculeCloud(*molsToDel[m]);
     }
 

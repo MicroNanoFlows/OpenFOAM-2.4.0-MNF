@@ -42,6 +42,7 @@ Description
 #include "FixedList.H"
 #include "polyMeshTetDecomposition.H"
 #include "particleMacros.H"
+#include "treeDataFace.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -504,6 +505,16 @@ public:
             template<class TrackData>
             label track(const vector& endPosition, TrackData& td);
 
+            //- Track particle to end of trajectory
+            //  or until it hits the boundary.
+            //  On entry 'stepFraction()' should be set to the fraction of the
+            //  time-step at which the tracking starts and on exit it contains
+            //  the fraction of the time-step completed.
+            //  Returns the boundary face index if the track stops at the
+            //  boundary, -1 otherwise.
+            template<class TrackData>
+            label track(const vector& endPosition, TrackData& td, bool DSMC/*, const indexedOctree<treeDataFace> faceTree*/);
+
             //- Track particle to a given position and returns 1.0 if the
             //  trajectory is completed without hitting a face otherwise
             //  stops at the face and returns the fraction of the trajectory
@@ -512,6 +523,15 @@ public:
             //  time-step at which the tracking starts.
             template<class TrackData>
             scalar trackToFace(const vector& endPosition, TrackData& td);
+
+            //- Track particle to a given position and returns 1.0 if the
+            //  trajectory is completed without hitting a face otherwise
+            //  stops at the face and returns the fraction of the trajectory
+            //  completed.
+            //  on entry 'stepFraction()' should be set to the fraction of the
+            //  time-step at which the tracking starts.
+            template<class TrackData>
+            scalar trackToFace(const vector& endPosition, TrackData& td, bool DSMC/*, const indexedOctree<treeDataFace> faceTree*/);
 
             //- Return the index of the face to be used in the interpolation
             //  routine

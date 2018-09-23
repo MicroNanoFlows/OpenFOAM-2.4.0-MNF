@@ -215,8 +215,9 @@ public:
             const vector& normal() const;             
             const vector& centroid() const;               
 
-            
-            
+            // neighbour
+            const word& patchNameN() const;
+            const label& patchIdN() const;           
             
             // parallel reconstructed number of faces
 //             const label& nFaces() const;

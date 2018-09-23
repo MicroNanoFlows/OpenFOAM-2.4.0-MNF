@@ -97,7 +97,7 @@ polyInstantPropertiesZoneBounded::polyInstantPropertiesZoneBounded
     molIds_ = ids.molIds();
 
     velocityField_.clear();
-    forceField_.clear();
+//     forceField_.clear();
 }
 
 
@@ -117,7 +117,7 @@ void polyInstantPropertiesZoneBounded::calculateField()
 {
     scalar mols = 0.0;
     vector vel = vector::zero;
-    vector frc = vector::zero;
+//     vector frc = vector::zero;
 
     IDLList<polyMolecule>::iterator mol(molCloud_.begin());
 
@@ -132,7 +132,7 @@ void polyInstantPropertiesZoneBounded::calculateField()
 //                     const polyMolecule::constantProperties& constProp = molCloud_.constProps(mol().id());
                     mols += 1.0;
                     vel += mol().v();
-                    frc += molCloud_.cP().mass(mol().id())*mol().a();
+//                     frc += molCloud_.cP().mass(mol().id())*mol().a();
                 }
             }
         }
@@ -143,20 +143,20 @@ void polyInstantPropertiesZoneBounded::calculateField()
     {
         reduce(mols, sumOp<scalar>());
         reduce(vel, sumOp<vector>());
-        reduce(frc, sumOp<vector>());
+//         reduce(frc, sumOp<vector>());
     }
     
     vector velocity = vector::zero;
-    vector force = vector::zero;
+//     vector force = vector::zero;
     
     if(mols > 0.0)
     {
         velocity = vel/mols;
-        force = frc/mols;
+//         force = frc/mols;
     }
     
     velocityField_.append(velocity);
-    forceField_.append(force);
+//     forceField_.append(force);
 }
 
 
@@ -169,16 +169,16 @@ void polyInstantPropertiesZoneBounded::writeField()
         if(Pstream::master())
         {
             velocityField_.shrink();
-            forceField_.shrink();
+//             forceField_.shrink();
 
             scalarField timeField (velocityField_.size(), 0.0);
             vectorField velocity (velocityField_.size(), vector::zero);
-            vectorField force (forceField_.size(), vector::zero);
+//            vectorField force (forceField_.size(), vector::zero);
             
             velocity.transfer(velocityField_);
             velocityField_.clear();
-            force.transfer(forceField_);
-            forceField_.clear();
+//            force.transfer(forceField_);
+//            forceField_.clear();
             
             const scalar& deltaT = time_.time().deltaT().value();
             
@@ -195,7 +195,7 @@ void polyInstantPropertiesZoneBounded::writeField()
                 velocity,
                 true
             );
-            
+/*            
             writeTimeData
             (
                 casePath_,
@@ -204,6 +204,7 @@ void polyInstantPropertiesZoneBounded::writeField()
                 force,
                 true
             );
+*/
         }
     }
 }

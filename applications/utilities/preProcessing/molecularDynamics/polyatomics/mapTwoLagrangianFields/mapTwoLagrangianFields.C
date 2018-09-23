@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
             cP,
             rndGen,
             "mapping",
-            true
+            false
         );    
         
         IDLList<polyMolecule>::iterator mol(oldMolecules.begin());

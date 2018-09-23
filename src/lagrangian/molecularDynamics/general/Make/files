@@ -68,6 +68,7 @@ binModels/derived/radialBinsNormalised/radialBinsNormalised.C
 binModels/derived/cuboidBinII/cuboidBinII.C
 binModels/derived/sphericalBins/sphericalBins.C
 binModels/derived/angularBins/angularBins.C
+binModels/derived/simpleBins/simpleBins.C
 
 /*  WALL VELOCITY MOTION*/
 
@@ -79,23 +80,32 @@ wallMotion/derived/rampVelocity/rampVelocity.C
 /* TIME*/
 
 time/clockTimer/clockTimer.C
+time/couplingTimeData/couplingTimeData.C
+time/decoupledTimeData/decoupledTimeData.C
+time/timeData/timeData.C
+time/timeDataMeas/timeDataMeas.C
+time/timeFluxData/timeFluxData.C
+time/timeInterval/timeInterval.C
 
 /*  GRAVITY FORCE  */
 
 gravityForce/basic/gravityForce.C
 gravityForce/derived/uniformForce/uniformForce.C
+gravityForce/derived/timeVaryingForce/timeVaryingForce.C
 gravityForce/derived/oscillatingForce/oscillatingForce.C
+gravityForce/derived/rampForceII/rampForceII.C
+
+/*
 gravityForce/derived/oscillatingSquareForce/oscillatingSquareForce.C
 gravityForce/derived/oscillatingLowResolutionForce/oscillatingLowResolutionForce.C
 gravityForce/derived/oneDimForce/oneDimForce.C
 gravityForce/derived/gaussianForce/gaussianForce.C
 gravityForce/derived/standardGaussian/standardGaussian.C
 gravityForce/derived/rampForce/rampForce.C
-gravityForce/derived/rampForceII/rampForceII.C
 gravityForce/derived/multiRampForce/multiRampForce.C
-gravityForce/derived/timeVaryingForce/timeVaryingForce.C
 gravityForce/derived/mixedOscillatingForce/mixedOscillatingForce.C
 gravityForce/derived/gaussianBoundedForce/gaussianBoundedForce.C
+*/
 
 /*  MD PRIMITIVES  */
 
@@ -113,6 +123,8 @@ fitting/leastSquaresFit/leastSquaresFit.C
 davesInterpolant/davesInterpolant.C
 
 trackingNumber/trackingNumber.C
+
+randomPointsInSquareZone/randomPointsInSquareZone.C
 
 
 multiscale/boundaryConditions/mixedFixedValueSlipFvPatchFields.C

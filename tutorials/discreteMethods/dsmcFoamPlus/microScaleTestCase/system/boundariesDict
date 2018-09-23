@@ -1,0 +1,118 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.3                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      boundariesDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dsmcPatchBoundaries
+(
+	boundary
+	{
+		patchBoundaryProperties
+		{
+			patchName			walls;
+		}
+
+		boundaryModel		dsmcDiffuseWallPatch;
+
+		dsmcDiffuseWallPatchProperties
+		{
+			velocity 			(0 0 0);
+			temperature			300;
+		}
+	}
+
+	boundary
+	{
+		patchBoundaryProperties
+		{
+			patchName			outlet;
+		}
+
+		boundaryModel		dsmcDeletionPatch;
+
+		dsmcDeletionPatchProperties
+		{
+			allSpecies	true;
+		}
+	}
+
+	boundary
+	{
+		patchBoundaryProperties
+		{
+			patchName			inlet;
+		}
+
+		boundaryModel		dsmcDeletionPatch;
+
+		dsmcDeletionPatchProperties
+		{
+			allSpecies		true;
+		}
+	}
+);
+
+dsmcCyclicBoundaries
+(
+
+);
+
+dsmcGeneralBoundaries
+(
+
+	boundary
+	{
+		generalBoundaryProperties
+		{
+			patchName			inlet;
+		}
+
+		boundaryModel		dsmcWangPressureInlet;
+
+		dsmcWangPressureInletProperties
+		{
+			inletPressure 		252000;
+			inletTemperature	300;
+			typeIds				(N2);
+			moleFractions
+			{
+				N2		1.0;
+			}
+		}
+	}
+
+	boundary
+	{
+		generalBoundaryProperties
+		{
+			patchName			outlet;
+		}
+
+		boundaryModel		dsmcLiouFangPressureOutletSpecifiedMolarFraction;
+
+		dsmcLiouFangPressureOutletSpecifiedMolarFractionProperties
+		{
+			outletPressure 		100000;
+			typeIds				(N2);
+			moleFractions
+			{
+				N2		1.0;
+			}
+		}
+	}
+);
+
+
+// ************************************************************************* //

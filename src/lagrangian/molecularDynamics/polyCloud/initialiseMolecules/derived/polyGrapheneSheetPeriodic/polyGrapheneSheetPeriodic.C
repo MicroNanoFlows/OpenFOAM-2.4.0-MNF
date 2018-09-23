@@ -89,6 +89,8 @@ void polyGrapheneSheetPeriodic::setInitialConfiguration()
 
     boundBox box = mesh_.bounds();
     
+    
+    
     vector nL = mdInitialiseDict_.lookup("lengthNormal");    
     vector nB = mdInitialiseDict_.lookup("breadthNormal");
     vector nZ = mdInitialiseDict_.lookup("heightNormal");    
@@ -100,6 +102,22 @@ void polyGrapheneSheetPeriodic::setInitialConfiguration()
     
     scalar Lx = box.span() & nL;
     scalar Ly = box.span() & nB;
+
+    
+    
+    bool shift = false;
+
+    vector Vshift = vector::zero;
+    
+    if(mdInitialiseDict_.found("shift"))
+    {
+        shift = Switch(mdInitialiseDict_.lookup("shift"));
+        
+        if(shift)
+        {
+            Vshift = b*nL;
+        }
+    }
     
     
 //     label L = readLabel(mdInitialiseDict_.lookup("length"));
@@ -236,6 +254,31 @@ void polyGrapheneSheetPeriodic::setInitialConfiguration()
         Gnew[i] += nZ*Z;
     }
     
+    // shift for stagerred approach
+    if(shift)
+    {
+        forAll (Gnew, i)
+        {
+            Gnew[i] += Vshift;
+            
+            label cell = -1;
+            label tetFace = -1;
+            label tetPt = -1;
+
+            mesh_.findCellFacePt
+            (
+                Gnew[i],
+                cell,
+                tetFace,
+                tetPt
+            );
+
+            if(cell == -1)
+            {
+                Gnew[i] -= Lx*nL;
+            }
+        }        
+    }
     
     // READ IN MORE PROPERTIES FROM DICTIONARY
 
@@ -272,6 +315,9 @@ void polyGrapheneSheetPeriodic::setInitialConfiguration()
     {
         initialiseVelocities_ = Switch(mdInitialiseDict_.lookup("initialiseVelocities"));
     }
+    
+    
+    
 
     bool tethered = false;
 

@@ -264,6 +264,46 @@ writeTimeData::writeTimeData
 }
 
 
+//- scalar field, complex field
+writeTimeData::writeTimeData
+(
+    const fileName& pathName,
+    const word& nameFile,
+    const scalarField& xData,
+    const List<complex>& yData
+)
+{
+    if(xData.size() == yData.size())
+    {
+        OFstream file(pathName/nameFile);
+    
+        if(file.good())
+        {
+            forAll(yData, n)
+            {
+                file 
+                    << xData[n] << "\t" 
+                    << yData[n].Re() << "\t" 
+                    << yData[n].Im() << "\t"
+                    << endl;
+            }
+        }
+        else
+        {
+            FatalErrorIn("void writeTimeData::writeTimeData()")
+                << "Cannot open file " << file.name()
+                << abort(FatalError);
+        }
+    }
+    else
+    {
+        Info << "WARNING: size of two fields for output are not equal: " 
+             << xData.size() << " and " << yData.size()
+             << nl << " in writeTimeData."
+             << endl;
+    }
+}
+
 
 //- vector field, vector field, 
 writeTimeData::writeTimeData
@@ -442,7 +482,7 @@ writeTimeData::writeTimeData
 }
 
 
-// one scalar field (with append possible)
+// one scalar field (with append possible) [OLD]
 writeTimeData::writeTimeData
 (
     const fileName& pathName,
@@ -496,7 +536,88 @@ writeTimeData::writeTimeData
     }
 }
 
+// one scalar field - sideways (with append possible)
+writeTimeData::writeTimeData
+(
+    const fileName& pathName,
+    const word& nameFile,
+    const scalarField& xData,
+    const word& option, 
+    const bool& dummy     
 
+)
+{
+    if(option == "once")
+    {
+        OFstream file(pathName/nameFile);
+    
+        if(file.good())
+        {
+            forAll(xData, n)
+            {
+                file 
+                    << xData[n]
+                    << endl;
+            }
+        }
+        else
+        {
+            FatalErrorIn("void writeTimeData::writeTimeData()")
+                << "Cannot open file " << file.name()
+                << abort(FatalError);
+        }    
+    }
+    if(option == "append")
+    {
+        fileName fName(pathName/nameFile);
+
+        std::ofstream file(fName.c_str(),ios_base::app);
+        file.precision(11);
+
+        if(file.is_open())
+        {
+            forAll(xData, n)
+            {
+                file << xData[n] << nl;
+            }
+        }
+        else
+        {
+            FatalErrorIn("void writeTimeData::writeTimeData()")
+                << "Cannot open file " << fName
+                << abort(FatalError);
+        }
+
+        file.close();
+    }    
+    if(option == "sidewaysAppend")
+    {
+//         Pout <<"xData = " << xData << endl;
+        
+        fileName fName(pathName/nameFile);
+
+        std::ofstream file(fName.c_str(),ios_base::app);
+        file.precision(11);
+
+        if(file.is_open())
+        {
+            forAll(xData, n)
+            {
+                file << xData[n] << " ";
+            }
+            
+            file << nl;
+        }
+        else
+        {
+            FatalErrorIn("void writeTimeData::writeTimeData()")
+                << "Cannot open file " << fName
+                << abort(FatalError);
+        }
+
+        file.close();
+    }
+}
 
 
 // one scalar field one VECTOR field (with append possible)
@@ -579,6 +700,8 @@ writeTimeData::writeTimeData
 }
 
 
+
+
 // one scalar field one TENSOR field (with append possible)
 writeTimeData::writeTimeData
 (
@@ -616,6 +739,104 @@ writeTimeData::writeTimeData
                 << abort(FatalError);
         }
     
+        file.close();
+    }
+    else
+    {
+        Info << "WARNING: size of two fields for output are not equal: " 
+             << xData.size() << " and " << yData.size()
+             << nl << " in writeTimeData."
+             << endl;
+    }
+}
+
+// one scalar field and one List<scalarField> (with append possible)
+writeTimeData::writeTimeData
+(
+    const fileName& pathName,
+    const word& nameFile,
+    const scalarField& xData,
+    const List<scalarField>& yData,
+    const bool& dummy
+)
+{
+    if(xData.size() == yData.size())
+    {
+        fileName fName(pathName/nameFile);
+    
+        std::ofstream file(fName.c_str(),ios_base::app);
+    
+        if(file.is_open())
+        {
+            forAll(xData, n)
+            {
+                label ySize = yData[n].size();
+                
+                file 
+                    << xData[n] << "\t";
+
+                    
+                    for(label i = 0; i < ySize; i++)
+                    {
+                        file
+                            << yData[n][i] << "\t";
+                    }
+                    
+                file
+                    << nl;
+            }
+        }
+        else
+        {
+            FatalErrorIn("void writeTimeData::writeTimeData()")
+                << "Cannot open file " << fName
+                << abort(FatalError);
+        }
+    
+        file.close();
+    }
+    else
+    {
+        Info << "WARNING: size of two fields for output are not equal: " 
+             << xData.size() << " and " << yData.size()
+             << nl << " in writeTimeData."
+             << endl;
+    }
+}
+
+// one scalar field and one complex field (with append possible)
+writeTimeData::writeTimeData
+(
+    const fileName& pathName,
+    const word& nameFile,
+    const scalarField& xData,
+    const List<complex>& yData,
+    const bool& dummy
+)
+{
+    if(xData.size() == yData.size())
+    {
+        fileName fName(pathName/nameFile);
+    
+        std::ofstream file(fName.c_str(),ios_base::app);
+    
+        if(file.is_open())
+        {
+            forAll(yData, n)
+            {
+                file 
+                    << xData[n] << "\t" 
+                    << yData[n].Re() << "\t" 
+                    << yData[n].Im() << nl;
+            }
+        }
+        else
+        {
+            FatalErrorIn("void writeTimeData::writeTimeData()")
+                << "Cannot open file " << fName
+                << abort(FatalError);
+        }
+        
         file.close();
     }
     else

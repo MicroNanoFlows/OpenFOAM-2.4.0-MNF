@@ -4,6 +4,9 @@ makeType=${1:-libso}
 set -x
 
 wmake $makeType general
+wmake $makeType potential
+wmake $makeType molecularMeasurements
+wmake $makeType molecule
 wmake $makeType polyCloud
 
 # ----------------------------------------------------------------- end-of-file

@@ -58,7 +58,9 @@ uniformForce::uniformForce
     gravityForce(time, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
     force_(propsDict_.lookup("force"))
-{}
+{
+    timeVarying_ = true;
+}
 
 
 
@@ -75,7 +77,7 @@ uniformForce::~uniformForce()
 
 vector uniformForce::force(const vector& position)
 {
-    return force_;
+    return vector::zero;
 }
 
 void uniformForce::updateForce()

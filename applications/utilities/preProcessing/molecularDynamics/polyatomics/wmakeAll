@@ -17,7 +17,7 @@ fi
 
 clean
 
-cases="createWeightField  deleteMolecules  mapLagrangianFields  mapTwoLagrangianFields  mdInitialise  mdInitialiseInExistingField  quickMapLagrangianFields  reconstructXmol"
+cases="createWeightField  deleteMolecules  mapLagrangianFields  mapTwoLagrangianFields  mdInitialiseField  mdInitialiseInExistingField  quickMapLagrangianFields  reconstructXmol"
 
 for case in $cases
 do
