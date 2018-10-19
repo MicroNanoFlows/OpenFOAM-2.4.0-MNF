@@ -63,7 +63,7 @@ uniform3DBins::uniform3DBins
     unitVector_((endPoint_ - startPoint_)/mag(endPoint_ - startPoint_)),
     rSEMag_(mag(endPoint_ - startPoint_)),
     nBins_(propsDict_.lookup("nBins")),
-    binWidth_(mag(endPoint_ - startPoint_)/(nBins_))
+    binWidth_(mag(endPoint_ - startPoint_)/(nBins_[0]), mag(endPoint_ - startPoint_)/(nBins_[1]), mag(endPoint_ - startPoint_)/(nBins_[2]))
 {}
 
 // * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * * //
@@ -112,13 +112,22 @@ List<label> uniform3DBins::isPointWithinBin
 }
 
 vectorField uniform3DBins::binPositionsX()
-{}
+{
+    vectorField positions(0, vector::zero);
+    return positions;
+}
 
 scalarField uniform3DBins::binPositionsY()
-{}
+{
+    scalarField positions(0, 0.0);
+    return positions;
+}
 
 scalarField uniform3DBins::binPositionsZ()
-{}
+{
+    scalarField positions(0, 0.0);
+    return positions;
+}
 
 vectorField uniform3DBins::binPositionsXYZ()
 {
@@ -153,18 +162,10 @@ void uniform3DBins::write
 )
 {}
 
-vectorField uniform3DBins::position()
+vector uniform3DBins::position(const vector& h, const scalar& r, const scalar& theta)
 {
-    vectorField positions(nBins_[0], vector::zero);
-
-    /*
-    forAll(positions, i)
-    {
-        positions[i] = startPoint_ + (0.5 + scalar(i))*binWidth_*unitVector_;
-    }
-    */
-
-    return positions;
+    vector p(vector::zero);
+    return p;
 }
 
 List<label> uniform3DBins::nBins()

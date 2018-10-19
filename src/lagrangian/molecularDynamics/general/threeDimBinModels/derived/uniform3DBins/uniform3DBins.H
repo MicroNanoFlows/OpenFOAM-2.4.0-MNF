@@ -110,7 +110,7 @@ public:
 
             vectorField binPositionsXYZ();
 
-            vectorField position();
+            vector position(const vector& h, const scalar& r, const scalar& theta);
 
             // 0 length, 1 radius, 2 angle
             List<label> nBins();

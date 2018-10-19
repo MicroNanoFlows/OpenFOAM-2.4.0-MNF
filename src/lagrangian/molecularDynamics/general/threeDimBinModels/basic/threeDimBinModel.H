@@ -125,7 +125,6 @@ public:
 
 //             virtual vectorField bins() = 0;
 
-            virtual vector position() = 0;
             virtual vector position(const vector&, const scalar&, const scalar&) = 0;
 
             virtual List<label> nBins() = 0;
