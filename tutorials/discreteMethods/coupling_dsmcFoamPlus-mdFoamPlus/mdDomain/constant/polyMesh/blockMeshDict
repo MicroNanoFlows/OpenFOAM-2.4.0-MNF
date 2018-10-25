@@ -19,7 +19,7 @@ FoamFile
 
 convertToMeters 1;
 
-// MD domain size in nm (50 50 50) (total channel size (300 50 50)
+// MD domain size in nm (50 50 50) (total channel size (250 50 50) including DSMC domain)
 
 vertices
 (

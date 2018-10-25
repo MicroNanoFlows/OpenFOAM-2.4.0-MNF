@@ -59,11 +59,18 @@ uniform3DBins::uniform3DBins
     threeDimBinModel(mesh, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
     startPoint_(propsDict_.lookup("startPoint")),
+    startPointX_(startPoint_[0],0,0),
+    startPointY_(0,startPoint_[0],0),
+    startPointZ_(0,0,startPoint_[0]),
     endPoint_(propsDict_.lookup("endPoint")),
-    unitVector_((endPoint_ - startPoint_)/mag(endPoint_ - startPoint_)),
-    rSEMag_(mag(endPoint_ - startPoint_)),
+    endPointX_(endPoint_[0],0,0),
+    endPointY_(0,endPoint_[0],0),
+    endPointZ_(0,0,endPoint_[0]),
+    rSEMagX_(mag(endPointX_ - startPointX_)),
+    rSEMagY_(mag(endPointY_ - startPointY_)),
+    rSEMagZ_(mag(endPointZ_ - startPointZ_)),
     nBins_(propsDict_.lookup("nBins")),
-    binWidth_(mag(endPoint_ - startPoint_)/(nBins_[0]), mag(endPoint_ - startPoint_)/(nBins_[1]), mag(endPoint_ - startPoint_)/(nBins_[2]))
+    binWidth_(rSEMagX_/nBins_[0], rSEMagY_/nBins_[1], rSEMagZ_/nBins_[2])
 {}
 
 // * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * * //
@@ -84,30 +91,59 @@ List<label> uniform3DBins::isPointWithinBin
 )
 {
     List<label> binNumbers(3, -1);
-/*
+
     vector rSI = rI - startPoint_;
-    scalar rD = rSI & unitVector_;
-    vector n(label(rD/binWidth_[0]), label(rD/binWidth_[1]), label(rD/binWidth_[2]));
+
+    vector n(label(rSI[0]/binWidth_[0]), label(rSI[1]/binWidth_[1]), label(rSI[2]/binWidth_[2]));
     
     if
     (
-        (rD <= rSEMag_) && (rD >= 0.0)
+      (rSI[0] <= rSEMagX_) && (rSI[0] >= 0.0)
     )
     {
-      forAll(n, i)
+      if(n[0] == nBins_[0])
       {
-        if(n[i] == nBins_[i])
-        {
-            n[i]--;
-        }
+        n[0]--;
+      }
 
-        if( (n[i] >= 0) && (n[i] < nBins_[i]) )
-        {
-            binNumber[i] = n[i];
-        }
+      if( (n[0] >= 0) && (n[0] < nBins_[0]) )
+      {
+        binNumbers[0] = n[0];
       }
     }
-*/
+
+    if
+    (
+      (rSI[1] <= rSEMagY_) && (rSI[1] >= 0.0)
+    )
+    {
+      if(n[1] == nBins_[1])
+      {
+        n[1]--;
+      }
+
+      if( (n[1] >= 0) && (n[1] < nBins_[1]) )
+      {
+        binNumbers[1] = n[1];
+      }
+    }
+
+    if
+    (
+      (rSI[2] <= rSEMagZ_) && (rSI[2] >= 0.0)
+    )
+    {
+      if(n[2] == nBins_[2])
+      {
+        n[2]--;
+      }
+
+      if( (n[2] >= 0) && (n[2] < nBins_[2]) )
+      {
+        binNumbers[2] = n[2];
+      }
+    }
+
     return binNumbers;
 }
 

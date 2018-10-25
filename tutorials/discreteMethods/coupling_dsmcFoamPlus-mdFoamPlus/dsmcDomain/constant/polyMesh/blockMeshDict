@@ -19,7 +19,7 @@ FoamFile
 
 convertToMeters 5e-8;
 
-// Channel size in nm (300 50 50), 50nm gap in centre for MD domain
+// Channel size in nm (250 50 50), 50nm gap in centre for MD domain
 
 vertices
 (

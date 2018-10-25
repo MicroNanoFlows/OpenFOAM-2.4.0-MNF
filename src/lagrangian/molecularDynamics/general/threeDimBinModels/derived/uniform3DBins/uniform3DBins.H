@@ -59,9 +59,16 @@ private:
         dictionary propsDict_;
 
         vector startPoint_;
+        vector startPointX_;
+        vector startPointY_;
+        vector startPointZ_;
         vector endPoint_;
-        vector unitVector_;
-        scalar rSEMag_;
+        vector endPointX_;
+        vector endPointY_;
+        vector endPointZ_;
+        scalar rSEMagX_;
+        scalar rSEMagY_;
+        scalar rSEMagZ_;
 
 
         vector nBins_;
