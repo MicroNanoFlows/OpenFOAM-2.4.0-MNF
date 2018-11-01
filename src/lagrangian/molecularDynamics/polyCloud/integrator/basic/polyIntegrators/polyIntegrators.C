@@ -54,7 +54,7 @@ polyIntegrators::polyIntegrators
     )
 {}
 
-//- Constructor for mdFOAM
+//- Constructor for mdFoam+
 polyIntegrators::polyIntegrators
 (
     Time& t,

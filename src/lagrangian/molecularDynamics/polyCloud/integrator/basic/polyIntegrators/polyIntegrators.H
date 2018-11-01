@@ -77,7 +77,7 @@ public:
             const polyMesh& mesh
         );
 
-        //- Constructor for mdFOAM
+        //- Constructor for mdFoam+
         polyIntegrators
         (
             Time& t,

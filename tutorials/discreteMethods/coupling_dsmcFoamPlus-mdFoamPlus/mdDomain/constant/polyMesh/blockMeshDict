@@ -19,7 +19,7 @@ FoamFile
 
 convertToMeters 1;
 
-// MD domain size in nm (50 50 50) (total channel size (250 50 50) including DSMC domain)
+// MD domain size in nm (50 rCut rCut) (total channel size (250 rCut rCut) including DSMC domain)
 
 vertices
 (
@@ -35,7 +35,7 @@ vertices
 
 blocks
 (
-    hex (0 1 2 3 4 5 6 7) mdZone (20 20 20) simpleGrading (1 1 1)
+    hex (0 1 2 3 4 5 6 7) mdZone (20 1 1) simpleGrading (1 1 1)
 );
 
 boundary

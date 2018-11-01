@@ -24,7 +24,7 @@
   License terms under which you can copy the files.
   
 * About Micro & Nano Flows Codes
-  The Micro & Nano Flows (MNF) Group are the original authors of the mdFoam and dsmcFoam applications. This repository provides up to date versions of these applications (name mdFOAM and dsmcFOAM), with the groups most recent developments included along with documentation and new tutorial cases.
+  The Micro & Nano Flows (MNF) Group are the original authors of the mdFoam and dsmcFoam applications. This repository provides up to date versions of these applications (name mdFoam+ and dsmcFoam+), with the groups most recent developments included along with documentation and new tutorial cases.
   
 * [[http://www.OpenFOAM.org/git.php][Download and installation instructions]]
 * [[http://www.OpenFOAM.org/docs][Documentation]]

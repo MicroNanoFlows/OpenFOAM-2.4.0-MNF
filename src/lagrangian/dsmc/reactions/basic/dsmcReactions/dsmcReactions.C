@@ -59,7 +59,7 @@ dsmcReactions::dsmcReactions
     counter_(0)
 {}
 
-//- Constructor for mdFOAM
+//- Constructor for mdFoam+
 dsmcReactions::dsmcReactions
 (
     Time& t,

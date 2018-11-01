@@ -76,7 +76,7 @@ polyControllers::polyControllers
     threeDInterfaces_()
 {}
 
-//- Constructor for mdFOAM
+//- Constructor for mdFoam+
 polyControllers::polyControllers
 (
     Time& t,

@@ -87,8 +87,7 @@ private:
 #endif
         bool sending_;          //- Determine whether this interface will send
         List<Foam::word> sendInterfaceNames_;
-        bool sendMass_;
-        bool sendDensity_;
+        bool sendHistogram_;
 
         //- Receiving properties
 #ifdef USE_MUI
@@ -96,10 +95,6 @@ private:
 #endif
         bool receiving_;        //- Determine whether this interface will receive
         List<Foam::word> recvInterfaceNames_;
-        bool recvMass_;
-        bool recvDensity_;
-        Foam::List<List<Foam::scalar> > recvMassValues_;
-        Foam::List<List<Foam::scalar> > recvDensityValues_;
 
     // Private Member Functions
 

@@ -28,9 +28,7 @@ polyPatchBoundaries
         }
 
         polyCouplingPatchProperties
-        {
-
-        }
+        {}
     }
     boundary
     {
@@ -42,9 +40,7 @@ polyPatchBoundaries
         }
 
         polyCouplingPatchProperties
-        {
-
-        }
+        {}
     }
 );
 

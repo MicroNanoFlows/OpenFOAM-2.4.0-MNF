@@ -62,21 +62,12 @@ mdDsmcCoupling::mdDsmcCoupling
     threeDInterfaces_(threeDInterfaces),
 #ifdef USE_MUI
     cellCentres_(),
+    sendInterfaces_(),
+    recvInterfaces_(),
 #endif
     sending_(false),
     receiving_(false),
-#ifdef USE_MUI
-    sendInterfaces_(),
-#endif
-    sendMass_(false),
-    sendDensity_(false),
-#ifdef USE_MUI
-    recvInterfaces_(),
-#endif
-    recvMass_(false),
-    recvDensity_(false),
-    recvMassValues_(),
-    recvDensityValues_()
+    sendHistogram_(false)
 {
 #ifdef USE_MUI
     //- Determine sending interfaces if defined
@@ -169,37 +160,15 @@ mdDsmcCoupling::mdDsmcCoupling
 #endif
 
     //Determine sending properties
-    if(propsDictSend_.found("mass"))
-    {
-        sendMass_ = Switch(propsDictSend_.lookup("mass"));
-    }
 
-    if(propsDictSend_.found("density"))
-    {
-        sendDensity_ = Switch(propsDictSend_.lookup("density"));
-    }
-
-    if((sendInterfaces_.size() != 0) || sendMass_ || sendDensity_)
+    if(sendInterfaces_.size() != 0)
     {
         sending_ = true;
     }
 
-    if(propsDictRecv_.found("mass"))
-    {
-        recvMass_ = Switch(propsDictRecv_.lookup("mass"));
-    }
-
-    if(propsDictRecv_.found("density"))
-    {
-        recvDensity_ = Switch(propsDictRecv_.lookup("density"));
-    }
-
-    if((recvInterfaces_.size() != 0) || recvMass_ || recvDensity_)
+    if(recvInterfaces_.size() != 0)
     {
         receiving_ = true;
-
-        recvMassValues_.setSize(recvInterfaces_.size());
-        recvDensityValues_.setSize(recvInterfaces_.size());
     }
 
     writeInTimeDir_ = true;
@@ -268,11 +237,10 @@ void mdDsmcCoupling::initialConfiguration()
 
         for(int i=0; i<recvInterfaces_.size(); ++i)
         {
-            recvMassValues_[i].setSize(cellCentres_.size());
-            recvDensityValues_[i].setSize(cellCentres_.size());
+
         }
 
-        if(sendMass_ || sendDensity_) //- If calculating at least one average value per cell then commit initial t=0 values
+        if(true) //- If calculating at least one average value per cell then commit initial t=0 values
         {
             scalar mass;
             scalar density;
@@ -304,13 +272,13 @@ void mdDsmcCoupling::initialConfiguration()
                 for(size_t i=0; i<sendInterfaces_.size(); ++i)
                 {
                     //- Push average mass for the cell if enabled to each interface
-                    if(sendMass_)
+                    if(true)
                     {
                         sendInterfaces_[i]->push("m", cellCentres_[cellCount], mass);
                     }
 
                     //Push cell density if enabled
-                    if(sendDensity_)
+                    if(true)
                     {
                         scalar volume = mesh_.V()[cellI];
                         if(volume > 0.0)
@@ -355,7 +323,7 @@ void mdDsmcCoupling::sendCoupling()
     //- Only send data if at least one sending interface is defined
     if(sending_)
     {
-        if(sendMass_ || sendDensity_) //- If calculating at least one average value per cell then commit initial t=0 values
+        if(true) //- If calculating at least one average value per cell then commit initial t=0 values
         {
             scalar mass;
             scalar density;
@@ -387,13 +355,13 @@ void mdDsmcCoupling::sendCoupling()
                 for(size_t i=0; i<sendInterfaces_.size(); ++i)
                 {
                     //- Push average mass for the cell if enabled to each interface
-                    if(sendMass_)
+                    if(true)
                     {
                         sendInterfaces_[i]->push("m", cellCentres_[cellCount], mass);
                     }
 
                     //Push cell density if enabled
-                    if(sendDensity_)
+                    if(true)
                     {
                         scalar volume = mesh_.V()[cellI];
                         if(volume > 0.0)
@@ -435,7 +403,7 @@ void mdDsmcCoupling::receiveCoupling()
         Info << threeDInterfaces_.domainName << ": Receiving MUI values for time " << time_.value()
              << " through " << recvInterfaces_.size() << " interfaces" << endl;
 
-        if(recvMass_ || recvDensity_) //- Calculating at least one average value per cell
+        if(true) //- Calculating at least one average value per cell
         {
             mui::sampler_exact3d<scalar> spatial_sampler;
             mui::chrono_sampler_exact3d chrono_sampler;
@@ -444,17 +412,15 @@ void mdDsmcCoupling::receiveCoupling()
             {
                 for(int j=0; j<cellCentres_.size(); ++j) //- Iterate through the cell centres (we receive exactly as many as were sent in this example)
                 {
-                    if(recvMass_) //- If we are receiving mass values
+                    if(true) //- If we are receiving mass values
                     {
-                        recvMassValues_[i][j] = recvInterfaces_[i]->fetch("m", cellCentres_[j], time_.value(),
-                                                                     spatial_sampler, chrono_sampler);
+                        //recvMassValues_[i][j] = recvInterfaces_[i]->fetch("m", cellCentres_[j], time_.value(), spatial_sampler, chrono_sampler);
 
                     }
 
-                    if(recvMass_) //- If we are receiving density values
+                    if(true) //- If we are receiving density values
                     {
-                        recvDensityValues_[i][j] = recvInterfaces_[i]->fetch("p", cellCentres_[j], time_.value(),
-                                                                             spatial_sampler, chrono_sampler);
+                        //recvDensityValues_[i][j] = recvInterfaces_[i]->fetch("p", cellCentres_[j], time_.value(), spatial_sampler, chrono_sampler);
                     }
                 }
             }
@@ -483,30 +449,34 @@ void mdDsmcCoupling::output
             fileName outputFile(timePath/recvInterfaceNames_[i]);
             OFstream of(outputFile);
 
-            if(recvMass_) //- Output mass values
+            if(true) //- Output mass values
             {
                 of << "Averaged mass values from coupled interface " << recvInterfaceNames_[i] << endl;
                 of << "{" << endl;
 
+                /*
                 for(int j=0; j<recvMassValues_[i].size(); ++j)
                 {
-                    of << "(" << cellCentres_[j][0] << "," << cellCentres_[j][1] << "," << cellCentres_[j][2] << "): ";
-                    of << recvMassValues_[i][j] << endl;
+                   of << "(" << cellCentres_[j][0] << "," << cellCentres_[j][1] << "," << cellCentres_[j][2] << "): ";
+                   of << recvMassValues_[i][j] << endl;
                 }
+                */
 
                 of << "};" << endl;
             }
 
-            if(recvDensity_) //- Output density values
+            if(true) //- Output density values
             {
                 of << "Averaged density values from coupled interface " << recvInterfaceNames_[i] << endl;
                 of << "{" << endl;
 
+                /*
                 for(int j=0; j<recvDensityValues_[i].size(); ++j)
                 {
                     of << "(" << cellCentres_[j][0] << "," << cellCentres_[j][1] << "," << cellCentres_[j][2] << "): ";
                     of << recvDensityValues_[i][j] << endl;
                 }
+                */
 
                 of << "};" << endl;
             }

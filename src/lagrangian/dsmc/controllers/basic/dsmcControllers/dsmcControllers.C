@@ -67,7 +67,7 @@ dsmcControllers::dsmcControllers
     fluxControllers_()
 {}
 
-//- Constructor for mdFOAM
+//- Constructor for mdFoam+
 dsmcControllers::dsmcControllers
 (
     Time& t,

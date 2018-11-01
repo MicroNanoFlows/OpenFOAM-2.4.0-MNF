@@ -114,7 +114,7 @@ public:
             const polyMesh& mesh
         );
 
-        //- Constructor for gnemdFOAM
+        //- Constructor for gnemdFoamPlus
         dsmcBoundaries
         (
             Time& t,

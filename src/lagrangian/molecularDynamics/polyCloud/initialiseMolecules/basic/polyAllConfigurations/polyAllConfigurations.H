@@ -70,7 +70,7 @@ public:
             const polyMesh& mesh
         );
 
-        //- Constructor for gnemdFOAM
+        //- Constructor for gnemdFoam+
         polyAllConfigurations
         (
             const polyMesh& mesh,

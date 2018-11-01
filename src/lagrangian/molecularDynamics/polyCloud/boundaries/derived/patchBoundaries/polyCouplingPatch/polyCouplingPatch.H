@@ -68,6 +68,8 @@ private:
 
         scalar startTime_;
 
+        List<label> molIds_;
+
         scalar molFlux_;
         scalar massFlux_;
 

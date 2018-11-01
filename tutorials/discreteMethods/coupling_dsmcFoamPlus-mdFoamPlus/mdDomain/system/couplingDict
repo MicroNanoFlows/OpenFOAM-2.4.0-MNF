@@ -17,23 +17,41 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-couplingName mdDomain; //MUI domain name
+couplingName mdDomain; //Coupling domain name
 
 couplingConfigurations
 ( 
-    OneD //1D MUI coupling interface names
+    OneDInterfaces //1D coupling interfaces
     {
 	
     }
 
-    TwoD //2D MUI coupling interface names
+    TwoDInterfaces //2D coupling interfaces
     {
         
     }
 
-    ThreeD //3D MUI coupling interface names
+    ThreeDInterfaces //3D coupling interfaces
     {
-        interfaceNames (ifs_1 ifs_2); 
+        //interfaceNames (ifs_1 ifs_2); 
+
+	interface
+	{
+	    name	ifs_1;
+	    domainStart	(294.117647 0 0);
+	    domainEnd	(323.529412 147.058824 147.058824);
+	    sending	yes;
+	    receiving	no;
+	}
+
+	interface
+	{
+	    name	ifs_2;
+	    domainStart	(411.764706 0 0);
+	    domainEnd	(441.176471 147.058824 147.058824);
+	    sending	yes;
+	    receiving	no;
+	}
     }
 );
 

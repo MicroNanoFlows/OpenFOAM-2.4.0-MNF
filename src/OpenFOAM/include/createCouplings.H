@@ -51,14 +51,14 @@
 
                     if (!coupling.isDict())
                     {
-                        FatalIOErrorIn("mdFOAM", couplingDict)
+                        FatalIOErrorIn("mdFoam+", couplingDict)
                                         << "Entry " << coupling << " in couplingConfigurations section is not a"
                                         << " valid dictionary." << exit(FatalIOError);
                     }
 
                     word couplingName = coupling.keyword();
 
-                    if(couplingName.compare("OneD") == 0)
+                    if(couplingName.compare("OneDInterfaces") == 0)
                     {
                         if (coupling.dict().found("interfaceNames"))
                         {
@@ -76,7 +76,7 @@
                             oneDInterfaces.interfaces = new coupling1d(mainCouplingName, interfaceNames);
                         }
                     }
-                    else if(couplingName.compare("TwoD") == 0)
+                    else if(couplingName.compare("TwoDInterfaces") == 0)
                     {
                         if (coupling.dict().found("interfaceNames"))
                         {
@@ -94,7 +94,7 @@
                             twoDInterfaces.interfaces = new coupling2d(mainCouplingName, interfaceNames);
                         }
                     }
-                    else if(couplingName.compare("ThreeD") == 0)
+                    else if(couplingName.compare("ThreeDInterfaces") == 0)
                     {
                         if (coupling.dict().found("interfaceNames"))
                         {

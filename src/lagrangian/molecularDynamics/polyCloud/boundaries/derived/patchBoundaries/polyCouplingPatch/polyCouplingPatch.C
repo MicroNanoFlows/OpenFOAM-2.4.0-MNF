@@ -85,14 +85,107 @@ void polyCouplingPatch::controlMol
     polyMolecule& mol,
     polyMolecule::trackingData& td
 )
-{}
+{
+    if(findIndex(molIds_, mol.id()) != -1)
+    {
+        const scalar& massI = molCloud_.cP().mass(mol.id());
+        massFlux_ += massI;
+        molFlux_ += 1.0;
+        cumulMolFlux_ += 1.0;
+        cumulMassFlux_ += massI;
+
+        td.keepParticle = false;
+    }
+    else // reflect
+    {
+        const label& faceI = mol.face();
+        vector nF = mesh_.faceAreas()[faceI];
+        nF /= mag(nF);
+
+        scalar Un = mol.v() & nF;
+
+        if (Un > 0.0)
+        {
+            mol.v() -= 2.0*Un*nF;
+        }
+    }
+}
 
 void polyCouplingPatch::output
 (
     const fileName& fixedPathName,
     const fileName& timePath
 )
-{}
+{
+    scalar molFluxCumul = cumulMolFlux_;
+    scalar massFluxCumul = cumulMassFlux_;
+
+    if (Pstream::parRun())
+    {
+        reduce(massFlux_, sumOp<scalar>());
+        reduce(molFlux_, sumOp<scalar>());
+        reduce(molFluxCumul, sumOp<scalar>());
+        reduce(massFluxCumul, sumOp<scalar>());
+    }
+
+    if(Pstream::master())
+    {
+        elapsedTime_ += writeInterval_;
+
+        scalarField time(1);
+        scalarField massFlux(1);
+        scalarField mols(1);
+        scalarField cumulMols(1);
+        scalarField cumulMassFlux(1);
+
+        time[0] = t_.timeOutputValue();
+
+        massFlux[0] = massFlux_/writeInterval_;
+        mols[0] = molFlux_;
+
+        cumulMols[0] = molFluxCumul;
+        cumulMassFlux[0] = massFluxCumul/elapsedTime_;
+
+        writeTimeData
+        (
+            fixedPathName,
+            patchName_+"_couplingPatch_write_mols.xy",
+            time,
+            mols,
+            true
+        );
+
+        writeTimeData
+        (
+            fixedPathName,
+            patchName_+"_couplingPatch_write_massFlux.xy",
+            time,
+            massFlux,
+            true
+        );
+
+        writeTimeData
+        (
+            fixedPathName,
+            patchName_+"_couplingPatch_write_cumul_mols.xy",
+            time,
+            cumulMols,
+            true
+        );
+
+        writeTimeData
+        (
+            fixedPathName,
+            patchName_+"_couplingPatch_write_cumul_massFlux.xy",
+            time,
+            cumulMassFlux,
+            true
+        );
+     }
+
+     massFlux_ = 0.0;
+     molFlux_ = 0.0;
+}
 
 void polyCouplingPatch::updateProperties(const dictionary& newDict)
 {

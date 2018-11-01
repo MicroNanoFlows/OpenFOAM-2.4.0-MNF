@@ -4,7 +4,7 @@ For details on how MUI has been fundamentally integrated into OpenFOAM see the d
 
 This example case does the following:
 
-1) Runs three instances of mdFOAM simultaneously (either in serial or parallel)
+1) Runs three instances of mdFoam+ simultaneously (either in serial or parallel)
 2) Each instance solves a simple identical equilibrated water cube problem to 0.1s
 3) Each instance is considered to be a seperate domain (named mdFoamPlus_1, mdFoamPlus_2 & mdFoamPlus_3)
 4) The system creates 3 MUI interfaces (ifs_1and2, ifs_1and3, ifs_2and3)

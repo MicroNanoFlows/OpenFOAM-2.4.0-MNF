@@ -41,23 +41,19 @@ polyCouplingControllers
             {
                 startPoint		(294.117647 0 0);
                 endPoint		(323.529412 147.058824 147.058824);
-                nBins			(20 20 20);      
+                nBins			(2 20 20);   
             } 
         }
 
 	mdDsmcCouplingSending
 	{
-	    sendingInterfaces       (ifs_1 ifs_2);	    
+	    sendingInterfaces       (ifs_1);	    
 	    mass		    no;
 	    density		    no;
 	}
 
 	mdDsmcCouplingReceiving
-	{
-	    receivingInterfaces     (ifs_1 ifs_2);
-	    mass		    no;
-	    density		    no;
-	}
+	{}
     }
 
     controller
@@ -75,23 +71,19 @@ polyCouplingControllers
             {
                 startPoint		(411.764706 0 0);
                 endPoint		(441.176471 147.058824 147.058824);
-                nBins			(20 20 20);      
+                nBins			(2 20 20);      
             } 
         }
 
 	mdDsmcCouplingSending
 	{
-	    sendingInterfaces       (ifs_1 ifs_2);	    
+	    sendingInterfaces       (ifs_2);	    
 	    mass		    no;
 	    density		    no;
 	}
 
 	mdDsmcCouplingReceiving
-	{
-	    receivingInterfaces     (ifs_1 ifs_2);
-	    mass		    no;
-	    density		    no;
-	}
+	{}
     }
 );    
 

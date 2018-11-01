@@ -93,7 +93,7 @@ public:
             const polyMesh& mesh
         );
 
-        //- Constructor for mdFOAM
+        //- Constructor for mdFoam+
         dsmcReactions
         (
             Time& t,

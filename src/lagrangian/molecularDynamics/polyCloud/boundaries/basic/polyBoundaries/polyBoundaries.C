@@ -80,7 +80,7 @@ polyBoundaries::polyBoundaries
 {}
 
 
-//- Constructor for gnemdFOAM
+//- Constructor for gnemdFoam+
 polyBoundaries::polyBoundaries
 (
     Time& t,

@@ -94,7 +94,7 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-couplingName mdFOAM_domain1; //MUI domain name
+couplingName mdFoamPlus_domain1; //MUI domain name
 
 couplingConfigurations
 ( 

@@ -20,21 +20,21 @@ FoamFile
     couplingX_right
     {
         type            patch;
-        nFaces          400;
-        startFace       22800;
+        nFaces          1;
+        startFace       19;
     }
     couplingX_left
     {
         type            patch;
-        nFaces          400;
-        startFace       23200;
+        nFaces          1;
+        startFace       20;
     }
     periodicY_back
     {
         type            cyclic;
         inGroups        1(cyclic);
-        nFaces          400;
-        startFace       23600;
+        nFaces          20;
+        startFace       21;
         matchTolerance  0.0001;
         transform       unknown;
         neighbourPatch  periodicY_front;
@@ -43,8 +43,8 @@ FoamFile
     {
         type            cyclic;
         inGroups        1(cyclic);
-        nFaces          400;
-        startFace       24000;
+        nFaces          20;
+        startFace       41;
         matchTolerance  0.0001;
         transform       unknown;
         neighbourPatch  periodicY_back;
@@ -53,8 +53,8 @@ FoamFile
     {
         type            cyclic;
         inGroups        1(cyclic);
-        nFaces          400;
-        startFace       24400;
+        nFaces          20;
+        startFace       61;
         matchTolerance  0.0001;
         transform       unknown;
         neighbourPatch  periodicZ_bottom;
@@ -63,8 +63,8 @@ FoamFile
     {
         type            cyclic;
         inGroups        1(cyclic);
-        nFaces          400;
-        startFace       24800;
+        nFaces          20;
+        startFace       81;
         matchTolerance  0.0001;
         transform       unknown;
         neighbourPatch  periodicZ_top;
