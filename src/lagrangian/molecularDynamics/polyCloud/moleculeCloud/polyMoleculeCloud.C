@@ -692,8 +692,9 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
 	clock_(t, "evolve", true),
     oneDInterfaces_(),
     twoDInterfaces_(),
-    threeDInterfaces_()
-{
+    threeDInterfaces_(),
+    coupledMols_()
+  {
     polyMolecule::readFields(*this);
 
     rndGen.initialise(this->size() != 0 ? this->size() : 10000); //Initialise the random number cache (initialise to 10000 if size is zero)
@@ -758,6 +759,7 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     twoDInterfaces_(twoDInterfaces),
     threeDInterfaces_(threeDInterfaces),
     controllers_(t, mesh, *this, oneDInterfaces_, twoDInterfaces_, threeDInterfaces_),
+    coupledMols_(),
     trackingInfo_(mesh, *this),
     moleculeTracking_(),
     cyclics_(t, mesh_, -1),
@@ -829,7 +831,8 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
 	clock_(t, "evolve", true),
     oneDInterfaces_(),
     twoDInterfaces_(),
-    threeDInterfaces_()
+    threeDInterfaces_(),
+    coupledMols_()
 {
     polyMolecule::readFields(*this);
 
@@ -1548,6 +1551,16 @@ void Foam::polyMoleculeCloud::removeMolFromCellOccupancy
     cellOccupancy_[cell].transfer(molsInCell);
 }
 
+void Foam::polyMoleculeCloud::insertCoupledMol(polyMolecule* mol)
+{
+    //Create a copy of the molecule before it is deleted
+    coupledMols_.append(static_cast<polyMolecule*>(mol->clone().ptr()));
+}
+
+void Foam::polyMoleculeCloud::clearCoupledMols()
+{
+    coupledMols_.clear();
+}
 
 
 // ************************************************************************* //

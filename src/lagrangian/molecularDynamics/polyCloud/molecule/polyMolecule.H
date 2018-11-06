@@ -326,6 +326,8 @@ public:
 
             void setAsReferred();
             
+            void setCouplingDeletion();
+
         // Access
 
             inline const tensor& Q() const;
@@ -381,6 +383,8 @@ public:
             
             inline bool referred();
             
+            inline bool couplingDeletion();
+
     // Member Operators
 
 

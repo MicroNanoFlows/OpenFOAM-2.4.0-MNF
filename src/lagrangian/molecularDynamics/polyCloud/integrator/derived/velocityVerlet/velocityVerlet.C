@@ -77,7 +77,7 @@ void velocityVerlet::evolve()
     updateVelocity(mesh_.time().deltaT().value());
     molCloud_.controlBeforeMove();
     molCloud_.move();
-    molCloud_.controlAfterMove();
+    molCloud_.controlAfterMove(); //Coupling boundary applied here
     molCloud_.buildCellOccupancy();
     molCloud_.controlBeforeForces();
     molCloud_.clearLagrangianFields();
@@ -86,7 +86,7 @@ void velocityVerlet::evolve()
     molCloud_.controlAfterForces();
     updateVelocity(mesh_.time().deltaT().value());
     molCloud_.controlAfterVelocity();
-    molCloud_.postTimeStep();
+    molCloud_.postTimeStep(); //Coupling send and receive applied here
 }
 
 void velocityVerlet::updateVelocity(const scalar& trackTime)

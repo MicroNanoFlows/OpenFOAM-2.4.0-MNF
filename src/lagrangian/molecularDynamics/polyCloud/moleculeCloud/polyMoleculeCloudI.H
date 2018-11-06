@@ -753,4 +753,10 @@ inline Foam::clockTimer& Foam::polyMoleculeCloud::clock()
     return clock_;
 }
 
+inline const Foam::DynamicList<Foam::polyMolecule*>&
+    Foam::polyMoleculeCloud::coupledMols() const
+{
+    return coupledMols_;
+}
+
 // ************************************************************************* //

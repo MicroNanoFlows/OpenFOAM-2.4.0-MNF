@@ -95,6 +95,10 @@ void polyCouplingPatch::controlMol
         cumulMassFlux_ += massI;
 
         td.keepParticle = false;
+
+        //Add to list of coupled molecules before it is deleted
+        polyMolecule *molPtr = &mol;
+        molCloud_.insertCoupledMol(molPtr);
     }
     else // reflect
     {

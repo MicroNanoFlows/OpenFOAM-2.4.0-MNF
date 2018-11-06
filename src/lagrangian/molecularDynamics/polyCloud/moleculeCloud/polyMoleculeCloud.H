@@ -101,6 +101,9 @@ private:
         couplingInterface2d twoDInterfaces_;
         couplingInterface3d threeDInterfaces_;
 
+        //- Copy of molecules deleted by coupling boundary
+        DynamicList<polyMolecule*> coupledMols_;
+
         //- controllers
         polyControllers controllers_;
         
@@ -294,6 +297,13 @@ public:
         void resetTrackingNumbers();
         void writeReferredCloud();
         
+        void insertCoupledMol
+        (
+            polyMolecule* molI
+        );
+
+        void clearCoupledMols();
+
         // Access
 
             label nSites() const;
@@ -319,6 +329,7 @@ public:
             inline trackingNumber& moleculeTracking();
             inline cellInteractions<polyMolecule>& il();
             inline clockTimer& clock();
+            inline const DynamicList<polyMolecule*>& coupledMols() const;
             
     // Member Operators
 
