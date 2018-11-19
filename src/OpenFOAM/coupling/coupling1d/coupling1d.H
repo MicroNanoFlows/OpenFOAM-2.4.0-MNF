@@ -35,6 +35,7 @@ SourceFiles
 #ifndef coupling1d_H
 #define coupling1d_H
 
+#include "vector.H"
 #include "scalar.H"
 #include "List.H"
 
@@ -57,8 +58,8 @@ class coupling1d
 {
     // Private data
 private:
-    Foam::word appName_;
-    Foam::List<Foam::word> interfaceNames_;
+    word appName_;
+    List<word> interfaceNames_;
 
 #ifdef USE_MUI
     std::vector<mui::uniface<mui::config_1d>* > interfaces_;
@@ -66,13 +67,21 @@ private:
 
 public:
 
+    struct interface {
+          word name;
+          vector domainStart;
+          vector domainEnd;
+          bool send;
+          bool recieve;
+      };
+
     // Constructors
 
         //- Construct
         coupling1d
         (
-            Foam::word name,
-            Foam::List<Foam::word>& interfaceNames
+            word name,
+            List<coupling1d::interface>& interfaces
         );
 
     // Destructor
@@ -84,7 +93,7 @@ public:
         mui::uniface<mui::config_1d>* getInterface(int index) const;
 #endif
         size_t size() const;
-        const Foam::word& getInterfaceName(int index) const;
+        const word& getInterfaceName(int index) const;
 };
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -92,8 +101,8 @@ public:
 struct couplingInterface1d
 {
 public:
-    Foam::word domainName;
-    Foam::coupling1d* interfaces;
+    word domainName;
+    coupling1d* interfaces;
 };
 
 } // End namespace Foam

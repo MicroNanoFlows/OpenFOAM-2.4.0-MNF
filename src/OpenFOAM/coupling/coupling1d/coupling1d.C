@@ -30,19 +30,19 @@ License
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::coupling1d::coupling1d(Foam::word name, Foam::List<Foam::word>& interfaceNames)
+Foam::coupling1d::coupling1d(word name, List<coupling1d::interface>& interfaces)
 {
-    std::vector<std::string> interfaces;
+    std::vector<std::string> interfaceList;
 
     appName_ = name;
-    for(size_t i=0; i<interfaceNames.size(); ++i)
+    for(size_t i=0; i<interfaces.size(); ++i)
     {
-        interfaceNames_.append(interfaceNames[i]);
-        interfaces.push_back(static_cast<string>(interfaceNames[i]));
+        interfaceNames_.append(interfaces[i].name);
+        interfaceList.push_back(static_cast<string>(interfaces[i].name));
     }
 
     #ifdef USE_MUI
-        interfaces_ = mui::create_uniface<mui::config_1d>(static_cast<std::string>(name), interfaces);
+        interfaces_ = mui::create_uniface<mui::config_1d>(static_cast<std::string>(name), interfaceList);
     #endif
 }
 
