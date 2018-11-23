@@ -19,7 +19,7 @@ FoamFile
 
 convertToMeters 5e-8;
 
-// Channel size in nm (250 50 50), 50nm gap in centre for MD domain
+// DSMC domain size in nm (250 50 50) - 50nm gap in middle for MD domain
 
 vertices
 (
@@ -43,8 +43,8 @@ vertices
 
 blocks
 (
-    hex (0 1 2 3 4 5 6 7) dsmcZone1 (40 20 20) simpleGrading (1 1 1)
-    hex (8 9 10 11 12 13 14 15) dsmcZone2 (40 20 20) simpleGrading (1 1 1)
+    hex (0 1 2 3 4 5 6 7) dsmcZoneLeft (16 1 1) simpleGrading (1 1 1)
+    hex (8 9 10 11 12 13 14 15) dsmcZoneRight (16 1 1) simpleGrading (1 1 1)
 );
 
 boundary

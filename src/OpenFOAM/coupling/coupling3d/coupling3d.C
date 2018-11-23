@@ -28,22 +28,40 @@ License
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * * Constructor  * * * * * * * * * * * * * * //
 
-Foam::coupling3d::coupling3d(Foam::word name, Foam::List<Foam::word>& interfaceNames)
+Foam::coupling3d::coupling3d(word domainName, List<word>& interfaceNames, List<vector>& domainStarts,
+                             List<vector>& domainEnds, List<bool>& send, List<bool>& receive)
 {
-    std::vector<std::string> interfaces;
-
-    appName_ = name;
-    for(size_t i=0; i<interfaceNames.size(); ++i)
+    //
+    //Ensure parameters for each interface passed to constructor
+    if(interfaceNames.size() == domainStarts.size() == domainEnds.size() == send.size() == receive.size())
     {
-        interfaceNames_.append(interfaceNames[i]);
-        interfaces.push_back(static_cast<string>(interfaceNames[i]));
-    }
+        domainName_ = domainName;
 
-    #ifdef USE_MUI
-        interfaces_ = mui::create_uniface<mui::config_3d>(static_cast<std::string>(name), interfaces);
-    #endif
+        interfaceDetails newInterface;
+        interfaces.setSize(interfaceNames.size());
+
+        for(size_t i=0; i<interfaceNames.size(); i++)
+        {
+            std::vector<std::string> interfaceList;
+
+            newInterface.interfaceName = interfaceNames[i];
+            interfaceList.push_back(newInterface.interfaceName); //Need std::vector copy for MUI create_uniface function
+            newInterface.domainStart = domainStarts[i];
+            newInterface.domainEnd = domainEnds[i];
+            newInterface.send = send[i];
+            newInterface.receive = receive[i];
+
+            #ifdef USE_MUI
+              std::vector<mui::uniface<mui::config_3d>*> returnInterfaces;
+              returnInterfaces = mui::create_uniface<mui::config_3d>(static_cast<std::string>(domainName_), interfaceList);
+              newInterface.mui_interface = returnInterfaces[0];
+            #endif
+
+            interfaces[i] = newInterface;
+        }
+    }
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -51,9 +69,9 @@ Foam::coupling3d::coupling3d(Foam::word name, Foam::List<Foam::word>& interfaceN
 Foam::coupling3d::~coupling3d()
 {
     #ifdef USE_MUI
-        for(size_t i=0; i<interfaces_.size(); ++i)
+        for(size_t i=0; i<interfaces.size(); ++i)
         {
-            delete interfaces_[i];
+            delete interfaces[i].mui_interface;
         }
     #endif
 }
@@ -63,26 +81,38 @@ Foam::coupling3d::~coupling3d()
 #ifdef USE_MUI
 mui::uniface<mui::config_3d>* Foam::coupling3d::getInterface(int index) const
 {
-    return interfaces_[index];
+    return interfaces[index].mui_interface;
 }
 #endif
 
 size_t Foam::coupling3d::size() const
 {
-#ifdef USE_MUI
-    return interfaces_.size();
-#else
-    return 0;
-#endif
+    return interfaces.size();
 }
 
-const Foam::word& Foam::coupling3d::getInterfaceName(int index) const
+const Foam::word Foam::coupling3d::getInterfaceName(int index) const
 {
-#ifdef USE_MUI
-    return interfaceNames_[index];
-#else
-    return NULL;
-#endif
+    return interfaces[index].interfaceName;
+}
+
+const Foam::vector& Foam::coupling3d::getInterfaceDomainStart(int index) const
+{
+    return interfaces[index].domainStart;
+}
+
+const Foam::vector& Foam::coupling3d::getInterfaceDomainEnd(int index) const
+{
+    return interfaces[index].domainEnd;
+}
+
+const bool Foam::coupling3d::getInterfaceSendStatus(int index) const
+{
+    return interfaces[index].send;
+}
+
+const bool Foam::coupling3d::getInterfaceReceiveStatus(int index) const
+{
+    return interfaces[index].receive;
 }
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //

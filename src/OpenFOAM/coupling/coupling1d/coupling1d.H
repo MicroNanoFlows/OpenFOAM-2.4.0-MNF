@@ -58,30 +58,34 @@ class coupling1d
 {
     // Private data
 private:
-    word appName_;
-    List<word> interfaceNames_;
+    struct interfaceDetails
+    {
+        word interfaceName;
+        vector domainStart;
+        vector domainEnd;
+        bool send;
+        bool receive;
+        #ifdef USE_MUI
+          mui::uniface<mui::config_1d>* mui_interface;
+        #endif
+    };
 
-#ifdef USE_MUI
-    std::vector<mui::uniface<mui::config_1d>* > interfaces_;
-#endif
+    word domainName_;
+    List<coupling1d::interfaceDetails> interfaces;
 
 public:
-
-    struct interface {
-          word name;
-          vector domainStart;
-          vector domainEnd;
-          bool send;
-          bool recieve;
-      };
 
     // Constructors
 
         //- Construct
         coupling1d
         (
-            word name,
-            List<coupling1d::interface>& interfaces
+            word domainName,
+            List<word>& interfaceNames,
+            List<vector>& domainStarts,
+            List<vector>& domainEnds,
+            List<bool>& send,
+            List<bool>& receive
         );
 
     // Destructor
@@ -93,14 +97,15 @@ public:
         mui::uniface<mui::config_1d>* getInterface(int index) const;
 #endif
         size_t size() const;
-        const word& getInterfaceName(int index) const;
+        const word getInterfaceName(int index) const;
+        const vector& getInterfaceDomainStart(int index) const;
+        const vector& getInterfaceDomainEnd(int index) const;
+        const bool getInterfaceSendStatus(int index) const;
+        const bool getInterfaceReceiveStatus(int index) const;
 };
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 struct couplingInterface1d
 {
-public:
     word domainName;
     coupling1d* interfaces;
 };

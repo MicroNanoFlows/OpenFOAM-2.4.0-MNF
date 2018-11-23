@@ -69,15 +69,18 @@
                 threeDsubDict.lookup("interface")
             );
 
-            List<coupling1d::interface> lclOneDinterfaces(cplInfo1d.size());
-            //Read 1D interfaces
-            for (int i=0; i<cplInfo1d.size(); ++i)
-            {
-                coupling1d::interface newInterface;
+            List<word> interfaceNames(cplInfo1d.size());
+            List<vector> domainStarts(cplInfo1d.size());
+            List<vector> domainEnds(cplInfo1d.size());
+            List<bool> send(cplInfo1d.size());
+            List<bool> receive(cplInfo1d.size());
 
+            //Read 1D interfaces
+            for (int i=0; i<cplInfo1d.size(); i++)
+            {
                 if (cplInfo1d[i].found("name"))
                 {
-                    newInterface.name = static_cast<word>(cplInfo1d[i].lookup("name"));
+                    interfaceNames[i] = static_cast<word>(cplInfo1d[i].lookup("name"));
                 }
                 else
                 {
@@ -85,12 +88,12 @@
                                    << "Interface name missing" << exit(FatalIOError);
                 }
 
-                newInterface.domainStart[0] = -VSMALL;
-                newInterface.domainStart[1] = -VSMALL;
-                newInterface.domainStart[2] = -VSMALL;
-                newInterface.domainEnd[0] = -VSMALL;
-                newInterface.domainEnd[1] = -VSMALL;
-                newInterface.domainEnd[2] = -VSMALL;
+                domainStarts[i][0] = -VSMALL;
+                domainStarts[i][1] = -VSMALL;
+                domainStarts[i][2] = -VSMALL;
+                domainEnds[i][0] = -VSMALL;
+                domainEnds[i][1] = -VSMALL;
+                domainEnds[i][2] = -VSMALL;
 
                 if (cplInfo1d[i].found("domainStart"))
                 {
@@ -99,9 +102,9 @@
 
                     if(domainStartList.size() == 3)
                     {
-                        newInterface.domainStart[0] = domainStartList[0];
-                        newInterface.domainStart[1] = domainStartList[1];
-                        newInterface.domainStart[2] = domainStartList[2];
+                        domainStarts[i][0] = domainStartList[0];
+                        domainStarts[i][1] = domainStartList[1];
+                        domainStarts[i][2] = domainStartList[2];
                     }
                     else
                     {
@@ -117,9 +120,9 @@
 
                     if(domainEndList.size() == 3)
                     {
-                        newInterface.domainEnd[0] = domainEndList[0];
-                        newInterface.domainEnd[1] = domainEndList[1];
-                        newInterface.domainEnd[2] = domainEndList[2];
+                        domainEnds[i][0] = domainEndList[0];
+                        domainEnds[i][1] = domainEndList[1];
+                        domainEnds[i][2] = domainEndList[2];
                     }
                     else
                     {
@@ -130,7 +133,7 @@
 
                 if (cplInfo1d[i].found("sending"))
                 {
-                    newInterface.send = Switch(cplInfo1d[i].lookup("sending"));
+                    send[i] = Switch(cplInfo1d[i].lookup("sending"));
                 }
                 else
                 {
@@ -140,28 +143,37 @@
 
                 if (cplInfo1d[i].found("receiving"))
                 {
-                    newInterface.recieve = Switch(cplInfo1d[i].lookup("receiving"));
+                    receive[i] = Switch(cplInfo1d[i].lookup("receiving"));
                 }
                 else
                 {
                     FatalIOErrorIn("", couplingDict)
                                    << "Missing interface receiving entry" << exit(FatalIOError);
                 }
-
-                lclOneDinterfaces.append(newInterface);
             }
 
-            oneDInterfaces.domainName = mainCouplingName;
-            oneDInterfaces.interfaces = new coupling1d(mainCouplingName, lclOneDinterfaces);
+            if(cplInfo1d.size() != 0)
+            {
+                oneDInterfaces.interfaces = new coupling1d(mainCouplingName, interfaceNames, domainStarts, domainEnds, send, receive);
+            }
+
+            interfaceNames.clear();
+            interfaceNames.setSize(cplInfo2d.size());
+            domainStarts.clear();
+            domainStarts.setSize(cplInfo2d.size());
+            domainEnds.clear();
+            domainEnds.setSize(cplInfo2d.size());
+            send.clear();
+            send.setSize(cplInfo2d.size());
+            receive.clear();
+            receive.setSize(cplInfo2d.size());
 
             //Read 2D interfaces
-            for (int i=0; i< cplInfo2d.size(); ++i)
+            for (int i=0; i< cplInfo2d.size(); i++)
             {
-                word interfaceName;
-
                 if (cplInfo2d[i].found("name"))
                 {
-                    interfaceName = static_cast<word>(cplInfo2d[i].lookup("name"));
+                    interfaceNames[i] = static_cast<word>(cplInfo2d[i].lookup("name"));
                 }
                 else
                 {
@@ -169,8 +181,12 @@
                                    << "Interface name missing" << exit(FatalIOError);
                 }
 
-                vector domainStart(-VSMALL, -VSMALL, -VSMALL);
-                vector domainEnd(-VSMALL, -VSMALL, -VSMALL);
+                domainStarts[i][0] = -VSMALL;
+                domainStarts[i][1] = -VSMALL;
+                domainStarts[i][2] = -VSMALL;
+                domainEnds[i][0] = -VSMALL;
+                domainEnds[i][1] = -VSMALL;
+                domainEnds[i][2] = -VSMALL;
 
                 if (cplInfo2d[i].found("domainStart"))
                 {
@@ -179,9 +195,9 @@
 
                     if(domainStartList.size() == 3)
                     {
-                        domainStart[0] = domainStartList[0];
-                        domainStart[1] = domainStartList[1];
-                        domainStart[2] = domainStartList[2];
+                        domainStarts[i][0] = domainStartList[0];
+                        domainStarts[i][1] = domainStartList[1];
+                        domainStarts[i][2] = domainStartList[2];
                     }
                     else
                     {
@@ -197,9 +213,9 @@
 
                     if(domainEndList.size() == 3)
                     {
-                        domainEnd[0] = domainEndList[0];
-                        domainEnd[1] = domainEndList[1];
-                        domainEnd[2] = domainEndList[2];
+                        domainEnds[i][0] = domainEndList[0];
+                        domainEnds[i][1] = domainEndList[1];
+                        domainEnds[i][2] = domainEndList[2];
                     }
                     else
                     {
@@ -208,11 +224,9 @@
                     }
                 }
 
-                bool sending;
-
                 if (cplInfo2d[i].found("sending"))
                 {
-                    sending = Switch(cplInfo2d[i].lookup("sending"));
+                    send[i] = Switch(cplInfo2d[i].lookup("sending"));
                 }
                 else
                 {
@@ -220,30 +234,39 @@
                                    << "Missing interface sending entry" << exit(FatalIOError);
                 }
 
-                bool receiving;
-
                 if (cplInfo2d[i].found("receiving"))
                 {
-                    receiving = Switch(cplInfo2d[i].lookup("receiving"));
+                    receive[i] = Switch(cplInfo2d[i].lookup("receiving"));
                 }
                 else
                 {
                     FatalIOErrorIn("", couplingDict)
                                    << "Missing interface receiving entry" << exit(FatalIOError);
                 }
-
-                //oneDInterfaces.domainName = mainCouplingName;
-                //oneDInterfaces.interfaces = new coupling2d(mainCouplingName, interfaceNames);
             }
+
+            if(cplInfo2d.size() != 0)
+            {
+                twoDInterfaces.interfaces = new coupling2d(mainCouplingName, interfaceNames, domainStarts, domainEnds, send, receive);
+            }
+
+            interfaceNames.clear();
+            interfaceNames.setSize(cplInfo3d.size());
+            domainStarts.clear();
+            domainStarts.setSize(cplInfo3d.size());
+            domainEnds.clear();
+            domainEnds.setSize(cplInfo3d.size());
+            send.clear();
+            send.setSize(cplInfo3d.size());
+            receive.clear();
+            receive.setSize(cplInfo3d.size());
 
             //Read 3D interfaces
             for (int i=0; i< cplInfo3d.size(); ++i)
             {
-                word interfaceName;
-
                 if (cplInfo3d[i].found("name"))
                 {
-                    interfaceName = static_cast<word>(cplInfo3d[i].lookup("name"));
+                    interfaceNames[i] = static_cast<word>(cplInfo3d[i].lookup("name"));
                 }
                 else
                 {
@@ -251,8 +274,12 @@
                                    << "Interface name missing" << exit(FatalIOError);
                 }
 
-                vector domainStart(-VSMALL, -VSMALL, -VSMALL);
-                vector domainEnd(-VSMALL, -VSMALL, -VSMALL);
+                domainStarts[i][0] = -VSMALL;
+                domainStarts[i][1] = -VSMALL;
+                domainStarts[i][2] = -VSMALL;
+                domainEnds[i][0] = -VSMALL;
+                domainEnds[i][1] = -VSMALL;
+                domainEnds[i][2] = -VSMALL;
 
                 if (cplInfo3d[i].found("domainStart"))
                 {
@@ -261,9 +288,9 @@
 
                     if(domainStartList.size() == 3)
                     {
-                        domainStart[0] = domainStartList[0];
-                        domainStart[1] = domainStartList[1];
-                        domainStart[2] = domainStartList[2];
+                        domainStarts[i][0] = domainStartList[0];
+                        domainStarts[i][1] = domainStartList[1];
+                        domainStarts[i][2] = domainStartList[2];
                     }
                     else
                     {
@@ -279,9 +306,9 @@
 
                     if(domainEndList.size() == 3)
                     {
-                        domainEnd[0] = domainEndList[0];
-                        domainEnd[1] = domainEndList[1];
-                        domainEnd[2] = domainEndList[2];
+                        domainEnds[i][0] = domainEndList[0];
+                        domainEnds[i][1] = domainEndList[1];
+                        domainEnds[i][2] = domainEndList[2];
                     }
                     else
                     {
@@ -290,11 +317,9 @@
                     }
                 }
 
-                bool sending;
-
                 if (cplInfo3d[i].found("sending"))
                 {
-                    sending = Switch(cplInfo3d[i].lookup("sending"));
+                    send[i] = Switch(cplInfo3d[i].lookup("sending"));
                 }
                 else
                 {
@@ -302,22 +327,109 @@
                                    << "Missing interface sending entry" << exit(FatalIOError);
                 }
 
-                bool receiving;
-
                 if (cplInfo3d[i].found("receiving"))
                 {
-                    receiving = Switch(cplInfo3d[i].lookup("receiving"));
+                    receive[i] = Switch(cplInfo3d[i].lookup("receiving"));
                 }
                 else
                 {
                     FatalIOErrorIn("", couplingDict)
                                    << "Missing interface receiving entry" << exit(FatalIOError);
                 }
+            }
 
-                //oneDInterfaces.domainName = mainCouplingName;
-                //oneDInterfaces.interfaces = new coupling2d(mainCouplingName, interfaceNames);
+            if(cplInfo3d.size() != 0)
+            {
+                threeDInterfaces.interfaces = new coupling3d(mainCouplingName, interfaceNames, domainStarts, domainEnds, send, receive);
             }
         }
 
         couplingDict.close();
+
+        //Announce send and receive spans for 1D interfaces that have domain extents to enable MUI smart send
+        for(int i=0; i<oneDInterfaces.interfaces->size(); i++)
+        {
+            Foam::vector domainStart = oneDInterfaces.interfaces->getInterfaceDomainStart(i);
+            Foam::vector domainEnd = oneDInterfaces.interfaces->getInterfaceDomainEnd(i);
+
+            //Only set smart send regions if a domain is defined in the coupling dictionary
+            if(domainStart[0] != -VSMALL && domainStart[1] != -VSMALL && domainStart[2] != -VSMALL
+               && domainEnd[0] != -VSMALL && domainEnd[1] != -VSMALL && domainEnd[2] != -VSMALL)
+            {
+                //Create a geometry region
+                mui::point1d start(domainStart[0]);
+                mui::point1d end(domainEnd[0]);
+                mui::geometry::box1d region_1d(start, end);
+
+                //Interface is set to send
+                if(oneDInterfaces.interfaces->getInterfaceSendStatus(i))
+                {
+                    oneDInterfaces.interfaces->getInterface(i)->announce_send_span(0.0, static_cast<double>(runTime.endTime().value()), region_1d);
+                }
+
+                //Interface is set to receive
+                if(oneDInterfaces.interfaces->getInterfaceReceiveStatus(i))
+                {
+                    oneDInterfaces.interfaces->getInterface(i)->announce_recv_span(0.0, static_cast<double>(runTime.endTime().value()), region_1d);
+                }
+            }
+        }
+
+        //Announce send and receive spans for 2D interfaces that have domain extents to enable MUI smart send
+        for(int i=0; i<twoDInterfaces.interfaces->size(); i++)
+        {
+            Foam::vector domainStart = twoDInterfaces.interfaces->getInterfaceDomainStart(i);
+            Foam::vector domainEnd = twoDInterfaces.interfaces->getInterfaceDomainEnd(i);
+
+            //Only set smart send regions if a domain is defined in the coupling dictionary
+            if(domainStart[0] != -VSMALL && domainStart[1] != -VSMALL && domainStart[2] != -VSMALL
+               && domainEnd[0] != -VSMALL && domainEnd[1] != -VSMALL && domainEnd[2] != -VSMALL)
+            {
+                //Create a geometry region
+                mui::point2d start(domainStart[0], domainStart[1]);
+                mui::point2d end(domainEnd[0], domainEnd[1]);
+                mui::geometry::box2d region_2d(start, end);
+
+                //Interface is set to send
+                if(twoDInterfaces.interfaces->getInterfaceSendStatus(i))
+                {
+                    twoDInterfaces.interfaces->getInterface(i)->announce_send_span(0.0, static_cast<double>(runTime.endTime().value()), region_2d);
+                }
+
+                //Interface is set to receive
+                if(twoDInterfaces.interfaces->getInterfaceReceiveStatus(i))
+                {
+                    twoDInterfaces.interfaces->getInterface(i)->announce_recv_span(0.0, static_cast<double>(runTime.endTime().value()), region_2d);
+                }
+            }
+        }
+
+        //Announce send and receive spans for 3D interfaces that have domain extents to enable MUI smart send
+        for(int i=0; i<threeDInterfaces.interfaces->size(); i++)
+        {
+            Foam::vector domainStart = threeDInterfaces.interfaces->getInterfaceDomainStart(i);
+            Foam::vector domainEnd = threeDInterfaces.interfaces->getInterfaceDomainEnd(i);
+
+            //Only set smart send regions if a domain is defined in the coupling dictionary
+            if(domainStart[0] != -VSMALL && domainStart[1] != -VSMALL && domainStart[2] != -VSMALL
+               && domainEnd[0] != -VSMALL && domainEnd[1] != -VSMALL && domainEnd[2] != -VSMALL)
+            {
+                //Create a geometry region
+                mui::point3d start(domainStart[0], domainStart[1], domainStart[2]);
+                mui::point3d end(domainEnd[0], domainEnd[1], domainEnd[2]);
+                mui::geometry::box3d region_3d(start, end);
+
+                //Interface is set to send
+                if(threeDInterfaces.interfaces->getInterfaceSendStatus(i))
+                {
+                    threeDInterfaces.interfaces->getInterface(i)->announce_send_span(0.0, static_cast<double>(runTime.endTime().value()), region_3d);
+                }
+
+                //Interface is set to receive
+                if(threeDInterfaces.interfaces->getInterfaceReceiveStatus(i))
+                {
+                    threeDInterfaces.interfaces->getInterface(i)->announce_recv_span(0.0, static_cast<double>(runTime.endTime().value()), region_3d);
+                }
+            }
+        }
     }

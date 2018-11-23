@@ -35,6 +35,7 @@ SourceFiles
 #ifndef coupling3d_H
 #define coupling3d_H
 
+#include "vector.H"
 #include "scalar.H"
 #include "List.H"
 
@@ -57,12 +58,20 @@ class coupling3d
 {
     // Private data
 private:
-    word appName_;
-    Foam::List<Foam::word> interfaceNames_;
+    struct interfaceDetails
+    {
+        word interfaceName;
+        vector domainStart;
+        vector domainEnd;
+        bool send;
+        bool receive;
+        #ifdef USE_MUI
+          mui::uniface<mui::config_3d>* mui_interface;
+        #endif
+    };
 
-#ifdef USE_MUI
-    std::vector<mui::uniface<mui::config_3d>* > interfaces_;
-#endif
+    word domainName_;
+    List<coupling3d::interfaceDetails> interfaces;
 
 public:
 
@@ -71,8 +80,12 @@ public:
         //- Construct
         coupling3d
         (
-            Foam::word name,
-            Foam::List<Foam::word>& interfaceNames
+            word domainName,
+            List<word>& interfaceNames,
+            List<vector>& domainStarts,
+            List<vector>& domainEnds,
+            List<bool>& send,
+            List<bool>& receive
         );
 
     // Destructor
@@ -84,15 +97,17 @@ public:
         mui::uniface<mui::config_3d>* getInterface(int index) const;
 #endif
         size_t size() const;
-        const Foam::word& getInterfaceName(int index) const;
+        const word getInterfaceName(int index) const;
+        const vector& getInterfaceDomainStart(int index) const;
+        const vector& getInterfaceDomainEnd(int index) const;
+        const bool getInterfaceSendStatus(int index) const;
+        const bool getInterfaceReceiveStatus(int index) const;
 };
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 struct couplingInterface3d
 {
-    Foam::word domainName;
-    Foam::coupling3d* interfaces;
+    word domainName;
+    coupling3d* interfaces;
 };
 
 } // End namespace Foam

@@ -15,59 +15,66 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-6
+7
 (
-    couplingX_right
-    {
-        type            patch;
-        nFaces          1;
-        startFace       19;
-    }
     couplingX_left
     {
         type            patch;
         nFaces          1;
-        startFace       20;
+        startFace       7;
     }
-    periodicY_back
+    couplingX_right
     {
-        type            cyclic;
-        inGroups        1(cyclic);
-        nFaces          20;
-        startFace       21;
-        matchTolerance  0.0001;
-        transform       unknown;
-        neighbourPatch  periodicY_front;
+        type            patch;
+        nFaces          1;
+        startFace       8;
     }
     periodicY_front
     {
         type            cyclic;
         inGroups        1(cyclic);
-        nFaces          20;
-        startFace       41;
+        nFaces          8;
+        startFace       9;
         matchTolerance  0.0001;
         transform       unknown;
         neighbourPatch  periodicY_back;
     }
-    periodicZ_top
+    periodicY_back
     {
         type            cyclic;
         inGroups        1(cyclic);
-        nFaces          20;
-        startFace       61;
+        nFaces          8;
+        startFace       17;
         matchTolerance  0.0001;
         transform       unknown;
-        neighbourPatch  periodicZ_bottom;
+        neighbourPatch  periodicY_front;
     }
     periodicZ_bottom
     {
         type            cyclic;
         inGroups        1(cyclic);
-        nFaces          20;
-        startFace       81;
+        nFaces          8;
+        startFace       25;
         matchTolerance  0.0001;
         transform       unknown;
         neighbourPatch  periodicZ_top;
+    }
+    periodicZ_top
+    {
+        type            cyclic;
+        inGroups        1(cyclic);
+        nFaces          8;
+        startFace       33;
+        matchTolerance  0.0001;
+        transform       unknown;
+        neighbourPatch  periodicZ_bottom;
+    }
+    defaultFaces
+    {
+        type            empty;
+        inGroups        1(empty);
+        nFaces          12;
+        startFace       41;
     }
 )
 

@@ -33,8 +33,6 @@ couplingConfigurations
 
     ThreeDInterfaces //3D coupling interfaces
     {
-        //interfaceNames (ifs_1 ifs_2); 
-
 	interface
 	{
 	    name	ifs_1;
