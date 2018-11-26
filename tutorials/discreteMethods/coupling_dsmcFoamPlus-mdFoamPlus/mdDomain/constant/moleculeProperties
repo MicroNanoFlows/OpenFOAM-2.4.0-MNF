@@ -19,7 +19,6 @@ idList          (Ar);
 
 moleculeProperties
 (
-
     Ar
     {
         cloudType                   polyMoleculeCloud;

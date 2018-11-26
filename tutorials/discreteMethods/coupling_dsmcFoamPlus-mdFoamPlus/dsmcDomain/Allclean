@@ -12,4 +12,12 @@ if [ -d "fieldMeasurements" ]; then
   rm -rf fieldMeasurements
 fi
 
+if [ -d "boundaries" ]; then
+  rm -rf boundaries
+fi
+
+if [ -f "constant/polyMesh/boundary" ]; then
+  rm -f constant/polyMesh/boundary
+fi
+
 # ----------------------------------------------------------------- end-of-file

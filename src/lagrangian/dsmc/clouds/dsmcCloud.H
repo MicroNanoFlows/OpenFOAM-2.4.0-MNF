@@ -185,6 +185,9 @@ private:
         couplingInterface2d twoDInterfaces_;
         couplingInterface3d threeDInterfaces_;
 
+        //- Copy of parcels deleted by coupling boundary
+        DynamicList<dsmcParcel*> coupledParcels_;
+
         // flux-face tracking 
         dsmcFaceTracker trackingInfo_;
 
@@ -329,10 +332,17 @@ public:
 
 
     //- Type of parcel the cloud was instantiated for
-//     typedef dsmcParcel parcelType;
+    //  typedef dsmcParcel parcelType;
 
 
     // Member Functions
+
+     void insertCoupledParcel
+     (
+         dsmcParcel* parcel
+     );
+
+     void clearCoupledParcels();
 
         // Access
 

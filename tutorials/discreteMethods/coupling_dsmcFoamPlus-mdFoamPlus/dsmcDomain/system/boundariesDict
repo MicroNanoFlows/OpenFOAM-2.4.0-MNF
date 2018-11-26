@@ -19,30 +19,28 @@ dsmcPatchBoundaries
 (
     boundary
     {
+	boundaryModel  dsmcCouplingPatch;
+
         patchBoundaryProperties
         {
             patchName	couplingX_middle_left;
-        }
-        
-        boundaryModel	dsmcSpecularWallPatch;
+        }      
 
-        dsmcSpecularWallPatchProperties
-        {
-        }
+        dsmcCouplingPatchProperties
+        {}
     }
 
     boundary
     {
+	boundaryModel  dsmcCouplingPatch;
+
         patchBoundaryProperties
         {
             patchName	couplingX_middle_right;
-        }
-        
-        boundaryModel	dsmcSpecularWallPatch;
+        }      
 
-        dsmcSpecularWallPatchProperties
-        {
-        }
+        dsmcCouplingPatchProperties
+        {}
     }
 );
 

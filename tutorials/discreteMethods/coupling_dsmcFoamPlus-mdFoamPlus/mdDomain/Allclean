@@ -40,4 +40,8 @@ if [ -f "system/cyclicBoundaries" ]; then
   rm -f system/cyclicBoundaries
 fi
 
+if [ -f "constant/polyMesh/boundary" ]; then
+  rm -f constant/polyMesh/boundary
+fi
+
 # ----------------------------------------------------------------- end-of-file

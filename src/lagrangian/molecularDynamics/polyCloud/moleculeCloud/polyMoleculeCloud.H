@@ -299,7 +299,7 @@ public:
         
         void insertCoupledMol
         (
-            polyMolecule* molI
+            polyMolecule* mol
         );
 
         void clearCoupledMols();
