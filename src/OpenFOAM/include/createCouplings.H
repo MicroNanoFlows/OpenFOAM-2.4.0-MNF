@@ -70,10 +70,15 @@
             );
 
             List<word> interfaceNames(cplInfo1d.size());
+            List<word> zoneNames(cplInfo1d.size());
             List<vector> domainStarts(cplInfo1d.size());
             List<vector> domainEnds(cplInfo1d.size());
             List<bool> send(cplInfo1d.size());
             List<bool> receive(cplInfo1d.size());
+            List<bool> smart_send(cplInfo1d.size());
+
+            bool domainStartFound = false;
+            bool domainEndFound = false;
 
             //Read 1D interfaces
             for (int i=0; i<cplInfo1d.size(); i++)
@@ -88,6 +93,16 @@
                                    << "Interface name missing" << exit(FatalIOError);
                 }
 
+                if (cplInfo1d[i].found("zone"))
+                {
+                    zoneNames[i] = static_cast<word>(cplInfo1d[i].lookup("zone"));
+                }
+                else
+                {
+                    FatalIOErrorIn("", couplingDict)
+                                   << "Zone missing" << exit(FatalIOError);
+                }
+
                 domainStarts[i][0] = -VSMALL;
                 domainStarts[i][1] = -VSMALL;
                 domainStarts[i][2] = -VSMALL;
@@ -97,6 +112,7 @@
 
                 if (cplInfo1d[i].found("domainStart"))
                 {
+                    domainStartFound = true;
                     scalarList domainStartList;
                     cplInfo1d[i].lookup("domainStart") >> domainStartList;
 
@@ -115,6 +131,7 @@
 
                 if (cplInfo1d[i].found("domainEnd"))
                 {
+                    domainEndFound = true;
                     scalarList domainEndList;
                     cplInfo1d[i].lookup("domainEnd") >> domainEndList;
 
@@ -150,15 +167,35 @@
                     FatalIOErrorIn("", couplingDict)
                                    << "Missing interface receiving entry" << exit(FatalIOError);
                 }
+
+                if (cplInfo1d[i].found("smart_send"))
+                {
+                    smart_send[i] = Switch(cplInfo1d[i].lookup("smart_send"));
+                }
+                else
+                {
+                    FatalIOErrorIn("", couplingDict)
+                                   << "Missing interface smart_send entry" << exit(FatalIOError);
+                }
             }
 
             if(cplInfo1d.size() != 0)
             {
-                oneDInterfaces.interfaces = new coupling1d(mainCouplingName, interfaceNames, domainStarts, domainEnds, send, receive);
+                //Explicit domain extents defined
+                if(domainStartFound && domainEndFound)
+                {
+                    oneDInterfaces.interfaces = new coupling1d(mainCouplingName, zoneNames, interfaceNames, domainStarts, domainEnds, send, receive, smart_send);
+                }
+                else //Domain extents extracted from zone
+                {
+                    oneDInterfaces.interfaces = new coupling1d(mainCouplingName, zoneNames, interfaceNames, send, receive, smart_send);
+                }
             }
 
             interfaceNames.clear();
             interfaceNames.setSize(cplInfo2d.size());
+            zoneNames.clear();
+            zoneNames.setSize(cplInfo2d.size());
             domainStarts.clear();
             domainStarts.setSize(cplInfo2d.size());
             domainEnds.clear();
@@ -167,6 +204,11 @@
             send.setSize(cplInfo2d.size());
             receive.clear();
             receive.setSize(cplInfo2d.size());
+            smart_send.clear();
+            smart_send.setSize(cplInfo2d.size());
+
+            domainStartFound = false;
+            domainEndFound = false;
 
             //Read 2D interfaces
             for (int i=0; i< cplInfo2d.size(); i++)
@@ -181,6 +223,16 @@
                                    << "Interface name missing" << exit(FatalIOError);
                 }
 
+                if (cplInfo1d[i].found("zone"))
+                {
+                    zoneNames[i] = static_cast<word>(cplInfo1d[i].lookup("zone"));
+                }
+                else
+                {
+                    FatalIOErrorIn("", couplingDict)
+                                   << "Zone missing" << exit(FatalIOError);
+                }
+
                 domainStarts[i][0] = -VSMALL;
                 domainStarts[i][1] = -VSMALL;
                 domainStarts[i][2] = -VSMALL;
@@ -190,6 +242,8 @@
 
                 if (cplInfo2d[i].found("domainStart"))
                 {
+                    domainStartFound = true;
+
                     scalarList domainStartList;
                     cplInfo2d[i].lookup("domainStart") >> domainStartList;
 
@@ -208,6 +262,8 @@
 
                 if (cplInfo2d[i].found("domainEnd"))
                 {
+                    domainEndFound = true;
+
                     scalarList domainEndList;
                     cplInfo2d[i].lookup("domainEnd") >> domainEndList;
 
@@ -243,15 +299,35 @@
                     FatalIOErrorIn("", couplingDict)
                                    << "Missing interface receiving entry" << exit(FatalIOError);
                 }
+
+                if (cplInfo1d[i].found("smart_send"))
+                {
+                    smart_send[i] = Switch(cplInfo1d[i].lookup("smart_send"));
+                }
+                else
+                {
+                    FatalIOErrorIn("", couplingDict)
+                                   << "Missing interface smart_send entry" << exit(FatalIOError);
+                }
             }
 
             if(cplInfo2d.size() != 0)
             {
-                twoDInterfaces.interfaces = new coupling2d(mainCouplingName, interfaceNames, domainStarts, domainEnds, send, receive);
+                //Explicit domain extents defined
+                if(domainStartFound && domainEndFound)
+                {
+                    twoDInterfaces.interfaces = new coupling2d(mainCouplingName, zoneNames, interfaceNames, domainStarts, domainEnds, send, receive, smart_send);
+                }
+                else //Domain extents extracted from zone
+                {
+                    twoDInterfaces.interfaces = new coupling2d(mainCouplingName, zoneNames, interfaceNames, send, receive, smart_send);
+                }
             }
 
             interfaceNames.clear();
             interfaceNames.setSize(cplInfo3d.size());
+            zoneNames.clear();
+            zoneNames.setSize(cplInfo2d.size());
             domainStarts.clear();
             domainStarts.setSize(cplInfo3d.size());
             domainEnds.clear();
@@ -260,6 +336,11 @@
             send.setSize(cplInfo3d.size());
             receive.clear();
             receive.setSize(cplInfo3d.size());
+            smart_send.clear();
+            smart_send.setSize(cplInfo2d.size());
+
+            domainStartFound = false;
+            domainEndFound = false;
 
             //Read 3D interfaces
             for (int i=0; i< cplInfo3d.size(); ++i)
@@ -274,6 +355,16 @@
                                    << "Interface name missing" << exit(FatalIOError);
                 }
 
+                if (cplInfo1d[i].found("zone"))
+                {
+                    zoneNames[i] = static_cast<word>(cplInfo1d[i].lookup("zone"));
+                }
+                else
+                {
+                    FatalIOErrorIn("", couplingDict)
+                                   << "Zone missing" << exit(FatalIOError);
+                }
+
                 domainStarts[i][0] = -VSMALL;
                 domainStarts[i][1] = -VSMALL;
                 domainStarts[i][2] = -VSMALL;
@@ -283,6 +374,8 @@
 
                 if (cplInfo3d[i].found("domainStart"))
                 {
+                    domainStartFound = true;
+
                     scalarList domainStartList;
                     cplInfo3d[i].lookup("domainStart") >> domainStartList;
 
@@ -301,6 +394,8 @@
 
                 if (cplInfo3d[i].found("domainEnd"))
                 {
+                    domainEndFound = true;
+
                     scalarList domainEndList;
                     cplInfo3d[i].lookup("domainEnd") >> domainEndList;
 
@@ -336,27 +431,77 @@
                     FatalIOErrorIn("", couplingDict)
                                    << "Missing interface receiving entry" << exit(FatalIOError);
                 }
+
+                if (cplInfo1d[i].found("smart_send"))
+                {
+                    smart_send[i] = Switch(cplInfo1d[i].lookup("smart_send"));
+                }
+                else
+                {
+                    FatalIOErrorIn("", couplingDict)
+                                   << "Missing interface smart_send entry" << exit(FatalIOError);
+                }
             }
 
             if(cplInfo3d.size() != 0)
             {
-                threeDInterfaces.interfaces = new coupling3d(mainCouplingName, interfaceNames, domainStarts, domainEnds, send, receive);
+                //Explicit domain extents defined
+                if(domainStartFound && domainEndFound)
+                {
+                    threeDInterfaces.interfaces = new coupling3d(mainCouplingName, zoneNames, interfaceNames, domainStarts, domainEnds, send, receive, smart_send);
+                }
+                else //Domain extents extracted from zone
+                {
+                  threeDInterfaces.interfaces = new coupling3d(mainCouplingName, zoneNames, interfaceNames, send, receive, smart_send);
+                }
             }
         }
 
         couplingDict.close();
 
-        //Announce send and receive spans for 1D interfaces that have domain extents to enable MUI smart send
+        //Announce send and receive spans for 1D interfaces that have smart send enabled
         for(int i=0; i<oneDInterfaces.interfaces->size(); i++)
         {
-            Foam::vector domainStart = oneDInterfaces.interfaces->getInterfaceDomainStart(i);
-            Foam::vector domainEnd = oneDInterfaces.interfaces->getInterfaceDomainEnd(i);
-
-            //Only set smart send regions if a domain is defined in the coupling dictionary
-            if(domainStart[0] != -VSMALL && domainStart[1] != -VSMALL && domainStart[2] != -VSMALL
-               && domainEnd[0] != -VSMALL && domainEnd[1] != -VSMALL && domainEnd[2] != -VSMALL)
+            if(oneDInterfaces.interfaces->getInterfaceSmartSendStatus(i)) //Check if smart send should be enabled for this interface
             {
-                //Create a geometry region
+                Foam::vector domainStart(Foam::vector::zero);
+                Foam::vector domainEnd(Foam::vector::zero);
+
+                if(oneDInterfaces.interfaces->getInterfaceExtentsStatus(i)) //Using zone for extents details
+                {
+                    //List of points that make up the coupling zone
+                    labelList& controlZonePoints = mesh.pointZones()[oneDInterfaces.interfaces->getInterfaceZoneName(i)];
+
+                    point min(VGREAT, VGREAT, VGREAT);
+                    point max(-VSMALL, -VSMALL, -VSMALL);
+
+                    //Iterate through coupling zone points and find overall extents
+                    forAll(controlZonePoints, p)
+                    {
+                        point currVertex = mesh.points()[p];
+
+                        if(currVertex[0] < min[0]) min[0] = currVertex[0];
+                        if(currVertex[1] < min[1]) min[1] = currVertex[1];
+                        if(currVertex[2] < min[2]) min[2] = currVertex[2];
+                        if(currVertex[0] > max[0]) max[0] = currVertex[0];
+                        if(currVertex[1] > max[1]) max[1] = currVertex[1];
+                        if(currVertex[2] > max[2]) max[2] = currVertex[2];
+                    }
+
+                    domainStart[0] = min[0];
+                    domainStart[1] = min[1];
+                    domainStart[2] = min[2];
+                    domainEnd[0] = max[0];
+                    domainEnd[1] = max[1];
+                    domainEnd[2] = max[2];
+                }
+                else //using explicit domain sizes
+                {
+                    domainStart = oneDInterfaces.interfaces->getInterfaceDomainStart(i);
+                    domainEnd = oneDInterfaces.interfaces->getInterfaceDomainEnd(i);
+                }
+
+                //Create a 1d box geometry (line)
                 mui::point1d start(domainStart[0]);
                 mui::point1d end(domainEnd[0]);
                 mui::geometry::box1d region_1d(start, end);
@@ -378,14 +523,46 @@
         //Announce send and receive spans for 2D interfaces that have domain extents to enable MUI smart send
         for(int i=0; i<twoDInterfaces.interfaces->size(); i++)
         {
-            Foam::vector domainStart = twoDInterfaces.interfaces->getInterfaceDomainStart(i);
-            Foam::vector domainEnd = twoDInterfaces.interfaces->getInterfaceDomainEnd(i);
-
-            //Only set smart send regions if a domain is defined in the coupling dictionary
-            if(domainStart[0] != -VSMALL && domainStart[1] != -VSMALL && domainStart[2] != -VSMALL
-               && domainEnd[0] != -VSMALL && domainEnd[1] != -VSMALL && domainEnd[2] != -VSMALL)
+            if(twoDInterfaces.interfaces->getInterfaceSmartSendStatus(i)) //Check if smart send should be enabled for this interface
             {
-                //Create a geometry region
+                Foam::vector domainStart(Foam::vector::zero);
+                Foam::vector domainEnd(Foam::vector::zero);
+
+                if(twoDInterfaces.interfaces->getInterfaceExtentsStatus(i)) //Using zone for extents details
+                {
+                    //List of points that make up the coupling zone
+                    labelList& controlZonePoints = mesh.pointZones()[twoDInterfaces.interfaces->getInterfaceZoneName(i)];
+
+                    point min(VGREAT, VGREAT, VGREAT);
+                    point max(-VSMALL, -VSMALL, -VSMALL);
+
+                    //Iterate through coupling zone points and find overall extents
+                    forAll(controlZonePoints, p)
+                    {
+                        point currVertex = mesh.points()[p];
+
+                        if(currVertex[0] < min[0]) min[0] = currVertex[0];
+                        if(currVertex[1] < min[1]) min[1] = currVertex[1];
+                        if(currVertex[2] < min[2]) min[2] = currVertex[2];
+                        if(currVertex[0] > max[0]) max[0] = currVertex[0];
+                        if(currVertex[1] > max[1]) max[1] = currVertex[1];
+                        if(currVertex[2] > max[2]) max[2] = currVertex[2];
+                    }
+
+                    domainStart[0] = min[0];
+                    domainStart[1] = min[1];
+                    domainStart[2] = min[2];
+                    domainEnd[0] = max[0];
+                    domainEnd[1] = max[1];
+                    domainEnd[2] = max[2];
+                }
+                else //using explicit domain sizes
+                {
+                    domainStart = twoDInterfaces.interfaces->getInterfaceDomainStart(i);
+                    domainEnd = twoDInterfaces.interfaces->getInterfaceDomainEnd(i);
+                }
+
+                //Create a 2d box geometry
                 mui::point2d start(domainStart[0], domainStart[1]);
                 mui::point2d end(domainEnd[0], domainEnd[1]);
                 mui::geometry::box2d region_2d(start, end);
@@ -407,14 +584,46 @@
         //Announce send and receive spans for 3D interfaces that have domain extents to enable MUI smart send
         for(int i=0; i<threeDInterfaces.interfaces->size(); i++)
         {
-            Foam::vector domainStart = threeDInterfaces.interfaces->getInterfaceDomainStart(i);
-            Foam::vector domainEnd = threeDInterfaces.interfaces->getInterfaceDomainEnd(i);
-
-            //Only set smart send regions if a domain is defined in the coupling dictionary
-            if(domainStart[0] != -VSMALL && domainStart[1] != -VSMALL && domainStart[2] != -VSMALL
-               && domainEnd[0] != -VSMALL && domainEnd[1] != -VSMALL && domainEnd[2] != -VSMALL)
+            if(threeDInterfaces.interfaces->getInterfaceSmartSendStatus(i)) //Check if smart send should be enabled for this interface
             {
-                //Create a geometry region
+                Foam::vector domainStart(Foam::vector::zero);
+                Foam::vector domainEnd(Foam::vector::zero);
+
+                if(threeDInterfaces.interfaces->getInterfaceExtentsStatus(i)) //Using zone for extents details
+                {
+                    //List of points that make up the coupling zone
+                    labelList& controlZonePoints = mesh.pointZones()[threeDInterfaces.interfaces->getInterfaceZoneName(i)];
+
+                    point min(VGREAT, VGREAT, VGREAT);
+                    point max(-VSMALL, -VSMALL, -VSMALL);
+
+                    //Iterate through coupling zone points and find overall extents
+                    forAll(controlZonePoints, p)
+                    {
+                        point currVertex = mesh.points()[p];
+
+                        if(currVertex[0] < min[0]) min[0] = currVertex[0];
+                        if(currVertex[1] < min[1]) min[1] = currVertex[1];
+                        if(currVertex[2] < min[2]) min[2] = currVertex[2];
+                        if(currVertex[0] > max[0]) max[0] = currVertex[0];
+                        if(currVertex[1] > max[1]) max[1] = currVertex[1];
+                        if(currVertex[2] > max[2]) max[2] = currVertex[2];
+                    }
+
+                    domainStart[0] = min[0];
+                    domainStart[1] = min[1];
+                    domainStart[2] = min[2];
+                    domainEnd[0] = max[0];
+                    domainEnd[1] = max[1];
+                    domainEnd[2] = max[2];
+                }
+                else //using explicit domain sizes
+                {
+                    domainStart = threeDInterfaces.interfaces->getInterfaceDomainStart(i);
+                    domainEnd = threeDInterfaces.interfaces->getInterfaceDomainEnd(i);
+                }
+
+                //Create a 3d box geometry
                 mui::point3d start(domainStart[0], domainStart[1], domainStart[2]);
                 mui::point3d end(domainEnd[0], domainEnd[1], domainEnd[2]);
                 mui::geometry::box3d region_3d(start, end);

@@ -36,19 +36,19 @@ couplingConfigurations
 	interface
 	{
 	    name	ifs_1;
-	    domainStart	(294.117647 0 0);
-	    domainEnd	(323.529412 147.058824 147.058824);
+	    zone	couplingZoneLeft;
 	    sending	yes;
 	    receiving	no;
+	    smart_send	yes;
 	}
 
 	interface
 	{
 	    name	ifs_2;
-	    domainStart	(411.764706 0 0);
-	    domainEnd	(441.176471 147.058824 147.058824);
+	    zone	couplingZoneRight;
 	    sending	yes;
 	    receiving	no;
+	    smart_send	yes;
 	}
     }
 );

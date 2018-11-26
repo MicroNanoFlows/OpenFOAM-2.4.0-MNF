@@ -60,32 +60,48 @@ class coupling1d
 private:
     struct interfaceDetails
     {
-        word interfaceName;
         vector domainStart;
         vector domainEnd;
-        bool send;
-        bool receive;
+        word interfaceName;
+        word zoneName;
         #ifdef USE_MUI
           mui::uniface<mui::config_1d>* mui_interface;
         #endif
+        bool send;
+        bool receive;
+        bool smartSend;
+        bool zoneExtents;
     };
 
     word domainName_;
-    List<coupling1d::interfaceDetails> interfaces;
+    List<coupling1d::interfaceDetails> interfaces_;
 
 public:
 
     // Constructors
 
-        //- Construct
+        //- Construct without explicit domain size
         coupling1d
         (
             word domainName,
+            List<word>& zoneNames,
+            List<word>& interfaceNames,
+            List<bool>& send,
+            List<bool>& receive,
+            List<bool>& smart_send
+        );
+
+        //- Construct with explicit domain size
+        coupling1d
+        (
+            word domainName,
+            List<word>& zoneNames,
             List<word>& interfaceNames,
             List<vector>& domainStarts,
             List<vector>& domainEnds,
             List<bool>& send,
-            List<bool>& receive
+            List<bool>& receive,
+            List<bool>& smart_send
         );
 
     // Destructor
@@ -97,11 +113,14 @@ public:
         mui::uniface<mui::config_1d>* getInterface(int index) const;
 #endif
         size_t size() const;
-        const word getInterfaceName(int index) const;
         const vector& getInterfaceDomainStart(int index) const;
         const vector& getInterfaceDomainEnd(int index) const;
+        const word getInterfaceName(int index) const;
+        const word getInterfaceZoneName(int index) const;
         const bool getInterfaceSendStatus(int index) const;
         const bool getInterfaceReceiveStatus(int index) const;
+        const bool getInterfaceSmartSendStatus(int index) const;
+        const bool getInterfaceExtentsStatus(int index) const;
 };
 
 struct couplingInterface1d
