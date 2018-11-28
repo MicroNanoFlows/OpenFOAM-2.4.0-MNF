@@ -23,18 +23,18 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    dsmcMassDensityCoupling
+    dsmcMdCoupling
 
 Description
 
 
 SourceFiles
-    dsmcMassDensityCoupling.C
+    dsmcMdCoupling.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef dsmcMassDensityCoupling_H
-#define dsmcMassDensityCoupling_H
+#ifndef dsmcMdCoupling_H
+#define dsmcMdCoupling_H
 
 #include "dsmcCouplingController.H"
 #include "vector.H"
@@ -48,10 +48,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class dsmcMassDensityCoupling Declaration
+                           Class dsmcMdCoupling Declaration
 \*---------------------------------------------------------------------------*/
 
-class dsmcMassDensityCoupling
+class dsmcMdCoupling
 :
     public dsmcCouplingController
 {
@@ -116,12 +116,12 @@ private:
 public:
 
     //- Runtime type information
-    TypeName("dsmcMassDensityCoupling");
+    TypeName("dsmcMdCoupling");
 
     // Constructors
 
         //- Construct from components
-        dsmcMassDensityCoupling
+        dsmcMdCoupling
         (
             Time& t,
             dsmcCloud& cloud,
@@ -133,7 +133,7 @@ public:
 
     // Destructor
 
-        ~dsmcMassDensityCoupling();
+        ~dsmcMdCoupling();
 
 
     // Member Functions

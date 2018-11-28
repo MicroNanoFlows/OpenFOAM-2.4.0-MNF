@@ -26,7 +26,8 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "dsmcMassDensityCoupling.H"
+#include "dsmcMdCoupling.H"
+
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -34,14 +35,14 @@ Description
 namespace Foam
 {
 
-defineTypeNameAndDebug(dsmcMassDensityCoupling, 0);
+defineTypeNameAndDebug(dsmcMdCoupling, 0);
 
-addToRunTimeSelectionTable(dsmcCouplingController, dsmcMassDensityCoupling, dictionary);
+addToRunTimeSelectionTable(dsmcCouplingController, dsmcMdCoupling, dictionary);
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-dsmcMassDensityCoupling::dsmcMassDensityCoupling
+dsmcMdCoupling::dsmcMdCoupling
 (
     Time& t,
     dsmcCloud& cloud,
@@ -108,13 +109,13 @@ dsmcMassDensityCoupling::dsmcMassDensityCoupling
         {
             if(sendInterfaces_[i] == NULL)
             {
-                FatalErrorIn("dsmcMassDensityCoupling::dsmcMassDensityCoupling()")
+                FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
                             << "Could not find 3D MUI coupling interface (" << interfaces[i]
                             << ") to send for domain " << threeDInterfaces.domainName << exit(FatalError);
             }
             else
             {
-                Info << "dsmcMassDensityCoupling::dsmcMassDensityCoupling(): Found 3D MUI coupling interface ("
+                Info << "dsmcMdCoupling::dsmcMdCoupling(): Found 3D MUI coupling interface ("
                      << interfaces[i] << ") to send for domain " << threeDInterfaces.domainName << endl;
             }
         }
@@ -151,19 +152,19 @@ dsmcMassDensityCoupling::dsmcMassDensityCoupling
         {
             if(recvInterfaces_[i] == NULL)
             {
-                FatalErrorIn("dsmcMassDensityCoupling::dsmcMassDensityCoupling()")
+                FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
                             << "Could not find 3D MUI coupling interface (" << interfaces[i]
                             << ") to receive for domain " << threeDInterfaces.domainName << exit(FatalError);
             }
             else
             {
-                Info << "dsmcMassDensityCoupling::dsmcMassDensityCoupling(): Found 3D MUI coupling interface ("
+                Info << "dsmcMdCoupling::dsmcMdCoupling(): Found 3D MUI coupling interface ("
                      << interfaces[i] << ") to receive for domain " << threeDInterfaces.domainName << endl;
             }
         }
     }
 #else
-    FatalErrorIn("dsmcMassDensityCoupling::dsmcMassDensityCoupling()")
+    FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
                 << "MUI library not enabled at compilation" << exit(FatalError);
 #endif
 
@@ -213,12 +214,12 @@ dsmcMassDensityCoupling::dsmcMassDensityCoupling
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-dsmcMassDensityCoupling::~dsmcMassDensityCoupling()
+dsmcMdCoupling::~dsmcMdCoupling()
 {}
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void dsmcMassDensityCoupling::initialConfiguration()
+void dsmcMdCoupling::initialConfiguration()
 {
 #ifdef USE_MUI
     //- Only send initial data if at least one sending interface is defined
@@ -327,7 +328,7 @@ void dsmcMassDensityCoupling::initialConfiguration()
 #endif
 }
 
-void dsmcMassDensityCoupling::sendCoupling()
+void dsmcMdCoupling::sendCoupling()
 {
 #ifdef USE_MUI
     //- Only send data if at least one sending interface is defined
@@ -404,7 +405,7 @@ void dsmcMassDensityCoupling::sendCoupling()
 #endif
 }
 
-void dsmcMassDensityCoupling::receiveCoupling()
+void dsmcMdCoupling::receiveCoupling()
 {
 #ifdef USE_MUI
     //- Only receive data if at least one receiving interface is defined
@@ -447,7 +448,7 @@ void dsmcMassDensityCoupling::receiveCoupling()
 #endif
 }
 
-void dsmcMassDensityCoupling::output
+void dsmcMdCoupling::output
 (
     const fileName& fixedPathName,
     const fileName& timePath
@@ -500,7 +501,7 @@ void dsmcMassDensityCoupling::output
     }
 }
 
-void dsmcMassDensityCoupling::updateProperties(const dictionary& newDict)
+void dsmcMdCoupling::updateProperties(const dictionary& newDict)
 {
 
 }
