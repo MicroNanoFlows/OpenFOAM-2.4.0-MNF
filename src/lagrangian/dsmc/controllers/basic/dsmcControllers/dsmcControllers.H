@@ -74,6 +74,7 @@ class dsmcControllers
         // number of dsmcControllers
         label nStateControllers_;
         label nFluxControllers_;
+        label nCouplingControllers_;
 
         //- state dsmcControllers
 		PtrList<entry> stateControllersList_;
@@ -89,6 +90,18 @@ class dsmcControllers
         List<fileName> fCFixedPathNames_;
 		List< autoPtr<dsmcFluxController> > fluxControllers_;
 
+		//- MUI coupling polyControllers
+        PtrList<entry> couplingControllersList_;
+        List<word> cCNames_;
+        List<label> cCIds_;
+        List<fileName> cCFixedPathNames_;
+        List< autoPtr<dsmcCouplingController> > couplingControllers_;
+
+        //- MUI coupling interfaces
+        couplingInterface1d oneDInterfaces_;
+        couplingInterface2d twoDInterfaces_;
+        couplingInterface3d threeDInterfaces_;
+
         
 public:
 
@@ -101,12 +114,23 @@ public:
             const polyMesh& mesh
         );
 
-        //- Constructor for dsmcFOAM
+        //- Constructor for dsmcFoam+
         dsmcControllers
         (
             Time& t,
             const polyMesh& mesh,
             dsmcCloud& cloud
+        );
+
+        //- Constructor for dsmcFoam+ with MUI coupling
+        dsmcControllers
+        (
+            Time& t,
+            const polyMesh& mesh,
+            dsmcCloud& cloud,
+            couplingInterface1d& oneDInterfaces,
+            couplingInterface2d& twoDInterfaces,
+            couplingInterface3d& threeDInterfaces
         );
 
 

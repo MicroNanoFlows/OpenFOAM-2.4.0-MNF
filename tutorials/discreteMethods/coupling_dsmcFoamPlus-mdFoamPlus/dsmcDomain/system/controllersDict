@@ -26,6 +26,47 @@ dsmcFluxControllers
 
 dsmcCouplingControllers
 (
+    controller
+    {
+ 	zoneName                    dsmcZoneLeft;
+        stateControllerModel        dsmcMdCoupling;
+
+        dsmcMdCouplingProperties
+        { 	   
+            molIds	(Ar);            
+        }
+
+	dsmcMdCouplingSending
+	{
+	    sendingInterfaces	(ifs_1);
+	}
+
+	dsmcMdCouplingReceiving
+	{
+	    receivingInterfaces	(ifs_1);
+	}
+    }
+
+    controller
+    {
+ 	zoneName                    dsmcZoneRight;
+        stateControllerModel        dsmcMdCoupling;
+
+        dsmcMdCouplingProperties
+        { 	   
+            molIds	(Ar);            
+        }
+
+	dsmcMdCouplingSending
+	{
+	    sendingInterfaces	(ifs_2);
+	}
+
+	dsmcMdCouplingReceiving
+	{
+	    receivingInterfaces	(ifs_2);
+	}
+    }
 );    
 
 // ************************************************************************* //

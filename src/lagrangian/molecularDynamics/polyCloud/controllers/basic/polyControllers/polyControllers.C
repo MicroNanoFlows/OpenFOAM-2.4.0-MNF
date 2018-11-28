@@ -612,7 +612,12 @@ void polyControllers::controlBeforeMove()
     forAll(stateControllers_, sC)
     {
         stateControllers_[sC]->controlBeforeMove();
-    }    
+    }
+
+    forAll(couplingControllers_, cC)
+    {
+      couplingControllers_[cC]->controlBeforeMove();
+    }
 }
 
 
@@ -670,12 +675,7 @@ void polyControllers::calculateStateProps()
 
     forAll(couplingControllers_, cC)
     {
-        couplingControllers_[cC]->sendCoupling();
-    }
-
-    forAll(couplingControllers_, cC)
-    {
-        couplingControllers_[cC]->receiveCoupling();
+        couplingControllers_[cC]->calculateProperties();
     }
 }
 

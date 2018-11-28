@@ -151,11 +151,20 @@ public:
         //- create an initial configuration
         virtual void initialConfiguration() = 0;
 
-        //- receive any coupled data to the MUI interface (start of time-step)
-        virtual void receiveCoupling() = 0;
+        //- run at start of MD time step before molecules move
+        virtual void controlBeforeMove() = 0;
 
-        //- send any coupled data to the MUI interface (end of time-step)
-        virtual void sendCoupling() = 0;
+        //- run at end of DSMC time step
+        virtual void calculateProperties() = 0;
+
+        //- receive molecules that fall into the MD coupled region from coupled dsmcFoamPlus
+        virtual void receiveCoupledRegion() = 0;
+
+        //- send molecules to dsmcFoamPlus that have crossed a coupling boundary
+        virtual void sendCoupledMolecules() = 0;
+
+        //- receive parcels from dsmcFoamPlus that have crossed a coupling boundary
+        virtual void receiveCoupledParcels() = 0;
 
         //- output data
         virtual void output

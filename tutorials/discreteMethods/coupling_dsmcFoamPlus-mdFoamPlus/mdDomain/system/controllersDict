@@ -28,62 +28,44 @@ polyCouplingControllers
 (
     controller
     {
- 	zoneName                    mdZone;
+ 	zoneName                    couplingZoneLeft;
         stateControllerModel        mdDsmcCoupling;
 
         mdDsmcCouplingProperties
         { 	   
-            molIds			(Ar);
-
-            binModel			uniform3DBins;
-
-            uniform3DBinsProperties
-            {
-                startPoint		(294.117647 0 0);
-                endPoint		(323.529412 147.058824 147.058824);
-                nBins			(2 20 20);   
-            } 
+            molIds	(Ar);            
         }
 
 	mdDsmcCouplingSending
 	{
-	    sendingInterfaces       (ifs_1);	    
-	    mass		    no;
-	    density		    no;
+	    sendingInterfaces	(ifs_1);
 	}
 
 	mdDsmcCouplingReceiving
-	{}
+	{
+	    receivingInterfaces	(ifs_1);
+	}
     }
 
     controller
     {
- 	zoneName                    mdZone;
+ 	zoneName                    couplingZoneRight;
         stateControllerModel        mdDsmcCoupling;
 
         mdDsmcCouplingProperties
         { 	   
-            molIds			(Ar);
-
-            binModel			uniform3DBins;
-
-            uniform3DBinsProperties
-            {
-                startPoint		(411.764706 0 0);
-                endPoint		(441.176471 147.058824 147.058824);
-                nBins			(2 20 20);      
-            } 
+            molIds	(Ar);            
         }
 
 	mdDsmcCouplingSending
 	{
-	    sendingInterfaces       (ifs_2);	    
-	    mass		    no;
-	    density		    no;
+	    sendingInterfaces	(ifs_2);
 	}
 
 	mdDsmcCouplingReceiving
-	{}
+	{
+	    receivingInterfaces	(ifs_2);
+	}
     }
 );    
 

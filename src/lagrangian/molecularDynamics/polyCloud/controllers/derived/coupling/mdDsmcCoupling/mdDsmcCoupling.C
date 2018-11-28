@@ -311,14 +311,63 @@ void mdDsmcCoupling::initialConfiguration()
 #endif
 }
 
-void mdDsmcCoupling::calculateProperties()
+void mdDsmcCoupling::controlBeforeMove()
 {
-    //- Calculate velocity histogram for all molecules in coupling region
-
+    receiveCoupledRegion();
 }
 
-void mdDsmcCoupling::sendCoupling()
+void mdDsmcCoupling::calculateProperties()
 {
+    sendCoupledMolecules();
+    receiveCoupledParcels();
+}
+
+void mdDsmcCoupling::receiveCoupledRegion()
+{
+  /*
+#ifdef USE_MUI
+    //- Only receive data if at least one receiving interface is defined
+    if(receiving_)
+    {
+        Info << threeDInterfaces_.domainName << ": Receiving MUI values for time " << time_.value()
+             << " through " << recvInterfaces_.size() << " interfaces" << endl;
+
+        if(true) //- Calculating at least one average value per cell
+        {
+            mui::sampler_exact3d<scalar> spatial_sampler;
+            mui::chrono_sampler_exact3d chrono_sampler;
+
+            for(size_t i=0; i<recvInterfaces_.size(); ++i) //- Iterate through the interfaces
+            {
+                for(int j=0; j<cellCentres_.size(); ++j) //- Iterate through the cell centres (we receive exactly as many as were sent in this example)
+                {
+                    if(true) //- If we are receiving mass values
+                    {
+                        //recvMassValues_[i][j] = recvInterfaces_[i]->fetch("m", cellCentres_[j], time_.value(), spatial_sampler, chrono_sampler);
+
+                    }
+
+                    if(true) //- If we are receiving density values
+                    {
+                        //recvDensityValues_[i][j] = recvInterfaces_[i]->fetch("p", cellCentres_[j], time_.value(), spatial_sampler, chrono_sampler);
+                    }
+                }
+            }
+        }
+
+        //- Signal other interfaces they can move on if they have a block by committing the receive time to each interface, not needed in this example, provided for clarity
+        for(size_t i=0; i<sendInterfaces_.size(); ++i)
+        {
+            sendInterfaces_[i]->commit(time_.value());
+        }
+    }
+#endif
+*/
+}
+
+void mdDsmcCoupling::sendCoupledMolecules()
+{
+  /*
 #ifdef USE_MUI
     //- Only send data if at least one sending interface is defined
     if(sending_)
@@ -392,10 +441,12 @@ void mdDsmcCoupling::sendCoupling()
         }
     }
 #endif
+*/
 }
 
-void mdDsmcCoupling::receiveCoupling()
+void mdDsmcCoupling::receiveCoupledParcels()
 {
+  /*
 #ifdef USE_MUI
     //- Only receive data if at least one receiving interface is defined
     if(receiving_)
@@ -433,6 +484,7 @@ void mdDsmcCoupling::receiveCoupling()
         }
     }
 #endif
+*/
 }
 
 void mdDsmcCoupling::output

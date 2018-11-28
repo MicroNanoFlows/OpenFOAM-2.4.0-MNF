@@ -53,6 +53,7 @@ dsmcControllers::dsmcControllers
     ),
     nStateControllers_(0),
     nFluxControllers_(0),
+    nCouplingControllers_(0),
 
     stateControllersList_(),
     sCNames_(),
@@ -64,10 +65,19 @@ dsmcControllers::dsmcControllers
     fCNames_(),
     fCIds_(),
     fCFixedPathNames_(),
-    fluxControllers_()
+    fluxControllers_(),
+
+    couplingControllersList_(),
+    cCNames_(),
+    cCIds_(),
+    cCFixedPathNames_(),
+    couplingControllers_(),
+    oneDInterfaces_(),
+    twoDInterfaces_(),
+    threeDInterfaces_()
 {}
 
-//- Constructor for mdFoam+
+//- Constructor for dsmcFoam+
 dsmcControllers::dsmcControllers
 (
     Time& t,
@@ -89,6 +99,7 @@ dsmcControllers::dsmcControllers
     ),
     nStateControllers_(0),
     nFluxControllers_(0),
+    nCouplingControllers_(0),
 
 	stateControllersList_(dsmcControllersDict_.lookup("dsmcStateControllers")),
     sCNames_(stateControllersList_.size()),
@@ -100,7 +111,16 @@ dsmcControllers::dsmcControllers
     fCNames_(fluxControllersList_.size()),
     fCIds_(fluxControllersList_.size()),
     fCFixedPathNames_(fluxControllersList_.size()),
-	fluxControllers_(fluxControllersList_.size())
+	fluxControllers_(fluxControllersList_.size()),
+
+	couplingControllersList_(),
+    cCNames_(),
+    cCIds_(),
+    cCFixedPathNames_(),
+    couplingControllers_(0),
+    oneDInterfaces_(),
+    twoDInterfaces_(),
+    threeDInterfaces_()
 {
 
     Info << nl << "Creating dsmcControllers" << nl << endl;
@@ -257,6 +277,285 @@ dsmcControllers::dsmcControllers
     }
 }
 
+//- Constructor for dsmcFoam+ with MUI coupling
+dsmcControllers::dsmcControllers
+(
+    Time& t,
+    const polyMesh& mesh,
+    dsmcCloud& cloud,
+    couplingInterface1d& oneDInterfaces,
+    couplingInterface2d& twoDInterfaces,
+    couplingInterface3d& threeDInterfaces
+)
+:
+    time_(t),
+    dsmcControllersDict_
+    (
+        IOobject
+        (
+            "controllersDict",
+            time_.system(),
+            mesh,
+            IOobject::MUST_READ_IF_MODIFIED,
+            IOobject::NO_WRITE
+        )
+    ),
+    nStateControllers_(0),
+    nFluxControllers_(0),
+    nCouplingControllers_(0),
+
+    stateControllersList_(dsmcControllersDict_.lookup("dsmcStateControllers")),
+    sCNames_(stateControllersList_.size()),
+    sCIds_(stateControllersList_.size()),
+    sCFixedPathNames_(stateControllersList_.size()),
+    stateControllers_(stateControllersList_.size()),
+
+    fluxControllersList_(dsmcControllersDict_.lookup("dsmcFluxControllers")),
+    fCNames_(fluxControllersList_.size()),
+    fCIds_(fluxControllersList_.size()),
+    fCFixedPathNames_(fluxControllersList_.size()),
+    fluxControllers_(fluxControllersList_.size()),
+
+    couplingControllersList_(dsmcControllersDict_.lookup("dsmcCouplingControllers")),
+    cCNames_(couplingControllersList_.size()),
+    cCIds_(couplingControllersList_.size()),
+    cCFixedPathNames_(couplingControllersList_.size()),
+    couplingControllers_(couplingControllersList_.size()),
+    oneDInterfaces_(oneDInterfaces),
+    twoDInterfaces_(twoDInterfaces),
+    threeDInterfaces_(threeDInterfaces)
+{
+
+    Info << nl << "Creating dsmcControllers" << nl << endl;
+
+    //- state dsmcControllers
+
+    if(stateControllers_.size() > 0 )
+    {
+        forAll(stateControllers_, sC)
+        {
+            const entry& dsmcControllersI = stateControllersList_[sC];
+            const dictionary& dsmcControllersIDict = dsmcControllersI.dict();
+
+            stateControllers_[sC] = autoPtr<dsmcStateController>
+            (
+                dsmcStateController::New(time_, cloud, dsmcControllersIDict)
+            );
+
+            sCNames_[sC] = stateControllers_[sC]->type();
+            sCIds_[sC] = sC;
+
+            nStateControllers_++;
+        }
+    }
+
+    //- flux dsmcControllers
+
+    if(fluxControllers_.size() > 0 )
+    {
+        forAll(fluxControllers_, fC)
+        {
+            const entry& dsmcControllersI = fluxControllersList_[fC];
+
+            const dictionary& dsmcControllersIDict = dsmcControllersI.dict();
+
+            fluxControllers_[fC] = autoPtr<dsmcFluxController>
+            (
+                dsmcFluxController::New(time_, cloud, dsmcControllersIDict)
+            );
+
+            fCNames_[fC] = fluxControllers_[fC]->type();
+            fCIds_[fC] = fC;
+
+            nFluxControllers_++;
+        }
+    }
+
+    //- coupling polyControllers
+
+    if(couplingControllers_.size() > 0 )
+    {
+        forAll(couplingControllers_, cC)
+        {
+            const entry& dsmcControllersI = couplingControllersList_[cC];
+
+            const dictionary& dsmcControllersIDict = dsmcControllersI.dict();
+
+            couplingControllers_[cC] = autoPtr<dsmcCouplingController>
+            (
+                dsmcCouplingController::New(time_, cloud, dsmcControllersIDict, oneDInterfaces_, twoDInterfaces_, threeDInterfaces_)
+            );
+
+            cCNames_[cC] = couplingControllers_[cC]->type();
+            cCIds_[cC] = cC;
+
+            nCouplingControllers_++;
+        }
+    }
+
+    // creating directories for state controllers
+    if(nStateControllers_ > 0)
+    {
+        // directory: case/controllers
+        fileName controllersPath(time_.path()/"controllers");
+
+        if( !isDir(controllersPath) )
+        {
+            mkDir(controllersPath);
+        }
+
+        // directory: case/controllers/dsmc
+        fileName dsmcControllersPath(controllersPath/"dsmc");
+
+        if( !isDir(dsmcControllersPath) )
+        {
+            mkDir(dsmcControllersPath);
+        }
+
+        // directory: case/controllers/dsmc/stateControllers
+        fileName stateControllersPath(dsmcControllersPath/"stateControllers");
+
+        if (!isDir(stateControllersPath))
+        {
+            mkDir(stateControllersPath);
+        }
+
+        forAll(stateControllers_, sC)
+        {
+            if(stateControllers_[sC]->writeInCase())
+            {
+                // directory: case/controllers/dsmc/stateControllers/<stateControllerModel>
+                fileName stateControllerPath(stateControllersPath/sCNames_[sC]);
+
+                if (!isDir(stateControllerPath))
+                {
+                    mkDir(stateControllerPath);
+                }
+
+                const word& regionName = stateControllers_[sC]->regionName();
+
+                // directory: case/controllers/dsmc/stateControllers/<stateControllerModel>/<cellZoneName>
+                fileName zonePath(stateControllerPath/regionName);
+
+                if (!isDir(zonePath))
+                {
+                    mkDir(zonePath);
+                }
+
+                sCFixedPathNames_[sC] = zonePath;
+            }
+        }
+    }
+
+    // creating directories for flux controllers
+    if(nFluxControllers_ > 0)
+    {
+        // directory: case/controllers
+        fileName controllersPath(time_.path()/"controllers");
+
+        if( !isDir(controllersPath) )
+        {
+            mkDir(controllersPath);
+        }
+
+        // directory: case/controllers/dsmc
+        fileName dsmcControllersPath(time_.path()/"dsmc");
+
+        if( !isDir(dsmcControllersPath) )
+        {
+            mkDir(dsmcControllersPath);
+        }
+
+        // directory: case/controllers/dsmc/fluxControllers
+        fileName fluxControllersPath(dsmcControllersPath/"fluxControllers");
+
+        if (!isDir(fluxControllersPath))
+        {
+            mkDir(fluxControllersPath);
+        }
+
+        forAll(fluxControllers_, fC)
+        {
+            if(fluxControllers_[fC]->writeInCase())
+            {
+                // directory: case/controllers/dsmc/fluxControllers/<fluxControllerModel>
+                fileName fluxControllerPath(fluxControllersPath/fCNames_[fC]);
+
+                if (!isDir(fluxControllerPath))
+                {
+                    mkDir(fluxControllerPath);
+                }
+
+                const word& regionName = fluxControllers_[fC]->regionName();
+
+                // directory: case/controllers/dsmc/fluxControllers/<fluxControllerModel>/<faceZoneName>
+                fileName zonePath(fluxControllerPath/regionName);
+
+                if (!isDir(zonePath))
+                {
+                    mkDir(zonePath);
+                }
+
+                fCFixedPathNames_[fC] = zonePath;
+            }
+        }
+    }
+
+    // creating directories for flux controllers
+    if(nCouplingControllers_ > 0)
+    {
+        // directory: case/controllers
+        fileName controllersPath(time_.path()/"controllers");
+
+        if( !isDir(controllersPath) )
+        {
+            mkDir(controllersPath);
+        }
+
+        // directory: case/controllers/dsmc
+        fileName dsmcControllersPath(time_.path()/"dsmc");
+
+        if( !isDir(dsmcControllersPath) )
+        {
+            mkDir(dsmcControllersPath);
+        }
+
+        // directory: case/controllers/dsmc/couplingControllers
+        fileName couplingControllersPath(dsmcControllersPath/"couplingControllers");
+
+        if (!isDir(couplingControllersPath))
+        {
+            mkDir(couplingControllersPath);
+        }
+
+        forAll(couplingControllers_, cC)
+        {
+            if(couplingControllers_[cC]->writeInCase())
+            {
+                // directory: case/controllers/dsmc/couplingControllers/<couplingControllerModel>
+                fileName couplingControllerPath(couplingControllersPath/cCNames_[cC]);
+
+                if (!isDir(couplingControllerPath))
+                {
+                    mkDir(couplingControllerPath);
+                }
+
+                const word& regionName = couplingControllers_[cC]->regionName();
+
+                // directory: case/controllers/dsmc/couplingControllers/<couplingControllerModel>/<faceZoneName>
+                fileName zonePath(couplingControllerPath/regionName);
+
+                if (!isDir(zonePath))
+                {
+                    mkDir(zonePath);
+                }
+
+                cCFixedPathNames_[cC] = zonePath;
+            }
+        }
+    }
+}
+
 dsmcControllers::~dsmcControllers()
 {}
 
@@ -273,6 +572,11 @@ void dsmcControllers::initialConfig()
     {
         fluxControllers_[fC]->initialConfiguration();
     }
+
+    forAll(couplingControllers_, cC)
+    {
+        couplingControllers_[cC]->initialConfiguration();
+    }
 }
 
         //- different control stages 
@@ -281,6 +585,11 @@ void dsmcControllers::controlBeforeMove()
     forAll(stateControllers_, sC)
     {
         stateControllers_[sC]->controlParcelsBeforeMove();
+    }
+
+    forAll(couplingControllers_, cC)
+    {
+      couplingControllers_[cC]->controlParcelsBeforeMove();
     }
 }
 
@@ -303,7 +612,7 @@ void dsmcControllers::controlAfterCollisions()
 
 
 
-//- calculate properties -- call this at the end of the MD time-step.
+//- calculate properties -- call this at the end of the DSMC time-step.
 void dsmcControllers::calculateProps()
 {
     forAll(stateControllers_, sC)
@@ -316,6 +625,12 @@ void dsmcControllers::calculateProps()
     {
 //         Info << "error: " << sCNames_[sC] << endl;
         fluxControllers_[fC]->calculateProperties();
+    }
+
+    forAll(couplingControllers_, cC)
+    {
+//         Info << "error: " << cCNames_[cC] << endl;
+        couplingControllers_[cC]->calculateProperties();
     }
 }
 
@@ -498,6 +813,83 @@ void dsmcControllers::outputResults()
             }
         }
 
+        {
+            List<fileName> timePathNames(sCFixedPathNames_.size());
+
+            if(nCouplingControllers_ > 0)
+            {
+                // directory: case/<timeDir>/uniform
+                fileName uniformTimePath(runTime.path()/runTime.timeName()/"uniform");
+
+                if (!isDir(uniformTimePath))
+                {
+                    mkDir(uniformTimePath);
+                }
+
+                if(couplingControllers_.size() > 0)
+                {
+                   // directory: case/<timeDir>/uniform/controllers
+                    fileName controllersTimePath(uniformTimePath/"controllers");
+
+                    if (!isDir(controllersTimePath))
+                    {
+                        mkDir(controllersTimePath);
+                    }
+
+                    // directory: case/<timeDir>/uniform/controllers/dsmc
+                    fileName dsmcTimePath(controllersTimePath/"dsmc");
+
+                    if (!isDir(dsmcTimePath))
+                    {
+                        mkDir(dsmcTimePath);
+                    }
+
+                    // directory: case/<timeDir>/uniform/fluxControllers
+                    fileName dsmcControllersTimePath(dsmcTimePath/"couplingControllers");
+
+                    if (!isDir(dsmcControllersTimePath))
+                    {
+                        mkDir(dsmcControllersTimePath);
+                    }
+
+                    forAll(couplingControllers_, cC)
+                    {
+                        if
+                        (
+                            couplingControllers_[cC]->writeInTimeDir()
+                        )
+                        {
+                            // directory: case/<timeDir>/uniform/controllers/dsmc/<couplingControllerModel>
+                            fileName cCTimePath(dsmcControllersTimePath/cCNames_[cC]);
+
+                            if(!isDir(cCTimePath))
+                            {
+                                mkDir(cCTimePath);
+                            }
+
+                            const word& regionName = couplingControllers_[cC]->regionName();
+
+                            // directory: case/<timeDir>/uniform/controllers/dsmc/<couplingControllerModel>  <faceZoneName>
+                            fileName zoneTimePath(cCTimePath/regionName);
+
+                            if (!isDir(zoneTimePath))
+                            {
+                                mkDir(zoneTimePath);
+                            }
+
+                            timePathNames[cC] = zoneTimePath;
+                        }
+                    }
+                }
+            }
+
+            // -- write out data (do not comment this out)
+            forAll(couplingControllers_, cC)
+            {
+              couplingControllers_[cC]->output(cCFixedPathNames_[cC], timePathNames[cC]);
+            }
+        }
+
         // RE-READ DICTIONARIES FOR MODIFIED PROPERTIES (RUN-TIME SELECTION)
 
         {
@@ -525,6 +917,20 @@ void dsmcControllers::outputResults()
                 const dictionary& dsmcControllersIDict = dsmcControllersI.dict();
     
                 fluxControllers_[fC]->updateProperties(dsmcControllersIDict);
+            }
+        }
+
+        {
+            couplingControllersList_.clear();
+
+            couplingControllersList_ = dsmcControllersDict_.lookup("dsmcCouplingControllers");
+
+            forAll(couplingControllers_, cC)
+            {
+                const entry& dsmcControllersI = couplingControllersList_[cC];
+                const dictionary& dsmcControllersIDict = dsmcControllersI.dict();
+
+                couplingControllers_[cC]->updateProperties(dsmcControllersIDict);
             }
         }
     }
