@@ -77,7 +77,7 @@ private:
 public:
 
     //- Runtime type information
-    TypeName("dsmcDeletionPatch");
+    TypeName("dsmcCouplingPatch");
 
     // Constructors
 
