@@ -1138,7 +1138,15 @@ Foam::labelList Foam::dsmcCloud::equipartitionVibrationalEnergyLevel
     {  
         forAll(vibLevel, i)
         {
-            label j = -log(rndGen_.scalar01())*temperature/
+            scalar rand = -1;
+            
+            do
+            {
+                rand = rndGen_.scalar01();
+
+            } while (rand < VSMALL);
+            
+            label j = -log(rand)*temperature/
                                     constProps(typeId).thetaV()[i];
             vibLevel[i] = j;
         }

@@ -13,6 +13,8 @@ initialiseDsmcParcels/basic/dsmcConfiguration/dsmcConfiguration.C
 initialiseDsmcParcels/basic/dsmcAllConfigurations/dsmcAllConfigurations.C
 initialiseDsmcParcels/derived/dsmcMeshFill/dsmcMeshFill.C
 initialiseDsmcParcels/derived/dsmcZoneFill/dsmcZoneFill.C
+initialiseDsmcParcels/derived/dsmcGaussianPulseFill/dsmcGaussianPulseFill.C
+initialiseDsmcParcels/derived/dsmcSinePulseFill/dsmcSinePulseFill.C
 initialiseDsmcParcels/derived/dsmcInitialiseOnLine/dsmcInitialiseOnLine.C
 initialiseDsmcParcels/derived/dsmcLaserHeatingFill/dsmcLaserHeatingFill.C
 
