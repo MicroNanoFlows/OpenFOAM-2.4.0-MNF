@@ -49,9 +49,9 @@ polyCouplingController::polyCouplingController
     Time& t,
     polyMoleculeCloud& molCloud,
     const dictionary& dict,
-    couplingInterface1d &oneDInterfaces,
-    couplingInterface2d &twoDInterfaces,
-    couplingInterface3d &threeDInterfaces
+    couplingInterface1d& oneDInterfaces,
+    couplingInterface2d& twoDInterfaces,
+    couplingInterface3d& threeDInterfaces
 )
 :
     mesh_(refCast<const fvMesh>(molCloud.mesh())),
@@ -72,7 +72,7 @@ polyCouplingController::polyCouplingController
 
     if(regionId_ == -1)
     {
-        FatalErrorIn("polyStateController::polyStateController()")
+        FatalErrorIn("polyCouplingController::polyCouplingController()")
             << "Cannot find region: " << regionName_ << nl << "in: "
             << time_.time().system()/"controllersDict"
             << exit(FatalError);
@@ -91,14 +91,14 @@ autoPtr<polyCouplingController> polyCouplingController::New
     Time& t,
     polyMoleculeCloud& molCloud,
     const dictionary& dict,
-    couplingInterface1d &oneDInterfaces,
-    couplingInterface2d &twoDInterfaces,
-    couplingInterface3d &threeDInterfaces
+    couplingInterface1d& oneDInterfaces,
+    couplingInterface2d& twoDInterfaces,
+    couplingInterface3d& threeDInterfaces
 )
 {
     word polyCouplingControllerName
     (
-        dict.lookup("stateControllerModel")
+        dict.lookup("couplingControllerModel")
     );
 
     Info<< "Selecting polyCouplingController "

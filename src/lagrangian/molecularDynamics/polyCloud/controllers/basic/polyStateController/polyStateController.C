@@ -62,6 +62,7 @@ polyStateController::polyStateController
     writeInTimeDir_(true),
     writeInCase_(true)
 {
+
     const cellZoneMesh& cellZones = mesh_.cellZones();
     regionId_ = cellZones.findZoneID(regionName_);
 
@@ -90,6 +91,7 @@ autoPtr<polyStateController> polyStateController::New
     const dictionary& dict
 )
 {
+
     word polyStateControllerName
     (
         dict.lookup("stateControllerModel")

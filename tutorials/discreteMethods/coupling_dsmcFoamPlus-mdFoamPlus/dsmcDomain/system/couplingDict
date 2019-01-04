@@ -17,23 +17,37 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-couplingName dsmcDomain1; //MUI domain name
+couplingName dsmcDomain; //Coupling domain name
 
 couplingConfigurations
 ( 
-    OneD //1D MUI coupling interface names
+    OneDInterfaces //1D coupling interfaces
     {
 	
     }
 
-    TwoD //2D MUI coupling interface names
+    TwoDInterfaces //2D coupling interfaces
     {
         
     }
 
-    ThreeD //3D MUI coupling interface names
+    ThreeDInterfaces //3D coupling interfaces
     {
-       interfaceNames (ifs_1 ifs_2); 
+	ifs_1
+	{
+	    zone	dsmcZoneLeft;
+	    sending	yes;
+	    receiving	yes;
+	    smart_send	yes;
+	}
+
+	ifs_2
+	{
+	    zone	dsmcZoneRight;
+	    sending	yes;
+	    receiving	yes;
+	    smart_send	yes;
+	}
     }
 );
 

@@ -27,7 +27,9 @@ dsmcPatchBoundaries
         }      
 
         dsmcCouplingPatchProperties
-        {}
+        {
+	    typeIds	(Ar); 	
+	}
     }
 
     boundary
@@ -40,7 +42,9 @@ dsmcPatchBoundaries
         }      
 
         dsmcCouplingPatchProperties
-        {}
+        {
+	    typeIds	(Ar);
+	}
     }
 );
 

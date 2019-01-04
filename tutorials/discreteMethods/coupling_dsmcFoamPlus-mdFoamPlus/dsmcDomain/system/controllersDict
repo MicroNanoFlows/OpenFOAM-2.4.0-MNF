@@ -29,7 +29,7 @@ dsmcCouplingControllers
     controller
     {
  	zoneName                    dsmcZoneLeft;
-        stateControllerModel        dsmcMdCoupling;
+        couplingControllerModel     dsmcMdCoupling;
 
         dsmcMdCouplingProperties
         { 	   
@@ -50,7 +50,7 @@ dsmcCouplingControllers
     controller
     {
  	zoneName                    dsmcZoneRight;
-        stateControllerModel        dsmcMdCoupling;
+        couplingControllerModel     dsmcMdCoupling;
 
         dsmcMdCouplingProperties
         { 	   

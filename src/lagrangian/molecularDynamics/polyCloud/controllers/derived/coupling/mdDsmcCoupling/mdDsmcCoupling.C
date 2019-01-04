@@ -66,8 +66,7 @@ mdDsmcCoupling::mdDsmcCoupling
     recvInterfaces_(),
 #endif
     sending_(false),
-    receiving_(false),
-    sendHistogram_(false)
+    receiving_(false)
 {
 #ifdef USE_MUI
     //- Determine sending interfaces if defined
@@ -184,10 +183,13 @@ mdDsmcCoupling::mdDsmcCoupling
 
     molIds_ = ids.molIds();
 
-    binModel_ =  autoPtr<binModel>
-    (
-        binModel::New(mesh_, propsDict_)
-    );
+    if(propsDict_.found("binModel"))
+    {
+        binModel_ =  autoPtr<binModel>
+        (
+            binModel::New(mesh_, propsDict_)
+        );
+    }
 
     if (propsDict_.found("output"))
     {
@@ -204,112 +206,7 @@ mdDsmcCoupling::~mdDsmcCoupling()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void mdDsmcCoupling::initialConfiguration()
-{
-#ifdef USE_MUI
-    //- Only send initial data if at least one sending interface is defined
-    if(sending_)
-    {
-        cellCentres_.setSize(controlZone().size());
-        label cellCount = 0;
-
-        //- Label list of the face labels
-        const faceList &ff = mesh_.faces();
-        //- The coordinate sets for the individual points
-        const pointField &pp = mesh_.points();
-
-        //- Start by calculating list of points at cell centres in the control zone
-        forAll(controlZone(), c)
-        {
-            const label& cellI = controlZone()[c];
-
-            mesh_.cells()[cellI].labels(ff);
-            mesh_.cells()[cellI].points(ff, pp);
-
-            point cellCentre = mesh_.cells()[cellI].centre(pp, ff);
-
-            //- Create MUI point from OpenFOAM point object
-            mui::point3d centre(cellCentre.x(), cellCentre.y(), cellCentre.z());
-
-            cellCentres_[cellCount] = centre;
-
-            cellCount++;
-        }
-
-        for(int i=0; i<recvInterfaces_.size(); ++i)
-        {
-
-        }
-
-        if(true) //- If calculating at least one average value per cell then commit initial t=0 values
-        {
-            scalar mass;
-            scalar density;
-            label molCount;
-            polyMolecule* molI = NULL;
-            label cellCount = 0;
-
-            forAll(controlZone(), c)
-            {
-                mass = 0.0;
-                molCount = 0;
-                const label& cellI = controlZone()[c];
-                const List<polyMolecule*>& molsInCell = molCloud_.cellOccupancy()[cellI];
-
-                forAll(molsInCell, m)
-                {
-                    molI = molsInCell[m];
-                    mass += molCloud_.cP().mass(molI->id());
-                    molCount++;
-                }
-
-                //- Calculate average mass for the cell
-                if(molCount > 0)
-                {
-                    mass /= molCount;
-                }
-
-                //- Iterate through sending interfaces and push mass and/or density
-                for(size_t i=0; i<sendInterfaces_.size(); ++i)
-                {
-                    //- Push average mass for the cell if enabled to each interface
-                    if(true)
-                    {
-                        sendInterfaces_[i]->push("m", cellCentres_[cellCount], mass);
-                    }
-
-                    //Push cell density if enabled
-                    if(true)
-                    {
-                        scalar volume = mesh_.V()[cellI];
-                        if(volume > 0.0)
-                        {
-                            density = mass / mesh_.V()[cellI];
-                        }
-                        else
-                        {
-                            density = 0.0;
-                        }
-
-                        sendInterfaces_[i]->push("p", cellCentres_[cellCount], density);
-                    }
-                }
-
-                cellCount++;
-            }
-
-            //Commit (transmit) values to the MUI interfaces
-            for(size_t i=0; i<sendInterfaces_.size(); ++i)
-            {
-                sendInterfaces_[i]->commit(time_.value());
-                sendInterfaces_[i]->barrier(time_.value());
-            }
-
-            Info << threeDInterfaces_.domainName << ": MUI values pushed for time " << time_.value()
-                 << " to " << sendInterfaces_.size() << " interfaces" << endl;
-        }
-    }
-#endif
-}
+{}
 
 void mdDsmcCoupling::controlBeforeMove()
 {
@@ -493,6 +390,7 @@ void mdDsmcCoupling::output
     const fileName& timePath
 )
 {
+  /*
 #ifdef USE_MUI
     if(!Pstream::parRun() || (Pstream::parRun() && Pstream::master()))
     {
@@ -506,13 +404,13 @@ void mdDsmcCoupling::output
                 of << "Averaged mass values from coupled interface " << recvInterfaceNames_[i] << endl;
                 of << "{" << endl;
 
-                /*
+
                 for(int j=0; j<recvMassValues_[i].size(); ++j)
                 {
                    of << "(" << cellCentres_[j][0] << "," << cellCentres_[j][1] << "," << cellCentres_[j][2] << "): ";
                    of << recvMassValues_[i][j] << endl;
                 }
-                */
+
 
                 of << "};" << endl;
             }
@@ -522,19 +420,20 @@ void mdDsmcCoupling::output
                 of << "Averaged density values from coupled interface " << recvInterfaceNames_[i] << endl;
                 of << "{" << endl;
 
-                /*
+
                 for(int j=0; j<recvDensityValues_[i].size(); ++j)
                 {
                     of << "(" << cellCentres_[j][0] << "," << cellCentres_[j][1] << "," << cellCentres_[j][2] << "): ";
                     of << recvDensityValues_[i][j] << endl;
                 }
-                */
+
 
                 of << "};" << endl;
             }
         }
     }
 #endif
+ */
 }
 
 void mdDsmcCoupling::updateProperties(const dictionary& newDict)

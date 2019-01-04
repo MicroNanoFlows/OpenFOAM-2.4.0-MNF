@@ -22,32 +22,28 @@ couplingName mdDomain; //Coupling domain name
 couplingConfigurations
 ( 
     OneDInterfaces //1D coupling interfaces
-    {
-	
+    {	
     }
 
     TwoDInterfaces //2D coupling interfaces
-    {
-        
+    {        
     }
 
     ThreeDInterfaces //3D coupling interfaces
     {
-	interface
-	{
-	    name	ifs_1;
+	ifs_1
+	{	   
 	    zone	couplingZoneLeft;
 	    sending	yes;
-	    receiving	no;
+	    receiving	yes;
 	    smart_send	yes;
 	}
 
-	interface
-	{
-	    name	ifs_2;
+	ifs_2
+	{	   
 	    zone	couplingZoneRight;
 	    sending	yes;
-	    receiving	no;
+	    receiving	yes;
 	    smart_send	yes;
 	}
     }

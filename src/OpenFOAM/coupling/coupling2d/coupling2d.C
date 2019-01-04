@@ -31,75 +31,94 @@ License
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 //Construct without explicit domain sizes
-Foam::coupling2d::coupling2d(word domainName, List<word>& zoneNames, List<word>& interfaceNames, List<bool>& send, List<bool>& receive, List<bool>& smart_send)
+Foam::coupling2d::coupling2d
+(
+    word domainName,
+    List<word>& zoneNames,
+    List<word>& interfaceNames,
+    List<bool>& send,
+    List<bool>& receive,
+    List<bool>& smart_send
+)
+:
+    domainName_(domainName),
+    zoneNames_(zoneNames),
+    interfaceNames_(interfaceNames),
+    send_(send),
+    receive_(receive),
+    smart_send_(smart_send)
 {
-    //
-    //Ensure parameters for each interface passed to constructor
-    if(interfaceNames.size() == zoneNames.size() == send.size() == receive.size())
+    interfaceDetails newInterface;
+    interfaces_.setSize(interfaceNames_.size());
+
+    for(size_t i=0; i<interfaceNames_.size(); i++)
     {
-        domainName_ = domainName;
+        std::vector<std::string> interfaceList;
 
-        interfaceDetails newInterface;
-        interfaces_.setSize(interfaceNames.size());
+        newInterface.interfaceName = interfaceNames_[i];
+        interfaceList.push_back(newInterface.interfaceName); //Need std::vector copy for MUI create_uniface function
+        newInterface.zoneName = zoneNames_[i];
+        newInterface.send = send_[i];
+        newInterface.receive = receive_[i];
+        newInterface.smartSend = smart_send_[i];
+        newInterface.zoneExtents = true;
 
-        for(size_t i=0; i<interfaceNames.size(); i++)
-        {
-            std::vector<std::string> interfaceList;
+        #ifdef USE_MUI
+          std::vector<mui::uniface<mui::config_2d>*> returnInterfaces;
+          returnInterfaces = mui::create_uniface<mui::config_2d>(static_cast<std::string>(domainName_), interfaceList);
+          newInterface.mui_interface = returnInterfaces[0];
+        #endif
 
-            newInterface.interfaceName = interfaceNames[i];
-            interfaceList.push_back(newInterface.interfaceName); //Need std::vector copy for MUI create_uniface function
-            newInterface.zoneName = zoneNames[i];
-            newInterface.send = send[i];
-            newInterface.receive = receive[i];
-            newInterface.smartSend = smart_send[i];
-            newInterface.zoneExtents = true;
-
-            #ifdef USE_MUI
-              std::vector<mui::uniface<mui::config_2d>*> returnInterfaces;
-              returnInterfaces = mui::create_uniface<mui::config_2d>(static_cast<std::string>(domainName_), interfaceList);
-              newInterface.mui_interface = returnInterfaces[0];
-            #endif
-
-            interfaces_[i] = newInterface;
-        }
+        interfaces_[i] = newInterface;
     }
 }
 
 //Construct with explicit domain sizes
-Foam::coupling2d::coupling2d(word domainName, List<word>& zoneNames, List<word>& interfaceNames, List<vector>& domainStarts, List<vector>& domainEnds,
-                             List<bool>& send, List<bool>& receive, List<bool>& smart_send)
+Foam::coupling2d::coupling2d
+(
+    word domainName,
+    List<word>& zoneNames,
+    List<word>& interfaceNames,
+    List<vector>& domainStarts,
+    List<vector>& domainEnds,
+    List<bool>& send,
+    List<bool>& receive,
+    List<bool>& smart_send
+)
+:
+    domainName_(domainName),
+    zoneNames_(zoneNames),
+    interfaceNames_(interfaceNames),
+    domainStarts_(domainStarts),
+    domainEnds_(domainEnds),
+    send_(send),
+    receive_(receive),
+    smart_send_(smart_send)
 {
-    //
-    //Ensure parameters for each interface passed to constructor
-    if(interfaceNames.size() == zoneNames.size() == send.size() == receive.size())
+    interfaceDetails newInterface;
+    interfaces_.setSize(interfaceNames_.size());
+
+    for(size_t i=0; i<interfaceNames_.size(); i++)
     {
-        domainName_ = domainName;
+        std::vector<std::string> interfaceList;
 
-        interfaceDetails newInterface;
-        interfaces_.setSize(interfaceNames.size());
+        newInterface.interfaceName = interfaceNames_[i];
+        interfaceList.push_back(newInterface.interfaceName); //Need std::vector copy for MUI create_uniface function
+        newInterface.zoneName = zoneNames_[i];
+        newInterface.domainStart = domainStarts_[i];
+        newInterface.domainEnd = domainEnds_[i];
+        newInterface.send = send_[i];
+        newInterface.receive = receive_[i];
+        newInterface.smartSend = smart_send_[i];
+        newInterface.zoneExtents = true;
 
-        for(size_t i=0; i<interfaceNames.size(); i++)
-        {
-            std::vector<std::string> interfaceList;
+        #ifdef USE_MUI
+          std::vector<mui::uniface<mui::config_2d>*> returnInterfaces;
+          returnInterfaces = mui::create_uniface<mui::config_2d>(static_cast<std::string>(domainName_), interfaceList);
+          newInterface.mui_interface = returnInterfaces[0];
+        #endif
 
-            newInterface.interfaceName = interfaceNames[i];
-            interfaceList.push_back(newInterface.interfaceName); //Need std::vector copy for MUI create_uniface function
-            newInterface.zoneName = zoneNames[i];
-            newInterface.domainStart = domainStarts[i];
-            newInterface.domainEnd = domainEnds[i];
-            newInterface.send = send[i];
-            newInterface.receive = receive[i];
-            newInterface.smartSend = smart_send[i];
-            newInterface.zoneExtents = true;
-
-            #ifdef USE_MUI
-              std::vector<mui::uniface<mui::config_2d>*> returnInterfaces;
-              returnInterfaces = mui::create_uniface<mui::config_2d>(static_cast<std::string>(domainName_), interfaceList);
-              newInterface.mui_interface = returnInterfaces[0];
-            #endif
-
-            interfaces_[i] = newInterface;
-        }
+        interfaces_[i] = newInterface;
     }
 }
 

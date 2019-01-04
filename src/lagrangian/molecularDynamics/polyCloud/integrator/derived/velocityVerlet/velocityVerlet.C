@@ -86,7 +86,7 @@ void velocityVerlet::evolve()
     molCloud_.controlAfterForces();
     updateVelocity(mesh_.time().deltaT().value());
     molCloud_.controlAfterVelocity();
-    molCloud_.postTimeStep(); //Coupling send and receive applied here
+    molCloud_.postTimeStep(); //Coupling send and receive of molecules/parcels that have crossed a coupling boundary applied here
 }
 
 void velocityVerlet::updateVelocity(const scalar& trackTime)

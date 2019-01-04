@@ -87,7 +87,6 @@ private:
 #endif
         bool sending_;          //- Determine whether this interface will send
         List<Foam::word> sendInterfaceNames_;
-        bool sendHistogram_;
 
         //- Receiving properties
 #ifdef USE_MUI
@@ -132,7 +131,7 @@ public:
         //- run at start of MD time step before molecules move
         void controlBeforeMove();
 
-        //- run at end of DSMC time step
+        //- run at end of MD time step
         void calculateProperties();
 
         //- receive molecules that fall into the MD coupled region from coupled dsmcFoamPlus

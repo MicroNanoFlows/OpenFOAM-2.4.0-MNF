@@ -41,6 +41,7 @@ SourceFiles
 #include "fvMesh.H"
 #include "volFields.H"
 #include "dsmcCloud.H"
+#include "binModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -58,6 +59,8 @@ class dsmcMdCoupling
 
 private:
 
+private:
+
     // Private data
 
         //- subDictionarys containing the properties
@@ -65,18 +68,10 @@ private:
         dictionary propsDictSend_;
         dictionary propsDictRecv_;
 
-        //- initial target density, velocity and temperature
-        scalar density_; // parcel density
-        vector velocity_;
-        scalar temperature_;
-        scalarField densities_;
-        vectorField velocities_;
-        scalarField temperatures_;
-        labelField nMolsToControl_;
-        scalarField parcels_;
-        scalarField measuredDensity_;
-        scalarField residual_;
-        scalarField residualSum_;
+        autoPtr<binModel> binModel_;
+
+        List<label> molIds_;
+
         bool output_;
 
         //- MUI coupling interfaces (1D & 2D unused in this controller derivation)
@@ -94,8 +89,6 @@ private:
 #endif
         bool sending_;          //- Determine whether this interface will send
         List<Foam::word> sendInterfaceNames_;
-        bool sendMass_;
-        bool sendDensity_;
 
         //- Receiving properties
 #ifdef USE_MUI
@@ -103,10 +96,6 @@ private:
 #endif
         bool receiving_;        //- Determine whether this interface will receive
         List<Foam::word> recvInterfaceNames_;
-        bool recvMass_;
-        bool recvDensity_;
-        Foam::List<List<Foam::scalar> > recvMassValues_;
-        Foam::List<List<Foam::scalar> > recvDensityValues_;
 
     // Private Member Functions
 

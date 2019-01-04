@@ -75,6 +75,13 @@ private:
 
     word domainName_;
     List<coupling1d::interfaceDetails> interfaces_;
+    List<word> zoneNames_;
+    List<word> interfaceNames_;
+    List<vector> domainStarts_;
+    List<vector> domainEnds_;
+    List<bool> send_;
+    List<bool> receive_;
+    List<bool> smart_send_;
 
 public:
 

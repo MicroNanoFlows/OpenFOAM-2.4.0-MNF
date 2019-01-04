@@ -56,27 +56,18 @@ dsmcMdCoupling::dsmcMdCoupling
     propsDict_(dict.subDict(typeName + "Properties")),
     propsDictSend_(dict.subDict(typeName + "Sending")),
     propsDictRecv_(dict.subDict(typeName + "Receiving")),
+    molIds_(),
     output_(false),
     oneDInterfaces_(),
     twoDInterfaces_(),
     threeDInterfaces_(threeDInterfaces),
 #ifdef USE_MUI
     cellCentres_(),
-#endif
-    sending_(false),
-    receiving_(false),
-#ifdef USE_MUI
     sendInterfaces_(),
-#endif
-    sendMass_(false),
-    sendDensity_(false),
-#ifdef USE_MUI
     recvInterfaces_(),
 #endif
-    recvMass_(false),
-    recvDensity_(false),
-    recvMassValues_(),
-    recvDensityValues_()
+    sending_(false),
+    receiving_(false)
 {
 #ifdef USE_MUI
     //- Determine sending interfaces if defined
@@ -220,113 +211,7 @@ dsmcMdCoupling::~dsmcMdCoupling()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void dsmcMdCoupling::initialConfiguration()
-{
-#ifdef USE_MUI
-    //- Only send initial data if at least one sending interface is defined
-    if(sending_)
-    {
-        cellCentres_.setSize(controlZone().size());
-        label cellCount = 0;
-
-        //- Label list of the face labels
-        const faceList &ff = mesh_.faces();
-        //- The coordinate sets for the individual points
-        const pointField &pp = mesh_.points();
-
-        //- Start by calculating list of points at cell centres in the control zone
-        forAll(controlZone(), c)
-        {
-            const label& cellI = controlZone()[c];
-
-            mesh_.cells()[cellI].labels(ff);
-            mesh_.cells()[cellI].points(ff, pp);
-
-            point cellCentre = mesh_.cells()[cellI].centre(pp, ff);
-
-            //- Create MUI point from OpenFOAM point object
-            mui::point3d centre(cellCentre.x(), cellCentre.y(), cellCentre.z());
-
-            cellCentres_[cellCount] = centre;
-
-            cellCount++;
-        }
-
-        for(int i=0; i<recvInterfaces_.size(); ++i)
-        {
-            recvMassValues_[i].setSize(cellCentres_.size());
-            recvDensityValues_[i].setSize(cellCentres_.size());
-        }
-
-        if(sendMass_ || sendDensity_) //- If calculating at least one average value per cell then commit initial t=0 values
-        {
-            scalar mass;
-            scalar density;
-            label molCount;
-            polyMolecule* molI = NULL;
-            label cellCount = 0;
-
-            forAll(controlZone(), c)
-            {
-                mass = 0.0;
-                molCount = 0;
-                const label& cellI = controlZone()[c];
-                const List<polyMolecule*>& molsInCell = molCloud_.cellOccupancy()[cellI];
-
-                forAll(molsInCell, m)
-                {
-                    molI = molsInCell[m];
-                    mass += molCloud_.cP().mass(molI->id());
-                    molCount++;
-                }
-
-                //- Calculate average mass for the cell
-                if(molCount > 0)
-                {
-                    mass /= molCount;
-                }
-
-                //- Iterate through sending interfaces and push mass and/or density
-                for(size_t i=0; i<sendInterfaces_.size(); ++i)
-                {
-                    //- Push average mass for the cell if enabled to each interface
-                    if(sendMass_)
-                    {
-                        sendInterfaces_[i]->push("m", cellCentres_[cellCount], mass);
-                    }
-
-                    //Push cell density if enabled
-                    if(sendDensity_)
-                    {
-                        scalar volume = mesh_.V()[cellI];
-                        if(volume > 0.0)
-                        {
-                            density = mass / mesh_.V()[cellI];
-                        }
-                        else
-                        {
-                            density = 0.0;
-                        }
-
-                        sendInterfaces_[i]->push("p", cellCentres_[cellCount], density);
-                    }
-                }
-
-                cellCount++;
-            }
-
-            //Commit (transmit) values to the MUI interfaces
-            for(size_t i=0; i<sendInterfaces_.size(); ++i)
-            {
-                sendInterfaces_[i]->commit(time_.value());
-                sendInterfaces_[i]->barrier(time_.value());
-            }
-
-            Info << threeDInterfaces_.domainName << ": MUI values pushed for time " << time_.value()
-                 << " to " << sendInterfaces_.size() << " interfaces" << endl;
-        }
-    }
-#endif
-}
+{}
 
 void dsmcMdCoupling::controlParcelsBeforeMove()
 {

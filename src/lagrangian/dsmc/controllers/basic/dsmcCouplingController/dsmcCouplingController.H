@@ -30,7 +30,6 @@ Description
 
 
 SourceFiles
-    dsmcCouplingControllerI.H
     dsmcCouplingController.C
     dsmcCouplingControllerIO.C
 
