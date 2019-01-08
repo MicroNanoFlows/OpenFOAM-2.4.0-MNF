@@ -237,7 +237,6 @@ void Foam::Cloud<ParticleType>::move(TrackData& td, const scalar trackTime)
     // Allocate transfer buffers
     PstreamBuffers pBufs(Pstream::nonBlocking);
 
-
     // While there are particles to transfer
     while (true)
     {
@@ -299,7 +298,6 @@ void Foam::Cloud<ParticleType>::move(TrackData& td, const scalar trackTime)
             break;
         }
 
-
         // Clear transfer buffers
         pBufs.clear();
 
@@ -319,7 +317,6 @@ void Foam::Cloud<ParticleType>::move(TrackData& td, const scalar trackTime)
                     << particleTransferLists[i];
             }
         }
-
 
         // Start sending. Sets number of bytes transferred
         labelListList allNTrans(Pstream::nProcs());

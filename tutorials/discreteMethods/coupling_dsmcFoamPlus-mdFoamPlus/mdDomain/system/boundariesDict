@@ -28,7 +28,9 @@ polyPatchBoundaries
         }
 
         polyCouplingPatchProperties
-        {}
+        {
+		molIds (Ar);
+	}
     }
     boundary
     {
@@ -40,8 +42,10 @@ polyPatchBoundaries
         }
 
         polyCouplingPatchProperties
-        {}
-    }
+        {
+		molIds (Ar);
+	}
+    }    
 );
 
 polyCyclicBoundaries

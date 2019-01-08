@@ -33,7 +33,7 @@ couplingConfigurations
     {
 	ifs_1
 	{	   
-	    zone	couplingZoneLeft;
+	    zone	mdZone;
 	    sending	yes;
 	    receiving	yes;
 	    smart_send	yes;
@@ -41,7 +41,7 @@ couplingConfigurations
 
 	ifs_2
 	{	   
-	    zone	couplingZoneRight;
+	    zone	mdZone;
 	    sending	yes;
 	    receiving	yes;
 	    smart_send	yes;

@@ -97,8 +97,8 @@ void polyCouplingPatch::controlMol
         td.keepParticle = false;
 
         //Add to list of coupled molecules before it is deleted
-        polyMolecule *molPtr = &mol;
-        molCloud_.insertCoupledMol(molPtr);
+        //polyMolecule *molPtr = &mol;
+        //molCloud_.insertCoupledMol(molPtr);
     }
     else // reflect
     {

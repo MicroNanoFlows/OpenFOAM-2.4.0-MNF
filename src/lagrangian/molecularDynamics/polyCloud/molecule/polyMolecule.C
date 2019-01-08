@@ -310,11 +310,11 @@ void Foam::polyMolecule::hitPatch
 {
     //-find which patch has been hit
     label patchIndex = pp.index();
-
     const label& patchModelId = td.cloud().boundaries().patchToModelIds()[patchIndex];
 
     // apply a boundary model when a molecule collides with this poly patch
     td.cloud().boundaries().patchBoundaryModels()[patchModelId]->controlMol(*this, td);
+
 }
 
 // ************************************************************************* //
