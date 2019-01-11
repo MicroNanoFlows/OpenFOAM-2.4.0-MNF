@@ -56,6 +56,7 @@ polyCouplingPatch::polyCouplingPatch
     elapsedTime_(0.0),
     writeInterval_(readScalar(t.controlDict().lookup("writeInterval"))),
     startTime_(t.startTime().value()),
+    molIds_(),
     molFlux_(0.0),
     massFlux_(0.0),
     cumulMolFlux_(0.0),
@@ -63,6 +64,16 @@ polyCouplingPatch::polyCouplingPatch
 {
     writeInTimeDir_ = false;
     writeInCase_ = true;
+
+    molIds_.clear();
+
+    selectIds ids
+    (
+        molCloud_.cP(),
+        propsDict_
+    );
+
+    molIds_ = ids.molIds();
 }
 
 
@@ -86,6 +97,7 @@ void polyCouplingPatch::controlMol
     polyMolecule::trackingData& td
 )
 {
+    std::cout << std::endl << std::endl << "enter coupling boundary control" << std::endl << std::endl;
     if(findIndex(molIds_, mol.id()) != -1)
     {
         const scalar& massI = molCloud_.cP().mass(mol.id());
@@ -97,8 +109,8 @@ void polyCouplingPatch::controlMol
         td.keepParticle = false;
 
         //Add to list of coupled molecules before it is deleted
-        //polyMolecule *molPtr = &mol;
-        //molCloud_.insertCoupledMol(molPtr);
+        polyMolecule *molPtr = &mol;
+        molCloud_.insertCoupledMol(molPtr);
     }
     else // reflect
     {

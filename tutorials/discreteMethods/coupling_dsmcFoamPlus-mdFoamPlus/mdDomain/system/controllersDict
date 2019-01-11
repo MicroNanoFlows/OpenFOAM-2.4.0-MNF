@@ -28,7 +28,7 @@ polyCouplingControllers
 (
     controller
     {
- 	zoneName                    mdZone;
+ 	zoneName                    couplingZoneLeft;
         couplingControllerModel     mdDsmcCoupling;
 
         mdDsmcCouplingProperties
@@ -49,7 +49,7 @@ polyCouplingControllers
 
     controller
     {
- 	zoneName                    mdZone;
+ 	zoneName                    couplingZoneRight;
         couplingControllerModel     mdDsmcCoupling;
 
         mdDsmcCouplingProperties
