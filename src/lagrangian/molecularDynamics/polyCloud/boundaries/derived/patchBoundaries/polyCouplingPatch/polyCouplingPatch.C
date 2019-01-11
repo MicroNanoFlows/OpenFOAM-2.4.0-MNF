@@ -97,7 +97,6 @@ void polyCouplingPatch::controlMol
     polyMolecule::trackingData& td
 )
 {
-    std::cout << std::endl << std::endl << "enter coupling boundary control" << std::endl << std::endl;
     if(findIndex(molIds_, mol.id()) != -1)
     {
         const scalar& massI = molCloud_.cP().mass(mol.id());
