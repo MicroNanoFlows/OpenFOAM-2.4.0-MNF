@@ -224,35 +224,40 @@
                     {
                         label regionId = -1;
                         const cellZoneMesh& cellZones = mesh.cellZones();
-                        regionId = cellZones.findZoneID(threeDInterfaces.interfaces->getInterfaceZoneName(i));
-                        if(regionId == -1)
-                        {
-                            FatalErrorIn("createCouplings.H")
-                                << "Cannot find region: " << threeDInterfaces.interfaces->getInterfaceZoneName(i) << nl
-                                << exit(FatalError);
-                        }
-
-                        //List of points that make up the coupling zone
-                        labelList controlZoneCells = mesh.cellZones()[regionId];
-
                         point min(VGREAT, VGREAT, VGREAT);
                         point max(-VSMALL, -VSMALL, -VSMALL);
 
-                        //Iterate through coupling zone points and find overall extents
-                        forAll(controlZoneCells, p)
+                        List<label> interfaceZones = oneDInterfaces.interfaces->getInterfaceZoneName(i);
+
+                        forAll(interfaceZones, ifZone)
                         {
-                            const labelList& cellPts = mesh.cellPoints()[controlZoneCells[p]];
-
-                            forAll(cellPts, pI)
+                            regionId = cellZones.findZoneID(interfaceZones[ifZone]);
+                            if(regionId == -1)
                             {
-                              const point& currPoint = mesh.points()[cellPts[pI]];
+                                FatalErrorIn("createCouplings.H")
+                                    << "Cannot find zone: " << interfaceZones[ifZone] << nl
+                                    << exit(FatalError);
+                            }
 
-                              if(currPoint[0] < min[0]) min[0] = currPoint[0];
-                              if(currPoint[1] < min[1]) min[1] = currPoint[1];
-                              if(currPoint[2] < min[2]) min[2] = currPoint[2];
-                              if(currPoint[0] > max[0]) max[0] = currPoint[0];
-                              if(currPoint[1] > max[1]) max[1] = currPoint[1];
-                              if(currPoint[2] > max[2]) max[2] = currPoint[2];
+                            //List of points that make up the coupling zone
+                            labelList controlZoneCells = mesh.cellZones()[regionId];
+
+                            //Iterate through coupling zone points and find overall extents
+                            forAll(controlZoneCells, p)
+                            {
+                                const labelList& cellPts = mesh.cellPoints()[controlZoneCells[p]];
+
+                                forAll(cellPts, pI)
+                                {
+                                  const point& currPoint = mesh.points()[cellPts[pI]];
+
+                                  if(currPoint[0] < min[0]) min[0] = currPoint[0];
+                                  if(currPoint[1] < min[1]) min[1] = currPoint[1];
+                                  if(currPoint[2] < min[2]) min[2] = currPoint[2];
+                                  if(currPoint[0] > max[0]) max[0] = currPoint[0];
+                                  if(currPoint[1] > max[1]) max[1] = currPoint[1];
+                                  if(currPoint[2] > max[2]) max[2] = currPoint[2];
+                                }
                             }
                         }
 
@@ -303,35 +308,40 @@
                     {
                         label regionId = -1;
                         const cellZoneMesh& cellZones = mesh.cellZones();
-                        regionId = cellZones.findZoneID(threeDInterfaces.interfaces->getInterfaceZoneName(i));
-                        if(regionId == -1)
-                        {
-                            FatalErrorIn("createCouplings.H")
-                                << "Cannot find region: " << threeDInterfaces.interfaces->getInterfaceZoneName(i) << nl
-                                << exit(FatalError);
-                        }
-
-                        //List of points that make up the coupling zone
-                        labelList controlZoneCells = mesh.cellZones()[regionId];
-
                         point min(VGREAT, VGREAT, VGREAT);
                         point max(-VSMALL, -VSMALL, -VSMALL);
 
-                        //Iterate through coupling zone points and find overall extents
-                        forAll(controlZoneCells, p)
+                        List<label> interfaceZones = twoDInterfaces.interfaces->getInterfaceZoneName(i);
+
+                        forAll(interfaceZones, ifZone)
                         {
-                            const labelList& cellPts = mesh.cellPoints()[controlZoneCells[p]];
-
-                            forAll(cellPts, pI)
+                            regionId = cellZones.findZoneID(interfaceZones[ifZone]);
+                            if(regionId == -1)
                             {
-                              const point& currPoint = mesh.points()[cellPts[pI]];
+                                FatalErrorIn("createCouplings.H")
+                                    << "Cannot find zone: " << interfaceZones[ifZone] << nl
+                                    << exit(FatalError);
+                            }
 
-                              if(currPoint[0] < min[0]) min[0] = currPoint[0];
-                              if(currPoint[1] < min[1]) min[1] = currPoint[1];
-                              if(currPoint[2] < min[2]) min[2] = currPoint[2];
-                              if(currPoint[0] > max[0]) max[0] = currPoint[0];
-                              if(currPoint[1] > max[1]) max[1] = currPoint[1];
-                              if(currPoint[2] > max[2]) max[2] = currPoint[2];
+                            //List of points that make up the coupling zone
+                            labelList controlZoneCells = mesh.cellZones()[regionId];
+
+                            //Iterate through coupling zone points and find overall extents
+                            forAll(controlZoneCells, p)
+                            {
+                                const labelList& cellPts = mesh.cellPoints()[controlZoneCells[p]];
+
+                                forAll(cellPts, pI)
+                                {
+                                  const point& currPoint = mesh.points()[cellPts[pI]];
+
+                                  if(currPoint[0] < min[0]) min[0] = currPoint[0];
+                                  if(currPoint[1] < min[1]) min[1] = currPoint[1];
+                                  if(currPoint[2] < min[2]) min[2] = currPoint[2];
+                                  if(currPoint[0] > max[0]) max[0] = currPoint[0];
+                                  if(currPoint[1] > max[1]) max[1] = currPoint[1];
+                                  if(currPoint[2] > max[2]) max[2] = currPoint[2];
+                                }
                             }
                         }
 
@@ -382,35 +392,40 @@
                     {
                         label regionId = -1;
                         const cellZoneMesh& cellZones = mesh.cellZones();
-                        regionId = cellZones.findZoneID(threeDInterfaces.interfaces->getInterfaceZoneName(i));
-                        if(regionId == -1)
-                        {
-                            FatalErrorIn("createCouplings.H")
-                                << "Cannot find region: " << threeDInterfaces.interfaces->getInterfaceZoneName(i) << nl
-                                << exit(FatalError);
-                        }
-
-                        //List of points that make up the coupling zone
-                        labelList controlZoneCells = mesh.cellZones()[regionId];
-
                         point min(VGREAT, VGREAT, VGREAT);
                         point max(-VSMALL, -VSMALL, -VSMALL);
 
-                        //Iterate through coupling zone points and find overall extents
-                        forAll(controlZoneCells, p)
+                        List<label> interfaceZones = threeDInterfaces.interfaces->getInterfaceZoneName(i);
+
+                        forAll(interfaceZones, ifZone)
                         {
-                            const labelList& cellPts = mesh.cellPoints()[controlZoneCells[p]];
-
-                            forAll(cellPts, pI)
+                            regionId = cellZones.findZoneID(interfaceZones[ifZone]);
+                            if(regionId == -1)
                             {
-                              const point& currPoint = mesh.points()[cellPts[pI]];
+                                FatalErrorIn("createCouplings.H")
+                                    << "Cannot find zone: " << interfaceZones[ifZone] << nl
+                                    << exit(FatalError);
+                            }
 
-                              if(currPoint[0] < min[0]) min[0] = currPoint[0];
-                              if(currPoint[1] < min[1]) min[1] = currPoint[1];
-                              if(currPoint[2] < min[2]) min[2] = currPoint[2];
-                              if(currPoint[0] > max[0]) max[0] = currPoint[0];
-                              if(currPoint[1] > max[1]) max[1] = currPoint[1];
-                              if(currPoint[2] > max[2]) max[2] = currPoint[2];
+                            //List of points that make up the coupling zone
+                            labelList controlZoneCells = mesh.cellZones()[regionId];
+
+                            //Iterate through coupling zone points and find overall extents
+                            forAll(controlZoneCells, p)
+                            {
+                                const labelList& cellPts = mesh.cellPoints()[controlZoneCells[p]];
+
+                                forAll(cellPts, pI)
+                                {
+                                  const point& currPoint = mesh.points()[cellPts[pI]];
+
+                                  if(currPoint[0] < min[0]) min[0] = currPoint[0];
+                                  if(currPoint[1] < min[1]) min[1] = currPoint[1];
+                                  if(currPoint[2] < min[2]) min[2] = currPoint[2];
+                                  if(currPoint[0] > max[0]) max[0] = currPoint[0];
+                                  if(currPoint[1] > max[1]) max[1] = currPoint[1];
+                                  if(currPoint[2] > max[2]) max[2] = currPoint[2];
+                                }
                             }
                         }
 

@@ -63,7 +63,7 @@ private:
         vector domainStart;
         vector domainEnd;
         word interfaceName;
-        word zoneName;
+        List<word> zoneNames;
         #ifdef USE_MUI
           mui::uniface<mui::config_3d>* mui_interface;
         #endif
@@ -75,7 +75,7 @@ private:
 
     word domainName_;
     List<coupling3d::interfaceDetails> interfaces_;
-    List<word> zoneNames_;
+    List<List<word> > zoneNames_;
     List<word> interfaceNames_;
     List<vector> domainStarts_;
     List<vector> domainEnds_;
@@ -91,7 +91,7 @@ public:
         coupling3d
         (
             word domainName,
-            List<word>& zoneNames,
+            List<List<word> >& zoneNames,
             List<word>& interfaceNames,
             List<bool>& send,
             List<bool>& receive,
@@ -102,7 +102,7 @@ public:
         coupling3d
         (
             word domainName,
-            List<word>& zoneNames,
+            List<List<word> >& zoneNames,
             List<word>& interfaceNames,
             List<vector>& domainStarts,
             List<vector>& domainEnds,
@@ -123,7 +123,7 @@ public:
         const vector& getInterfaceDomainStart(int index) const;
         const vector& getInterfaceDomainEnd(int index) const;
         const word getInterfaceName(int index) const;
-        const word getInterfaceZoneName(int index) const;
+        const List<word> getInterfaceZoneNames(int index) const;
         const bool getInterfaceSendStatus(int index) const;
         const bool getInterfaceReceiveStatus(int index) const;
         const bool getInterfaceSmartSendStatus(int index) const;
