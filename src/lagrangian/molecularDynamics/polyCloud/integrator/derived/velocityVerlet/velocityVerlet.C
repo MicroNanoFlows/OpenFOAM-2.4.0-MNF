@@ -75,7 +75,7 @@ void velocityVerlet::evolve()
 {
     molCloud_.controlBeforeVelocity();
     updateVelocity(mesh_.time().deltaT().value());
-    molCloud_.controlBeforeMove();
+    molCloud_.controlBeforeMove(); //Coupling regions molecules populated here
     molCloud_.move();
     molCloud_.controlAfterMove(); //Coupling boundary applied here
     molCloud_.buildCellOccupancy();

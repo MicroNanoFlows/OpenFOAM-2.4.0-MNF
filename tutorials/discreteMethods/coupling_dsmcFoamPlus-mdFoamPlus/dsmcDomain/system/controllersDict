@@ -28,7 +28,7 @@ dsmcCouplingControllers
 (
     controller
     {
- 	zoneName                    dsmcZoneLeft;
+ 	zoneNames                   (dsmcZoneLeft dsmcCouplingZoneLeft);
         couplingControllerModel     dsmcMdCoupling;
 
         dsmcMdCouplingProperties
@@ -49,7 +49,7 @@ dsmcCouplingControllers
 
     controller
     {
- 	zoneName                    dsmcZoneRight;
+ 	zoneNames                   (dsmcZoneRight dsmcCouplingZoneRight);
         couplingControllerModel     dsmcMdCoupling;
 
         dsmcMdCouplingProperties

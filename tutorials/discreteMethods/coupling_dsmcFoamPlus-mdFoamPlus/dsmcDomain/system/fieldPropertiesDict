@@ -47,7 +47,43 @@ dsmcFields
 
         dsmcZoneProperties
         {
+            zoneName		dsmcZoneCoupledLeft;
+            fieldName		Ar;
+            typeIds		(Ar);
+        }
+    }
+
+    field
+    {
+        fieldModel	dsmcZone;
+
+        timeProperties
+        {
+            timeOption		write;
+            resetAtOutput	off;
+        }
+
+        dsmcZoneProperties
+        {
             zoneName		dsmcZoneRight;
+            fieldName		Ar;
+            typeIds		(Ar);
+        }
+    }
+
+    field
+    {
+        fieldModel	dsmcZone;
+
+        timeProperties
+        {
+            timeOption		write;
+            resetAtOutput	off;
+        }
+
+        dsmcZoneProperties
+        {
+            zoneName		dsmcZoneCoupledRight;
             fieldName		Ar;
             typeIds		(Ar);
         }

@@ -34,7 +34,7 @@ License
 Foam::coupling1d::coupling1d
 (
     word domainName,
-    List<word>& zoneNames,
+    List<List<word> >& zoneNames,
     List<word>& interfaceNames,
     List<bool>& send,
     List<bool>& receive,
@@ -57,7 +57,7 @@ Foam::coupling1d::coupling1d
 
         newInterface.interfaceName = interfaceNames_[i];
         interfaceList.push_back(newInterface.interfaceName); //Need std::vector copy for MUI create_uniface function
-        newInterface.zoneName = zoneNames_[i];
+        newInterface.zoneNames = zoneNames_[i];
         newInterface.send = send_[i];
         newInterface.receive = receive_[i];
         newInterface.smartSend = smart_send_[i];
@@ -77,7 +77,7 @@ Foam::coupling1d::coupling1d
 Foam::coupling1d::coupling1d
 (
     word domainName,
-    List<word>& zoneNames,
+    List<List<word> >& zoneNames,
     List<word>& interfaceNames,
     List<vector>& domainStarts,
     List<vector>& domainEnds,
@@ -104,7 +104,7 @@ Foam::coupling1d::coupling1d
 
         newInterface.interfaceName = interfaceNames_[i];
         interfaceList.push_back(newInterface.interfaceName); //Need std::vector copy for MUI create_uniface function
-        newInterface.zoneName = zoneNames_[i];
+        newInterface.zoneNames = zoneNames_[i];
         newInterface.domainStart = domainStarts_[i];
         newInterface.domainEnd = domainEnds_[i];
         newInterface.send = send_[i];
@@ -163,9 +163,9 @@ const Foam::word Foam::coupling1d::getInterfaceName(int index) const
     return interfaces_[index].interfaceName;
 }
 
-const Foam::word Foam::coupling1d::getInterfaceZoneName(int index) const
+const Foam::List<Foam::word> Foam::coupling1d::getInterfaceZoneNames(int index) const
 {
-    return interfaces_[index].zoneName;
+    return interfaces_[index].zoneNames;
 }
 
 const bool Foam::coupling1d::getInterfaceSendStatus(int index) const

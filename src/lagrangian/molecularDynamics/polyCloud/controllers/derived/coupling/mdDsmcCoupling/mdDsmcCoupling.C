@@ -206,7 +206,9 @@ mdDsmcCoupling::~mdDsmcCoupling()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void mdDsmcCoupling::initialConfiguration()
-{}
+{
+    sendInitialisation();
+}
 
 void mdDsmcCoupling::controlBeforeMove()
 {
@@ -217,6 +219,11 @@ void mdDsmcCoupling::calculateProperties()
 {
     sendCoupledMolecules();
     receiveCoupledParcels();
+}
+
+void mdDsmcCoupling::sendInitialisation()
+{
+
 }
 
 void mdDsmcCoupling::receiveCoupledRegion()

@@ -55,7 +55,7 @@
                 wordList iFaceTOC(couplingConfigIDict.toc());
 
                 List<word> interfaceNames(iFaceTOC.size());
-                List<word> zoneNames(iFaceTOC.size());
+                List<List<word> > zoneNames(iFaceTOC.size());
                 List<vector> domainStarts(iFaceTOC.size());
                 List<vector> domainEnds(iFaceTOC.size());
                 List<bool> send(iFaceTOC.size());
@@ -72,9 +72,9 @@
 
                     interfaceNames[cI] = static_cast<word>(interfaceDict.dictName());
 
-                    if (interfaceDict.found("zone"))
+                    if (interfaceDict.found("zones"))
                     {
-                        zoneNames[cI] = static_cast<word>(interfaceDict.lookup("zone"));
+                        zoneNames[cI] = interfaceDict.lookup("zones");
                     }
                     else
                     {

@@ -136,6 +136,9 @@ public:
         //- run at end of DSMC time step
         void calculateProperties();
 
+        //- run at initialisation of controller, receives dimensions of coupled regions from coupled mdFoamPlus instance
+        void receiveInitialisation();
+
         //- send parcels that fall into the MD coupled region to coupled mdFoamPlus
         void sendCoupledRegion();
 
