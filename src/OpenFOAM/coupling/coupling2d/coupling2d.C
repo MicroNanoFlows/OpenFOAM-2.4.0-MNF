@@ -163,7 +163,7 @@ const Foam::word Foam::coupling2d::getInterfaceName(int index) const
     return interfaces_[index].interfaceName;
 }
 
-const Foam::List<Foam::word> Foam::coupling2d::getInterfaceZoneName(int index) const
+const Foam::List<Foam::word> Foam::coupling2d::getInterfaceZoneNames(int index) const
 {
     return interfaces_[index].zoneNames;
 }

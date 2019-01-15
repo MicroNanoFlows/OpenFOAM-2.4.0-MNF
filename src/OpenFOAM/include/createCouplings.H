@@ -74,7 +74,12 @@
 
                     if (interfaceDict.found("zones"))
                     {
-                        zoneNames[cI] = interfaceDict.lookup("zones");
+                        const List<word> lclZoneNames(interfaceDict.lookup("zones"));
+
+                        forAll(lclZoneNames, lclZones)
+                        {
+                            zoneNames[cI].append(lclZoneNames[lclZones]);
+                        }
                     }
                     else
                     {
@@ -227,7 +232,7 @@
                         point min(VGREAT, VGREAT, VGREAT);
                         point max(-VSMALL, -VSMALL, -VSMALL);
 
-                        List<label> interfaceZones = oneDInterfaces.interfaces->getInterfaceZoneName(i);
+                        List<word> interfaceZones = oneDInterfaces.interfaces->getInterfaceZoneNames(i);
 
                         forAll(interfaceZones, ifZone)
                         {
@@ -311,7 +316,7 @@
                         point min(VGREAT, VGREAT, VGREAT);
                         point max(-VSMALL, -VSMALL, -VSMALL);
 
-                        List<label> interfaceZones = twoDInterfaces.interfaces->getInterfaceZoneName(i);
+                        List<word> interfaceZones = twoDInterfaces.interfaces->getInterfaceZoneNames(i);
 
                         forAll(interfaceZones, ifZone)
                         {
@@ -395,7 +400,7 @@
                         point min(VGREAT, VGREAT, VGREAT);
                         point max(-VSMALL, -VSMALL, -VSMALL);
 
-                        List<label> interfaceZones = threeDInterfaces.interfaces->getInterfaceZoneName(i);
+                        List<word> interfaceZones = threeDInterfaces.interfaces->getInterfaceZoneNames(i);
 
                         forAll(interfaceZones, ifZone)
                         {
