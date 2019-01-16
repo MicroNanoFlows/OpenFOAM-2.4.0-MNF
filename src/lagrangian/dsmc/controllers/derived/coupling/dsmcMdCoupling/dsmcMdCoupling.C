@@ -154,47 +154,41 @@ dsmcMdCoupling::dsmcMdCoupling
             }
         }
     }
+
+    if((sendInterfaces_.size() != 0))
+    {
+        sending_ = true;
+    }
+
+    if((recvInterfaces_.size() != 0))
+    {
+        receiving_ = true;
+    }
 #else
     FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
                 << "MUI library not enabled at compilation" << exit(FatalError);
 #endif
 
-    //Determine sending properties
-    if(propsDictSend_.found("mass"))
-    {
-        sendMass_ = Switch(propsDictSend_.lookup("mass"));
-    }
-
-    if(propsDictSend_.found("density"))
-    {
-        sendDensity_ = Switch(propsDictSend_.lookup("density"));
-    }
-
-    if((sendInterfaces_.size() != 0) || sendMass_ || sendDensity_)
-    {
-        sending_ = true;
-    }
-
-    if(propsDictRecv_.found("mass"))
-    {
-        recvMass_ = Switch(propsDictRecv_.lookup("mass"));
-    }
-
-    if(propsDictRecv_.found("density"))
-    {
-        recvDensity_ = Switch(propsDictRecv_.lookup("density"));
-    }
-
-    if((recvInterfaces_.size() != 0) || recvMass_ || recvDensity_)
-    {
-        receiving_ = true;
-
-        recvMassValues_.setSize(recvInterfaces_.size());
-        recvDensityValues_.setSize(recvInterfaces_.size());
-    }
-
     writeInTimeDir_ = true;
     writeInCase_ = true;
+
+    molIds_.clear();
+
+    selectIds ids
+    (
+        molCloud_.cP(),
+        propsDict_
+    );
+
+    molIds_ = ids.molIds();
+
+    if(propsDict_.found("binModel"))
+    {
+        binModel_ =  autoPtr<binModel>
+        (
+            binModel::New(mesh_, propsDict_)
+        );
+    }
 
     if (propsDict_.found("output"))
     {
@@ -233,7 +227,13 @@ void dsmcMdCoupling::receiveInitialisation()
 
 void dsmcMdCoupling::sendCoupledRegion()
 {
+//#ifdef USE_MUI
+    //- Only send data if at least one sending interface is defined
+    if(sending_)
+    {
 
+    }
+//#endif
 }
 
 void dsmcMdCoupling::sendCoupledParcels()

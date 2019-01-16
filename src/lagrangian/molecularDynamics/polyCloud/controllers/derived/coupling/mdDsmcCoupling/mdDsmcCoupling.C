@@ -153,12 +153,6 @@ mdDsmcCoupling::mdDsmcCoupling
             }
         }
     }
-#else
-    FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
-                << "MUI library not enabled at compilation" << exit(FatalError);
-#endif
-
-    //Determine sending properties
 
     if(sendInterfaces_.size() != 0)
     {
@@ -169,6 +163,10 @@ mdDsmcCoupling::mdDsmcCoupling
     {
         receiving_ = true;
     }
+#else
+    FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
+                << "MUI library not enabled at compilation" << exit(FatalError);
+#endif
 
     writeInTimeDir_ = true;
     writeInCase_ = true;

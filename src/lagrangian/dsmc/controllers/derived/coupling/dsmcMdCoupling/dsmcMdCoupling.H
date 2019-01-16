@@ -87,14 +87,14 @@ private:
 #ifdef USE_MUI
         List<mui::uniface<mui::config_3d>* > sendInterfaces_; //- 3D MUI interfaces to send through
 #endif
-        bool sending_;          //- Determine whether this interface will send
+        bool sending_;          //- Determine whether this controller will send
         List<Foam::word> sendInterfaceNames_;
 
         //- Receiving properties
 #ifdef USE_MUI
         List<mui::uniface<mui::config_3d>* > recvInterfaces_; //- 3D MUI interfaces to receive from
 #endif
-        bool receiving_;        //- Determine whether this interface will receive
+        bool receiving_;        //- Determine whether this controller will receive
         List<Foam::word> recvInterfaceNames_;
 
     // Private Member Functions
