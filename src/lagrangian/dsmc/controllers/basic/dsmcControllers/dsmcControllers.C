@@ -540,17 +540,20 @@ dsmcControllers::dsmcControllers
                     mkDir(couplingControllerPath);
                 }
 
-                const word& regionName = couplingControllers_[cC]->regionName();
+                const List<word>& couplingRegions = couplingControllers_[cC]->regionNames();
 
-                // directory: case/controllers/dsmc/couplingControllers/<couplingControllerModel>/<faceZoneName>
-                fileName zonePath(couplingControllerPath/regionName);
-
-                if (!isDir(zonePath))
+                forAll(couplingRegions, regions)
                 {
-                    mkDir(zonePath);
-                }
+                    // directory: case/controllers/dsmc/couplingControllers/<couplingControllerModel>/<faceZoneName>
+                    fileName zonePath(couplingControllerPath/couplingRegions[regions]);
 
-                cCFixedPathNames_[cC] = zonePath;
+                    if (!isDir(zonePath))
+                    {
+                        mkDir(zonePath);
+                    }
+
+                    cCFixedPathNames_[cC] = zonePath;
+                }
             }
         }
     }
@@ -814,7 +817,7 @@ void dsmcControllers::outputResults()
         }
 
         {
-            List<fileName> timePathNames(sCFixedPathNames_.size());
+            List<List<fileName> > timePathNames(sCFixedPathNames_.size());
 
             if(nCouplingControllers_ > 0)
             {
@@ -867,17 +870,20 @@ void dsmcControllers::outputResults()
                                 mkDir(cCTimePath);
                             }
 
-                            const word& regionName = couplingControllers_[cC]->regionName();
+                            const List<word>& couplingRegions = couplingControllers_[cC]->regionNames();
 
-                            // directory: case/<timeDir>/uniform/controllers/dsmc/<couplingControllerModel>  <faceZoneName>
-                            fileName zoneTimePath(cCTimePath/regionName);
-
-                            if (!isDir(zoneTimePath))
+                            forAll(couplingRegions, regions)
                             {
-                                mkDir(zoneTimePath);
-                            }
+                                // directory: case/<timeDir>/uniform/controllers/dsmc/<couplingControllerModel>  <faceZoneName>
+                                fileName zoneTimePath(cCTimePath/couplingRegions[regions]);
 
-                            timePathNames[cC] = zoneTimePath;
+                                if (!isDir(zoneTimePath))
+                                {
+                                     mkDir(zoneTimePath);
+                                }
+
+                                timePathNames[cC].append(zoneTimePath);
+                            }
                         }
                     }
                 }

@@ -560,17 +560,20 @@ polyControllers::polyControllers
                     mkDir(couplingControllerPath);
                 }
 
-                const word& regionName = couplingControllers_[cC]->regionName();
+                const List<word>& couplingRegions = couplingControllers_[cC]->regionNames();
 
-                // directory: case/controllers/poly/couplingControllers/<couplingControllerModel>/<cellZoneName>
-                fileName zonePath(couplingControllerPath/regionName);
-
-                if (!isDir(zonePath))
+                forAll(couplingRegions, regions)
                 {
-                    mkDir(zonePath);
-                }
+                    // directory: case/controllers/poly/couplingControllers/<couplingControllerModel>/<cellZoneName>
+                    fileName zonePath(couplingControllerPath/couplingRegions[regions]);
 
-                cCFixedPathNames_[cC] = zonePath;
+                    if (!isDir(zonePath))
+                    {
+                        mkDir(zonePath);
+                    }
+
+                    cCFixedPathNames_[cC] = zonePath;
+                }
             }
         }
     }
@@ -846,7 +849,7 @@ void polyControllers::outputStateResults()
 
         // -- creating a set of directories in the current time directory
         {
-            List<fileName> timePathNames(cCFixedPathNames_.size());
+            List<List<fileName> > timePathNames(cCFixedPathNames_.size());
 
             if(nCouplingControllers_ > 0)
             {
@@ -899,18 +902,20 @@ void polyControllers::outputStateResults()
                                     mkDir(cCTimePath);
                                 }
 
-                                //- creating directory for different zones but of the same model
-                                const word& regionName = couplingControllers_[cC]->regionName();
+                                const List<word>& couplingRegions = couplingControllers_[cC]->regionNames();
 
-                                // directory: case/<timeDir>/uniform/controllers/poly/<couplingControllerModel>/<cellZoneName>
-                                fileName zoneTimePath(cCTimePath/regionName);
-
-                                if (!isDir(zoneTimePath))
+                                forAll(couplingRegions, regions)
                                 {
-                                    mkDir(zoneTimePath);
-                                }
+                                    // directory: case/<timeDir>/uniform/controllers/poly/<couplingControllerModel>/<cellZoneName>
+                                    fileName zoneTimePath(cCTimePath/couplingRegions[regions]);
 
-                                timePathNames[cC] = zoneTimePath;
+                                    if (!isDir(zoneTimePath))
+                                    {
+                                        mkDir(zoneTimePath);
+                                    }
+
+                                    timePathNames[cC].append(zoneTimePath);
+                                }
                             }
                         }
                     }

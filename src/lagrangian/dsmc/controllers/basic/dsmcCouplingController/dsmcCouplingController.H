@@ -86,8 +86,8 @@ protected:
         scalar initialTime_;
 
         //- name of control zone
-        word regionName_;
-        label regionId_;
+        List<word> regionNames_;
+        List<label> regionIds_;
 
         bool control_;
         bool readStateFromFile_;
@@ -203,7 +203,7 @@ public:
         virtual void output
         (
             const fileName& fixedPathName,
-            const fileName& timePath
+            const List<fileName>& timePaths
         ) = 0;
 
         //- update properties from a modified dictionary
@@ -214,10 +214,13 @@ public:
     // Access
 
         //- return the control zone cells
-        const labelList& controlZone() const;
+        const labelList& controlZone(label regionID) const;
 
-        //- return the control zone name
-        const word& regionName() const;
+        //- return the control zone names
+        const List<word>& regionNames() const;
+
+        //- return the control zone IDs
+        const List<label>& regionIds() const;
 
         const bool& controlInterForces() const;
         bool& controlInterForces();

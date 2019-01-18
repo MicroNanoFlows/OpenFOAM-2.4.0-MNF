@@ -172,8 +172,6 @@ dsmcMdCoupling::dsmcMdCoupling
     writeInTimeDir_ = true;
     writeInCase_ = true;
 
-    molIds_.clear();
-
     selectIds ids
     (
         molCloud_.cP(),
@@ -231,7 +229,16 @@ void dsmcMdCoupling::sendCoupledRegion()
     //- Only send data if at least one sending interface is defined
     if(sending_)
     {
+        forAll(regionIds(), id)
+        {
+            forAll(controlZone(regionIds()[id]), c)
+            {
+                const label& cellI = controlZone(regionIds()[id])[c];
+                const List<dsmcParcel*>& parcelsInCell = cloud_.cellOccupancy()[cellI];
 
+
+            }
+        }
     }
 //#endif
 }
@@ -249,15 +256,17 @@ void dsmcMdCoupling::receiveCoupledMolecules()
 void dsmcMdCoupling::output
 (
     const fileName& fixedPathName,
-    const fileName& timePath
+    const List<fileName>& timePaths
 )
 {
+    /*
     const Time& runTime = time_.time();
 
     if(runTime.outputTime())
     {
 
     }
+    */
 }
 
 void dsmcMdCoupling::updateProperties(const dictionary& newDict)

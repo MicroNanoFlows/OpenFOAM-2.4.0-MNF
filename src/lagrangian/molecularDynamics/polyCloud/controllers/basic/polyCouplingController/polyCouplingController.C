@@ -57,8 +57,8 @@ polyCouplingController::polyCouplingController
     mesh_(refCast<const fvMesh>(molCloud.mesh())),
     molCloud_(molCloud),
     time_(t),
-    regionName_(dict.lookup("zoneName")),
-    regionId_(-1),
+    regionNames_(dict.lookup("zoneNames")),
+    regionIds_(),
     control_(true),
     controlInterForces_(false),
     writeInTimeDir_(true),
@@ -68,14 +68,20 @@ polyCouplingController::polyCouplingController
     threeDInterfaces_(threeDInterfaces)
 {
     const cellZoneMesh& cellZones = mesh_.cellZones();
-    regionId_ = cellZones.findZoneID(regionName_);
 
-    if(regionId_ == -1)
+    forAll(regionNames_, regions)
     {
-        FatalErrorIn("polyCouplingController::polyCouplingController()")
-            << "Cannot find region: " << regionName_ << nl << "in: "
-            << time_.time().system()/"controllersDict"
-            << exit(FatalError);
+      label lclRegionId = cellZones.findZoneID(regionNames_[regions]);
+
+      if(lclRegionId == -1)
+      {
+          FatalErrorIn("dsmcCouplingController::dsmcCouplingController()")
+              << "Cannot find region: " << regionNames_[regions] << nl << "in: "
+              << time_.time().system()/"controllersDict"
+              << exit(FatalError);
+      }
+
+      regionIds_.append(lclRegionId);
     }
 
     if(dict.found("control"))
@@ -150,14 +156,19 @@ void polyCouplingController::updateCouplingControllerProperties
     }
 }
 
-const labelList& polyCouplingController::controlZone() const
+const labelList& polyCouplingController::controlZone(label regionID) const
 {
-    return mesh_.cellZones()[regionId_];
+    return mesh_.cellZones()[regionID];
 }
 
-const word& polyCouplingController::regionName() const
+const List<word>& polyCouplingController::regionNames() const
 {
-    return regionName_;
+    return regionNames_;
+}
+
+const List<label>& polyCouplingController::regionIds() const
+{
+    return regionIds_;
 }
 
 const bool& polyCouplingController::controlInterForces() const

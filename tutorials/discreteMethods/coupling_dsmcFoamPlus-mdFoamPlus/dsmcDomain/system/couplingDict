@@ -35,7 +35,7 @@ couplingConfigurations
     {
 	ifs_1
 	{
-	    zones	(dsmcZoneLeft dsmcCouplingZoneLeft);
+	    zones	(couplingZoneLeft);
 	    sending	yes;
 	    receiving	yes;
 	    smart_send	yes;
@@ -43,7 +43,7 @@ couplingConfigurations
 
 	ifs_2
 	{
-	    zones	(dsmcZoneRight dsmcCouplingZoneRight);
+	    zones	(couplingZoneRight);
 	    sending	yes;
 	    receiving	yes;
 	    smart_send	yes;

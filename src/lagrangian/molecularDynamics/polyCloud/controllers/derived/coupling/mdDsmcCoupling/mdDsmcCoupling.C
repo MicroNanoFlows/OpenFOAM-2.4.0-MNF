@@ -171,8 +171,6 @@ mdDsmcCoupling::mdDsmcCoupling
     writeInTimeDir_ = true;
     writeInCase_ = true;
 
-    molIds_.clear();
-
     selectIds ids
     (
         molCloud_.cP(),
@@ -269,8 +267,8 @@ void mdDsmcCoupling::receiveCoupledRegion()
 
 void mdDsmcCoupling::sendCoupledMolecules()
 {
-  /*
-#ifdef USE_MUI
+/*
+//#ifdef USE_MUI
     //- Only send data if at least one sending interface is defined
     if(sending_)
     {
@@ -342,7 +340,7 @@ void mdDsmcCoupling::sendCoupledMolecules()
                  << " to " << sendInterfaces_.size() << " interfaces" << endl;
         }
     }
-#endif
+//#endif
 */
 }
 
@@ -392,53 +390,17 @@ void mdDsmcCoupling::receiveCoupledParcels()
 void mdDsmcCoupling::output
 (
     const fileName& fixedPathName,
-    const fileName& timePath
+    const List<fileName>& timePaths
 )
 {
-  /*
-#ifdef USE_MUI
-    if(!Pstream::parRun() || (Pstream::parRun() && Pstream::master()))
+    /*
+    const Time& runTime = time_.time();
+
+    if(runTime.outputTime())
     {
-        for(int i=0; i<recvInterfaces_.size(); ++i)
-        {
-            fileName outputFile(timePath/recvInterfaceNames_[i]);
-            OFstream of(outputFile);
 
-            if(true) //- Output mass values
-            {
-                of << "Averaged mass values from coupled interface " << recvInterfaceNames_[i] << endl;
-                of << "{" << endl;
-
-
-                for(int j=0; j<recvMassValues_[i].size(); ++j)
-                {
-                   of << "(" << cellCentres_[j][0] << "," << cellCentres_[j][1] << "," << cellCentres_[j][2] << "): ";
-                   of << recvMassValues_[i][j] << endl;
-                }
-
-
-                of << "};" << endl;
-            }
-
-            if(true) //- Output density values
-            {
-                of << "Averaged density values from coupled interface " << recvInterfaceNames_[i] << endl;
-                of << "{" << endl;
-
-
-                for(int j=0; j<recvDensityValues_[i].size(); ++j)
-                {
-                    of << "(" << cellCentres_[j][0] << "," << cellCentres_[j][1] << "," << cellCentres_[j][2] << "): ";
-                    of << recvDensityValues_[i][j] << endl;
-                }
-
-
-                of << "};" << endl;
-            }
-        }
     }
-#endif
- */
+    */
 }
 
 void mdDsmcCoupling::updateProperties(const dictionary& newDict)

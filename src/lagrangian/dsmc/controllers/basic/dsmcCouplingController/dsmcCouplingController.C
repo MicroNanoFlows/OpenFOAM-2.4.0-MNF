@@ -63,8 +63,8 @@ dsmcCouplingController::dsmcCouplingController
     time_(t, timeDict_),
     timePeriod_(readScalar(timeDict_.lookup("initialTimePeriod"))), //temp
     initialTime_(time_.time().startTime().value()),
-    regionName_(controllerDict_.lookup("zoneName")),
-    regionId_(-1),
+    regionNames_(controllerDict_.lookup("zoneNames")),
+    regionIds_(),
     control_(true),
     readStateFromFile_(true),
     singleValueController_(false),
@@ -86,14 +86,20 @@ dsmcCouplingController::dsmcCouplingController
     threeDInterfaces_(threeDInterfaces)
 {
     const cellZoneMesh& cellZones = mesh_.cellZones();
-    regionId_ = cellZones.findZoneID(regionName_);
 
-    if(regionId_ == -1)
+    forAll(regionNames_, regions)
     {
-        FatalErrorIn("dsmcCouplingController::dsmcCouplingController()")
-            << "Cannot find region: " << regionName_ << nl << "in: "
-            << time_.time().system()/"controllersDict"
-            << exit(FatalError);
+      label lclRegionId = cellZones.findZoneID(regionNames_[regions]);
+
+      if(lclRegionId == -1)
+      {
+          FatalErrorIn("dsmcCouplingController::dsmcCouplingController()")
+              << "Cannot find region: " << regionNames_[regions] << nl << "in: "
+              << time_.time().system()/"controllersDict"
+              << exit(FatalError);
+      }
+
+      regionIds_.append(lclRegionId);
     }
 
     control_ = Switch(controllerDict_.lookup("controlSwitch"));
@@ -187,14 +193,19 @@ void dsmcCouplingController::updateCouplingControllerProperties
     }
 }
 
-const labelList& dsmcCouplingController::controlZone() const
+const labelList& dsmcCouplingController::controlZone(label regionID) const
 {
-    return mesh_.cellZones()[regionId_];
+    return mesh_.cellZones()[regionID];
 }
 
-const word& dsmcCouplingController::regionName() const
+const List<word>& dsmcCouplingController::regionNames() const
 {
-    return regionName_;
+    return regionNames_;
+}
+
+const List<label>& dsmcCouplingController::regionIds() const
+{
+    return regionIds_;
 }
 
 const bool& dsmcCouplingController::writeInTimeDir() const

@@ -152,7 +152,7 @@ public:
         void output
         (
             const fileName& fixedPathName,
-            const fileName& timePath
+            const List<fileName>& timePaths
         );
 
         //- update properties from a modified dictionary (optional)

@@ -266,12 +266,12 @@
                             }
                         }
 
-                        domainStart[0] = min[0];
-                        domainStart[1] = min[1];
-                        domainStart[2] = min[2];
-                        domainEnd[0] = max[0];
-                        domainEnd[1] = max[1];
-                        domainEnd[2] = max[2];
+                        domainStart[0] = min[0] - min[0] * 0.01;
+                        domainStart[1] = min[1] - min[1] * 0.01;
+                        domainStart[2] = min[2] - min[2] * 0.01;
+                        domainEnd[0] = max[0] + max[0] * 0.01;
+                        domainEnd[1] = max[1] + max[1] * 0.01;
+                        domainEnd[2] = max[2] + max[2] * 0.01;
                     }
                     else //using explicit domain sizes
                     {
@@ -350,12 +350,12 @@
                             }
                         }
 
-                        domainStart[0] = min[0];
-                        domainStart[1] = min[1];
-                        domainStart[2] = min[2];
-                        domainEnd[0] = max[0];
-                        domainEnd[1] = max[1];
-                        domainEnd[2] = max[2];
+                        domainStart[0] = min[0] - min[0] * 0.01;
+                        domainStart[1] = min[1] - min[1] * 0.01;
+                        domainStart[2] = min[2] - min[2] * 0.01;
+                        domainEnd[0] = max[0] + max[0] * 0.01;
+                        domainEnd[1] = max[1] + max[1] * 0.01;
+                        domainEnd[2] = max[2] + max[2] * 0.01;
                     }
                     else //using explicit domain sizes
                     {
@@ -434,12 +434,12 @@
                             }
                         }
 
-                        domainStart[0] = min[0];
-                        domainStart[1] = min[1];
-                        domainStart[2] = min[2];
-                        domainEnd[0] = max[0];
-                        domainEnd[1] = max[1];
-                        domainEnd[2] = max[2];
+                        domainStart[0] = min[0] - min[0] * 0.01;
+                        domainStart[1] = min[1] - min[1] * 0.01;
+                        domainStart[2] = min[2] - min[2] * 0.01;
+                        domainEnd[0] = max[0] + max[0] * 0.01;
+                        domainEnd[1] = max[1] + max[1] * 0.01;
+                        domainEnd[2] = max[2] + max[2] * 0.01;
                     }
                     else //using explicit domain sizes
                     {
