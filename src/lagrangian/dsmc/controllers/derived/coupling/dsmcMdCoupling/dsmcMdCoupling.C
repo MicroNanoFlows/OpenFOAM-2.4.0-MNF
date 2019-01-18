@@ -203,44 +203,63 @@ dsmcMdCoupling::~dsmcMdCoupling()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void dsmcMdCoupling::initialConfiguration()
-{
-    receiveInitialisation();
-}
+{}
 
 void dsmcMdCoupling::controlParcelsBeforeMove()
 {
-    sendCoupledRegion();
+    if(sending_)
+    {
+        sendCoupledRegion();
+    }
 }
 
 void dsmcMdCoupling::calculateProperties()
 {
-    sendCoupledParcels();
-    receiveCoupledMolecules();
-}
+    if(sending_)
+    {
+        sendCoupledParcels();
+    }
 
-void dsmcMdCoupling::receiveInitialisation()
-{
-
+    if(receiving_)
+    {
+        receiveCoupledMolecules();
+    }
 }
 
 void dsmcMdCoupling::sendCoupledRegion()
 {
-//#ifdef USE_MUI
+#ifdef USE_MUI
     //- Only send data if at least one sending interface is defined
     if(sending_)
     {
-        forAll(regionIds(), id)
+        dsmcParcel* parcelI = NULL;
+
+        // Iterate through all sending interfaces for this controller
+        forAll(sendInterfaces_, iface)
         {
-            forAll(controlZone(regionIds()[id]), c)
+            forAll(regionIds(), id)
             {
-                const label& cellI = controlZone(regionIds()[id])[c];
-                const List<dsmcParcel*>& parcelsInCell = cloud_.cellOccupancy()[cellI];
+                forAll(controlZone(regionIds()[id]), c)
+                {
+                    const label& cellI = controlZone(regionIds()[id])[c];
+                    const List<dsmcParcel*>& parcelsInCell = cloud_.cellOccupancy()[cellI];
 
+                    forAll(parcelsInCell, p) //Iterate through parcels in cell
+                    {
+                        parcelI = parcelsInCell[p];
 
+                        mui::point3d molCentre(parcelI->position());
+                        vector molVel(parcelI->U());
+
+                        sendInterfaces_[iface]->push("mol_vel_x", molCentre, molVel[0]);
+                        sendInterfaces_[iface]->push("mol_vel_y", molCentre, molVel[1]);
+                        sendInterfaces_[iface]->push("mol_vel_z", molCentre, molVel[2]);
+                    }
+                }
             }
         }
     }
-//#endif
+#endif
 }
 
 void dsmcMdCoupling::sendCoupledParcels()
