@@ -57,9 +57,6 @@ mdDsmcCoupling::mdDsmcCoupling
     propsDictRecv_(dict.subDict(typeName + "Receiving")),
     molIds_(),
     output_(false),
-    oneDInterfaces_(),
-    twoDInterfaces_(),
-    threeDInterfaces_(threeDInterfaces),
 #ifdef USE_MUI
     cellCentres_(),
     sendInterfaces_(),
@@ -82,7 +79,7 @@ mdDsmcCoupling::mdDsmcCoupling
         for(size_t i=0; i<interfaces.size(); ++i)
         {
             //- Find MUI interfaces
-            for(size_t j=0; j<threeDInterfaces.interfaces->size(); ++j)
+            for(size_t j=0; j<threeDInterfaces.interfaces->size(); j++)
             {
                 //- If the MUI interface is found then create a copy of its pointer address and store in sendInterfaces_
                 if(threeDInterfaces.interfaces->getInterfaceName(j).compare(interfaces[i]) == 0)
@@ -101,12 +98,12 @@ mdDsmcCoupling::mdDsmcCoupling
             {
                 FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
                             << "Could not find 3D MUI coupling interface (" << interfaces[i]
-                            << ") to send for domain " << threeDInterfaces.domainName << exit(FatalError);
+                            << ") to send for domain " << threeDInterfaces_.domainName << exit(FatalError);
             }
             else
             {
                 Info << "mdDsmcCoupling::mdDsmcCoupling(): Found 3D MUI coupling interface ("
-                     << interfaces[i] << ") to send for domain " << threeDInterfaces.domainName << endl;
+                     << interfaces[i] << ") to send for domain " << threeDInterfaces_.domainName << endl;
             }
         }
     }
@@ -125,12 +122,12 @@ mdDsmcCoupling::mdDsmcCoupling
         {
             recvInterfaces_[i] = NULL;
             //- Find MUI interfaces
-            for(size_t j=0; j<threeDInterfaces.interfaces->size(); ++j)
+            for(size_t j=0; j<threeDInterfaces_.interfaces->size(); ++j)
             {
                 //- If the MUI interface is found then create a copy of its pointer address and store in sendInterfaces_
-                if(threeDInterfaces.interfaces->getInterfaceName(j).compare(interfaces[i]) == 0)
+                if(threeDInterfaces_.interfaces->getInterfaceName(j).compare(interfaces[i]) == 0)
                 {
-                    recvInterfaces_[i] = threeDInterfaces.interfaces->getInterface(j);
+                    recvInterfaces_[i] = threeDInterfaces_.interfaces->getInterface(j);
                     recvInterfaceNames_[i] = interfaces[i]; //- Store the receiving interface name
                     break;
                 }
@@ -144,12 +141,12 @@ mdDsmcCoupling::mdDsmcCoupling
             {
                 FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
                             << "Could not find 3D MUI coupling interface (" << interfaces[i]
-                            << ") to receive for domain " << threeDInterfaces.domainName << exit(FatalError);
+                            << ") to receive for domain " << threeDInterfaces_.domainName << exit(FatalError);
             }
             else
             {
                 Info << "mdDsmcCoupling::mdDsmcCoupling(): Found 3D MUI coupling interface ("
-                     << interfaces[i] << ") to receive for domain " << threeDInterfaces.domainName << endl;
+                     << interfaces[i] << ") to receive for domain " << threeDInterfaces_.domainName << endl;
             }
         }
     }
@@ -202,67 +199,57 @@ mdDsmcCoupling::~mdDsmcCoupling()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void mdDsmcCoupling::initialConfiguration()
-{
-    sendInitialisation();
-}
+{}
 
 void mdDsmcCoupling::controlBeforeMove()
 {
-    receiveCoupledRegion();
+    if(receiving_)
+    {
+        //receiveCoupledRegion();
+    }
 }
 
 void mdDsmcCoupling::calculateProperties()
 {
-    sendCoupledMolecules();
-    receiveCoupledParcels();
-}
+    if(sending_)
+    {
+        sendCoupledMolecules();
+    }
 
-void mdDsmcCoupling::sendInitialisation()
-{
-
+    if(receiving_)
+    {
+        receiveCoupledParcels();
+    }
 }
 
 void mdDsmcCoupling::receiveCoupledRegion()
 {
-  /*
-#ifdef USE_MUI
-    //- Only receive data if at least one receiving interface is defined
-    if(receiving_)
+//#ifdef USE_MUI
+    mui::sampler_exact3d<scalar> spatial_sampler;
+    mui::chrono_sampler_exact3d chrono_sampler;
+    const reducedUnits& rU = molCloud_.redUnits();
+    const scalar refTime = rU.refTime() * time_.value();
+
+    std::cout << "Time: " << refTime << std::endl;
+
+    std::vector<mui::point3d> rcvPoints;
+
+    // Iterate through all receiving interfaces for this controller
+    forAll(sendInterfaces_, iface)
     {
-        Info << threeDInterfaces_.domainName << ": Receiving MUI values for time " << time_.value()
-             << " through " << recvInterfaces_.size() << " interfaces" << endl;
+        //- Extract a list of all molecule locations received from dsmcFoamPlus through this interface
+        rcvPoints = sendInterfaces_[iface]->fetch_points<scalar>("mol_vel_x", static_cast<scalar>(refTime));
 
-        if(true) //- Calculating at least one average value per cell
+        std::cout << rcvPoints.size() << std::endl;
+
+        /*
+        forAll(rcvPoints, pts)
         {
-            mui::sampler_exact3d<scalar> spatial_sampler;
-            mui::chrono_sampler_exact3d chrono_sampler;
 
-            for(size_t i=0; i<recvInterfaces_.size(); ++i) //- Iterate through the interfaces
-            {
-                for(int j=0; j<cellCentres_.size(); ++j) //- Iterate through the cell centres (we receive exactly as many as were sent in this example)
-                {
-                    if(true) //- If we are receiving mass values
-                    {
-                        //recvMassValues_[i][j] = recvInterfaces_[i]->fetch("m", cellCentres_[j], time_.value(), spatial_sampler, chrono_sampler);
-
-                    }
-
-                    if(true) //- If we are receiving density values
-                    {
-                        //recvDensityValues_[i][j] = recvInterfaces_[i]->fetch("p", cellCentres_[j], time_.value(), spatial_sampler, chrono_sampler);
-                    }
-                }
-            }
         }
-
-        //- Signal other interfaces they can move on if they have a block by committing the receive time to each interface, not needed in this example, provided for clarity
-        for(size_t i=0; i<sendInterfaces_.size(); ++i)
-        {
-            sendInterfaces_[i]->commit(time_.value());
-        }
+        */
     }
-#endif
-*/
+//#endif
 }
 
 void mdDsmcCoupling::sendCoupledMolecules()

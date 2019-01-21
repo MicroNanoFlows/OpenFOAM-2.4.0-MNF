@@ -690,9 +690,6 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     iL_(mesh, rU, cyclics_, p_.rCutMax(), "poly"),
     ipl_(mesh.nCells()),
 	clock_(t, "evolve", true),
-    oneDInterfaces_(),
-    twoDInterfaces_(),
-    threeDInterfaces_(),
     coupledMols_()
   {
     polyMolecule::readFields(*this);
@@ -732,7 +729,7 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     writeReferredCloud();
 }
 
-//- Use for running MD (mdFoam) with MUI coupling
+//- Use for running MD (mdFoamPlus) with MUI coupling
 Foam::polyMoleculeCloud::polyMoleculeCloud
 (
     Time& t,
@@ -755,10 +752,7 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     cellOccupancy_(mesh_.nCells()),
     fields_(t, mesh_, *this),
     boundaries_(t, mesh, *this),
-    oneDInterfaces_(oneDInterfaces),
-    twoDInterfaces_(twoDInterfaces),
-    threeDInterfaces_(threeDInterfaces),
-    controllers_(t, mesh, *this, oneDInterfaces_, twoDInterfaces_, threeDInterfaces_),
+    controllers_(t, mesh, *this, oneDInterfaces, twoDInterfaces, threeDInterfaces),
     coupledMols_(),
     trackingInfo_(mesh, *this),
     moleculeTracking_(),
@@ -829,9 +823,6 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     iL_(mesh, rU, cyclics_, p_.rCutMax(), "poly"),
     ipl_(mesh.nCells()),
 	clock_(t, "evolve", true),
-    oneDInterfaces_(),
-    twoDInterfaces_(),
-    threeDInterfaces_(),
     coupledMols_()
 {
     polyMolecule::readFields(*this);

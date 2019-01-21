@@ -71,10 +71,7 @@ dsmcControllers::dsmcControllers
     cCNames_(),
     cCIds_(),
     cCFixedPathNames_(),
-    couplingControllers_(),
-    oneDInterfaces_(),
-    twoDInterfaces_(),
-    threeDInterfaces_()
+    couplingControllers_()
 {}
 
 //- Constructor for dsmcFoam+
@@ -117,10 +114,7 @@ dsmcControllers::dsmcControllers
     cCNames_(),
     cCIds_(),
     cCFixedPathNames_(),
-    couplingControllers_(0),
-    oneDInterfaces_(),
-    twoDInterfaces_(),
-    threeDInterfaces_()
+    couplingControllers_(0)
 {
 
     Info << nl << "Creating dsmcControllers" << nl << endl;
@@ -320,12 +314,8 @@ dsmcControllers::dsmcControllers
     cCNames_(couplingControllersList_.size()),
     cCIds_(couplingControllersList_.size()),
     cCFixedPathNames_(couplingControllersList_.size()),
-    couplingControllers_(couplingControllersList_.size()),
-    oneDInterfaces_(oneDInterfaces),
-    twoDInterfaces_(twoDInterfaces),
-    threeDInterfaces_(threeDInterfaces)
+    couplingControllers_(couplingControllersList_.size())
 {
-
     Info << nl << "Creating dsmcControllers" << nl << endl;
 
     //- state dsmcControllers
@@ -383,7 +373,7 @@ dsmcControllers::dsmcControllers
 
             couplingControllers_[cC] = autoPtr<dsmcCouplingController>
             (
-                dsmcCouplingController::New(time_, cloud, dsmcControllersIDict, oneDInterfaces_, twoDInterfaces_, threeDInterfaces_)
+                dsmcCouplingController::New(time_, cloud, dsmcControllersIDict, oneDInterfaces, twoDInterfaces, threeDInterfaces)
             );
 
             cCNames_[cC] = couplingControllers_[cC]->type();

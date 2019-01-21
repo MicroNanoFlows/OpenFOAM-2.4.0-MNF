@@ -93,11 +93,6 @@ class polyControllers
         List< autoPtr<polyCouplingController> > couplingControllers_;
 
         labelList controllersDuringForceComp_;
-        
-        //- MUI coupling interfaces
-        couplingInterface1d oneDInterfaces_;
-        couplingInterface2d twoDInterfaces_;
-        couplingInterface3d threeDInterfaces_;
 
 public:
 

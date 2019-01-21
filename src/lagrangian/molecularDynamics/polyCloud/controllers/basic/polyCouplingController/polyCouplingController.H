@@ -84,11 +84,6 @@ protected:
         bool writeInTimeDir_;
         bool writeInCase_;
 
-        //- MUI coupling interfaces
-        couplingInterface1d oneDInterfaces_;
-        couplingInterface2d twoDInterfaces_;
-        couplingInterface3d threeDInterfaces_;
-
     // Private Member Functions
 
 public:

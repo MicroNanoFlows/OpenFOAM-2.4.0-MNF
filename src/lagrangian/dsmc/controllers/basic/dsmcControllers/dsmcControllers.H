@@ -96,12 +96,6 @@ class dsmcControllers
         List<label> cCIds_;
         List<fileName> cCFixedPathNames_;
         List< autoPtr<dsmcCouplingController> > couplingControllers_;
-
-        //- MUI coupling interfaces
-        couplingInterface1d oneDInterfaces_;
-        couplingInterface2d twoDInterfaces_;
-        couplingInterface3d threeDInterfaces_;
-
         
 public:
 

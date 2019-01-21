@@ -180,11 +180,6 @@ private:
         //- boundaries
         dsmcBoundaries boundaries_;
 
-        //- MUI coupling interfaces
-        couplingInterface1d oneDInterfaces_;
-        couplingInterface2d twoDInterfaces_;
-        couplingInterface3d threeDInterfaces_;
-
         //- Copy of parcels deleted by coupling boundary
         DynamicList<dsmcParcel*> coupledParcels_;
 
@@ -289,21 +284,6 @@ public:
             const IOdictionary& dsmcInitialiseDict,
             const bool& clearFields
         );
-
-        //- Construct given name, mesh and initialisation dictionary
-        //  with MUI coupling
-        dsmcCloud
-        (
-            Time& t,
-            const word& cloudName,
-            const fvMesh& mesh,
-            const IOdictionary& dsmcInitialiseDict,
-            const bool& clearFields,
-            couplingInterface1d& oneDInterfaces,
-            couplingInterface2d& twoDInterfaces,
-            couplingInterface3d& threeDInterfaces
-        );
-
 
 /*
         //- Construct for deleteParcels

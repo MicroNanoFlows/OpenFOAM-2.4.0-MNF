@@ -70,10 +70,7 @@ polyControllers::polyControllers
     cCIds_(),
     cCFixedPathNames_(),
     couplingControllers_(),
-    controllersDuringForceComp_(),
-    oneDInterfaces_(),
-    twoDInterfaces_(),
-    threeDInterfaces_()
+    controllersDuringForceComp_()
 {}
 
 //- Constructor for mdFoam+
@@ -115,10 +112,7 @@ polyControllers::polyControllers
     cCIds_(),
     cCFixedPathNames_(),
     couplingControllers_(0),
-    controllersDuringForceComp_(),
-    oneDInterfaces_(),
-    twoDInterfaces_(),
-    threeDInterfaces_()
+    controllersDuringForceComp_()
 {
 
     Info << nl << "Creating polyControllers" << nl << endl;
@@ -329,10 +323,7 @@ polyControllers::polyControllers
     cCIds_(couplingControllersList_.size()),
     cCFixedPathNames_(couplingControllersList_.size()),
     couplingControllers_(couplingControllersList_.size()),
-    controllersDuringForceComp_(),
-    oneDInterfaces_(oneDInterfaces),
-    twoDInterfaces_(twoDInterfaces),
-    threeDInterfaces_(threeDInterfaces)
+    controllersDuringForceComp_()
 {
     Info << nl << "Creating polyControllers" << nl << endl;
 
@@ -399,7 +390,7 @@ polyControllers::polyControllers
 
             couplingControllers_[cC] = autoPtr<polyCouplingController>
             (
-                polyCouplingController::New(time_, molCloud, polyControllersIDict, oneDInterfaces_, twoDInterfaces_, threeDInterfaces_)
+                polyCouplingController::New(time_, molCloud, polyControllersIDict, oneDInterfaces, twoDInterfaces, threeDInterfaces)
             );
 
             cCNames_[cC] = couplingControllers_[cC]->type();

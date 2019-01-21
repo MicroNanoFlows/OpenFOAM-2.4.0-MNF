@@ -72,11 +72,6 @@ private:
 
         bool output_;
 
-        //- MUI coupling interfaces (1D & 2D unused in this controller derivation)
-        couplingInterface1d oneDInterfaces_;
-        couplingInterface2d twoDInterfaces_;
-        couplingInterface3d threeDInterfaces_;
-
 #ifdef USE_MUI
         //- Calculated cell centres
         List<mui::point3d> cellCentres_;
@@ -133,9 +128,6 @@ public:
 
         //- run at end of MD time step
         void calculateProperties();
-
-        //- run at initialisation of controller, sends dimensions of coupled regions to coupled dsmcFoamPlus instance
-        void sendInitialisation();
 
         //- receive molecules that fall into the MD coupled region from coupled dsmcFoamPlus
         void receiveCoupledRegion();

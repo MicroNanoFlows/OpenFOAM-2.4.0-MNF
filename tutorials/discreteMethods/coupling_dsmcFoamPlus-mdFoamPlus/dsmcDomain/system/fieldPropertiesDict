@@ -47,7 +47,7 @@ dsmcFields
 
         dsmcZoneProperties
         {
-            zoneName		dsmcZoneCoupledLeft;
+            zoneName		couplingZoneLeft;
             fieldName		Ar;
             typeIds		(Ar);
         }
@@ -83,7 +83,7 @@ dsmcFields
 
         dsmcZoneProperties
         {
-            zoneName		dsmcZoneCoupledRight;
+            zoneName		couplingZoneRight;
             fieldName		Ar;
             typeIds		(Ar);
         }

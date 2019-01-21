@@ -62,10 +62,7 @@ polyCouplingController::polyCouplingController
     control_(true),
     controlInterForces_(false),
     writeInTimeDir_(true),
-    writeInCase_(true),
-    oneDInterfaces_(oneDInterfaces),
-    twoDInterfaces_(twoDInterfaces),
-    threeDInterfaces_(threeDInterfaces)
+    writeInCase_(true)
 {
     const cellZoneMesh& cellZones = mesh_.cellZones();
 

@@ -47,20 +47,16 @@ dsmcMdCoupling::dsmcMdCoupling
     Time& t,
     dsmcCloud& cloud,
     const dictionary& dict,
-    couplingInterface1d &oneDInterfaces,
-    couplingInterface2d &twoDInterfaces,
-    couplingInterface3d &threeDInterfaces
+    couplingInterface1d& oneDInterfaces,
+    couplingInterface2d& twoDInterfaces,
+    couplingInterface3d& threeDInterfaces
 )
 :
     dsmcCouplingController(t, cloud, dict, oneDInterfaces, twoDInterfaces, threeDInterfaces),
     propsDict_(dict.subDict(typeName + "Properties")),
     propsDictSend_(dict.subDict(typeName + "Sending")),
     propsDictRecv_(dict.subDict(typeName + "Receiving")),
-    molIds_(),
     output_(false),
-    oneDInterfaces_(),
-    twoDInterfaces_(),
-    threeDInterfaces_(threeDInterfaces),
 #ifdef USE_MUI
     cellCentres_(),
     sendInterfaces_(),
@@ -80,10 +76,10 @@ dsmcMdCoupling::dsmcMdCoupling
         sendInterfaces_.setSize(interfaces.size(), NULL);
         sendInterfaceNames_.setSize(interfaces.size());
 
-        for(size_t i=0; i<interfaces.size(); ++i)
+        for(size_t i=0; i<interfaces.size(); i++)
         {
             //- Find MUI interfaces
-            for(size_t j=0; j<threeDInterfaces.interfaces->size(); ++j)
+            for(size_t j=0; j<threeDInterfaces.interfaces->size(); j++)
             {
                 //- If the MUI interface is found then create a copy of its pointer address and store in sendInterfaces_
                 if(threeDInterfaces.interfaces->getInterfaceName(j).compare(interfaces[i]) == 0)
@@ -172,14 +168,6 @@ dsmcMdCoupling::dsmcMdCoupling
     writeInTimeDir_ = true;
     writeInCase_ = true;
 
-    selectIds ids
-    (
-        molCloud_.cP(),
-        propsDict_
-    );
-
-    molIds_ = ids.molIds();
-
     if(propsDict_.found("binModel"))
     {
         binModel_ =  autoPtr<binModel>
@@ -209,7 +197,7 @@ void dsmcMdCoupling::controlParcelsBeforeMove()
 {
     if(sending_)
     {
-        sendCoupledRegion();
+        //sendCoupledRegion();
     }
 }
 
@@ -229,35 +217,41 @@ void dsmcMdCoupling::calculateProperties()
 void dsmcMdCoupling::sendCoupledRegion()
 {
 #ifdef USE_MUI
-    //- Only send data if at least one sending interface is defined
-    if(sending_)
+    dsmcParcel* parcelI = NULL;
+
+    // Iterate through all sending interfaces for this controller
+    forAll(sendInterfaces_, iface)
     {
-        dsmcParcel* parcelI = NULL;
-
-        // Iterate through all sending interfaces for this controller
-        forAll(sendInterfaces_, iface)
+        forAll(regionIds(), id)
         {
-            forAll(regionIds(), id)
+            forAll(controlZone(regionIds()[id]), c)
             {
-                forAll(controlZone(regionIds()[id]), c)
+                const label& cellI = controlZone(regionIds()[id])[c];
+                const List<dsmcParcel*>& parcelsInCell = cloud_.cellOccupancy()[cellI];
+
+                forAll(parcelsInCell, p) // Iterate through parcels in cell
                 {
-                    const label& cellI = controlZone(regionIds()[id])[c];
-                    const List<dsmcParcel*>& parcelsInCell = cloud_.cellOccupancy()[cellI];
+                    parcelI = parcelsInCell[p];
 
-                    forAll(parcelsInCell, p) //Iterate through parcels in cell
-                    {
-                        parcelI = parcelsInCell[p];
+                    // Get the parcel centre
+                    mui::point3d molCentre;
+                    molCentre.data()[0] = parcelI->position()[0];
+                    molCentre.data()[1] = parcelI->position()[1];
+                    molCentre.data()[2] = parcelI->position()[2];
 
-                        mui::point3d molCentre(parcelI->position());
-                        vector molVel(parcelI->U());
+                    // Get the parcel velocity
+                    vector molVel(parcelI->U());
 
-                        sendInterfaces_[iface]->push("mol_vel_x", molCentre, molVel[0]);
-                        sendInterfaces_[iface]->push("mol_vel_y", molCentre, molVel[1]);
-                        sendInterfaces_[iface]->push("mol_vel_z", molCentre, molVel[2]);
-                    }
+                    // Push the parcel to the interface
+                    sendInterfaces_[iface]->push("mol_vel_x", molCentre, molVel[0]);
+                    sendInterfaces_[iface]->push("mol_vel_y", molCentre, molVel[1]);
+                    sendInterfaces_[iface]->push("mol_vel_z", molCentre, molVel[2]);
                 }
             }
         }
+
+        // Commit (transmit) values to the MUI interface
+        sendInterfaces_[iface]->commit(time_.time().value());
     }
 #endif
 }
@@ -279,7 +273,7 @@ void dsmcMdCoupling::output
 )
 {
     /*
-    const Time& runTime = time_.time();
+    const Time& runTime = time_.time().value();
 
     if(runTime.outputTime())
     {

@@ -28,11 +28,11 @@ startTime       	0;
 
 endTime         	1.0e-9; //1ns
 
-deltaT          	1.0e-14; //10fs
+deltaT          	2.0e-15; //2fs
 
 writeControl    	runTime;
 
-writeInterval   	1.0e-12; //1ps
+writeInterval   	1.0e-15; //1ps
 
 purgeWrite      	1000; //Keep all 1000 time outputs
 

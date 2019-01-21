@@ -70,14 +70,7 @@ private:
 
         autoPtr<binModel> binModel_;
 
-        List<label> molIds_;
-
         bool output_;
-
-        //- MUI coupling interfaces (1D & 2D unused in this controller derivation)
-        couplingInterface1d oneDInterfaces_;
-        couplingInterface2d twoDInterfaces_;
-        couplingInterface3d threeDInterfaces_;
 
 #ifdef USE_MUI
         //- Calculated cell centres
@@ -115,9 +108,9 @@ public:
             Time& t,
             dsmcCloud& cloud,
             const dictionary& dict,
-            couplingInterface1d &oneDInterfaces,
-            couplingInterface2d &twoDInterfaces,
-            couplingInterface3d &threeDInterfaces
+            couplingInterface1d& oneDInterfaces,
+            couplingInterface2d& twoDInterfaces,
+            couplingInterface3d& threeDInterfaces
         );
 
     // Destructor

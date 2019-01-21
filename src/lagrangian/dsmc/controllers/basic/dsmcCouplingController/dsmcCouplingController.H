@@ -75,52 +75,18 @@ protected:
 
         Random& rndGen_;
 
-        //- subDictionary containing the properties
-        dictionary controllerDict_;
-
-        dictionary timeDict_;
-
         timeData time_;
-
-        scalar timePeriod_;
-        scalar initialTime_;
 
         //- name of control zone
         List<word> regionNames_;
         List<label> regionIds_;
 
+        // on/off
         bool control_;
-        bool readStateFromFile_;
-
-        //- set all the properties below from model if required
-
-        // target single valued controller
-        bool singleValueController_;
-
-        scalar density_;
-        vector velocity_;
-        scalar temperature_;
-        scalar pressure_;
-
-        tensor strainRate_;
-        vector tempGradient_;
-
-        //- targeted field controller
-        bool fieldController_;
-
-        scalarField densities_;
-        vectorField velocities_;
-        scalarField temperatures_;
-        scalarField pressures_;
 
         //- writing out properties
         bool writeInTimeDir_;
         bool writeInCase_;
-
-        //- MUI coupling interfaces
-        couplingInterface1d oneDInterfaces_;
-        couplingInterface2d twoDInterfaces_;
-        couplingInterface3d threeDInterfaces_;
 
     // Private Member Functions
 
@@ -140,9 +106,9 @@ public:
                 Time& t,
                 dsmcCloud& cloud,
                 const dictionary& dict,
-                couplingInterface1d &oneDInterfaces,
-                couplingInterface2d &twoDInterfaces,
-                couplingInterface3d &threeDInterfaces
+                couplingInterface1d& oneDInterfaces,
+                couplingInterface2d& twoDInterfaces,
+                couplingInterface3d& threeDInterfaces
             ),
             (t, cloud, dict, oneDInterfaces, twoDInterfaces, threeDInterfaces)
         );
@@ -155,9 +121,9 @@ public:
 			Time& t,
             dsmcCloud& cloud,
             const dictionary& dict,
-            couplingInterface1d &oneDInterfaces,
-            couplingInterface2d &twoDInterfaces,
-            couplingInterface3d &threeDInterfaces
+            couplingInterface1d& oneDInterfaces,
+            couplingInterface2d& twoDInterfaces,
+            couplingInterface3d& threeDInterfaces
         );
 
 
@@ -168,9 +134,9 @@ public:
 			Time& t,
             dsmcCloud& cloud,
             const dictionary& dict,
-            couplingInterface1d &oneDInterfaces,
-            couplingInterface2d &twoDInterfaces,
-            couplingInterface3d &threeDInterfaces
+            couplingInterface1d& oneDInterfaces,
+            couplingInterface2d& twoDInterfaces,
+            couplingInterface3d& threeDInterfaces
         );
 
 

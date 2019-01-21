@@ -598,7 +598,7 @@ Foam::scalar Foam::dsmcCloud::PSIm
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// for running dsmcFoamPlus
+// for running dsmcFoam+
 Foam::dsmcCloud::dsmcCloud
 (
     Time& t,
@@ -681,9 +681,7 @@ Foam::dsmcCloud::dsmcCloud
     reactions_(t, mesh, *this),
     boundaryMeas_(mesh, *this, true),
     cellMeas_(mesh, *this, true),
-    oneDInterfaces_(),
-    twoDInterfaces_(),
-    threeDInterfaces_()
+    coupledParcels_()
 {
     if (readFields)
     {
@@ -725,7 +723,7 @@ Foam::dsmcCloud::dsmcCloud
     controllers_.initialConfig();
 }
 
-// for running dsmcFoamPlus with MUI coupling
+// for running dsmcFoam+ with MUI coupling
 Foam::dsmcCloud::dsmcCloud
 (
     Time& t,
@@ -792,10 +790,8 @@ Foam::dsmcCloud::dsmcCloud
     collisionSelectionRemainder_(mesh_.nCells(), 0),
     constProps_(),
     rndGen_(label(clock::getTime()) + 7183*Pstream::myProcNo()), // different seed every time simulation is started - needed for ensemble averaging!
-    oneDInterfaces_(oneDInterfaces),
-    twoDInterfaces_(twoDInterfaces),
-    threeDInterfaces_(threeDInterfaces),
-    controllers_(t, mesh, *this),
+    controllers_(t, mesh, *this, oneDInterfaces, twoDInterfaces, threeDInterfaces),
+    coupledParcels_(),
     dynamicLoadBalancing_(t, mesh, *this),
     fields_(t, mesh, *this),
     boundaries_(t, mesh, *this),
@@ -848,8 +844,6 @@ Foam::dsmcCloud::dsmcCloud
     boundaries_.setInitialConfig();
     controllers_.initialConfig();
 }
-
-
 
 // for running dsmcIntialise
 Foam::dsmcCloud::dsmcCloud
@@ -929,10 +923,7 @@ Foam::dsmcCloud::dsmcCloud
     collisionPartnerSelectionModel_(),
     reactions_(t, mesh),
     boundaryMeas_(mesh, *this),
-    cellMeas_(mesh, *this),
-    oneDInterfaces_(),
-    twoDInterfaces_(),
-    threeDInterfaces_()
+    cellMeas_(mesh, *this)
 {
     if(!clearFields)
     {
@@ -979,137 +970,6 @@ Foam::dsmcCloud::dsmcCloud
          << " added parcels: " << finalParcels - initialParcels
          << ", total no. of parcels: " << finalParcels 
          << endl;
-
-}
-
-// for running dsmcIntialise with MUI coupling
-Foam::dsmcCloud::dsmcCloud
-(
-    Time& t,
-    const word& cloudName,
-    const fvMesh& mesh,
-    const IOdictionary& dsmcInitialiseDict,
-    const bool& clearFields,
-    couplingInterface1d& oneDInterfaces,
-    couplingInterface2d& twoDInterfaces,
-    couplingInterface3d& threeDInterfaces
-)
-    :
-    Cloud<dsmcParcel>(mesh, cloudName, false),
-    cloudName_(cloudName),
-    mesh_(mesh),
-    particleProperties_
-    (
-        IOobject
-        (
-            cloudName + "Properties",
-            mesh_.time().constant(),
-            mesh_,
-            IOobject::MUST_READ_IF_MODIFIED,
-            IOobject::NO_WRITE
-        )
-    ),
-    controlDict_
-    (
-        IOobject
-        (
-            "controlDict",
-            mesh_.time().system(),
-            mesh_,
-            IOobject::MUST_READ_IF_MODIFIED,
-            IOobject::NO_WRITE
-        )
-    ),
-    typeIdList_(particleProperties_.lookup("typeIdList")),
-    nParticle_(readScalar(particleProperties_.lookup("nEquivalentParticles"))),
-    axisymmetric_(Switch(particleProperties_.lookup("axisymmetricSimulation"))),
-    radialExtent_(0.0),
-    maxRWF_(1.0),
-    nTerminalOutputs_(readLabel(controlDict_.lookup("nTerminalOutputs"))),
-    cellOccupancy_(),
-    rhoNMeanElectron_(),
-    rhoMMeanElectron_(),
-    rhoMMean_(),
-    momentumMeanElectron_(),
-    momentumMean_(),
-    linearKEMeanElectron_(),
-    electronTemperature_(),
-    cellVelocity_(),
-    sigmaTcRMax_
-    (
-        IOobject
-        (
-            this->name() + "SigmaTcRMax",
-            mesh_.time().timeName(),
-            mesh_,
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh_,
-        dimensionedScalar("zero",  dimensionSet(0, 3, -1, 0, 0), 0.0),
-        zeroGradientFvPatchScalarField::typeName
-    ),
-    collisionSelectionRemainder_(),
-    constProps_(),
-//     rndGen_(label(971501) + 1526*Pstream::myProcNo()),
-    rndGen_(label(clock::getTime()) + 1526*Pstream::myProcNo()), // different seed every time simulation is started - needed for ensemble averaging!
-    oneDInterfaces_(oneDInterfaces),
-    twoDInterfaces_(twoDInterfaces),
-    threeDInterfaces_(threeDInterfaces),
-    controllers_(t, mesh),
-    dynamicLoadBalancing_(t, mesh, *this),
-    fields_(t, mesh),
-    boundaries_(t, mesh),
-    trackingInfo_(mesh, *this),
-    binaryCollisionModel_(),
-    collisionPartnerSelectionModel_(),
-    reactions_(t, mesh),
-    boundaryMeas_(mesh, *this),
-    cellMeas_(mesh, *this)
-{
-    if(!clearFields)
-    {
-        dsmcParcel::readFields(*this);
-    }
-
-    label initialParcels = this->size();
-
-    if (Pstream::parRun())
-    {
-        reduce(initialParcels, sumOp<label>());
-    }
-
-    if(clearFields)
-    {
-        Info << "clearing existing field of parcels " << endl;
-
-        clear();
-
-        initialParcels = 0;
-    }
-
-    if(axisymmetric_)
-    {
-        radialExtent_ = readScalar(particleProperties_.lookup("radialExtentOfDomain"));
-        maxRWF_ = readScalar(particleProperties_.lookup("maxRadialWeightingFactor"));
-    }
-
-    buildConstProps();
-    dsmcAllConfigurations conf(dsmcInitialiseDict, *this);
-    conf.setInitialConfig();
-
-    label finalParcels = this->size();
-
-    if (Pstream::parRun())
-    {
-        reduce(finalParcels, sumOp<label>());
-    }
-
-    Info << nl << "Initial no. of parcels: " << initialParcels
-         << " added parcels: " << finalParcels - initialParcels
-         << ", total no. of parcels: " << finalParcels
-         << endl;
-
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //

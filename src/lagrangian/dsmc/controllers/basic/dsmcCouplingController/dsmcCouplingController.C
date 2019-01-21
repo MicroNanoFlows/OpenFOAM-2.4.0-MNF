@@ -50,40 +50,20 @@ dsmcCouplingController::dsmcCouplingController
     Time& t,
     dsmcCloud& cloud,
     const dictionary& dict,
-    couplingInterface1d &oneDInterfaces,
-    couplingInterface2d &twoDInterfaces,
-    couplingInterface3d &threeDInterfaces
+    couplingInterface1d& oneDInterfaces,
+    couplingInterface2d& twoDInterfaces,
+    couplingInterface3d& threeDInterfaces
 )
 :
     mesh_(cloud.mesh()),
     cloud_(cloud),
     rndGen_(cloud_.rndGen()),
-    controllerDict_(dict.subDict("controllerProperties")),
-    timeDict_(controllerDict_.subDict("timeProperties")),
-    time_(t, timeDict_),
-    timePeriod_(readScalar(timeDict_.lookup("initialTimePeriod"))), //temp
-    initialTime_(time_.time().startTime().value()),
-    regionNames_(controllerDict_.lookup("zoneNames")),
+    time_(t),
+    regionNames_(dict.lookup("zoneNames")),
     regionIds_(),
     control_(true),
-    readStateFromFile_(true),
-    singleValueController_(false),
-    density_(0.0),
-    velocity_(vector::zero),
-    temperature_(0.0),
-    pressure_(0.0),
-    strainRate_(tensor::zero),
-    tempGradient_(vector::zero),
-    fieldController_(false),
-    densities_(),
-    velocities_(),
-    temperatures_(),
-    pressures_(),
     writeInTimeDir_(true),
-    writeInCase_(true),
-    oneDInterfaces_(oneDInterfaces),
-    twoDInterfaces_(twoDInterfaces),
-    threeDInterfaces_(threeDInterfaces)
+    writeInCase_(true)
 {
     const cellZoneMesh& cellZones = mesh_.cellZones();
 
@@ -102,14 +82,9 @@ dsmcCouplingController::dsmcCouplingController
       regionIds_.append(lclRegionId);
     }
 
-    control_ = Switch(controllerDict_.lookup("controlSwitch"));
-    readStateFromFile_ = Switch(controllerDict_.lookup("readStateFromFile"));
-
-    const scalar& avTimeInterval = time_.averageTimeInterval().deltaT();
-
-    if((timePeriod_ < avTimeInterval) && (timePeriod_ > 0.0))
+    if(dict.found("control"))
     {
-        timePeriod_ = avTimeInterval;
+        control_ = Switch(dict.lookup("control"));
     }
 }
 
@@ -121,9 +96,9 @@ autoPtr<dsmcCouplingController> dsmcCouplingController::New
     Time& t,
     dsmcCloud& cloud,
     const dictionary& dict,
-    couplingInterface1d &oneDInterfaces,
-    couplingInterface2d &twoDInterfaces,
-    couplingInterface3d &threeDInterfaces
+    couplingInterface1d& oneDInterfaces,
+    couplingInterface2d& twoDInterfaces,
+    couplingInterface3d& threeDInterfaces
 )
 {
     word dsmcCouplingControllerName
@@ -167,29 +142,15 @@ void dsmcCouplingController::updateCouplingControllerProperties
     const dictionary& newDict
 )
 {
-    controllerDict_ = newDict.subDict("controllerProperties");
-
     //- you can reset the controlling zone from here. This essentially
     //  means that the coupling zone can in fact move arbitrarily. To make
     //  this happen we probably need to devise a technique for automatically
     //  changing the cellZone else where, and then calling this function to
     //  reset the controlling zone in which the controller operates in.
 
-    if (controllerDict_.found("controlSwitch"))
+    if (newDict.found("control"))
     {
-        control_ = Switch(controllerDict_.lookup("controlSwitch"));
-    }
-
-    if (controllerDict_.found("readStateFromFile"))
-    {
-        readStateFromFile_ = Switch(controllerDict_.lookup("readStateFromFile"));
-    }
-
-    timeDict_ = controllerDict_.subDict("timeProperties");
-
-    if (timeDict_.found("resetAtOutput"))
-    {
-        time_.resetFieldsAtOutput() = Switch(timeDict_.lookup("resetAtOutput"));
+        control_ = Switch(newDict.lookup("control"));
     }
 }
 

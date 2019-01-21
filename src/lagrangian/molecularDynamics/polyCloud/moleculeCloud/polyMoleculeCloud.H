@@ -95,11 +95,6 @@ private:
         
         //- boundaries
         polyBoundaries boundaries_;
-        
-        //- MUI coupling interfaces
-        couplingInterface1d oneDInterfaces_;
-        couplingInterface2d twoDInterfaces_;
-        couplingInterface3d threeDInterfaces_;
 
         //- Copy of molecules deleted by coupling boundary
         DynamicList<polyMolecule*> coupledMols_;

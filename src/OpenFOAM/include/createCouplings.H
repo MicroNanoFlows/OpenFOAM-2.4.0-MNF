@@ -41,6 +41,10 @@
                                 << "Missing couplingName entry" << exit(FatalIOError);
             }
 
+            oneDInterfaces.domainName = mainCouplingName;
+            twoDInterfaces.domainName = mainCouplingName;
+            threeDInterfaces.domainName = mainCouplingName;
+
             const PtrList<entry> couplingConfigurationsList
             (
                 couplingDict.lookup("couplingConfigurations")
