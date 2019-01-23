@@ -16,6 +16,10 @@ if [ -d "boundaries" ]; then
   rm -rf boundaries
 fi
 
+if [ -d "controllers" ]; then
+  rm -rf controllers
+fi
+
 if [ -f "constant/polyMesh/boundary" ]; then
   rm -f constant/polyMesh/boundary
 fi

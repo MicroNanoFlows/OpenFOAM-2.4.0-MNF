@@ -1003,18 +1003,18 @@ void Foam::dsmcCloud::evolve()
         //Remove electrons
         removeElectrons();
     }
-    
+
     if(adsorption_)
     {
         releaseParticlesFromWall();
     }
-    
+
     // Move the particles ballistically with their current velocities
     Cloud<dsmcParcel>::move(td, mesh_.time().deltaTValue());
-    
+
     // Update cell occupancy
     buildCellOccupancy();
-    
+
     if(axisymmetric_)
     {
         axisymmetricWeighting();
@@ -1028,21 +1028,18 @@ void Foam::dsmcCloud::evolve()
         // Update cell occupancy
         buildCellOccupancy();
     }
+
     controllers_.controlBeforeCollisions();//****
     boundaries_.controlBeforeCollisions();//****
-//     Info << "collisions" << endl;
 
     // Calculate new velocities via stochastic collisions
     collisions();
-    
+
      // Update cell occupancy (reactions may have changed it)
     buildCellOccupancy();
-
     controllers_.controlAfterCollisions();//****
     boundaries_.controlAfterCollisions();//****
-
     reactions_.outputData();
-
     fields_.calculateFields();//****
     fields_.writeFields();//****
 
@@ -1054,7 +1051,7 @@ void Foam::dsmcCloud::evolve()
 
     trackingInfo_.clean(); //****
     boundaryMeas_.clean(); //****
-    cellMeas_.clean();     
+    cellMeas_.clean();
 }
 
 Foam::label Foam::dsmcCloud::nTerminalOutputs()

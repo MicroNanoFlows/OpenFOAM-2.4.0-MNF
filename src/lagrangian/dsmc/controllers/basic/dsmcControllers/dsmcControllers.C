@@ -395,7 +395,7 @@ dsmcControllers::dsmcControllers
         }
 
         // directory: case/controllers/dsmc
-        fileName dsmcControllersPath(controllersPath/"dsmc");
+        fileName dsmcControllersPath(controllersPath/"controllers/dsmc");
 
         if( !isDir(dsmcControllersPath) )
         {
@@ -449,7 +449,7 @@ dsmcControllers::dsmcControllers
         }
 
         // directory: case/controllers/dsmc
-        fileName dsmcControllersPath(time_.path()/"dsmc");
+        fileName dsmcControllersPath(time_.path()/"controllers/dsmc");
 
         if( !isDir(dsmcControllersPath) )
         {
@@ -503,7 +503,7 @@ dsmcControllers::dsmcControllers
         }
 
         // directory: case/controllers/dsmc
-        fileName dsmcControllersPath(time_.path()/"dsmc");
+        fileName dsmcControllersPath(time_.path()/"controllers/dsmc");
 
         if( !isDir(dsmcControllersPath) )
         {
@@ -807,7 +807,7 @@ void dsmcControllers::outputResults()
         }
 
         {
-            List<List<fileName> > timePathNames(sCFixedPathNames_.size());
+            List<List<fileName> > timePathNames(cCFixedPathNames_.size());
 
             if(nCouplingControllers_ > 0)
             {

@@ -50,7 +50,6 @@ bool Foam::dsmcParcel::move
             newParcel() = 0;
         }
         
-        
         scalar tEnd = (1.0 - stepFraction())*trackTime;
         const scalar dtMax = tEnd;
                     
@@ -59,7 +58,8 @@ bool Foam::dsmcParcel::move
         // altered or used, as it is altered by patch interactions an
         // needs to retain its 3D value for collision purposes.
         vector Utracking = U_;
-            
+        label count = 0;
+
         while (td.keepParticle && !td.switchProcessor && tEnd > ROOTVSMALL)
         {           
             Utracking = U_;
@@ -116,6 +116,7 @@ bool Foam::dsmcParcel::move
                     }
                 }
             }
+            count++;
         }
     }
 
@@ -172,12 +173,8 @@ void Foam::dsmcParcel::hitPatch
 
     const label& patchModelId = td.cloud().boundaries().patchToModelIds()[patchIndex];
 
-    if(patchModelId != -1)
-    {
-        // apply a boundary model when a molecule collides with this poly patch
-        td.cloud().boundaries().
-        patchBoundaryModels()[patchModelId]->controlParticle(*this, td);
-    }
+    // apply a boundary model when a molecule collides with this poly patch
+    td.cloud().boundaries().patchBoundaryModels()[patchModelId]->controlParticle(*this, td);
 }
 
 

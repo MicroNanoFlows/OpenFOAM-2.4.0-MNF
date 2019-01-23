@@ -39,8 +39,8 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef dsmcDeletionPatch_H
-#define dsmcDeletionPatch_H
+#ifndef dsmcCouplingPatch_H
+#define dsmcCouplingPatch_H
 
 #include "dsmcPatchBoundary.H"
 #include "vector.H"
@@ -55,7 +55,7 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class dsmcDeletionPatch Declaration
+                           Class dsmcCouplingPatch Declaration
 \*---------------------------------------------------------------------------*/
 
 class dsmcCouplingPatch

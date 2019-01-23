@@ -2,7 +2,7 @@
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
 |  \\    /   O peration     | Version:  2.4.0-MNF                             |
-|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|   \\  /    A nd           | Web:      http://www.OpenFOAM.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -10,28 +10,44 @@ FoamFile
     version     2.0;
     format      ascii;
     class       dictionary;
-    location    "system";
-    object      dsmcInitialiseDict;
+    object      zonesDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-configurations
+cellZones
 (
-    configuration
+    zone
     {
-        type	dsmcMeshFill;
+        zoneName	dsmcZoneLeft;
+        option		boundBox;
+        startPoint	(0 0 0);
+        endPoint	(9.5e-8 5e-8 5e-8);
+    }
 
-	numberDensities
-	{
-		Ar	2.68835e25;
-	};
+    zone
+    {
+        zoneName	couplingZoneLeft;
+        option		boundBox;
+        startPoint	(9.5e-8 0 0);
+        endPoint	(1e-7 5e-8 5e-8);
+    }
 
-	translationalTemperature	273;
-	rotationalTemperature		0;
-	vibrationalTemperature		0;
-    	electronicTemperature		0;
-	velocity			(0 0 0);
+    zone
+    {
+        zoneName	dsmcZoneRight;
+        option		boundBox;
+        startPoint	(1.5e-7 0 0);
+        endPoint	(1.55e-7 5e-8 5e-8);
+    }
+
+    zone
+    {
+        zoneName	couplingZoneRight;
+        option		boundBox;
+        startPoint	(1.55e-7 0 0);
+        endPoint	(2.5e-7 5e-8 5e-8);
     }
 );
+
 
 // ************************************************************************* //

@@ -404,13 +404,13 @@ void dsmcBoundaries::checkPatchBoundaryModels(const polyMesh& mesh)
     forAll(mesh.boundaryMesh(), patchi)
     {
         const polyPatch& patch = mesh.boundaryMesh()[patchi];
-    
+
         if
         (
             isA<polyPatch>(patch) &&
+            !isA<emptyPolyPatch>(patch) &&
             !isA<cyclicPolyPatch>(patch) &&
             !isA<processorPolyPatch>(patch) &&
-            !isA<emptyPolyPatch>(patch) &&
             !isA<symmetryPolyPatch>(patch) &&
             !isA<wedgePolyPatch>(patch)
         )
@@ -424,7 +424,7 @@ void dsmcBoundaries::checkPatchBoundaryModels(const polyMesh& mesh)
             forAll(patchBoundaryModels_, p)
             {
                 const label& patchId = patchBoundaryModels_[p]->patchId();
- 
+
                 if(patchIndex == patchId)
                 {
                     nPatches++;
@@ -445,8 +445,6 @@ void dsmcBoundaries::checkPatchBoundaryModels(const polyMesh& mesh)
             }
         }
     }
-
-//     Pout << "patchToModelId_: " << patchToModelId_ << endl;
 
     if(nPolyPatches != nPatchBoundaryModels_)
     {

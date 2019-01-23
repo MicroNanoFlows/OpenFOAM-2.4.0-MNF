@@ -23,7 +23,7 @@ dsmcPatchBoundaries
 
         patchBoundaryProperties
         {
-            patchName	couplingX_middle_left;
+            patchName	couplingX_left_middle;
         }      
 
         dsmcCouplingPatchProperties
@@ -38,14 +38,14 @@ dsmcPatchBoundaries
 
         patchBoundaryProperties
         {
-            patchName	couplingX_middle_right;
+            patchName	couplingX_right_middle;
         }      
 
         dsmcCouplingPatchProperties
         {
 	    typeIds	(Ar);
 	}
-    }
+    }   
 );
 
 dsmcCyclicBoundaries

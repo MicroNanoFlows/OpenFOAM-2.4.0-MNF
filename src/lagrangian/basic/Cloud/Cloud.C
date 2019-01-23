@@ -322,7 +322,6 @@ void Foam::Cloud<ParticleType>::move(TrackData& td, const scalar trackTime)
         labelListList allNTrans(Pstream::nProcs());
         pBufs.finishedSends(allNTrans);
 
-
         bool transfered = false;
 
         forAll(allNTrans, i)

@@ -98,12 +98,12 @@ mdDsmcCoupling::mdDsmcCoupling
             {
                 FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
                             << "Could not find 3D MUI coupling interface (" << interfaces[i]
-                            << ") to send for domain " << threeDInterfaces_.domainName << exit(FatalError);
+                            << ") to send for domain " << threeDInterfaces.domainName << exit(FatalError);
             }
             else
             {
                 Info << "mdDsmcCoupling::mdDsmcCoupling(): Found 3D MUI coupling interface ("
-                     << interfaces[i] << ") to send for domain " << threeDInterfaces_.domainName << endl;
+                     << interfaces[i] << ") to send for domain " << threeDInterfaces.domainName << endl;
             }
         }
     }
@@ -122,12 +122,12 @@ mdDsmcCoupling::mdDsmcCoupling
         {
             recvInterfaces_[i] = NULL;
             //- Find MUI interfaces
-            for(size_t j=0; j<threeDInterfaces_.interfaces->size(); ++j)
+            for(size_t j=0; j<threeDInterfaces.interfaces->size(); ++j)
             {
                 //- If the MUI interface is found then create a copy of its pointer address and store in sendInterfaces_
-                if(threeDInterfaces_.interfaces->getInterfaceName(j).compare(interfaces[i]) == 0)
+                if(threeDInterfaces.interfaces->getInterfaceName(j).compare(interfaces[i]) == 0)
                 {
-                    recvInterfaces_[i] = threeDInterfaces_.interfaces->getInterface(j);
+                    recvInterfaces_[i] = threeDInterfaces.interfaces->getInterface(j);
                     recvInterfaceNames_[i] = interfaces[i]; //- Store the receiving interface name
                     break;
                 }
@@ -141,12 +141,12 @@ mdDsmcCoupling::mdDsmcCoupling
             {
                 FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
                             << "Could not find 3D MUI coupling interface (" << interfaces[i]
-                            << ") to receive for domain " << threeDInterfaces_.domainName << exit(FatalError);
+                            << ") to receive for domain " << threeDInterfaces.domainName << exit(FatalError);
             }
             else
             {
                 Info << "mdDsmcCoupling::mdDsmcCoupling(): Found 3D MUI coupling interface ("
-                     << interfaces[i] << ") to receive for domain " << threeDInterfaces_.domainName << endl;
+                     << interfaces[i] << ") to receive for domain " << threeDInterfaces.domainName << endl;
             }
         }
     }
