@@ -53,22 +53,62 @@ polyCyclicBoundaries
     boundary
     {
         boundaryModel  polyStandardCyclic;
-        patchName      periodicY_back;
+        patchName      periodicY_top_couplingLeft;
     }
     boundary
     {
         boundaryModel  polyStandardCyclic;
-        patchName      periodicY_front;
+        patchName      periodicY_bottom_couplingLeft;
     }
     boundary
     {
         boundaryModel  polyStandardCyclic;
-        patchName      periodicZ_top;
+        patchName      periodicY_top;
     }
     boundary
     {
         boundaryModel  polyStandardCyclic;
-        patchName      periodicZ_bottom;
+        patchName      periodicY_bottom;
+    }
+    boundary
+    {
+        boundaryModel  polyStandardCyclic;
+        patchName      periodicY_top_couplingRight;
+    }
+    boundary
+    {
+        boundaryModel  polyStandardCyclic;
+        patchName      periodicY_bottom_couplingRight;
+    }
+    boundary
+    {
+        boundaryModel  polyStandardCyclic;
+        patchName      periodicZ_front_couplingLeft;
+    }
+    boundary
+    {
+        boundaryModel  polyStandardCyclic;
+        patchName      periodicZ_back_couplingLeft;
+    }
+    boundary
+    {
+        boundaryModel  polyStandardCyclic;
+        patchName      periodicZ_front;
+    }
+    boundary
+    {
+        boundaryModel  polyStandardCyclic;
+        patchName      periodicZ_back;
+    }
+    boundary
+    {
+        boundaryModel  polyStandardCyclic;
+        patchName      periodicZ_front_couplingRight;
+    }
+    boundary
+    {
+        boundaryModel  polyStandardCyclic;
+        patchName      periodicZ_back_couplingRight;
     }
 );
 

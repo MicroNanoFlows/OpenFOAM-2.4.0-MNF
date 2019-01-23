@@ -29,7 +29,7 @@ deltaT			0.001; //2fs
 
 writeControl		runTime;
 
-writeInterval		0.5; //1ps
+writeInterval		0.01; //1ps
 
 purgeWrite		1000; //Keep all 1000 time outputs
 
