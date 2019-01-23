@@ -173,8 +173,11 @@ void Foam::dsmcParcel::hitPatch
 
     const label& patchModelId = td.cloud().boundaries().patchToModelIds()[patchIndex];
 
-    // apply a boundary model when a molecule collides with this poly patch
-    td.cloud().boundaries().patchBoundaryModels()[patchModelId]->controlParticle(*this, td);
+    if(patchModelId != -1)
+    {
+      // apply a boundary model when a molecule collides with this poly patch
+      td.cloud().boundaries().patchBoundaryModels()[patchModelId]->controlParticle(*this, td);
+    }
 }
 
 
