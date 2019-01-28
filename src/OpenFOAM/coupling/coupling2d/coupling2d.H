@@ -122,12 +122,12 @@ public:
         size_t size() const;
         const vector& getInterfaceDomainStart(int index) const;
         const vector& getInterfaceDomainEnd(int index) const;
-        const word getInterfaceName(int index) const;
-        const List<word> getInterfaceZoneNames(int index) const;
-        const bool getInterfaceSendStatus(int index) const;
-        const bool getInterfaceReceiveStatus(int index) const;
-        const bool getInterfaceSmartSendStatus(int index) const;
-        const bool getInterfaceExtentsStatus(int index) const;
+        word getInterfaceName(int index) const;
+        List<word> getInterfaceZoneNames(int index) const;
+        bool getInterfaceSendStatus(int index) const;
+        bool getInterfaceReceiveStatus(int index) const;
+        bool getInterfaceSmartSendStatus(int index) const;
+        bool getInterfaceExtentsStatus(int index) const;
 };
 
 struct couplingInterface2d

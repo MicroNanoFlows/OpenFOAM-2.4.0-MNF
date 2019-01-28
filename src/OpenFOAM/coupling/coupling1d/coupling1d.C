@@ -51,7 +51,7 @@ Foam::coupling1d::coupling1d
     interfaceDetails newInterface;
     interfaces_.setSize(interfaceNames_.size());
 
-    for(size_t i=0; i<interfaceNames_.size(); i++)
+    forAll(interfaceNames_, i)
     {
         std::vector<std::string> interfaceList;
 
@@ -64,7 +64,7 @@ Foam::coupling1d::coupling1d
         newInterface.zoneExtents = true;
 
         #ifdef USE_MUI
-          std::vector<mui::uniface<mui::config_1d>*> returnInterfaces;
+          std::vector<mui::uniface<mui::config_1d>* > returnInterfaces;
           returnInterfaces = mui::create_uniface<mui::config_1d>(static_cast<std::string>(domainName_), interfaceList);
           newInterface.mui_interface = returnInterfaces[0];
         #endif
@@ -98,7 +98,7 @@ Foam::coupling1d::coupling1d
     interfaceDetails newInterface;
     interfaces_.setSize(interfaceNames_.size());
 
-    for(size_t i=0; i<interfaceNames_.size(); i++)
+    forAll(interfaceNames_, i)
     {
         std::vector<std::string> interfaceList;
 
@@ -113,7 +113,7 @@ Foam::coupling1d::coupling1d
         newInterface.zoneExtents = false;
 
         #ifdef USE_MUI
-          std::vector<mui::uniface<mui::config_1d>*> returnInterfaces;
+          std::vector<mui::uniface<mui::config_1d>* > returnInterfaces;
           returnInterfaces = mui::create_uniface<mui::config_1d>(static_cast<std::string>(domainName_), interfaceList);
           newInterface.mui_interface = returnInterfaces[0];
         #endif
@@ -127,9 +127,9 @@ Foam::coupling1d::coupling1d
 Foam::coupling1d::~coupling1d()
 {
     #ifdef USE_MUI
-        for(size_t i=0; i<interfaces_.size(); ++i)
+        forAll(interfaces_, iface)
         {
-            delete interfaces_[i].mui_interface;
+            delete interfaces_[iface].mui_interface;
         }
     #endif
 }
@@ -158,32 +158,32 @@ const Foam::vector& Foam::coupling1d::getInterfaceDomainEnd(int index) const
     return interfaces_[index].domainEnd;
 }
 
-const Foam::word Foam::coupling1d::getInterfaceName(int index) const
+Foam::word Foam::coupling1d::getInterfaceName(int index) const
 {
     return interfaces_[index].interfaceName;
 }
 
-const Foam::List<Foam::word> Foam::coupling1d::getInterfaceZoneNames(int index) const
+Foam::List<Foam::word> Foam::coupling1d::getInterfaceZoneNames(int index) const
 {
     return interfaces_[index].zoneNames;
 }
 
-const bool Foam::coupling1d::getInterfaceSendStatus(int index) const
+bool Foam::coupling1d::getInterfaceSendStatus(int index) const
 {
     return interfaces_[index].send;
 }
 
-const bool Foam::coupling1d::getInterfaceReceiveStatus(int index) const
+bool Foam::coupling1d::getInterfaceReceiveStatus(int index) const
 {
     return interfaces_[index].receive;
 }
 
-const bool Foam::coupling1d::getInterfaceSmartSendStatus(int index) const
+bool Foam::coupling1d::getInterfaceSmartSendStatus(int index) const
 {
     return interfaces_[index].smartSend;
 }
 
-const bool Foam::coupling1d::getInterfaceExtentsStatus(int index) const
+bool Foam::coupling1d::getInterfaceExtentsStatus(int index) const
 {
     return interfaces_[index].zoneExtents;
 }

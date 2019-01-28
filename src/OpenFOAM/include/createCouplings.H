@@ -222,7 +222,7 @@
         if(oneDCreated)
         {
             //Announce send and receive spans for 1D interfaces that have smart send enabled
-            for(int i=0; i<oneDInterfaces.interfaces->size(); i++)
+            for(size_t i=0; i<oneDInterfaces.interfaces->size(); i++)
             {
                 if(oneDInterfaces.interfaces->getInterfaceSmartSendStatus(i)) //Check if smart send should be enabled for this interface
                 {
@@ -306,7 +306,7 @@
         if(twoDCreated)
         {
             //Announce send and receive spans for 2D interfaces that have domain extents to enable MUI smart send
-            for(int i=0; i<twoDInterfaces.interfaces->size(); i++)
+            for(size_t i=0; i<twoDInterfaces.interfaces->size(); i++)
             {
                 if(twoDInterfaces.interfaces->getInterfaceSmartSendStatus(i)) //Check if smart send should be enabled for this interface
                 {
@@ -390,7 +390,7 @@
         if(threeDCreated)
         {
             //Announce send and receive spans for 3D interfaces that have domain extents to enable MUI smart send
-            for(int i=0; i<threeDInterfaces.interfaces->size(); i++)
+            for(size_t i=0; i<threeDInterfaces.interfaces->size(); i++)
             {
                 if(threeDInterfaces.interfaces->getInterfaceSmartSendStatus(i)) //Check if smart send should be enabled for this interface
                 {
