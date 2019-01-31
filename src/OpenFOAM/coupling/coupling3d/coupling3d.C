@@ -65,7 +65,7 @@ Foam::coupling3d::coupling3d
 
         #ifdef USE_MUI
           auto returnInterfaces_ = mui::create_uniface<mui::config_3d>(static_cast<std::string>(domainName_), interfaceList);
-          newInterface.mui_interface = returnInterfaces_[0];
+          newInterface.mui_interface = returnInterfaces_[0].release();
         #endif
 
         interfaces_[i] = newInterface;
@@ -112,9 +112,8 @@ Foam::coupling3d::coupling3d
         newInterface.zoneExtents = false;
 
         #ifdef USE_MUI
-          std::vector<mui::uniface<mui::config_3d>* > returnInterfaces_;
-          returnInterfaces_ = mui::create_uniface<mui::config_3d>(static_cast<std::string>(domainName_), interfaceList);
-          newInterface.mui_interface = returnInterfaces_[0];
+          auto returnInterfaces_ = mui::create_uniface<mui::config_3d>(static_cast<std::string>(domainName_), interfaceList);
+          newInterface.mui_interface = returnInterfaces_[0].release();
         #endif
 
         interfaces_[i] = newInterface;
