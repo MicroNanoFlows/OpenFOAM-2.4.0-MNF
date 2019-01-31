@@ -459,10 +459,31 @@ void dsmcLiouFangPressureOutletSpecifiedMolarFraction::controlParcelsAfterCollis
         forAll(parcelsInCell, pIC)
         {
             dsmcParcel* p = parcelsInCell[pIC];
-                        
-            momentum[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass()*p->U();
-            mass[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass();
-            mcc[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass()*mag(p->U())*mag(p->U());
+            label iD = findIndex(typeIds_, p->typeId());
+                
+            if(iD != -1)
+            {
+                if(cloud_.axisymmetric())
+                {
+                    const point& fC = p->position();
+                    scalar radius = fC.y();
+                    
+                    scalar RWF = 1.0;
+
+                    RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
+                    
+                    momentum[c] += cloud_.nParticle()*RWF*cloud_.constProps(p->typeId()).mass()*p->U();
+                    mass[c] += cloud_.nParticle()*RWF*cloud_.constProps(p->typeId()).mass();
+                    mcc[c] += cloud_.nParticle()*RWF*cloud_.constProps(p->typeId()).mass()*mag(p->U())*mag(p->U());
+                }
+                else
+                {
+                    momentum[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass()*p->U();
+                    mass[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass();
+                    mcc[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass()*mag(p->U())*mag(p->U());
+                }
+            }
+            
             nParcels[c] += 1.0;
             UCollected[c] += p->U();
             rotationalEnergy[c] += p->ERot();
