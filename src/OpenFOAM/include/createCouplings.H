@@ -45,6 +45,30 @@
             twoDInterfaces.domainName = mainCouplingName;
             threeDInterfaces.domainName = mainCouplingName;
 
+            scalar lengthDiv;
+
+			if (!(couplingDict.readIfPresent("lengthDiv", lengthDiv)))
+			{
+				FatalIOErrorIn("", couplingDict)
+								<< "Missing lengthDiv entry" << exit(FatalIOError);
+			}
+
+			oneDInterfaces.lengthMult = 1.0 / lengthDiv;
+			twoDInterfaces.lengthMult = 1.0 / lengthDiv;
+			threeDInterfaces.lengthMult = 1.0 / lengthDiv;
+
+			scalar timeDiv;
+
+			if (!(couplingDict.readIfPresent("timeDiv", timeDiv)))
+			{
+				FatalIOErrorIn("", couplingDict)
+								<< "Missing timeDiv entry" << exit(FatalIOError);
+			}
+
+			oneDInterfaces.timeMult = 1.0 / timeDiv;
+			twoDInterfaces.timeMult = 1.0 / timeDiv;
+			threeDInterfaces.timeMult = 1.0 / timeDiv;
+
             const PtrList<entry> couplingConfigurationsList
             (
                 couplingDict.lookup("couplingConfigurations")
@@ -270,12 +294,12 @@
                             }
                         }
 
-                        domainStart[0] = min[0] - min[0] * 0.01;
-                        domainStart[1] = min[1] - min[1] * 0.01;
-                        domainStart[2] = min[2] - min[2] * 0.01;
-                        domainEnd[0] = max[0] + max[0] * 0.01;
-                        domainEnd[1] = max[1] + max[1] * 0.01;
-                        domainEnd[2] = max[2] + max[2] * 0.01;
+                        domainStart[0] = (min[0] * oneDInterfaces.lengthMult) - (min[0] * oneDInterfaces.lengthMult) * 0.001;
+                        domainStart[1] = (min[1] * oneDInterfaces.lengthMult) - (min[1] * oneDInterfaces.lengthMult) * 0.001;
+                        domainStart[2] = (min[2] * oneDInterfaces.lengthMult) - (min[2] * oneDInterfaces.lengthMult) * 0.001;
+                        domainEnd[0] = (max[0] * oneDInterfaces.lengthMult) + (max[0] * oneDInterfaces.lengthMult) * 0.001;
+                        domainEnd[1] = (max[1] * oneDInterfaces.lengthMult) + (max[1] * oneDInterfaces.lengthMult) * 0.001;
+                        domainEnd[2] = (max[2] * oneDInterfaces.lengthMult) + (max[2] * oneDInterfaces.lengthMult) * 0.001;
                     }
                     else //using explicit domain sizes
                     {
@@ -291,13 +315,13 @@
                     //Interface is set to send
                     if(oneDInterfaces.interfaces->getInterfaceSendStatus(i))
                     {
-                        oneDInterfaces.interfaces->getInterface(i)->announce_send_span(0.0, static_cast<double>(runTime.endTime().value()), region_1d);
+                        oneDInterfaces.interfaces->getInterface(i)->announce_send_span(0.0, static_cast<double>(runTime.endTime().value()) * oneDInterfaces.timeMult, region_1d);
                     }
 
                     //Interface is set to receive
                     if(oneDInterfaces.interfaces->getInterfaceReceiveStatus(i))
                     {
-                        oneDInterfaces.interfaces->getInterface(i)->announce_recv_span(0.0, static_cast<double>(runTime.endTime().value()), region_1d);
+                        oneDInterfaces.interfaces->getInterface(i)->announce_recv_span(0.0, static_cast<double>(runTime.endTime().value()) * oneDInterfaces.timeMult, region_1d);
                     }
                 }
             }
@@ -354,12 +378,12 @@
                             }
                         }
 
-                        domainStart[0] = min[0] - min[0] * 0.01;
-                        domainStart[1] = min[1] - min[1] * 0.01;
-                        domainStart[2] = min[2] - min[2] * 0.01;
-                        domainEnd[0] = max[0] + max[0] * 0.01;
-                        domainEnd[1] = max[1] + max[1] * 0.01;
-                        domainEnd[2] = max[2] + max[2] * 0.01;
+                        domainStart[0] = (min[0] * twoDInterfaces.lengthMult) - (min[0] * twoDInterfaces.lengthMult) * 0.001;
+                        domainStart[1] = (min[1] * twoDInterfaces.lengthMult) - (min[1] * twoDInterfaces.lengthMult) * 0.001;
+                        domainStart[2] = (min[2] * twoDInterfaces.lengthMult) - (min[2] * twoDInterfaces.lengthMult) * 0.001;
+                        domainEnd[0] = (max[0] * twoDInterfaces.lengthMult) + (max[0] * twoDInterfaces.lengthMult) * 0.001;
+                        domainEnd[1] = (max[1] * twoDInterfaces.lengthMult) + (max[1] * twoDInterfaces.lengthMult) * 0.001;
+                        domainEnd[2] = (max[2] * twoDInterfaces.lengthMult) + (max[2] * twoDInterfaces.lengthMult) * 0.001;
                     }
                     else //using explicit domain sizes
                     {
@@ -375,13 +399,13 @@
                     //Interface is set to send
                     if(twoDInterfaces.interfaces->getInterfaceSendStatus(i))
                     {
-                        twoDInterfaces.interfaces->getInterface(i)->announce_send_span(0.0, static_cast<double>(runTime.endTime().value()), region_2d);
+                        twoDInterfaces.interfaces->getInterface(i)->announce_send_span(0.0, static_cast<double>(runTime.endTime().value()) * twoDInterfaces.timeMult, region_2d);
                     }
 
                     //Interface is set to receive
                     if(twoDInterfaces.interfaces->getInterfaceReceiveStatus(i))
                     {
-                        twoDInterfaces.interfaces->getInterface(i)->announce_recv_span(0.0, static_cast<double>(runTime.endTime().value()), region_2d);
+                        twoDInterfaces.interfaces->getInterface(i)->announce_recv_span(0.0, static_cast<double>(runTime.endTime().value()) * twoDInterfaces.timeMult, region_2d);
                     }
                 }
             }
@@ -438,12 +462,12 @@
                             }
                         }
 
-                        domainStart[0] = min[0] - min[0] * 0.01;
-                        domainStart[1] = min[1] - min[1] * 0.01;
-                        domainStart[2] = min[2] - min[2] * 0.01;
-                        domainEnd[0] = max[0] + max[0] * 0.01;
-                        domainEnd[1] = max[1] + max[1] * 0.01;
-                        domainEnd[2] = max[2] + max[2] * 0.01;
+                        domainStart[0] = (min[0] * threeDInterfaces.lengthMult) - (min[0] * threeDInterfaces.lengthMult) * 0.001;
+                        domainStart[1] = (min[1] * threeDInterfaces.lengthMult) - (min[1] * threeDInterfaces.lengthMult) * 0.001;
+                        domainStart[2] = (min[2] * threeDInterfaces.lengthMult) - (min[2] * threeDInterfaces.lengthMult) * 0.001;
+                        domainEnd[0] = (max[0] * threeDInterfaces.lengthMult) + (max[0] * threeDInterfaces.lengthMult) * 0.001;
+                        domainEnd[1] = (max[1] * threeDInterfaces.lengthMult) + (max[1] * threeDInterfaces.lengthMult) * 0.001;
+                        domainEnd[2] = (max[2] * threeDInterfaces.lengthMult) + (max[2] * threeDInterfaces.lengthMult) * 0.001;
                     }
                     else //using explicit domain sizes
                     {
@@ -459,13 +483,13 @@
                     //Interface is set to send
                     if(threeDInterfaces.interfaces->getInterfaceSendStatus(i))
                     {
-                        threeDInterfaces.interfaces->getInterface(i)->announce_send_span(0.0, static_cast<double>(runTime.endTime().value()), region_3d);
+                        threeDInterfaces.interfaces->getInterface(i)->announce_send_span(0.0, static_cast<double>(runTime.endTime().value()) * threeDInterfaces.timeMult, region_3d);
                     }
 
                     //Interface is set to receive
                     if(threeDInterfaces.interfaces->getInterfaceReceiveStatus(i))
                     {
-                        threeDInterfaces.interfaces->getInterface(i)->announce_recv_span(0.0, static_cast<double>(runTime.endTime().value()), region_3d);
+                        threeDInterfaces.interfaces->getInterface(i)->announce_recv_span(0.0, static_cast<double>(runTime.endTime().value()) * threeDInterfaces.timeMult, region_3d);
                     }
                 }
             }

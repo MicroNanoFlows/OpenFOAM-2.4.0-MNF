@@ -89,11 +89,12 @@ private:
 #endif
         bool receiving_;        //- Determine whether this interface will receive
         List<Foam::word> recvInterfaceNames_;
+        const reducedUnits& rU;
+        scalar lengthMult_;
+        scalar timeMult_;
+        label counter_;
 
     // Private Member Functions
-
-        template<int cplType>
-        void initConfig();
 
 public:
 

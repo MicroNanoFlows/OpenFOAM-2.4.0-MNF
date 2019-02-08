@@ -46,7 +46,7 @@ polyCouplingControllers
 	    receivingInterfaces	(ifs_1);
 	}
     }
-
+/*
     controller
     {
  	zoneNames	            (couplingZoneRight);
@@ -67,6 +67,7 @@ polyCouplingControllers
 	    receivingInterfaces	(ifs_2);
 	}
     }
+*/
 );    
 
 

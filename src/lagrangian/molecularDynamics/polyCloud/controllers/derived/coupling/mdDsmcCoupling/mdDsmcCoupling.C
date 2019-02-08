@@ -63,7 +63,9 @@ mdDsmcCoupling::mdDsmcCoupling
     recvInterfaces_(),
 #endif
     sending_(false),
-    receiving_(false)
+    receiving_(false),
+    rU(molCloud_.redUnits()),
+	counter_(0)
 {
 #ifdef USE_MUI
     //- Determine sending interfaces if defined
@@ -76,7 +78,7 @@ mdDsmcCoupling::mdDsmcCoupling
         sendInterfaces_.setSize(interfaces.size(), NULL);
         sendInterfaceNames_.setSize(interfaces.size());
 
-        for(size_t i=0; i<interfaces.size(); ++i)
+        forAll(interfaces, i)
         {
             //- Find MUI interfaces
             for(size_t j=0; j<threeDInterfaces.interfaces->size(); j++)
@@ -92,7 +94,7 @@ mdDsmcCoupling::mdDsmcCoupling
         }
 
         //- Check all interfaces were found
-        for(size_t i=0; i<sendInterfaces_.size(); ++i)
+        forAll(sendInterfaces_, i)
         {
             if(sendInterfaces_[i] == NULL)
             {
@@ -118,7 +120,7 @@ mdDsmcCoupling::mdDsmcCoupling
         recvInterfaces_.setSize(interfaces.size(), NULL);
         recvInterfaceNames_.setSize(interfaces.size());
 
-        for(size_t i=0; i<interfaces.size(); ++i)
+        forAll(interfaces, i)
         {
             recvInterfaces_[i] = NULL;
             //- Find MUI interfaces
@@ -135,7 +137,7 @@ mdDsmcCoupling::mdDsmcCoupling
         }
 
         //- Check all interfaces were found
-        for(size_t i=0; i<recvInterfaces_.size(); ++i)
+        forAll(recvInterfaces_, i)
         {
             if(recvInterfaces_[i] == NULL)
             {
@@ -188,6 +190,12 @@ mdDsmcCoupling::mdDsmcCoupling
     {
         output_ = Switch(propsDict_.lookup("output"));
     }
+
+    if(sending_ || receiving_)
+	{
+		lengthMult_ = threeDInterfaces.lengthMult; //- Store the length multiplier
+		timeMult_ = threeDInterfaces.timeMult; //- Store the length multiplier
+	}
 }
 
 
@@ -205,7 +213,7 @@ void mdDsmcCoupling::controlBeforeMove()
 {
     if(receiving_)
     {
-        //receiveCoupledRegion();
+        receiveCoupledRegion();
     }
 }
 
@@ -222,33 +230,59 @@ void mdDsmcCoupling::calculateProperties()
     }
 }
 
+
+
 void mdDsmcCoupling::receiveCoupledRegion()
 {
 //#ifdef USE_MUI
     mui::sampler_exact3d<scalar> spatial_sampler;
     mui::chrono_sampler_exact3d chrono_sampler;
     const reducedUnits& rU = molCloud_.redUnits();
-    const scalar refTime = rU.refTime() * time_.value();
+    scalar couplingTime = time_.time().value() * timeMult_;
 
-    std::cout << "Time: " << refTime << std::endl;
+    std::cout << couplingTime << std::endl;
 
     std::vector<mui::point3d> rcvPoints;
 
     // Iterate through all receiving interfaces for this controller
-    forAll(sendInterfaces_, iface)
+    forAll(recvInterfaces_, iface)
     {
-        //- Extract a list of all molecule locations received from dsmcFoamPlus through this interface
-        rcvPoints = sendInterfaces_[iface]->fetch_points<scalar>("mol_vel_x", static_cast<scalar>(refTime));
+    	//- Extract a list of all molecule locations received from dsmcFoamPlus through this interface
+        rcvPoints = recvInterfaces_[iface]->fetch_points<scalar>("mol_changed", couplingTime);
 
-        std::cout << rcvPoints.size() << std::endl;
-
-        /*
-        forAll(rcvPoints, pts)
+        for (size_t pts = 0; pts < rcvPoints.size(); pts++)
         {
+            std::cout << "Point: " << rcvPoints[pts][0] << "," << rcvPoints[pts][1] << "," << rcvPoints[pts][2] << std::endl;
 
+        	bool molChanged = recvInterfaces_[iface]->fetch("mol_changed", rcvPoints[pts], couplingTime, spatial_sampler, chrono_sampler);
+
+        	/*
+            if(molChanged)
+            {
+                label cell = -1;
+                label tetFace = -1;
+                label tetPt = -1;
+                vector position(rcvPoints[pts][0], rcvPoints[pts][1], rcvPoints[pts][2]);
+
+                mesh_.findCellFacePt
+                (
+                    position,
+                    cell,
+                    tetFace,
+                    tetPt
+                );
+            }
+            else
+            {
+
+            }
+            */
         }
-        */
+
+        recvInterfaces_[iface]->forget(couplingTime); // Forget the received buffer in memory
+        recvInterfaces_[iface]->commit(couplingTime); // Signalling the other solver that it can continue
     }
+    counter_++;
 //#endif
 }
 

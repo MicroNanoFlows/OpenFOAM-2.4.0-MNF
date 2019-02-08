@@ -63,7 +63,8 @@ dsmcMdCoupling::dsmcMdCoupling
     recvInterfaces_(),
 #endif
     sending_(false),
-    receiving_(false)
+    receiving_(false),
+	counter_(0)
 {
 #ifdef USE_MUI
     //- Determine sending interfaces if defined
@@ -76,7 +77,7 @@ dsmcMdCoupling::dsmcMdCoupling
         sendInterfaces_.setSize(interfaces.size(), NULL);
         sendInterfaceNames_.setSize(interfaces.size());
 
-        for(size_t i=0; i<interfaces.size(); i++)
+        forAll(interfaces, i)
         {
             //- Find MUI interfaces
             for(size_t j=0; j<threeDInterfaces.interfaces->size(); j++)
@@ -92,7 +93,7 @@ dsmcMdCoupling::dsmcMdCoupling
         }
 
         //- Check all interfaces were found
-        for(size_t i=0; i<sendInterfaces_.size(); ++i)
+        forAll(sendInterfaces_, i)
         {
             if(sendInterfaces_[i] == NULL)
             {
@@ -118,7 +119,7 @@ dsmcMdCoupling::dsmcMdCoupling
         recvInterfaces_.setSize(interfaces.size(), NULL);
         recvInterfaceNames_.setSize(interfaces.size());
 
-        for(size_t i=0; i<interfaces.size(); ++i)
+        forAll(interfaces, i)
         {
             recvInterfaces_[i] = NULL;
             //- Find MUI interfaces
@@ -135,7 +136,7 @@ dsmcMdCoupling::dsmcMdCoupling
         }
 
         //- Check all interfaces were found
-        for(size_t i=0; i<recvInterfaces_.size(); ++i)
+        forAll(recvInterfaces_, i)
         {
             if(recvInterfaces_[i] == NULL)
             {
@@ -180,6 +181,12 @@ dsmcMdCoupling::dsmcMdCoupling
     {
         output_ = Switch(propsDict_.lookup("output"));
     }
+
+    if(sending_ || receiving_)
+    {
+    	lengthMult_ = threeDInterfaces.lengthMult; //- Store the length multiplier
+    	timeMult_ = threeDInterfaces.timeMult; //- Store the length multiplier
+    }
 }
 
 
@@ -190,6 +197,11 @@ dsmcMdCoupling::~dsmcMdCoupling()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+void dsmcMdCoupling::resizeCellHistory(int size)
+{
+    parcelsInCellHistory_.resize(size);
+}
+
 void dsmcMdCoupling::initialConfiguration()
 {}
 
@@ -197,7 +209,7 @@ void dsmcMdCoupling::controlParcelsBeforeMove()
 {
     if(sending_)
     {
-        //sendCoupledRegion();
+        sendCoupledRegion();
     }
 }
 
@@ -216,8 +228,13 @@ void dsmcMdCoupling::calculateProperties()
 
 void dsmcMdCoupling::sendCoupledRegion()
 {
-#ifdef USE_MUI
+//#ifdef USE_MUI
     dsmcParcel* parcelI = NULL;
+    scalar couplingTime = time_.time().value() * timeMult_;
+    bool listSizeChanged = false;
+    bool parcelChanged = false;
+
+    std::cout << couplingTime << std::endl;
 
     // Iterate through all sending interfaces for this controller
     forAll(sendInterfaces_, iface)
@@ -229,31 +246,59 @@ void dsmcMdCoupling::sendCoupledRegion()
                 const label& cellI = controlZone(regionIds()[id])[c];
                 const List<dsmcParcel*>& parcelsInCell = cloud_.cellOccupancy()[cellI];
 
+                if(parcelsInCellHistory_.size() != parcelsInCell.size())
+                {
+                  resizeCellHistory(parcelsInCell.size());
+                  listSizeChanged = true;
+                }
+
                 forAll(parcelsInCell, p) // Iterate through parcels in cell
                 {
                     parcelI = parcelsInCell[p];
 
+                    if(listSizeChanged) //List size has changed so completely refresh the history list
+                    {
+                        parcelsInCellHistory_[p] = parcelI->origId();
+                        parcelChanged = true;
+                    }
+                    else //List size the same as last iteration so only update for parcels who's ID has changed
+                    {
+                        if(parcelsInCellHistory_[p] != parcelI->origId())
+                        {
+                            parcelsInCellHistory_[p] = parcelI->origId();
+                            parcelChanged = true;
+                        }
+                        else
+                        {
+                            parcelChanged = false;
+                        }
+                    }
+
                     // Get the parcel centre
                     mui::point3d molCentre;
-                    molCentre.data()[0] = parcelI->position()[0];
-                    molCentre.data()[1] = parcelI->position()[1];
-                    molCentre.data()[2] = parcelI->position()[2];
+                    molCentre[0] = parcelI->position()[0] * lengthMult_;
+                    molCentre[1] = parcelI->position()[1] * lengthMult_;
+                    molCentre[2] = parcelI->position()[2] * lengthMult_;
 
-                    // Get the parcel velocity
-                    vector molVel(parcelI->U());
+                    // Send flag to say whether this parcel is new or not (to avoid creating mdFoamPlus molecules where they don't have to be)
+                    sendInterfaces_[iface]->push("mol_changed", molCentre, static_cast<scalar>(parcelChanged));
 
-                    // Push the parcel to the interface
-                    sendInterfaces_[iface]->push("mol_vel_x", molCentre, molVel[0]);
-                    sendInterfaces_[iface]->push("mol_vel_y", molCentre, molVel[1]);
-                    sendInterfaces_[iface]->push("mol_vel_z", molCentre, molVel[2]);
+                    // Push the parcel velocity to the interface
+                    sendInterfaces_[iface]->push("mol_vel_x", molCentre, parcelI->U()[0]);
+                    sendInterfaces_[iface]->push("mol_vel_y", molCentre, parcelI->U()[1]);
+                    sendInterfaces_[iface]->push("mol_vel_z", molCentre, parcelI->U()[2]);
                 }
             }
         }
 
         // Commit (transmit) values to the MUI interface
-        sendInterfaces_[iface]->commit(time_.time().value());
+        sendInterfaces_[iface]->commit(couplingTime);
+
+        // Wait for the other side to catch up
+        sendInterfaces_[iface]->barrier(couplingTime);
     }
-#endif
+    counter_++;
+//#endif
 }
 
 void dsmcMdCoupling::sendCoupledParcels()

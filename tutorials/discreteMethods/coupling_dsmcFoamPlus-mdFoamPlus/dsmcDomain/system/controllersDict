@@ -46,7 +46,7 @@ dsmcCouplingControllers
 	    receivingInterfaces	(ifs_1);
 	}
     }
-
+/*
     controller
     {
  	zoneNames                   (couplingZoneRight);
@@ -66,7 +66,8 @@ dsmcCouplingControllers
 	{
 	    receivingInterfaces	(ifs_2);
 	}
-    }    
+    } 
+*/   
 );    
 
 // ************************************************************************* //

@@ -17,7 +17,9 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-couplingName mdDomain; //Coupling domain name
+couplingName	mdDomain; //Coupling domain name
+lengthDiv	1;  //Value to divide simulation length by for use with coupling interface
+timeDiv		1;  //Value to divide simulation time by for use with coupling interface
 
 couplingConfigurations
 ( 
@@ -36,9 +38,9 @@ couplingConfigurations
 	    zones	(couplingZoneLeft);
 	    sending	yes;
 	    receiving	yes;
-	    smart_send	yes;
+	    smart_send	yes;	
 	}
-
+/*
 	ifs_2
 	{	   
 	    zones	(couplingZoneRight);
@@ -46,6 +48,7 @@ couplingConfigurations
 	    receiving	yes;
 	    smart_send	yes;
 	}
+*/
     }
 );
 

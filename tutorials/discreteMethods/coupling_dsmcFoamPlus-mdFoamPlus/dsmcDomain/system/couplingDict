@@ -17,7 +17,9 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-couplingName dsmcDomain; //Coupling domain name
+couplingName	dsmcDomain; //Coupling domain name
+lengthDiv	3.4e-10;  //Value to divide simulation length by for use with coupling interface
+timeDiv		2.0e-12;  //Value to divide simulation time by for use with coupling interface
 
 couplingConfigurations
 ( 
@@ -40,7 +42,7 @@ couplingConfigurations
 	    receiving	yes;
 	    smart_send	yes;
 	}
-
+/*
 	ifs_2
 	{
 	    zones	(couplingZoneRight);
@@ -48,6 +50,7 @@ couplingConfigurations
 	    receiving	yes;
 	    smart_send	yes;
 	}
+*/
     }
 );
 

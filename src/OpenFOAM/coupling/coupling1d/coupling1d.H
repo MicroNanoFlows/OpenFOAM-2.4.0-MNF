@@ -133,6 +133,8 @@ public:
 struct couplingInterface1d
 {
     word domainName;
+    scalar lengthMult;
+    scalar timeMult;
     coupling1d* interfaces;
 };
 

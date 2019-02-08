@@ -89,11 +89,14 @@ private:
 #endif
         bool receiving_;        //- Determine whether this controller will receive
         List<Foam::word> recvInterfaceNames_;
+        List<label> parcelsInCellHistory_;
+        scalar lengthMult_;
+        scalar timeMult_;
+        label counter_;
 
     // Private Member Functions
 
-        template<int cplType>
-        void initConfig();
+        void resizeCellHistory(int size);
 
 public:
 

@@ -177,7 +177,6 @@ void timeData::setInitialData()
 
     nControlSteps_ = averagingTime_.deltaT()/controlTime_.deltaT();
 
-
    //-- offsetting the controlling time index so that the time-interval finishes 
     //   one time-step ahead of the calcProp time.
     controlTime_.timeIndex()--;
@@ -534,7 +533,6 @@ scalarField timeData::averagingTimes()
 
     return averagingTimes;
 }
-
 
 const timeInterval& timeData::mdTimeInterval() const
 {
