@@ -61,6 +61,8 @@ private:
 
     // Private data
         dictionary propsDict_;
+        dictionary sendingDict_;
+        dictionary receivingDict_;
 
         scalar elapsedTime_;
 
@@ -70,11 +72,9 @@ private:
 
         List<label> molIds_;
 
-        scalar molFlux_;
-        scalar massFlux_;
+        List<word> sendingInterfaces_;
 
-        scalar cumulMolFlux_;
-        scalar cumulMassFlux_;
+        List<word> receivingInterfaces_;
 
 public:
 

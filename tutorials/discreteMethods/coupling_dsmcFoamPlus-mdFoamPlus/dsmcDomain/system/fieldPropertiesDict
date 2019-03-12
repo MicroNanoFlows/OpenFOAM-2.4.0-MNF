@@ -103,8 +103,8 @@ dsmcFields
         {
             fieldName               	Ar;
             typeIds                 	(Ar);
-            measureMeanFreePath     	true;
-            mfpReferenceTemperature 	273;
+            measureMeanFreePath     	true;            
+	    mfpReferenceTemperature	140.044547121;
             measureHeatFluxShearStress  true;
         }
      }  

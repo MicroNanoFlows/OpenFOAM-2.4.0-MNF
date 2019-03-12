@@ -30,90 +30,49 @@ License
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-//Construct without explicit domain sizes
 Foam::coupling2d::coupling2d
 (
     word domainName,
-    List<List<word> >& zoneNames,
     List<word>& interfaceNames,
     List<bool>& send,
     List<bool>& receive,
-    List<bool>& smart_send
+    List<bool>& smart_send,
+    List<vector>& dom_send_start,
+    List<vector>& dom_send_end,
+    List<vector>& dom_rcv_start,
+    List<vector>& dom_rcv_end
 )
 :
     domainName_(domainName),
-    zoneNames_(zoneNames),
     interfaceNames_(interfaceNames),
     send_(send),
     receive_(receive),
-    smart_send_(smart_send)
+    smart_send_(smart_send),
+    dom_send_start_(dom_send_start),
+    dom_send_end_(dom_send_end),
+    dom_rcv_start_(dom_rcv_start),
+    dom_rcv_end_(dom_rcv_end)
 {
-    interfaceDetails newInterface;
-    interfaces_.setSize(interfaceNames_.size());
+    interfaces_.setSize(interfaceNames.size());
 
     forAll(interfaceNames_, i)
     {
+        interfaceDetails newInterface;
         std::vector<std::string> interfaceList;
 
         newInterface.interfaceName = interfaceNames_[i];
-        interfaceList.push_back(newInterface.interfaceName); //Need std::vector copy for MUI create_uniface function
-        newInterface.zoneNames = zoneNames_[i];
+        interfaceList.emplace_back(newInterface.interfaceName); //Need std::vector copy for MUI create_uniface function
         newInterface.send = send_[i];
         newInterface.receive = receive_[i];
         newInterface.smartSend = smart_send_[i];
-        newInterface.zoneExtents = true;
+        newInterface.dom_send_start = dom_send_start_[i];
+        newInterface.dom_send_end = dom_send_end_[i];
+        newInterface.dom_rcv_start = dom_rcv_start_[i];
+        newInterface.dom_rcv_end = dom_rcv_end_[i];
 
         #ifdef USE_MUI
-          auto returnInterfaces = mui::create_uniface<mui::config_2d>(static_cast<std::string>(domainName_), interfaceList);
-          newInterface.mui_interface = returnInterfaces[0].release();
-        #endif
-
-        interfaces_[i] = newInterface;
-    }
-}
-
-//Construct with explicit domain sizes
-Foam::coupling2d::coupling2d
-(
-    word domainName,
-    List<List<word> >& zoneNames,
-    List<word>& interfaceNames,
-    List<vector>& domainStarts,
-    List<vector>& domainEnds,
-    List<bool>& send,
-    List<bool>& receive,
-    List<bool>& smart_send
-)
-:
-    domainName_(domainName),
-    zoneNames_(zoneNames),
-    interfaceNames_(interfaceNames),
-    domainStarts_(domainStarts),
-    domainEnds_(domainEnds),
-    send_(send),
-    receive_(receive),
-    smart_send_(smart_send)
-{
-    interfaceDetails newInterface;
-    interfaces_.setSize(interfaceNames_.size());
-
-    forAll(interfaceNames_, i)
-    {
-        std::vector<std::string> interfaceList;
-
-        newInterface.interfaceName = interfaceNames_[i];
-        interfaceList.push_back(newInterface.interfaceName); //Need std::vector copy for MUI create_uniface function
-        newInterface.zoneNames = zoneNames_[i];
-        newInterface.domainStart = domainStarts_[i];
-        newInterface.domainEnd = domainEnds_[i];
-        newInterface.send = send_[i];
-        newInterface.receive = receive_[i];
-        newInterface.smartSend = smart_send_[i];
-        newInterface.zoneExtents = false;
-
-        #ifdef USE_MUI
-          auto returnInterfaces = mui::create_uniface<mui::config_2d>(static_cast<std::string>(domainName_), interfaceList);
-          newInterface.mui_interface = returnInterfaces[0].release();
+            auto returnInterfaces = mui::create_uniface<mui::config_2d>(static_cast<std::string>(domainName_), interfaceList);
+            newInterface.mui_interface = returnInterfaces[0].release();
         #endif
 
         interfaces_[i] = newInterface;
@@ -146,24 +105,9 @@ size_t Foam::coupling2d::size() const
     return interfaces_.size();
 }
 
-const Foam::vector& Foam::coupling2d::getInterfaceDomainStart(int index) const
-{
-    return interfaces_[index].domainStart;
-}
-
-const Foam::vector& Foam::coupling2d::getInterfaceDomainEnd(int index) const
-{
-    return interfaces_[index].domainEnd;
-}
-
 Foam::word Foam::coupling2d::getInterfaceName(int index) const
 {
     return interfaces_[index].interfaceName;
-}
-
-Foam::List<Foam::word> Foam::coupling2d::getInterfaceZoneNames(int index) const
-{
-    return interfaces_[index].zoneNames;
 }
 
 bool Foam::coupling2d::getInterfaceSendStatus(int index) const
@@ -181,9 +125,24 @@ bool Foam::coupling2d::getInterfaceSmartSendStatus(int index) const
     return interfaces_[index].smartSend;
 }
 
-bool Foam::coupling2d::getInterfaceExtentsStatus(int index) const
+Foam::vector Foam::coupling2d::getInterfaceSendDomStart(int index) const
 {
-    return interfaces_[index].zoneExtents;
+    return interfaces_[index].dom_send_start;
+}
+
+Foam::vector Foam::coupling2d::getInterfaceSendDomEnd(int index) const
+{
+    return interfaces_[index].dom_send_end;
+}
+
+Foam::vector Foam::coupling2d::getInterfaceReceiveDomStart(int index) const
+{
+    return interfaces_[index].dom_rcv_start;
+}
+
+Foam::vector Foam::coupling2d::getInterfaceReceiveDomEnd(int index) const
+{
+    return interfaces_[index].dom_rcv_end;
 }
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //

@@ -737,7 +737,6 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     const reducedUnits& rU,
     const constantMoleculeProperties& cP,
     cachedRandomMD& rndGen,
-    couplingInterface1d& oneDInterfaces,
     couplingInterface2d& twoDInterfaces,
     couplingInterface3d& threeDInterfaces
 )
@@ -752,7 +751,7 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     cellOccupancy_(mesh_.nCells()),
     fields_(t, mesh_, *this),
     boundaries_(t, mesh, *this),
-    controllers_(t, mesh, *this, oneDInterfaces, twoDInterfaces, threeDInterfaces),
+    controllers_(t, mesh, *this, twoDInterfaces, threeDInterfaces),
     coupledMols_(),
     trackingInfo_(mesh, *this),
     moleculeTracking_(),
@@ -912,14 +911,13 @@ Foam::autoPtr<Foam::polyMoleculeCloud> Foam::polyMoleculeCloud::New
     const reducedUnits& rU,
     const constantMoleculeProperties& cP, 
     cachedRandomMD& rndGen,
-    couplingInterface1d& oneDInterfaces,
     couplingInterface2d& twoDInterfaces,
     couplingInterface3d& threeDInterfaces
 )
 {
     return autoPtr<polyMoleculeCloud>
     (
-        new polyMoleculeCloud(t, mesh, rU, cP, rndGen, oneDInterfaces, twoDInterfaces, threeDInterfaces)
+        new polyMoleculeCloud(t, mesh, rU, cP, rndGen, twoDInterfaces, threeDInterfaces)
     );
 }
 
@@ -943,7 +941,7 @@ Foam::autoPtr<Foam::polyMoleculeCloud> Foam::polyMoleculeCloud::New
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void  Foam::polyMoleculeCloud::createMolecule
+Foam::polyMolecule*  Foam::polyMoleculeCloud::createMolecule
 (
     const vector& position,
     const label cell,
@@ -961,29 +959,30 @@ void  Foam::polyMoleculeCloud::createMolecule
     const label trackingNumber
 )
 {
-    addParticle
-    (
-        new polyMolecule
-        (
-            mesh_,
-            position,
-            cell,
-            tetFace,
-            tetPt,
-            Q,
-            v,
-            a,
-            pi,
-            tau,
-            specialPosition,
+    polyMolecule* newMol = 	new polyMolecule
+	(
+		mesh_,
+		position,
+		cell,
+		tetFace,
+		tetPt,
+		Q,
+		v,
+		a,
+		pi,
+		tau,
+		specialPosition,
 //             constProps(id),
-            cP_,
-            special,
-            id,
-            fraction,
-            trackingNumber
-        )
-    );
+		cP_,
+		special,
+		id,
+		fraction,
+		trackingNumber
+	);
+
+	addParticle(newMol);
+
+	return newMol;
 }
 
 
@@ -1076,6 +1075,10 @@ void Foam::polyMoleculeCloud::updateAfterMove(const scalar& trackTime)
 void Foam::polyMoleculeCloud::controlAfterMove()
 {
     boundaries_.controlAfterMove();
+    controllers_.controlAfterMove();
+
+    //Clean up record of any coupled molecules that have passed a boundary and been sent
+	this->clearCoupledMols();
 }
 
 
@@ -1157,17 +1160,8 @@ void Foam::polyMoleculeCloud::postTimeStep()
         writeReferredCloud();
     }
 
-    trackingInfo_.clean(); 
+    trackingInfo_.clean();
 }
-
-
-
-
-
-
-
-
-
 
 //- used if you want to read a new field at every time-step from an input file
 //- e.g. to be used in a utility that computes measurements
@@ -1542,14 +1536,25 @@ void Foam::polyMoleculeCloud::removeMolFromCellOccupancy
     cellOccupancy_[cell].transfer(molsInCell);
 }
 
-void Foam::polyMoleculeCloud::insertCoupledMol(polyMolecule* mol)
+void Foam::polyMoleculeCloud::insertCoupledMol(polyMolecule* mol, List<word>& sending, List<word>& receiving)
 {
+	coupledMols newCplMol;
+	newCplMol.mol = mol;
+	newCplMol.sendingInterfaces = sending;
+	newCplMol.receivingInterfaces = receiving;
+	newCplMol.molType = this->cP().molIds()[mol->id()];
+
     //Create a copy of the molecule before it is deleted
-    coupledMols_.append(static_cast<polyMolecule*>(mol->clone().ptr()));
+    coupledMols_.append(newCplMol);
 }
 
 void Foam::polyMoleculeCloud::clearCoupledMols()
 {
+    forAll(coupledMols_, mol)
+    {
+    	delete coupledMols_[mol].mol;
+    }
+
     coupledMols_.clear();
 }
 

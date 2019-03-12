@@ -67,10 +67,16 @@ private:
 
     // Private data
         dictionary propsDict_;
+        dictionary sendingDict_;
+		dictionary receivingDict_;
 
         bool allSpecies_;
 
         labelList typeIds_;
+
+        List<word> sendingInterfaces_;
+
+		List<word> receivingInterfaces_;
 
         void setProperties();
 

@@ -30,6 +30,16 @@ dsmcPatchBoundaries
         {
 	    typeIds	(Ar); 	
 	}
+
+	dsmcCouplingPatchSending
+	{
+	    sendingInterfaces	(ifs_1);
+	}
+
+	dsmcCouplingPatchReceiving
+	{
+	    receivingInterfaces	(ifs_1);
+	}
     }
 
     boundary
@@ -44,6 +54,16 @@ dsmcPatchBoundaries
         dsmcCouplingPatchProperties
         {
 	    typeIds	(Ar);
+	}
+
+	dsmcCouplingPatchSending
+	{
+	    sendingInterfaces	(ifs_2);
+	}
+
+	dsmcCouplingPatchReceiving
+	{
+	    receivingInterfaces	(ifs_2);
 	}
     }   
 );

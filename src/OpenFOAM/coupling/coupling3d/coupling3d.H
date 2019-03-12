@@ -60,28 +60,29 @@ class coupling3d
 private:
     struct interfaceDetails
     {
-        vector domainStart;
-        vector domainEnd;
         word interfaceName;
-        List<word> zoneNames;
         #ifdef USE_MUI
           mui::uniface<mui::config_3d>* mui_interface;
         #endif
         bool send;
         bool receive;
         bool smartSend;
-        bool zoneExtents;
+        vector dom_send_start;
+        vector dom_send_end;
+        vector dom_rcv_start;
+        vector dom_rcv_end;
     };
 
     word domainName_;
     List<coupling3d::interfaceDetails> interfaces_;
-    List<List<word> > zoneNames_;
     List<word> interfaceNames_;
-    List<vector> domainStarts_;
-    List<vector> domainEnds_;
     List<bool> send_;
     List<bool> receive_;
     List<bool> smart_send_;
+    List<vector> dom_send_start_;
+    List<vector> dom_send_end_;
+    List<vector> dom_rcv_start_;
+    List<vector> dom_rcv_end_;
 
 public:
 
@@ -91,24 +92,14 @@ public:
         coupling3d
         (
             word domainName,
-            List<List<word> >& zoneNames,
             List<word>& interfaceNames,
             List<bool>& send,
             List<bool>& receive,
-            List<bool>& smart_send
-        );
-
-        //- Construct with explicit domain size
-        coupling3d
-        (
-            word domainName,
-            List<List<word> >& zoneNames,
-            List<word>& interfaceNames,
-            List<vector>& domainStarts,
-            List<vector>& domainEnds,
-            List<bool>& send,
-            List<bool>& receive,
-            List<bool>& smart_send
+            List<bool>& smart_send,
+            List<vector>& dom_send_start,
+            List<vector>& dom_send_end,
+            List<vector>& dom_rcv_start,
+            List<vector>& dom_rcv_end
         );
 
     // Destructor
@@ -120,21 +111,22 @@ public:
         mui::uniface<mui::config_3d>* getInterface(int index) const;
 #endif
         size_t size() const;
-        const vector& getInterfaceDomainStart(int index) const;
-        const vector& getInterfaceDomainEnd(int index) const;
         word getInterfaceName(int index) const;
-        List<word> getInterfaceZoneNames(int index) const;
         bool getInterfaceSendStatus(int index) const;
         bool getInterfaceReceiveStatus(int index) const;
         bool getInterfaceSmartSendStatus(int index) const;
         bool getInterfaceExtentsStatus(int index) const;
+        vector getInterfaceSendDomStart(int index) const;
+        vector getInterfaceSendDomEnd(int index) const;
+        vector getInterfaceReceiveDomStart(int index) const;
+        vector getInterfaceReceiveDomEnd(int index) const;
 };
 
 struct couplingInterface3d
 {
     word domainName;
-    scalar lengthMult;
-	scalar timeMult;
+    scalar refLength;
+    scalar refTime;
     coupling3d* interfaces;
 };
 

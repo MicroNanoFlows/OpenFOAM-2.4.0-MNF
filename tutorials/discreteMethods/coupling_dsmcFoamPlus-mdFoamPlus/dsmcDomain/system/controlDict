@@ -26,15 +26,15 @@ stopAt          	endTime;
 
 startTime       	0;
 
-endTime         	1.0e-9; //1ns
+endTime         	1e-9; //1ns
 
-deltaT          	2.0e-15; //2fs (500,000 time-steps)
+deltaT          	2e-15; //2fs (500,000 time-steps)
 
 writeControl    	runTime;
 
-writeInterval   	1.0e-12; //1ps
+writeInterval   	2e-14; //1ps
 
-purgeWrite      	1000; //Keep 1000 time outputs
+purgeWrite      	50000; //Keep all time outputs
 
 writeFormat     	ascii;
 

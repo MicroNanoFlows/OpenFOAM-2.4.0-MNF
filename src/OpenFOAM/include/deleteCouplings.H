@@ -1,11 +1,6 @@
 //
 // deleteCouplings.H
 // ~~~~~~~~~~~~
-    if(oneDInterfaces.interfaces != NULL)
-    {
-        delete oneDInterfaces.interfaces;
-    }
-
     if(twoDInterfaces.interfaces != NULL)
     {
         delete twoDInterfaces.interfaces;

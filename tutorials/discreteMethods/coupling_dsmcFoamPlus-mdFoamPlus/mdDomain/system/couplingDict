@@ -18,37 +18,31 @@ FoamFile
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 couplingName	mdDomain; //Coupling domain name
-lengthDiv	1;  //Value to divide simulation length by for use with coupling interface
-timeDiv		1;  //Value to divide simulation time by for use with coupling interface
+refLength	1;  //Length reference value for anything used in the coupling interfaces
+refTime		1;  //Time reference value for anything used in the coupling interfaces
 
 couplingConfigurations
 ( 
-    OneDInterfaces //1D coupling interfaces
-    {	
-    }
-
     TwoDInterfaces //2D coupling interfaces
     {        
+
     }
 
     ThreeDInterfaces //3D coupling interfaces
     {
 	ifs_1
 	{	   
-	    zones	(couplingZoneLeft);
 	    sending	yes;
 	    receiving	yes;
 	    smart_send	yes;	
 	}
-/*
+
 	ifs_2
 	{	   
-	    zones	(couplingZoneRight);
 	    sending	yes;
 	    receiving	yes;
 	    smart_send	yes;
 	}
-*/
     }
 );
 

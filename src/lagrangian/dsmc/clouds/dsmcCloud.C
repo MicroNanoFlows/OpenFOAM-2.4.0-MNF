@@ -481,7 +481,7 @@ void Foam::dsmcCloud::addNewParcel
     const labelList vibLevel
 )
 {
-    dsmcParcel* pPtr = new dsmcParcel
+	dsmcParcel* pPtr = new dsmcParcel
     (
         mesh_,
         position,
@@ -729,7 +729,6 @@ Foam::dsmcCloud::dsmcCloud
     Time& t,
     const word& cloudName,
     const fvMesh& mesh,
-    couplingInterface1d& oneDInterfaces,
     couplingInterface2d& twoDInterfaces,
     couplingInterface3d& threeDInterfaces,
     bool readFields
@@ -790,7 +789,7 @@ Foam::dsmcCloud::dsmcCloud
     collisionSelectionRemainder_(mesh_.nCells(), 0),
     constProps_(),
     rndGen_(label(clock::getTime()) + 7183*Pstream::myProcNo()), // different seed every time simulation is started - needed for ensemble averaging!
-    controllers_(t, mesh, *this, oneDInterfaces, twoDInterfaces, threeDInterfaces),
+    controllers_(t, mesh, *this, twoDInterfaces, threeDInterfaces),
     coupledParcels_(),
     dynamicLoadBalancing_(t, mesh, *this),
     fields_(t, mesh, *this),
@@ -997,7 +996,7 @@ void Foam::dsmcCloud::evolve()
 
     controllers_.controlBeforeMove();//****
     boundaries_.controlBeforeMove();//****
-    
+
     if(charged_)
     {
         //Remove electrons
@@ -1009,7 +1008,8 @@ void Foam::dsmcCloud::evolve()
         releaseParticlesFromWall();
     }
 
-    // Move the particles ballistically with their current velocities
+    // Move the particles ballistically with their current velocities,
+    // parcels that pass through coupling boundary are deleted and recorded here
     Cloud<dsmcParcel>::move(td, mesh_.time().deltaTValue());
 
     // Update cell occupancy
@@ -1029,8 +1029,11 @@ void Foam::dsmcCloud::evolve()
         buildCellOccupancy();
     }
 
-    controllers_.controlBeforeCollisions();//****
-    boundaries_.controlBeforeCollisions();//****
+    controllers_.controlBeforeCollisions();//**** // Send and receive parcels through coupled boundaries (cell occupancy updated if parcels added)
+
+	this->clearCoupledParcels();  // Clean up record of parcels that have passed coupled boundary
+
+	boundaries_.controlBeforeCollisions();//****
 
     // Calculate new velocities via stochastic collisions
     collisions();
@@ -1043,7 +1046,7 @@ void Foam::dsmcCloud::evolve()
     fields_.calculateFields();//****
     fields_.writeFields();//****
 
-    controllers_.calculateProps();//****
+    controllers_.calculateProps();//**** // Coupling region send
     controllers_.outputResults();//****
 
     boundaries_.calculateProps();//****
@@ -1697,15 +1700,26 @@ void Foam::dsmcCloud::removeParcelFromCellOccupancy
     cellOccupancy_[cell].transfer(molsInCell);
 }
 
-void Foam::dsmcCloud::insertCoupledParcel(dsmcParcel* parcel)
+void Foam::dsmcCloud::insertCoupledParcel(dsmcParcel* parcel, List<word>& sending, List<word>& receiving)
 {
+	coupledParcs newCplParc;
+	newCplParc.parcel = parcel;
+	newCplParc.sendingInterfaces = sending;
+	newCplParc.receivingInterfaces = receiving;
+	newCplParc.parcType = this->typeIdList_[parcel->typeId()];
+
     //Create a copy of the parcel before it is deleted
-    coupledParcels_.append(static_cast<dsmcParcel*>(parcel->clone().ptr()));
+    coupledParcels_.append(newCplParc);
 }
 
 void Foam::dsmcCloud::clearCoupledParcels()
 {
-  coupledParcels_.clear();
+    forAll(coupledParcels_, parcel)
+    {
+    	delete coupledParcels_[parcel].parcel;
+    }
+
+    coupledParcels_.clear();
 }
 
 

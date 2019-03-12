@@ -655,7 +655,6 @@ meshes/data/data.C
 
 /* MUI COUPLING */
 
-coupling/coupling1d/coupling1d.C
 coupling/coupling2d/coupling2d.C
 coupling/coupling3d/coupling3d.C
 

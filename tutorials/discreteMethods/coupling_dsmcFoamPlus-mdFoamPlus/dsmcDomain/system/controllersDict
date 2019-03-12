@@ -33,7 +33,7 @@ dsmcCouplingControllers
 
         dsmcMdCouplingProperties
         { 	   
-            molIds	(Ar);            
+            typeIds	(Ar);            
         }
 
 	dsmcMdCouplingSending
@@ -46,7 +46,7 @@ dsmcCouplingControllers
 	    receivingInterfaces	(ifs_1);
 	}
     }
-/*
+
     controller
     {
  	zoneNames                   (couplingZoneRight);
@@ -54,7 +54,7 @@ dsmcCouplingControllers
 
         dsmcMdCouplingProperties
         { 	   
-            molIds	(Ar);            
+            typeIds	(Ar);            
         }
 
 	dsmcMdCouplingSending
@@ -66,8 +66,7 @@ dsmcCouplingControllers
 	{
 	    receivingInterfaces	(ifs_2);
 	}
-    } 
-*/   
+    }
 );    
 
 // ************************************************************************* //

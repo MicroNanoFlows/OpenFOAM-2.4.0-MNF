@@ -72,7 +72,6 @@ int main(int argc, char *argv[])
             rU,
             cP,
             rndGen,
-            oneDInterfaces,
             twoDInterfaces,
             threeDInterfaces
         );

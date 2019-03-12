@@ -59,6 +59,8 @@ SourceFiles
 #include "boundaryMeasurements.H"
 #include "cellMeasurements.H"
 
+#include <sstream>
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
@@ -73,6 +75,16 @@ class dsmcCloud
 :
     public Cloud<dsmcParcel>
 {
+
+public:
+
+	struct coupledParcs
+	{
+		dsmcParcel* parcel;
+		List<word> sendingInterfaces;
+		List<word> receivingInterfaces;
+		word parcType;
+	};
 
 private:
 
@@ -181,7 +193,7 @@ private:
         dsmcBoundaries boundaries_;
 
         //- Copy of parcels deleted by coupling boundary
-        DynamicList<dsmcParcel*> coupledParcels_;
+        DynamicList<coupledParcs> coupledParcels_;
 
         // flux-face tracking 
         dsmcFaceTracker trackingInfo_;
@@ -269,7 +281,6 @@ public:
             Time& t,
             const word& cloudName,
             const fvMesh& mesh,
-            couplingInterface1d& oneDInterfaces,
             couplingInterface2d& twoDInterfaces,
             couplingInterface3d& threeDInterfaces,
             bool readFields = true
@@ -319,7 +330,9 @@ public:
 
      void insertCoupledParcel
      (
-         dsmcParcel* parcel
+         dsmcParcel* parcel,
+		 List<word>& sending,
+		 List<word>& receiving
      );
 
      void clearCoupledParcels();
@@ -493,7 +506,6 @@ public:
             scalar mass
         ) const;
 
-
     // Sub-models
 
         //- Return reference to binary elastic collision model
@@ -602,6 +614,8 @@ public:
 
             //- Clear the Cloud
             inline void clear();
+
+            inline const DynamicList<dsmcCloud::coupledParcs>& coupledParcels() const;
 };
 
 

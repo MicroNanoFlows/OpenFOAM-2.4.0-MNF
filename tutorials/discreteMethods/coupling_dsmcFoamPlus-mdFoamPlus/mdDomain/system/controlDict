@@ -31,7 +31,7 @@ writeControl		runTime;
 
 writeInterval		0.01; //1ps
 
-purgeWrite		1000; //Keep all 1000 time outputs
+purgeWrite		50000; //Keep all time outputs
 
 writeFormat		ascii;
 

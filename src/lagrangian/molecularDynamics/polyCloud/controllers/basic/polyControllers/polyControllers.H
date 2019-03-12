@@ -119,7 +119,6 @@ public:
             Time& t,
             const polyMesh& mesh,
             polyMoleculeCloud& molCloud,
-            couplingInterface1d& oneDInterfaces,
             couplingInterface2d& twoDInterfaces,
             couplingInterface3d& threeDInterfaces
         );
@@ -133,6 +132,7 @@ public:
 
         void controlVelocitiesI();
         void controlBeforeMove();
+        void controlAfterMove();
         void controlBeforeForces();
         void controlDuringForceComputation
         (

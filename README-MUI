@@ -10,8 +10,6 @@ src/OpenFOAM/include:
 	* createCouplings.H (reads coupling data from a new dictionary file at system/couplingDict (example provided in appendix A below) and creates MUI interfaces, storing them into the objects created in createCouplingData.H)
 
 src/OpenFOAM/coupling:
-	* coupling1d/coupling1d.C (creates 1 or more 1D MUI coupling interfaces with URIs equal to "mpi://[couplingName name from couplingDict]/[interfaceNames values from couplingDict OneD section]")
-	* coupling1d/coupling1d.H
 	* coupling2d/coupling2d.C (creates 1 or more 2D MUI coupling interfaces with URIs equal to "mpi://[couplingName name from couplingDict]/[interfaceNames values from couplingDict TwoD section]")
 	* coupling2d/coupling2d.H
 	* coupling3d/coupling3d.C (creates 1 or more 3D MUI coupling interfaces with URIs equal to "mpi://[couplingName name from couplingDict]/[interfaceNames values from couplingDict ThreeD section]")
@@ -47,7 +45,7 @@ To use MUI in an OpenFOAM application, the general additions are as follows:
 			 	#include "deleteCouplings.H"
 			 #endif
 
-Assuming the above are added then you now have access to MUI interfaces in the objects created by "createCouplingData.H", which are named "couplingInterface1d", "couplingInterface2d" and "couplingInterface3d" respectively (these will be empty if no interfaces are specified in the corresponding section of the couplingDict dictionary). The objects data structures are defined in the header files coupling1d.H, coupling2d.H and coupling3d.H respectively. This gives access to the following data:
+Assuming the above are added then you now have access to MUI interfaces in the objects created by "createCouplingData.H", which are named "couplingInterface2d" and "couplingInterface3d" respectively (these will be empty if no interfaces are specified in the corresponding section of the couplingDict dictionary). The objects data structures are defined in the header files coupling2d.H and coupling3d.H respectively. This gives access to the following data:
 	1) word domainName (this is the value of "couplingName" in the couplingDict dictionary)	
 	2) coupling[n]d* interface (this is a pointer to an instance of the coupling[n]d Class, which itself wraps the appropriate MUI uniface constructs.
 
@@ -98,11 +96,6 @@ couplingName mdFoamPlus_domain1; //MUI domain name
 
 couplingConfigurations
 ( 
-    OneD //1D MUI coupling interface names
-    {
-	
-    }
-
     TwoD //2D MUI coupling interface names
     {
         

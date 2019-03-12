@@ -277,7 +277,6 @@ dsmcControllers::dsmcControllers
     Time& t,
     const polyMesh& mesh,
     dsmcCloud& cloud,
-    couplingInterface1d& oneDInterfaces,
     couplingInterface2d& twoDInterfaces,
     couplingInterface3d& threeDInterfaces
 )
@@ -373,7 +372,7 @@ dsmcControllers::dsmcControllers
 
             couplingControllers_[cC] = autoPtr<dsmcCouplingController>
             (
-                dsmcCouplingController::New(time_, cloud, dsmcControllersIDict, oneDInterfaces, twoDInterfaces, threeDInterfaces)
+                dsmcCouplingController::New(time_, cloud, dsmcControllersIDict, twoDInterfaces, threeDInterfaces)
             );
 
             cCNames_[cC] = couplingControllers_[cC]->type();
@@ -570,6 +569,11 @@ void dsmcControllers::initialConfig()
     {
         couplingControllers_[cC]->initialConfiguration();
     }
+
+    forAll(couplingControllers_, cC)
+	{
+		couplingControllers_[cC]->forget(static_cast<scalar>(1.0));
+	}
 }
 
         //- different control stages 
@@ -578,11 +582,6 @@ void dsmcControllers::controlBeforeMove()
     forAll(stateControllers_, sC)
     {
         stateControllers_[sC]->controlParcelsBeforeMove();
-    }
-
-    forAll(couplingControllers_, cC)
-    {
-      couplingControllers_[cC]->controlParcelsBeforeMove();
     }
 }
 
@@ -593,6 +592,11 @@ void dsmcControllers::controlBeforeCollisions()
     {
         stateControllers_[sC]->controlParcelsBeforeCollisions();
     }
+
+    forAll(couplingControllers_, cC)
+	{
+    	couplingControllers_[cC]->controlParcelsBeforeCollisions();
+	}
 }
 
 void dsmcControllers::controlAfterCollisions()
@@ -610,21 +614,23 @@ void dsmcControllers::calculateProps()
 {
     forAll(stateControllers_, sC)
     {
-//         Info << "error: " << sCNames_[sC] << endl;
         stateControllers_[sC]->calculateProperties();
     }
 
     forAll(fluxControllers_, fC)
     {
-//         Info << "error: " << sCNames_[sC] << endl;
         fluxControllers_[fC]->calculateProperties();
     }
 
     forAll(couplingControllers_, cC)
-    {
-//         Info << "error: " << cCNames_[cC] << endl;
-        couplingControllers_[cC]->calculateProperties();
-    }
+	{
+		couplingControllers_[cC]->calculateProperties();
+	}
+
+    forAll(couplingControllers_, cC)
+	{
+		couplingControllers_[cC]->forget();
+	}
 }
 
 //- this function is to be called at the beginning of the MD time-step. 

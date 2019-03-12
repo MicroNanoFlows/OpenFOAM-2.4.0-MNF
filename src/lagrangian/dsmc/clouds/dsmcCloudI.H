@@ -454,5 +454,10 @@ inline const Foam::cellMeasurements& Foam::dsmcCloud::cellPropMeasurements() con
     return cellMeas_;
 }
 
+inline const Foam::DynamicList<Foam::dsmcCloud::coupledParcs>& Foam::dsmcCloud::coupledParcels() const
+{
+    return coupledParcels_;
+}
+
 
 // ************************************************************************* //

@@ -75,9 +75,9 @@ void velocityVerlet::evolve()
 {
     molCloud_.controlBeforeVelocity();
     updateVelocity(mesh_.time().deltaT().value());
-    molCloud_.controlBeforeMove(); //Coupling regions molecules populated here
-    molCloud_.move();
-    molCloud_.controlAfterMove(); //Coupling boundary applied here
+    molCloud_.controlBeforeMove();
+    molCloud_.move(); // Molecules that pass through coupling boundary are deleted here and added to list to be sent
+    molCloud_.controlAfterMove(); // Coupled boundary molecules sent/received and coupling regions received and populated
     molCloud_.buildCellOccupancy();
     molCloud_.controlBeforeForces();
     molCloud_.clearLagrangianFields();
@@ -86,7 +86,7 @@ void velocityVerlet::evolve()
     molCloud_.controlAfterForces();
     updateVelocity(mesh_.time().deltaT().value());
     molCloud_.controlAfterVelocity();
-    molCloud_.postTimeStep(); //Coupling send and receive of molecules/parcels that have crossed a coupling boundary applied here
+    molCloud_.postTimeStep();
 }
 
 void velocityVerlet::updateVelocity(const scalar& trackTime)

@@ -287,7 +287,6 @@ polyControllers::polyControllers
     Time& t,
     const polyMesh& mesh,
     polyMoleculeCloud& molCloud,
-    couplingInterface1d& oneDInterfaces,
     couplingInterface2d& twoDInterfaces,
     couplingInterface3d& threeDInterfaces
 )
@@ -390,7 +389,7 @@ polyControllers::polyControllers
 
             couplingControllers_[cC] = autoPtr<polyCouplingController>
             (
-                polyCouplingController::New(time_, molCloud, polyControllersIDict, oneDInterfaces, twoDInterfaces, threeDInterfaces)
+                polyCouplingController::New(time_, molCloud, polyControllersIDict, twoDInterfaces, threeDInterfaces)
             );
 
             cCNames_[cC] = couplingControllers_[cC]->type();
@@ -591,6 +590,11 @@ void polyControllers::initialConfig()
     {
         couplingControllers_[cC]->initialConfiguration();
     }
+
+    forAll(couplingControllers_, cC)
+	{
+	  couplingControllers_[cC]->forget(static_cast<scalar>(1.0));
+	}
 }
 
 void polyControllers::controlVelocitiesI()
@@ -607,11 +611,29 @@ void polyControllers::controlBeforeMove()
     {
         stateControllers_[sC]->controlBeforeMove();
     }
+}
 
-    forAll(couplingControllers_, cC)
-    {
-      couplingControllers_[cC]->controlBeforeMove();
-    }
+void polyControllers::controlAfterMove()
+{
+	forAll(couplingControllers_, cC)
+	{
+	  couplingControllers_[cC]->controlAfterMove(1);
+	}
+
+	forAll(couplingControllers_, cC)
+	{
+	  couplingControllers_[cC]->forget();
+	}
+
+	forAll(couplingControllers_, cC)
+	{
+	  couplingControllers_[cC]->controlAfterMove(2);
+	}
+
+	forAll(couplingControllers_, cC)
+	{
+	  couplingControllers_[cC]->forget();
+	}
 }
 
 
@@ -665,11 +687,6 @@ void polyControllers::calculateStateProps()
     forAll(fluxControllers_, fC)
     {
         fluxControllers_[fC]->calculateProperties();
-    }
-
-    forAll(couplingControllers_, cC)
-    {
-        couplingControllers_[cC]->calculateProperties();
     }
 }
 

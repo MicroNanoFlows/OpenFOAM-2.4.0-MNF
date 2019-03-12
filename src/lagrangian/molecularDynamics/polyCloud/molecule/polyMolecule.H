@@ -382,8 +382,6 @@ public:
             inline bool frozen();
             
             inline bool referred();
-            
-            inline bool couplingDeletion();
 
     // Member Operators
 

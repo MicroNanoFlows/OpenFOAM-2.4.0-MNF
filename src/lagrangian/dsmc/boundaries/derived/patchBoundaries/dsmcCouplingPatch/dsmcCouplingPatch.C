@@ -55,6 +55,8 @@ dsmcCouplingPatch::dsmcCouplingPatch
 :
     dsmcPatchBoundary(t, mesh, cloud, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
+	sendingDict_(dict.subDict(typeName + "Sending")),
+	receivingDict_(dict.subDict(typeName + "Receiving")),
     allSpecies_(false),
     typeIds_()
 {
@@ -63,6 +65,30 @@ dsmcCouplingPatch::dsmcCouplingPatch
     writeInCase_ = true;
 
     setProperties();
+
+    const List<word> sendingInterfaces (sendingDict_.lookup("sendingInterfaces"));
+
+	if(sendingInterfaces.size() > 0)
+	{
+		sendingInterfaces_.resize(sendingInterfaces.size());
+
+		forAll(sendingInterfaces, interface)
+		{
+			sendingInterfaces_[interface] = sendingInterfaces[interface];
+		}
+	}
+
+	const List<word> receivingInterfaces (receivingDict_.lookup("receivingInterfaces"));
+
+	if(receivingInterfaces.size() > 0)
+	{
+		receivingInterfaces_.resize(receivingInterfaces.size());
+
+		forAll(sendingInterfaces, interface)
+		{
+			receivingInterfaces_[interface] = receivingInterfaces[interface];
+		}
+	}
 }
 
 
@@ -82,9 +108,9 @@ void dsmcCouplingPatch::controlParticle(dsmcParcel& p, dsmcParcel::trackingData&
 {
     td.keepParticle = false;
 
-    //Add to list of coupled parcels before it is deleted
-    dsmcParcel *parcelPtr = &p;
-    cloud_.insertCoupledParcel(parcelPtr);
+    //Add copy to list of coupled parcels before it is deleted from the cloud
+    dsmcParcel* parcelPtr = new dsmcParcel(p);
+    cloud_.insertCoupledParcel(parcelPtr, sendingInterfaces_, receivingInterfaces_);
 }
 
 void dsmcCouplingPatch::output

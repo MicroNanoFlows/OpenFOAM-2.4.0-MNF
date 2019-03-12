@@ -29,7 +29,17 @@ polyPatchBoundaries
 
         polyCouplingPatchProperties
         {
-		molIds (Ar);
+		molIds (Ar);		
+	}
+
+	polyCouplingPatchSending
+	{
+	    sendingInterfaces	(ifs_1);
+	}
+
+	polyCouplingPatchReceiving
+	{
+	    receivingInterfaces	(ifs_1);
 	}
     }
     boundary
@@ -44,6 +54,16 @@ polyPatchBoundaries
         polyCouplingPatchProperties
         {
 		molIds (Ar);
+	}
+
+	polyCouplingPatchSending
+	{
+	    sendingInterfaces	(ifs_2);
+	}
+
+	polyCouplingPatchReceiving
+	{
+	    receivingInterfaces	(ifs_2);
 	}
     }    
 );

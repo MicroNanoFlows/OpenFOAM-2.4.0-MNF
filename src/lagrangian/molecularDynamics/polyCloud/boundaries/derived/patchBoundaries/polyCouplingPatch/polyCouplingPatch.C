@@ -53,14 +53,12 @@ polyCouplingPatch::polyCouplingPatch
 :
     polyPatchBoundary(t, mesh, molCloud, dict),
     propsDict_(dict.subDict(typeName + "Properties")),
+	sendingDict_(dict.subDict(typeName + "Sending")),
+	receivingDict_(dict.subDict(typeName + "Receiving")),
     elapsedTime_(0.0),
     writeInterval_(readScalar(t.controlDict().lookup("writeInterval"))),
     startTime_(t.startTime().value()),
-    molIds_(),
-    molFlux_(0.0),
-    massFlux_(0.0),
-    cumulMolFlux_(0.0),
-    cumulMassFlux_(0.0)
+    molIds_()
 {
     writeInTimeDir_ = false;
     writeInCase_ = true;
@@ -74,6 +72,30 @@ polyCouplingPatch::polyCouplingPatch
     );
 
     molIds_ = ids.molIds();
+
+    const List<word> sendingInterfaces (sendingDict_.lookup("sendingInterfaces"));
+
+	if(sendingInterfaces.size() > 0)
+	{
+		sendingInterfaces_.resize(sendingInterfaces.size());
+
+		forAll(sendingInterfaces, interface)
+		{
+			sendingInterfaces_[interface] = sendingInterfaces[interface];
+		}
+	}
+
+	const List<word> receivingInterfaces (receivingDict_.lookup("receivingInterfaces"));
+
+	if(receivingInterfaces.size() > 0)
+	{
+		receivingInterfaces_.resize(receivingInterfaces.size());
+
+		forAll(sendingInterfaces, interface)
+		{
+			receivingInterfaces_[interface] = receivingInterfaces[interface];
+		}
+	}
 }
 
 
@@ -99,20 +121,15 @@ void polyCouplingPatch::controlMol
 {
     if(findIndex(molIds_, mol.id()) != -1)
     {
-        const scalar& massI = molCloud_.cP().mass(mol.id());
-        massFlux_ += massI;
-        molFlux_ += 1.0;
-        cumulMolFlux_ += 1.0;
-        cumulMassFlux_ += massI;
-
         td.keepParticle = false;
 
-        //Add to list of coupled molecules before it is deleted
-        polyMolecule *molPtr = &mol;
-        molCloud_.insertCoupledMol(molPtr);
+        //Add copy to list of coupled molecules before it is deleted from the cloud
+        polyMolecule* molPtr = new polyMolecule(mol);
+        molCloud_.insertCoupledMol(molPtr, sendingInterfaces_, receivingInterfaces_);
     }
     else // reflect
     {
+    	std::cout << "Mol reflected" << std::endl;
         const label& faceI = mol.face();
         vector nF = mesh_.faceAreas()[faceI];
         nF /= mag(nF);
@@ -131,76 +148,7 @@ void polyCouplingPatch::output
     const fileName& fixedPathName,
     const fileName& timePath
 )
-{
-    scalar molFluxCumul = cumulMolFlux_;
-    scalar massFluxCumul = cumulMassFlux_;
-
-    if (Pstream::parRun())
-    {
-        reduce(massFlux_, sumOp<scalar>());
-        reduce(molFlux_, sumOp<scalar>());
-        reduce(molFluxCumul, sumOp<scalar>());
-        reduce(massFluxCumul, sumOp<scalar>());
-    }
-
-    if(Pstream::master())
-    {
-        elapsedTime_ += writeInterval_;
-
-        scalarField time(1);
-        scalarField massFlux(1);
-        scalarField mols(1);
-        scalarField cumulMols(1);
-        scalarField cumulMassFlux(1);
-
-        time[0] = t_.timeOutputValue();
-
-        massFlux[0] = massFlux_/writeInterval_;
-        mols[0] = molFlux_;
-
-        cumulMols[0] = molFluxCumul;
-        cumulMassFlux[0] = massFluxCumul/elapsedTime_;
-
-        writeTimeData
-        (
-            fixedPathName,
-            patchName_+"_couplingPatch_write_mols.xy",
-            time,
-            mols,
-            true
-        );
-
-        writeTimeData
-        (
-            fixedPathName,
-            patchName_+"_couplingPatch_write_massFlux.xy",
-            time,
-            massFlux,
-            true
-        );
-
-        writeTimeData
-        (
-            fixedPathName,
-            patchName_+"_couplingPatch_write_cumul_mols.xy",
-            time,
-            cumulMols,
-            true
-        );
-
-        writeTimeData
-        (
-            fixedPathName,
-            patchName_+"_couplingPatch_write_cumul_massFlux.xy",
-            time,
-            cumulMassFlux,
-            true
-        );
-     }
-
-     massFlux_ = 0.0;
-     molFlux_ = 0.0;
-}
+{}
 
 void polyCouplingPatch::updateProperties(const dictionary& newDict)
 {

@@ -41,7 +41,7 @@ SourceFiles
 #include "polyMesh.H"
 #include "volFields.H"
 #include "polyMoleculeCloud.H"
-#include "binModel.H"
+#include <sstream>
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -66,9 +66,8 @@ private:
         dictionary propsDictSend_;
         dictionary propsDictRecv_;
 
-        autoPtr<binModel> binModel_;
-
         List<label> molIds_;
+        List<word> molNames_;
 
         bool output_;
 
@@ -78,23 +77,43 @@ private:
 #endif
         //- Sending properties
 #ifdef USE_MUI
-        List<mui::uniface<mui::config_3d>* > sendInterfaces_; //- 3D MUI interfaces to send through
+        DynamicList<mui::uniface<mui::config_3d>* > sendInterfaces_; //- 3D MUI interfaces to send through
 #endif
         bool sending_;          //- Determine whether this interface will send
-        List<Foam::word> sendInterfaceNames_;
+        DynamicList<Foam::word> sendInterfaceNames_;
 
         //- Receiving properties
 #ifdef USE_MUI
-        List<mui::uniface<mui::config_3d>* > recvInterfaces_; //- 3D MUI interfaces to receive from
+        DynamicList<mui::uniface<mui::config_3d>* > recvInterfaces_; //- 3D MUI interfaces to receive from
 #endif
         bool receiving_;        //- Determine whether this interface will receive
-        List<Foam::word> recvInterfaceNames_;
-        const reducedUnits& rU;
-        scalar lengthMult_;
-        scalar timeMult_;
-        label counter_;
+        DynamicList<Foam::word> recvInterfaceNames_;
+
+        scalar refLength_;
+        scalar oneOverRefLength_;
+        scalar refTime_;
+        scalar oneOverRefTime_;
+        const List<word>& idList;
+        const reducedUnits& rU_;
+        List<List<polyMolecule*> > molHistory_;
+        List<List<bool> > molChanged_;
+#ifdef USE_MUI
+    	mui::sampler_exact3d<scalar>* spatial_sampler;
+    	mui::chrono_sampler_exact3d* chrono_sampler;
+#endif
+    	point meshMin_;
+		point meshMax_;
 
     // Private Member Functions
+
+        polyMolecule* insertMolecule
+		(
+		   const point& position,
+		   const label& id,
+		   const bool& frozen,
+		   const scalar& temperature,
+		   vector& bulkVelocity
+		);
 
 public:
 
@@ -109,7 +128,6 @@ public:
             Time& t,
             polyMoleculeCloud& molCloud,
             const dictionary& dict,
-            couplingInterface1d &oneDInterfaces,
             couplingInterface2d &twoDInterfaces,
             couplingInterface3d &threeDInterfaces
         );
@@ -125,13 +143,13 @@ public:
         void initialConfiguration();
 
         //- run at start of MD time step before molecules move
-        void controlBeforeMove();
+        void controlAfterMove(int stage);
 
         //- run at end of MD time step
         void calculateProperties();
 
         //- receive molecules that fall into the MD coupled region from coupled dsmcFoamPlus
-        void receiveCoupledRegion();
+        void receiveCoupledRegion(bool init);
 
         //- send molecules to dsmcFoamPlus that have crossed a coupling boundary
         void sendCoupledMolecules();
@@ -148,6 +166,27 @@ public:
 
         //- update properties from a modified dictionary (optional)
         void updateProperties(const dictionary&);
+
+        //- Create a coupling barrier at current coupling time for all sending interfaces
+        void barrier();
+
+        //- Create a coupling barrier at specific coupling time for all sending interfaces
+        void barrier(scalar time);
+
+        //- Create a coupling barrier at current coupling time for all sending interfaces
+        void barrier(label interface);
+
+        //- Create a coupling barrier at specific coupling time for specific sending interface
+        void barrier(scalar time, label interface);
+
+        //- Forget the time frame received at current coupling time for all interfaces
+        void forget();
+
+        //- Forget the time frame received at specific time for all interfaces
+        void forget(scalar time);
+
+        //- Forget the time frame received at specific time for specific interfaces
+        void forget(scalar time, label interface);
 };
 
 

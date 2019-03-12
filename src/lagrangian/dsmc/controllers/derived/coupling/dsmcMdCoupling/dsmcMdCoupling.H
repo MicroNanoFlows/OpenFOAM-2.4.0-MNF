@@ -41,7 +41,8 @@ SourceFiles
 #include "fvMesh.H"
 #include "volFields.H"
 #include "dsmcCloud.H"
-#include "binModel.H"
+#include <sstream>
+#include <iomanip>      // std::setprecision
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -59,8 +60,6 @@ class dsmcMdCoupling
 
 private:
 
-private:
-
     // Private data
 
         //- subDictionarys containing the properties
@@ -68,8 +67,7 @@ private:
         dictionary propsDictSend_;
         dictionary propsDictRecv_;
 
-        autoPtr<binModel> binModel_;
-
+        List<word> typeNames_;
         bool output_;
 
 #ifdef USE_MUI
@@ -78,25 +76,38 @@ private:
 #endif
         //- Sending properties
 #ifdef USE_MUI
-        List<mui::uniface<mui::config_3d>* > sendInterfaces_; //- 3D MUI interfaces to send through
+        DynamicList<mui::uniface<mui::config_3d>* > sendInterfaces_; //- 3D MUI interfaces to send through
 #endif
         bool sending_;          //- Determine whether this controller will send
-        List<Foam::word> sendInterfaceNames_;
+        DynamicList<word> sendInterfaceNames_;
 
         //- Receiving properties
 #ifdef USE_MUI
-        List<mui::uniface<mui::config_3d>* > recvInterfaces_; //- 3D MUI interfaces to receive from
+        DynamicList<mui::uniface<mui::config_3d>* > recvInterfaces_; //- 3D MUI interfaces to receive from
 #endif
         bool receiving_;        //- Determine whether this controller will receive
-        List<Foam::word> recvInterfaceNames_;
-        List<label> parcelsInCellHistory_;
-        scalar lengthMult_;
-        scalar timeMult_;
-        label counter_;
+        DynamicList<word> recvInterfaceNames_;
+
+        List<List<label> > parcelsInCellHistory_;
+        scalar refLength_;
+		scalar oneOverRefLength_;
+		scalar refTime_;
+		scalar oneOverRefTime_;
+#ifdef USE_MUI
+		mui::sampler_exact3d<scalar>* spatial_sampler;
+		mui::chrono_sampler_exact3d* chrono_sampler;
+#endif
+		point meshMin_;
+		point meshMax_;
 
     // Private Member Functions
 
-        void resizeCellHistory(int size);
+        void insertParcel
+        (
+            const point& position,
+        	const vector& U,
+        	const label& typeId
+        );
 
 public:
 
@@ -111,7 +122,6 @@ public:
             Time& t,
             dsmcCloud& cloud,
             const dictionary& dict,
-            couplingInterface1d& oneDInterfaces,
             couplingInterface2d& twoDInterfaces,
             couplingInterface3d& threeDInterfaces
         );
@@ -126,20 +136,20 @@ public:
         //- create an initial configuration
         void initialConfiguration();
 
-        //- run at start of DSMC time step before particles move
-        void controlParcelsBeforeMove();
+        //- run before particle collisions
+        void controlParcelsBeforeCollisions();
 
         //- run at end of DSMC time step
         void calculateProperties();
 
         //- send parcels that fall into the MD coupled region to coupled mdFoamPlus
-        void sendCoupledRegion();
+        void sendCoupledRegion(bool init);
 
         //- send parcels to mdFoamPlus that have crossed a coupling boundary
         void sendCoupledParcels();
 
         //- receive molecules from mdFoamPlus that have crossed a coupling boundary
-        void receiveCoupledMolecules();
+        bool receiveCoupledMolecules();
 
         //- output data (optional)
         void output
@@ -150,6 +160,27 @@ public:
 
         //- update properties from a modified dictionary (optional)
         void updateProperties(const dictionary&);
+
+        //- Create a coupling barrier at current coupling time for all sending interfaces
+	void barrier();
+
+        //- Create a coupling barrier at specific coupling time for all sending interfaces
+        void barrier(scalar time);
+
+        //- Create a coupling barrier at current coupling time for all sending interfaces
+	void barrier(label interface);
+
+        //- Create a coupling barrier at specific coupling time for specific sending interface
+	void barrier(scalar time, label interface);
+
+	//- Forget the time frame received at current coupling time for all interfaces
+	void forget();
+
+	//- Forget the time frame received at specific time for all interfaces
+	void forget(scalar time);
+
+	//- Forget the time frame received at specific time for specific interfaces
+	void forget(scalar time, label interface);
 };
 
 

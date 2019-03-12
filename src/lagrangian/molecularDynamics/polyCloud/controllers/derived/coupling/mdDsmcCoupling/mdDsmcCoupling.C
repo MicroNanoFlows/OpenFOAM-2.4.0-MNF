@@ -46,12 +46,11 @@ mdDsmcCoupling::mdDsmcCoupling
     Time& t,
     polyMoleculeCloud& molCloud,
     const dictionary& dict,
-    couplingInterface1d &oneDInterfaces,
     couplingInterface2d &twoDInterfaces,
     couplingInterface3d &threeDInterfaces
 )
 :
-    polyCouplingController(t, molCloud, dict, oneDInterfaces, twoDInterfaces, threeDInterfaces),
+    polyCouplingController(t, molCloud, dict, twoDInterfaces, threeDInterfaces),
     propsDict_(dict.subDict(typeName + "Properties")),
     propsDictSend_(dict.subDict(typeName + "Sending")),
     propsDictRecv_(dict.subDict(typeName + "Receiving")),
@@ -64,19 +63,14 @@ mdDsmcCoupling::mdDsmcCoupling
 #endif
     sending_(false),
     receiving_(false),
-    rU(molCloud_.redUnits()),
-	counter_(0)
+	idList(molCloud_.cP().molIds()),
+	rU_(molCloud_.redUnits())
 {
 #ifdef USE_MUI
     //- Determine sending interfaces if defined
-    sendInterfaces_.clear();
-    sendInterfaces_.setSize(0);
-
     if(propsDictSend_.found("sendingInterfaces"))
     {
         const List<word> interfaces(propsDictSend_.lookup("sendingInterfaces"));
-        sendInterfaces_.setSize(interfaces.size(), NULL);
-        sendInterfaceNames_.setSize(interfaces.size());
 
         forAll(interfaces, i)
         {
@@ -86,8 +80,8 @@ mdDsmcCoupling::mdDsmcCoupling
                 //- If the MUI interface is found then create a copy of its pointer address and store in sendInterfaces_
                 if(threeDInterfaces.interfaces->getInterfaceName(j).compare(interfaces[i]) == 0)
                 {
-                    sendInterfaces_[i] = threeDInterfaces.interfaces->getInterface(j);
-                    sendInterfaceNames_[i] = interfaces[i]; //- Store the receiving interface name
+                    sendInterfaces_.append(threeDInterfaces.interfaces->getInterface(j));
+                    sendInterfaceNames_.append(interfaces[i]); //- Store the receiving interface name
                     break;
                 }
             }
@@ -96,41 +90,26 @@ mdDsmcCoupling::mdDsmcCoupling
         //- Check all interfaces were found
         forAll(sendInterfaces_, i)
         {
-            if(sendInterfaces_[i] == NULL)
-            {
-                FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
-                            << "Could not find 3D MUI coupling interface (" << interfaces[i]
-                            << ") to send for domain " << threeDInterfaces.domainName << exit(FatalError);
-            }
-            else
-            {
-                Info << "mdDsmcCoupling::mdDsmcCoupling(): Found 3D MUI coupling interface ("
-                     << interfaces[i] << ") to send for domain " << threeDInterfaces.domainName << endl;
-            }
+        	Info << "mdDsmcCoupling::mdDsmcCoupling(): Found 3D MUI coupling interface ("
+				 << interfaces[i] << ") to send for domain " << threeDInterfaces.domainName << endl;
         }
     }
 
     //- Determine receiving interfaces if defined
-    recvInterfaces_.clear();
-    recvInterfaces_.setSize(0);
-
     if(propsDictRecv_.found("receivingInterfaces"))
     {
         const List<word> interfaces(propsDictRecv_.lookup("receivingInterfaces"));
-        recvInterfaces_.setSize(interfaces.size(), NULL);
-        recvInterfaceNames_.setSize(interfaces.size());
 
         forAll(interfaces, i)
         {
-            recvInterfaces_[i] = NULL;
             //- Find MUI interfaces
             for(size_t j=0; j<threeDInterfaces.interfaces->size(); ++j)
             {
                 //- If the MUI interface is found then create a copy of its pointer address and store in sendInterfaces_
                 if(threeDInterfaces.interfaces->getInterfaceName(j).compare(interfaces[i]) == 0)
                 {
-                    recvInterfaces_[i] = threeDInterfaces.interfaces->getInterface(j);
-                    recvInterfaceNames_[i] = interfaces[i]; //- Store the receiving interface name
+                    recvInterfaces_.append(threeDInterfaces.interfaces->getInterface(j));
+                    recvInterfaceNames_.append(interfaces[i]); //- Store the receiving interface name
                     break;
                 }
             }
@@ -139,18 +118,12 @@ mdDsmcCoupling::mdDsmcCoupling
         //- Check all interfaces were found
         forAll(recvInterfaces_, i)
         {
-            if(recvInterfaces_[i] == NULL)
-            {
-                FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
-                            << "Could not find 3D MUI coupling interface (" << interfaces[i]
-                            << ") to receive for domain " << threeDInterfaces.domainName << exit(FatalError);
-            }
-            else
-            {
-                Info << "mdDsmcCoupling::mdDsmcCoupling(): Found 3D MUI coupling interface ("
-                     << interfaces[i] << ") to receive for domain " << threeDInterfaces.domainName << endl;
-            }
+        	Info << "mdDsmcCoupling::mdDsmcCoupling(): Found 3D MUI coupling interface ("
+				 << interfaces[i] << ") to receive for domain " << threeDInterfaces.domainName << endl;
         }
+
+        molChanged_.setSize(recvInterfaces_.size());
+        molHistory_.setSize(recvInterfaces_.size());
     }
 
     if(sendInterfaces_.size() != 0)
@@ -170,6 +143,26 @@ mdDsmcCoupling::mdDsmcCoupling
     writeInTimeDir_ = true;
     writeInCase_ = true;
 
+    const List<word> types(propsDict_.lookup("molIds"));
+	molNames_.setSize(types.size());
+
+	forAll(types, type)
+	{
+		molNames_[type] = types[type];
+	}
+
+	forAll(molNames_, molType)
+	{
+		const label molId = findIndex(idList, molNames_[molType]);
+
+		if(molId == -1)
+		{
+			FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
+				<< "Cannot find molecule id: " << molNames_[molType] << nl << "in idList."
+				<< exit(FatalError);
+		}
+	}
+
     selectIds ids
     (
         molCloud_.cP(),
@@ -178,14 +171,6 @@ mdDsmcCoupling::mdDsmcCoupling
 
     molIds_ = ids.molIds();
 
-    if(propsDict_.found("binModel"))
-    {
-        binModel_ =  autoPtr<binModel>
-        (
-            binModel::New(mesh_, propsDict_)
-        );
-    }
-
     if (propsDict_.found("output"))
     {
         output_ = Switch(propsDict_.lookup("output"));
@@ -193,8 +178,58 @@ mdDsmcCoupling::mdDsmcCoupling
 
     if(sending_ || receiving_)
 	{
-		lengthMult_ = threeDInterfaces.lengthMult; //- Store the length multiplier
-		timeMult_ = threeDInterfaces.timeMult; //- Store the length multiplier
+		refLength_ = threeDInterfaces.refLength; //- Store the reference length
+		refTime_ = threeDInterfaces.refTime; //- Store the reference time
+
+		oneOverRefLength_ = 1.0 / refLength_;
+		oneOverRefTime_ = 1.0 / refTime_;
+#ifdef USE_MUI
+		//Initialise exact time and spatial samplers for MUI with a numerical tolerance of 1e-9, large value needed as dsmcFoamPlus works in non-normalised numerics.
+		spatial_sampler = new mui::sampler_exact3d<scalar>(1e-9);
+		chrono_sampler = new mui::chrono_sampler_exact3d(1e-9);
+#endif
+	}
+
+    meshMin_[0] = VGREAT;
+	meshMin_[1] = VGREAT;
+	meshMin_[2] = VGREAT;
+	meshMax_[0] = -VSMALL;
+	meshMax_[1] = -VSMALL;
+	meshMax_[2] = -VSMALL;
+
+	const pointField& meshPoints = mesh_.points();
+
+	forAll(meshPoints, pts)
+	{
+		if(meshPoints[pts][0] < meshMin_[0])
+		{
+			meshMin_[0] = meshPoints[pts][0];
+		}
+
+		if(meshPoints[pts][1] < meshMin_[1])
+		{
+			meshMin_[1] = meshPoints[pts][1];
+		}
+
+		if(meshPoints[pts][2] < meshMin_[2])
+		{
+			meshMin_[2] = meshPoints[pts][2];
+		}
+
+		if(meshPoints[pts][0] > meshMax_[0])
+		{
+			meshMax_[0] = meshPoints[pts][0];
+		}
+
+		if(meshPoints[pts][1] > meshMax_[1])
+		{
+			meshMax_[1] = meshPoints[pts][1];
+		}
+
+		if(meshPoints[pts][2] > meshMax_[2])
+		{
+			meshMax_[2] = meshPoints[pts][2];
+		}
 	}
 }
 
@@ -207,205 +242,277 @@ mdDsmcCoupling::~mdDsmcCoupling()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void mdDsmcCoupling::initialConfiguration()
-{}
-
-void mdDsmcCoupling::controlBeforeMove()
 {
-    if(receiving_)
+	if(receiving_)
     {
-        receiveCoupledRegion();
+        receiveCoupledRegion(true); // Receive ghost molecules in coupled regions at time = startTime
+    }
+}
+
+void mdDsmcCoupling::controlAfterMove(int stage)
+{
+	if(stage == 1)
+	{
+		if(sending_)
+		{
+			sendCoupledMolecules(); // Send any molecules deleted by coupling boundary (non-blocking)
+		}
+
+		if(receiving_)
+		{
+			receiveCoupledParcels(); // Receive any molecules from dsmc coupling boundary (blocking)
+		}
+	}
+	else if (stage == 2)
+	{
+		receiveCoupledRegion(false); // Receive ghost molecules in coupled region (blocking)
     }
 }
 
 void mdDsmcCoupling::calculateProperties()
+{}
+
+void mdDsmcCoupling::receiveCoupledRegion(bool init)
 {
-    if(sending_)
-    {
-        sendCoupledMolecules();
-    }
+#ifdef USE_MUI
+	label molCount = 0;
+	scalar couplingTime;
+	if(init)
+	{
+		couplingTime = 1.0;
+	}
+	else
+	{
+		couplingTime = time_.time().value() * oneOverRefTime_;
+	}
+	List<std::vector<mui::point3d> > rcvPoints(recvInterfaces_.size());
+	std::stringstream rcvStr;
+	const scalar temperature = 1; //This needs to be properly defined, only correct for sample Argon case
 
-    if(receiving_)
-    {
-        receiveCoupledParcels();
-    }
-}
+	// Iterate through all receiving interfaces for this controller and extract a points list for each molecule type handled
+	forAll(recvInterfaces_, iface)
+	{
+		forAll(molNames_, molType)
+		{
+			rcvStr.str("");
+			rcvStr.clear();
+			rcvStr << molNames_[molType] << "_" << "parc_changed"; //Receive string in format [type]_parc_changed
 
+			//- Extract a list of all molecule locations received from other solver through this interface
+			rcvPoints[iface] = recvInterfaces_[iface]->fetch_points<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
+		}
+	}
 
+	forAll(rcvPoints, ifacepts)
+	{
+		if(rcvPoints[ifacepts].size() > 0)
+		{
+			forAll(molNames_, molType)
+			{
+				const label molId = findIndex(idList, molNames_[molType]);
+				bool newList = false;
 
-void mdDsmcCoupling::receiveCoupledRegion()
-{
-//#ifdef USE_MUI
-    mui::sampler_exact3d<scalar> spatial_sampler;
-    mui::chrono_sampler_exact3d chrono_sampler;
-    const reducedUnits& rU = molCloud_.redUnits();
-    scalar couplingTime = time_.time().value() * timeMult_;
+				//If list size has changed then treat this as a new list
+				if(static_cast<size_t>(molChanged_[ifacepts].size()) != rcvPoints[ifacepts].size())
+				{
+					forAll(molHistory_[ifacepts], mol)
+					{
+						if(molHistory_[ifacepts][mol] != NULL)
+						{
+							molCloud_.deleteParticle(*molHistory_[ifacepts][mol]);
+						}
+					}
 
-    std::cout << couplingTime << std::endl;
+					molChanged_[ifacepts].clear();
+					molHistory_[ifacepts].clear();
 
-    std::vector<mui::point3d> rcvPoints;
+					molChanged_[ifacepts].setSize(rcvPoints[ifacepts].size(), false);
+					molHistory_[ifacepts].setSize(rcvPoints[ifacepts].size(), NULL);
+					newList = true;
+				}
 
-    // Iterate through all receiving interfaces for this controller
-    forAll(recvInterfaces_, iface)
-    {
-    	//- Extract a list of all molecule locations received from dsmcFoamPlus through this interface
-        rcvPoints = recvInterfaces_[iface]->fetch_points<scalar>("mol_changed", couplingTime);
+				rcvStr.str("");
+				rcvStr.clear();
+				rcvStr << molNames_[molType] << "_" << "parc_changed"; //Receive string in format [type]_parc_changed
 
-        for (size_t pts = 0; pts < rcvPoints.size(); pts++)
-        {
-            std::cout << "Point: " << rcvPoints[pts][0] << "," << rcvPoints[pts][1] << "," << rcvPoints[pts][2] << std::endl;
+				for (size_t pts = 0; pts < rcvPoints[ifacepts].size(); pts++)
+				{
+					//Receive the parcel velocity through the interface
+					vector velocity;
 
-        	bool molChanged = recvInterfaces_[iface]->fetch("mol_changed", rcvPoints[pts], couplingTime, spatial_sampler, chrono_sampler);
+					velocity[0] = recvInterfaces_[ifacepts]->fetch("parc_vel_x_region", rcvPoints[ifacepts][pts], couplingTime, *spatial_sampler, *chrono_sampler);
+					velocity[1] = recvInterfaces_[ifacepts]->fetch("parc_vel_y_region", rcvPoints[ifacepts][pts], couplingTime, *spatial_sampler, *chrono_sampler);
+					velocity[2] = recvInterfaces_[ifacepts]->fetch("parc_vel_z_region", rcvPoints[ifacepts][pts], couplingTime, *spatial_sampler, *chrono_sampler);
 
-        	/*
-            if(molChanged)
-            {
-                label cell = -1;
-                label tetFace = -1;
-                label tetPt = -1;
-                vector position(rcvPoints[pts][0], rcvPoints[pts][1], rcvPoints[pts][2]);
+					velocity[0] /= rU_.refVelocity();
+					velocity[1] /= rU_.refVelocity();
+					velocity[2] /= rU_.refVelocity();
 
-                mesh_.findCellFacePt
-                (
-                    position,
-                    cell,
-                    tetFace,
-                    tetPt
-                );
-            }
-            else
-            {
+					const point position(rcvPoints[ifacepts][pts][0] * refLength_, rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
 
-            }
-            */
-        }
+					if(newList) //This is a completely new list so all molecules to be inserted regardless of molChanged flag
+					{
+						molHistory_[ifacepts][pts] = insertMolecule(position, molId, true, temperature, velocity);
+					}
+					else //This is not a completely new list so just check for individual molecule changes
+					{
+						//Update molecule status
+						molChanged_[ifacepts][pts] = recvInterfaces_[ifacepts]->fetch(rcvStr.str(), rcvPoints[ifacepts][pts], couplingTime, *spatial_sampler, *chrono_sampler);
 
-        recvInterfaces_[iface]->forget(couplingTime); // Forget the received buffer in memory
-        recvInterfaces_[iface]->commit(couplingTime); // Signalling the other solver that it can continue
-    }
-    counter_++;
-//#endif
+						if(molChanged_[ifacepts][pts]) //This molecule has changed in the list since the last time
+						{
+							if(molHistory_[ifacepts][pts] != NULL)
+							{
+								molCloud_.deleteParticle(*molHistory_[ifacepts][pts]); //First delete the old molecule in this list position
+							}
+							molHistory_[ifacepts][pts] = insertMolecule(position, molId, true, temperature, velocity); //Insert the new molecule
+						}
+						else //This molecule already exists in the list so just update properties
+						{
+							if(molHistory_[ifacepts][pts] != NULL)
+							{
+								molHistory_[ifacepts][pts]->position()[0] = rcvPoints[ifacepts][pts][0];
+								molHistory_[ifacepts][pts]->position()[1] = rcvPoints[ifacepts][pts][1];
+								molHistory_[ifacepts][pts]->position()[2] = rcvPoints[ifacepts][pts][2];
+
+								molHistory_[ifacepts][pts]->v()[0] = velocity[0];
+								molHistory_[ifacepts][pts]->v()[1] = velocity[1];
+								molHistory_[ifacepts][pts]->v()[2] = velocity[2];
+							}
+						}
+					}
+				}
+			}
+			molCount += rcvPoints[ifacepts].size();
+		}
+	}
+
+	if(init)
+	{
+		forAll(recvInterfaces_, iface)
+		{
+			recvInterfaces_[iface]->commit(couplingTime);
+		}
+	}
+
+	if(molCount > 0)
+	{
+		std::cout << "Number of molecules in coupled region = " << molCount << std::endl;
+	}
+#endif
 }
 
 void mdDsmcCoupling::sendCoupledMolecules()
 {
-/*
-//#ifdef USE_MUI
-    //- Only send data if at least one sending interface is defined
-    if(sending_)
+#ifdef USE_MUI
+	const DynamicList<polyMoleculeCloud::coupledMols>& molsToSend = molCloud_.coupledMolecules();
+	scalar couplingTime = time_.time().value() * oneOverRefTime_;
+	std::stringstream sendStr;
+
+	if(molsToSend.size() != 0)
+	{
+		forAll(molsToSend, mols)
+		{
+			const label typeIndex = findIndex(molNames_, molsToSend[mols].molType);
+
+			if(typeIndex != -1)
+			{
+				forAll(molsToSend[mols].sendingInterfaces, interface)
+				{
+					const label iface = findIndex(sendInterfaceNames_, molsToSend[mols].sendingInterfaces[interface]);
+
+					if(iface != -1)
+					{
+						// Get the molecule centre
+						mui::point3d molCentre;
+						molCentre[0] = molsToSend[mols].mol->position()[0] * oneOverRefLength_;
+						molCentre[1] = molsToSend[mols].mol->position()[1] * oneOverRefLength_;
+						molCentre[2] = molsToSend[mols].mol->position()[2] * oneOverRefLength_;
+
+						sendStr.str("");
+						sendStr.clear();
+						sendStr << molsToSend[mols].molType << "_" << "mol_vel_x_bound"; //Send string in format [type]_mol_vel_x_bound
+
+						// Push the molecule velocity to the interface
+						sendInterfaces_[iface]->push(sendStr.str(), molCentre, molsToSend[mols].mol->v()[0]*rU_.refVelocity());
+						sendStr.str("");
+						sendStr.clear();
+						sendStr << molsToSend[mols].molType << "_" << "mol_vel_y_bound"; //Send string in format [type]_mol_vel_y_bound
+						sendInterfaces_[iface]->push(sendStr.str(), molCentre, molsToSend[mols].mol->v()[1]*rU_.refVelocity());
+						sendStr.str("");
+						sendStr.clear();
+						sendStr << molsToSend[mols].molType << "_" << "mol_vel_z_bound"; //Send string in format [type]_mol_vel_z_bound
+						sendInterfaces_[iface]->push(sendStr.str(), molCentre, molsToSend[mols].mol->v()[2]*rU_.refVelocity());
+
+						std::cout << "Coupling boundary molecule pushed at: [" << molCentre[0] << "," << molCentre[1] << "," << molCentre[2] << "]" << std::endl;
+					}
+				}
+			}
+		}
+	}
+
+    forAll(sendInterfaces_, iface)
     {
-        if(true) //- If calculating at least one average value per cell then commit initial t=0 values
-        {
-            scalar mass;
-            scalar density;
-            label molCount;
-            polyMolecule* molI = NULL;
-            label cellCount = 0;
-
-            forAll(controlZone(), c)
-            {
-                mass = 0.0;
-                molCount = 0;
-                const label& cellI = controlZone()[c];
-                const List<polyMolecule*>& molsInCell = molCloud_.cellOccupancy()[cellI];
-
-                forAll(molsInCell, m)
-                {
-                    molI = molsInCell[m];
-                    mass += molCloud_.cP().mass(molI->id());
-                    molCount++;
-                }
-
-                //- Calculate average mass for the cell
-                if(molCount > 0)
-                {
-                    mass /= molCount;
-                }
-
-                //- Iterate through sending interfaces and push mass and/or density
-                for(size_t i=0; i<sendInterfaces_.size(); ++i)
-                {
-                    //- Push average mass for the cell if enabled to each interface
-                    if(true)
-                    {
-                        sendInterfaces_[i]->push("m", cellCentres_[cellCount], mass);
-                    }
-
-                    //Push cell density if enabled
-                    if(true)
-                    {
-                        scalar volume = mesh_.V()[cellI];
-                        if(volume > 0.0)
-                        {
-                            density = mass / mesh_.V()[cellI];
-                        }
-                        else
-                        {
-                            density = 0.0;
-                        }
-
-                        sendInterfaces_[i]->push("p", cellCentres_[cellCount], density);
-                    }
-                }
-
-                cellCount++;
-            }
-
-            //Commit (transmit) values to the MUI interfaces
-            for(size_t i=0; i<sendInterfaces_.size(); ++i)
-            {
-                sendInterfaces_[i]->commit(time_.value());
-                sendInterfaces_[i]->barrier(time_.value());
-            }
-
-            Info << threeDInterfaces_.domainName << ": MUI values pushed for time " << time_.value()
-                 << " to " << sendInterfaces_.size() << " interfaces" << endl;
-        }
+    	// Commit values to the coupling interface
+    	sendInterfaces_[iface]->commit(couplingTime);
     }
-//#endif
-*/
+#endif
 }
 
 void mdDsmcCoupling::receiveCoupledParcels()
 {
-  /*
 #ifdef USE_MUI
-    //- Only receive data if at least one receiving interface is defined
-    if(receiving_)
-    {
-        Info << threeDInterfaces_.domainName << ": Receiving MUI values for time " << time_.value()
-             << " through " << recvInterfaces_.size() << " interfaces" << endl;
+	scalar couplingTime = time_.time().value() * oneOverRefTime_;
+	std::vector<mui::point3d> rcvPoints;
+	const scalar temperature = 1; //This needs to be properly defined, only correct for sample Argon case
+	std::stringstream rcvStr;
 
-        if(true) //- Calculating at least one average value per cell
-        {
-            mui::sampler_exact3d<scalar> spatial_sampler;
-            mui::chrono_sampler_exact3d chrono_sampler;
+	// Iterate through all receiving interfaces for this controller
+	forAll(recvInterfaces_, iface)
+	{
+		forAll(molNames_, molType)
+		{
+			rcvStr.str("");
+			rcvStr.clear();
+			rcvStr << molNames_[molType] << "_" << "parc_vel_x_bound"; //Receive string in format [type]_parc_vel_x_bound
 
-            for(size_t i=0; i<recvInterfaces_.size(); ++i) //- Iterate through the interfaces
-            {
-                for(int j=0; j<cellCentres_.size(); ++j) //- Iterate through the cell centres (we receive exactly as many as were sent in this example)
-                {
-                    if(true) //- If we are receiving mass values
-                    {
-                        //recvMassValues_[i][j] = recvInterfaces_[i]->fetch("m", cellCentres_[j], time_.value(), spatial_sampler, chrono_sampler);
+			//- Extract a list of all molecule locations received from other solver through this interface
+			rcvPoints = recvInterfaces_[iface]->fetch_points<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
 
-                    }
+			if(rcvPoints.size() > 0)
+			{
+				const label molId = findIndex(idList, molNames_[molType]);
 
-                    if(true) //- If we are receiving density values
-                    {
-                        //recvDensityValues_[i][j] = recvInterfaces_[i]->fetch("p", cellCentres_[j], time_.value(), spatial_sampler, chrono_sampler);
-                    }
-                }
-            }
-        }
+				for (size_t pts = 0; pts < rcvPoints.size(); pts++)
+				{
+					std::cout << "Coupling boundary parcel received at: [" << rcvPoints[pts][0] << "," << rcvPoints[pts][1] << "," << rcvPoints[pts][2] << "]" << std::endl;
 
-        //- Signal other interfaces they can move on if they have a block by committing the receive time to each interface, not needed in this example, provided for clarity
-        for(size_t i=0; i<sendInterfaces_.size(); ++i)
-        {
-            sendInterfaces_[i]->commit(time_.value());
-        }
-    }
+					vector velocity;
+
+					rcvStr.str("");
+					rcvStr.clear();
+					rcvStr << molNames_[molType] << "_" << "parc_vel_x_bound";
+					velocity[0] = recvInterfaces_[iface]->fetch(rcvStr.str(), rcvPoints[pts], couplingTime, *spatial_sampler, *chrono_sampler);
+					rcvStr.str("");
+					rcvStr.clear();
+					rcvStr << molNames_[molType] << "_" << "parc_vel_y_bound";
+					velocity[1] = recvInterfaces_[iface]->fetch(rcvStr.str(), rcvPoints[pts], couplingTime, *spatial_sampler, *chrono_sampler);
+					rcvStr.str("");
+					rcvStr.clear();
+					rcvStr << molNames_[molType] << "_" << "parc_vel_z_bound";
+					velocity[2] = recvInterfaces_[iface]->fetch(rcvStr.str(), rcvPoints[pts], couplingTime, *spatial_sampler, *chrono_sampler);
+
+					velocity[0] /= rU_.refVelocity();
+					velocity[1] /= rU_.refVelocity();
+					velocity[2] /= rU_.refVelocity();
+
+					const point position(rcvPoints[pts][0] * refLength_, rcvPoints[pts][1] * refLength_, rcvPoints[pts][2] * refLength_);
+					insertMolecule(position, molId, false, temperature, velocity);
+				}
+			}
+		}
+	}
 #endif
-*/
 }
 
 void mdDsmcCoupling::output
@@ -413,22 +520,224 @@ void mdDsmcCoupling::output
     const fileName& fixedPathName,
     const List<fileName>& timePaths
 )
-{
-    /*
-    const Time& runTime = time_.time();
-
-    if(runTime.outputTime())
-    {
-
-    }
-    */
-}
+{}
 
 void mdDsmcCoupling::updateProperties(const dictionary& newDict)
 {
     //- the main controller properties should be updated first
     updateCouplingControllerProperties(newDict);
     propsDict_ = newDict.subDict(typeName + "Properties");
+    propsDictSend_ = newDict.subDict(typeName + "Sending");
+	propsDictRecv_ = newDict.subDict(typeName + "Receiving");
+}
+
+void mdDsmcCoupling::barrier()
+{
+	scalar barrierTime = chrono_sampler->get_lower_bound(time_.time().value() * oneOverRefTime_);
+
+	forAll(sendInterfaces_, iface)
+	{
+		sendInterfaces_[iface]->barrier(barrierTime);
+	}
+}
+
+void mdDsmcCoupling::barrier(scalar time)
+{
+	forAll(sendInterfaces_, iface)
+	{
+		sendInterfaces_[iface]->barrier(time);
+	}
+}
+
+void mdDsmcCoupling::barrier(label interface)
+{
+	scalar barrierTime = chrono_sampler->get_lower_bound(time_.time().value() * oneOverRefTime_);
+	sendInterfaces_[interface]->barrier(barrierTime);
+}
+
+void mdDsmcCoupling::barrier(scalar time, label interface)
+{
+	sendInterfaces_[interface]->barrier(time);
+}
+
+void mdDsmcCoupling::forget()
+{
+	scalar time = time_.time().value() * oneOverRefTime_;
+	forAll(recvInterfaces_, iface)
+	{
+		recvInterfaces_[iface]->forget(chrono_sampler->get_upper_bound(time), true);
+	}
+}
+
+void mdDsmcCoupling::forget(scalar time)
+{
+	forAll(recvInterfaces_, iface)
+	{
+		recvInterfaces_[iface]->forget(chrono_sampler->get_upper_bound(time), true);
+	}
+}
+
+void mdDsmcCoupling::forget(scalar time, label interface)
+{
+	recvInterfaces_[interface]->forget(chrono_sampler->get_upper_bound(time), true);
+}
+
+polyMolecule* mdDsmcCoupling::insertMolecule
+(
+    const point& position,
+    const label& id,
+    const bool& frozen,
+    const scalar& temperature,
+    vector& bulkVelocity
+)
+{
+    label cell = -1;
+    label tetFace = -1;
+    label tetPt = -1;
+
+    mesh_.findCellFacePt
+    (
+        position,
+        cell,
+        tetFace,
+        tetPt
+    );
+
+    if(cell != -1)
+    {
+        point specialPosition(vector::zero);
+
+        label special = 0;
+
+        if (frozen)
+        {
+            specialPosition = position;
+
+            special = polyMolecule::SPECIAL_FROZEN;
+        }
+
+        vector pi = vector::zero;
+
+        tensor Q = I;
+
+        polyMolecule* newMol = molCloud_.createMolecule
+        (
+		    position,
+		    cell,
+		    tetFace,
+		    tetPt,
+		    Q,
+		    bulkVelocity,
+		    vector::zero,
+		    pi,
+		    vector::zero,
+		    specialPosition,
+		    special,
+		    id,
+		    1.0,
+		    molCloud_.getTrackingNumber()
+	    );
+
+	    molCloud_.updateNeighbouringRadii(newMol);
+
+        return newMol;
+    }
+    else //Received point outside of mesh, this is almost certainly a rounding error, so snap to nearest mesh boundary to avoid loosing molecule
+    {
+    	point newPosition = position;
+
+    	if(newPosition[0] < meshMin_[0])
+		{
+    		newPosition[0] = meshMin_[0];
+		}
+
+		if(newPosition[0] > meshMax_[0])
+		{
+			newPosition[0] = meshMax_[0];
+		}
+
+		if(newPosition[1] < meshMin_[1])
+		{
+			newPosition[1] = meshMin_[1];
+		}
+
+		if(newPosition[1] > meshMax_[1])
+		{
+			newPosition[1] = meshMax_[1];
+		}
+
+		if(newPosition[2] < meshMin_[2])
+		{
+			newPosition[2] = meshMin_[2];
+		}
+
+		if(newPosition[2] > meshMax_[2])
+		{
+			newPosition[2] = meshMax_[2];
+		}
+
+		cell = -1;
+		tetFace = -1;
+		tetPt = -1;
+
+		mesh_.findCellFacePt
+		(
+			newPosition,
+			cell,
+			tetFace,
+			tetPt
+		);
+
+		if(cell != -1)
+		{
+			std::cout << "WARNING. Received molecule position snapped to mesh = ("
+					  << newPosition[0] << "," << newPosition[1] << "," << newPosition[2] << ")"
+					  << std::endl;
+
+			point specialPosition(vector::zero);
+
+			label special = 0;
+
+			if (frozen)
+			{
+				specialPosition = newPosition;
+
+				special = polyMolecule::SPECIAL_FROZEN;
+			}
+
+			vector pi = vector::zero;
+
+			tensor Q = I;
+
+			polyMolecule* newMol = molCloud_.createMolecule
+			(
+				newPosition,
+				cell,
+				tetFace,
+				tetPt,
+				Q,
+				bulkVelocity,
+				vector::zero,
+				pi,
+				vector::zero,
+				specialPosition,
+				special,
+				id,
+				1.0,
+				molCloud_.getTrackingNumber()
+			);
+
+			return newMol;
+		}
+		else //Position still outside of mesh (something very odd happening)
+		{
+			std::cout << "WARNING. Received molecule position outside of mesh and not added = ("
+				 << newPosition[0] << "," << newPosition[1] << "," << newPosition[2] << ")"
+				 << std::endl;
+
+			 return NULL;
+		}
+    }
 }
 
 } // End namespace Foam

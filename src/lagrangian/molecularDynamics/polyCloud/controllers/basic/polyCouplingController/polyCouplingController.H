@@ -37,7 +37,6 @@ SourceFiles
 #ifndef polyCouplingController_H
 #define polyCouplingController_H
 
-#include "coupling1d.H"
 #include "coupling2d.H"
 #include "coupling3d.H"
 #include "IOdictionary.H"
@@ -47,7 +46,6 @@ SourceFiles
 #include "volFields.H"
 #include "polyMolecule.H"
 #include "writeTimeData.H"
-#include "selectIds.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -101,11 +99,10 @@ public:
                 Time& t,
                 polyMoleculeCloud& molCloud,
                 const dictionary& dict,
-                couplingInterface1d &oneDInterfaces,
                 couplingInterface2d &twoDInterfaces,
                 couplingInterface3d &threeDInterfaces
             ),
-            (t, molCloud, dict, oneDInterfaces, twoDInterfaces, threeDInterfaces)
+            (t, molCloud, dict, twoDInterfaces, threeDInterfaces)
         );
 
     // Constructors
@@ -116,7 +113,6 @@ public:
             Time& t,
             polyMoleculeCloud& molCloud,
             const dictionary& dict,
-            couplingInterface1d &oneDInterfaces,
             couplingInterface2d &twoDInterfaces,
             couplingInterface3d &threeDInterfaces
         );
@@ -129,7 +125,6 @@ public:
             Time& t,
             polyMoleculeCloud& molCloud,
             const dictionary& dict,
-            couplingInterface1d &oneDInterfaces,
             couplingInterface2d &twoDInterfaces,
             couplingInterface3d &threeDInterfaces
         );
@@ -147,13 +142,13 @@ public:
         virtual void initialConfiguration() = 0;
 
         //- run at start of MD time step before molecules move
-        virtual void controlBeforeMove() = 0;
+        virtual void controlAfterMove(int stage) = 0;
 
         //- run at end of DSMC time step
         virtual void calculateProperties() = 0;
 
         //- receive molecules that fall into the MD coupled region from coupled dsmcFoamPlus
-        virtual void receiveCoupledRegion() = 0;
+        virtual void receiveCoupledRegion(bool init) = 0;
 
         //- send molecules to dsmcFoamPlus that have crossed a coupling boundary
         virtual void sendCoupledMolecules() = 0;
@@ -172,6 +167,27 @@ public:
         virtual void updateProperties(const dictionary&) = 0;
 
         void updateCouplingControllerProperties(const dictionary&);
+
+        //- create a coupling barrier at current coupling time for all sending interfaces
+		virtual void barrier() = 0;
+
+		//- create a coupling barrier for a specific sending interface
+		virtual void barrier(scalar time, label interface) = 0;
+
+		//- create a coupling barrier at current coupling time for a specific sending interface
+		virtual void barrier(label interface) = 0;
+
+		//- create a coupling barrier for all sending interfaces
+		virtual void barrier(scalar time) = 0;
+
+		//- Forget the time frame received at current coupling time for all interfaces
+		virtual void forget() = 0;
+
+		//- Forget the time frame received at specific time for all interfaces
+		virtual void forget(scalar time) = 0;
+
+		//- Forget the time frame received at specific time for specific interfaces
+		virtual void forget(scalar time, label interface) = 0;
 
     // Access
 

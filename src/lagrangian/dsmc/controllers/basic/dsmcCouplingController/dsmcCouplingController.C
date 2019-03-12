@@ -50,7 +50,6 @@ dsmcCouplingController::dsmcCouplingController
     Time& t,
     dsmcCloud& cloud,
     const dictionary& dict,
-    couplingInterface1d& oneDInterfaces,
     couplingInterface2d& twoDInterfaces,
     couplingInterface3d& threeDInterfaces
 )
@@ -96,7 +95,6 @@ autoPtr<dsmcCouplingController> dsmcCouplingController::New
     Time& t,
     dsmcCloud& cloud,
     const dictionary& dict,
-    couplingInterface1d& oneDInterfaces,
     couplingInterface2d& twoDInterfaces,
     couplingInterface3d& threeDInterfaces
 )
@@ -125,7 +123,7 @@ autoPtr<dsmcCouplingController> dsmcCouplingController::New
 
     return autoPtr<dsmcCouplingController>
 	(
-		cstrIter()(t, cloud, dict, oneDInterfaces, twoDInterfaces, threeDInterfaces)
+		cstrIter()(t, cloud, dict, twoDInterfaces, threeDInterfaces)
 	);
 }
 

@@ -71,6 +71,16 @@ class polyMoleculeCloud
     public Cloud<polyMolecule>
 {
 
+public:
+
+	struct coupledMols
+	{
+		polyMolecule* mol;
+		List<word> sendingInterfaces;
+		List<word> receivingInterfaces;
+		word molType;
+	};
+
 private:
 
     // Private data
@@ -97,7 +107,7 @@ private:
         polyBoundaries boundaries_;
 
         //- Copy of molecules deleted by coupling boundary
-        DynamicList<polyMolecule*> coupledMols_;
+        DynamicList<coupledMols> coupledMols_;
 
         //- controllers
         polyControllers controllers_;
@@ -157,7 +167,6 @@ public:
             const reducedUnits& rU,
             const constantMoleculeProperties& cP,
             cachedRandomMD& rndGen,
-            couplingInterface1d& oneDInterfaces,
             couplingInterface2d& twoDInterfaces,
             couplingInterface3d& threeDInterfaces
         );
@@ -185,7 +194,6 @@ public:
             const reducedUnits& rU,
             const constantMoleculeProperties& cP,
             cachedRandomMD& rndGen,
-            couplingInterface1d& oneDInterfaces,
             couplingInterface2d& twoDInterfaces,
             couplingInterface3d& threeDInterfaces
         );
@@ -205,7 +213,7 @@ public:
 
     // Member Functions
 
-        void createMolecule
+        polyMolecule* createMolecule
         (
             const vector& position,
             const label cell,
@@ -294,7 +302,9 @@ public:
         
         void insertCoupledMol
         (
-            polyMolecule* mol
+        	polyMolecule* mol,
+			List<word>& sending,
+			List<word>& receiving
         );
 
         void clearCoupledMols();
@@ -324,7 +334,7 @@ public:
             inline trackingNumber& moleculeTracking();
             inline cellInteractions<polyMolecule>& il();
             inline clockTimer& clock();
-            inline const DynamicList<polyMolecule*>& coupledMols() const;
+            inline const DynamicList<polyMoleculeCloud::coupledMols>& coupledMolecules() const;
             
     // Member Operators
 

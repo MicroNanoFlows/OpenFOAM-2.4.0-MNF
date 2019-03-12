@@ -26,7 +26,7 @@ configurations
 		Ar	2.68835e25;
 	};
 
-	translationalTemperature	273;
+	translationalTemperature	140.044547121;
 	rotationalTemperature		0;
 	vibrationalTemperature		0;
     	electronicTemperature		0;

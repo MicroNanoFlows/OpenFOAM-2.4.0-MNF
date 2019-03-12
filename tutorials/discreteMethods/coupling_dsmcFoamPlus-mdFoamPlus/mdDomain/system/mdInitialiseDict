@@ -22,7 +22,7 @@ polyConfigurations
     configuration
     {
         type		polyBCC;
-        temperature	0.66;
+        temperature	1;
         bulkVelocity	(0.0 0.0 0.0);
         molId		Ar;
         frozen		no;
@@ -33,7 +33,7 @@ polyConfigurations
           endPoint	(441.176471 147.058824 147.058824);  
         }
     
-        unitCellSize	1;
+        unitCellSize	1.1;
         N		3293;
     }
 );

@@ -71,7 +71,6 @@ int main(int argc, char *argv[])
             runTime,
             "dsmc",
             mesh,
-            oneDInterfaces,
             twoDInterfaces,
             threeDInterfaces
         );

@@ -49,7 +49,6 @@ polyCouplingController::polyCouplingController
     Time& t,
     polyMoleculeCloud& molCloud,
     const dictionary& dict,
-    couplingInterface1d& oneDInterfaces,
     couplingInterface2d& twoDInterfaces,
     couplingInterface3d& threeDInterfaces
 )
@@ -94,7 +93,6 @@ autoPtr<polyCouplingController> polyCouplingController::New
     Time& t,
     polyMoleculeCloud& molCloud,
     const dictionary& dict,
-    couplingInterface1d& oneDInterfaces,
     couplingInterface2d& twoDInterfaces,
     couplingInterface3d& threeDInterfaces
 )
@@ -123,7 +121,7 @@ autoPtr<polyCouplingController> polyCouplingController::New
 
     return autoPtr<polyCouplingController>
     (
-        cstrIter()(t, molCloud, dict, oneDInterfaces, twoDInterfaces, threeDInterfaces)
+        cstrIter()(t, molCloud, dict, twoDInterfaces, threeDInterfaces)
     );
 }
 

@@ -122,7 +122,6 @@ public:
             Time& t,
             const polyMesh& mesh,
             dsmcCloud& cloud,
-            couplingInterface1d& oneDInterfaces,
             couplingInterface2d& twoDInterfaces,
             couplingInterface3d& threeDInterfaces
         );

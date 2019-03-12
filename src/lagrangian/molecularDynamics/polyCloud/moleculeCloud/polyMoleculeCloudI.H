@@ -55,7 +55,7 @@ inline void Foam::polyMoleculeCloud::evaluatePair
         {
             f = molJ->fraction();
         }
-        
+
         // looping over just pair potential sites
         forAll(cP_.pairSitesLinks()[idI], i)
         {
@@ -753,8 +753,7 @@ inline Foam::clockTimer& Foam::polyMoleculeCloud::clock()
     return clock_;
 }
 
-inline const Foam::DynamicList<Foam::polyMolecule*>&
-    Foam::polyMoleculeCloud::coupledMols() const
+inline const Foam::DynamicList<Foam::polyMoleculeCloud::coupledMols>& Foam::polyMoleculeCloud::coupledMolecules() const
 {
     return coupledMols_;
 }
