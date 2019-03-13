@@ -231,9 +231,7 @@ void dsmcLiouFangPressureOutletSpecifiedMolarFraction::controlParcelsBeforeMove(
                 const tetIndices& faceTetIs = faceTets[selectedTriI];
 
                 point p = faceTetIs.faceTri(mesh_).randomPoint(rndGen);
-                
-                Info << "faceTemperature = " << faceTemperature << endl;
-                Info << "faceVelocity = " << faceVelocity << endl;
+
                     
                 // Velocity generation
                 scalar mostProbableSpeed
