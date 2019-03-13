@@ -584,12 +584,16 @@ void dsmcNewPressureOutletCalculatedMolarFraction::controlParcelsAfterCollisions
             
             outletVelocity_[c] = totalMomentum_[c]/totalMass_[c];
             
+            if(nTimeSteps_ > 100)
+            {
+            
             //velocity correction for each boundary cellI
 //             if(faceNormalVelocity < VSMALL)
 //             {
                 velocityCorrection[c] = (pressure[c] - outletPressure_) /
                                             (massDensity[c]*speedOfSound[c]);
                 outletVelocity_[c] += velocityCorrection[c]*n;
+            }
 //             }
 //             else
 //             {

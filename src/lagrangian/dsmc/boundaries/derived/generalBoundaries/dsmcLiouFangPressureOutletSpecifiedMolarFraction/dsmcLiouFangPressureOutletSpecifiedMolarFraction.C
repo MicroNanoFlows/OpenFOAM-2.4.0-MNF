@@ -172,6 +172,7 @@ void dsmcLiouFangPressureOutletSpecifiedMolarFraction::controlParcelsBeforeMove(
                 previousCummulativeSum = cTriAFracs[triI];
             }
 
+            
             //Force the last area fraction value to 1.0 to avoid any
             //rounding/non-flat face errors giving a value < 1.0
             cTriAFracs.last() = 1.0;
@@ -230,6 +231,9 @@ void dsmcLiouFangPressureOutletSpecifiedMolarFraction::controlParcelsBeforeMove(
                 const tetIndices& faceTetIs = faceTets[selectedTriI];
 
                 point p = faceTetIs.faceTri(mesh_).randomPoint(rndGen);
+                
+                Info << "faceTemperature = " << faceTemperature << endl;
+                Info << "faceVelocity = " << faceVelocity << endl;
                     
                 // Velocity generation
                 scalar mostProbableSpeed
@@ -584,9 +588,12 @@ void dsmcLiouFangPressureOutletSpecifiedMolarFraction::controlParcelsAfterCollis
             //velocity correction for each boundary cellI
 //              if(outletVelocity_[c] > VSMALL)
 //              {
+            if(nTimeSteps_ > 100)
+            {
                 velocityCorrection[c] = (pressure[c] - outletPressure_) / 
                                               (massDensity[c]*speedOfSound[c]);
                 outletVelocity_[c] += velocityCorrection[c]*n;
+            }
 //              }
 //              else
 //              {
