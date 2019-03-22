@@ -97,8 +97,7 @@ private:
         const reducedUnits& rU_;
         List<List<polyMolecule*> > molHistory_;
         List<List<bool> > molChanged_;
-#ifdef USE_MUI
-    	mui::sampler_exact3d<scalar>* spatial_sampler;
+#ifdef USE_MUI    	
     	mui::chrono_sampler_exact3d* chrono_sampler;
 #endif
     	point meshMin_;

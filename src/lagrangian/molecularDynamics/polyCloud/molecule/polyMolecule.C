@@ -106,11 +106,6 @@ bool Foam::polyMolecule::move
         }
     }
 
-    if(!td.keepParticle)
-    {
-    	std::cout << "Keep particle false" << std::endl;
-    }
-
     return td.keepParticle;
 }
 
@@ -317,8 +312,11 @@ void Foam::polyMolecule::hitPatch
     label patchIndex = pp.index();
     const label& patchModelId = td.cloud().boundaries().patchToModelIds()[patchIndex];
 
-    // apply a boundary model when a molecule collides with this poly patch
-    td.cloud().boundaries().patchBoundaryModels()[patchModelId]->controlMol(*this, td);
+    if(patchModelId != -1)
+    {
+    	// apply a boundary model when a molecule collides with this poly patch
+    	td.cloud().boundaries().patchBoundaryModels()[patchModelId]->controlMol(*this, td);
+    }
 }
 
 // ************************************************************************* //

@@ -42,7 +42,6 @@ SourceFiles
 #include "volFields.H"
 #include "dsmcCloud.H"
 #include <sstream>
-#include <iomanip>      // std::setprecision
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -94,7 +93,6 @@ private:
 		scalar refTime_;
 		scalar oneOverRefTime_;
 #ifdef USE_MUI
-		mui::sampler_exact3d<scalar>* spatial_sampler;
 		mui::chrono_sampler_exact3d* chrono_sampler;
 #endif
 		point meshMin_;

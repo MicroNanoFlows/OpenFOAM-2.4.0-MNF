@@ -172,13 +172,12 @@ dsmcMdCoupling::dsmcMdCoupling
 		oneOverRefLength_ = 1.0 / refLength_;
 		oneOverRefTime_ = 1.0 / refTime_;
 #ifdef USE_MUI
-		//Initialise exact time and spatial samplers for MUI with a numerical tolerance of 1e-9, large value needed as dsmcFoamPlus works in non-normalised numerics.
-		spatial_sampler = new mui::sampler_exact3d<scalar>(1e-9);
+		//Initialise exact time sampler for MUI with a numerical tolerance of 1e-9, large value needed as dsmcFoamPlus works in non-normalised numerics.
 		chrono_sampler = new mui::chrono_sampler_exact3d(1e-9);
 #endif
     }
 
-    meshMin_[0] = VGREAT;
+    	meshMin_[0] = VGREAT;
 	meshMin_[1] = VGREAT;
 	meshMin_[2] = VGREAT;
 	meshMax_[0] = -VSMALL;
@@ -361,9 +360,18 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 						sendInterfaces_[iface]->push(sendStr.str(), parcCentre, static_cast<scalar>(parcelChanged));
 
 						// Push the parcel velocity to the interface
-						sendInterfaces_[iface]->push("parc_vel_x_region", parcCentre, parcel->U()[0]);
-						sendInterfaces_[iface]->push("parc_vel_y_region", parcCentre, parcel->U()[1]);
-						sendInterfaces_[iface]->push("parc_vel_z_region", parcCentre, parcel->U()[2]);
+						sendStr.str("");
+						sendStr.clear();
+						sendStr << typeNames_[typeIndex] << "_" << "parc_vel_x_region"; //Send string in format [type]_parc_vel_x_region
+						sendInterfaces_[iface]->push(sendStr.str(), parcCentre, parcel->U()[0]);
+						sendStr.str("");
+						sendStr.clear();
+						sendStr << typeNames_[typeIndex] << "_" << "parc_vel_y_region"; //Send string in format [type]_parc_vel_y_region
+						sendInterfaces_[iface]->push(sendStr.str(), parcCentre, parcel->U()[1]);
+						sendStr.str("");
+						sendStr.clear();
+						sendStr << typeNames_[typeIndex] << "_" << "parc_vel_z_region"; //Send string in format [type]_parc_vel_z_region
+						sendInterfaces_[iface]->push(sendStr.str(), parcCentre, parcel->U()[2]);
 					}
 				}
 			}
@@ -371,10 +379,10 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 	}
 
 	forAll(sendInterfaces_, iface)
-    {
+    	{
 		// Commit (transmit) values to the MUI interface
-        sendInterfaces_[iface]->commit(couplingTime);
-    }
+        	sendInterfaces_[iface]->commit(couplingTime);
+    	}
 #endif
 }
 
@@ -441,47 +449,116 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
 	bool parcelAdded = false;
 #ifdef USE_MUI
 	scalar couplingTime = time_.time().value() * oneOverRefTime_;
-	std::vector<mui::point3d> rcvPoints;
+	List<std::vector<mui::point3d> > rcvPoints(recvInterfaces_.size());
+	List<std::vector<scalar> > rcvVelX(recvInterfaces_.size());
+    List<std::vector<scalar> > rcvVelY(recvInterfaces_.size());
+    List<std::vector<scalar> > rcvVelZ(recvInterfaces_.size());
 	std::stringstream rcvStr;
+	
+	// Iterate through all receiving interfaces for this controller and extract a points list for each molecule type handled
+    forAll(recvInterfaces_, iface)
+    {
+    	forAll(typeNames_, molType)
+        {
+            rcvStr.str("");
+            rcvStr.clear();
+            rcvStr << typeNames_[molType] << "_" << "mol_vel_x_bound";
+
+            //- Extract a list of all molecule locations received from other solver through this interface
+            rcvPoints[iface] = recvInterfaces_[iface]->fetch_points<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
+			
+            if(rcvPoints[iface].size() > 0)
+            {
+                //- Extract a list of all molecule velocities received from other solver through this interface
+				rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
+				rcvStr.str("");
+				rcvStr.clear();
+				rcvStr << typeNames_[molType] << "_" << "mol_vel_y_bound";
+				rcvVelY[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
+				rcvStr.str("");
+				rcvStr.clear();
+				rcvStr << typeNames_[molType] << "_" << "mol_vel_z_bound";
+				rcvVelZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
+           }
+       }
+    }
 		
 	// Iterate through all receiving interfaces for this controller
-	forAll(recvInterfaces_, iface)
+	forAll(recvInterfaces_, ifacepts)
 	{
 		forAll(typeNames_, molType)
 		{
-			rcvStr.str("");
-			rcvStr.clear();
-			rcvStr << typeNames_[molType] << "_" << "mol_vel_x_bound"; //Receive string in format [type]_mol_vel_x_bound
-
-			//- Extract a list of all molecule locations received from other solver through this interface
-			rcvPoints = recvInterfaces_[iface]->fetch_points<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
-
-			if(rcvPoints.size() > 0)
+			if(rcvPoints[ifacepts].size() > 0)
 			{
 				const label typeId = findIndex(cloud_.typeIdList(), typeNames_[molType]);
-
-				for (size_t pts = 0; pts < rcvPoints.size(); pts++)
+				
+				if(typeId != -1)
 				{
-					std::cout << "Coupling boundary molecule received at: [" << rcvPoints[pts][0] << "," << rcvPoints[pts][1] << "," << rcvPoints[pts][2] << "]" << std::endl;
+					vector exactBoundaryMin(vector::zero), exactBoundaryMax(vector::zero);
 
-					vector velocity;
+					if(recvInterfaceNames_[ifacepts] == "ifs_1")
+					{
+						exactBoundaryMin[0] = 10e-8;
+						exactBoundaryMin[1] = 0;
+						exactBoundaryMin[2] = 0;
 
-					rcvStr.str("");
-					rcvStr.clear();
-					rcvStr << typeNames_[molType] << "_" << "mol_vel_x_bound";
-					velocity[0] = recvInterfaces_[iface]->fetch(rcvStr.str(), rcvPoints[pts], couplingTime, *spatial_sampler, *chrono_sampler);
-					rcvStr.str("");
-					rcvStr.clear();
-					rcvStr << typeNames_[molType] << "_" << "mol_vel_y_bound";
-					velocity[1] = recvInterfaces_[iface]->fetch(rcvStr.str(), rcvPoints[pts], couplingTime, *spatial_sampler, *chrono_sampler);
-					rcvStr.str("");
-					rcvStr.clear();
-					rcvStr << typeNames_[molType] << "_" << "mol_vel_z_bound";
-					velocity[2] = recvInterfaces_[iface]->fetch(rcvStr.str(), rcvPoints[pts], couplingTime, *spatial_sampler, *chrono_sampler);
+						exactBoundaryMax[0] = 10e-8;
+						exactBoundaryMax[1] = 5e-8;
+						exactBoundaryMax[2] = 5e-8;
+					}
 
-					const point position(rcvPoints[pts][0] * refLength_, rcvPoints[pts][1] * refLength_, rcvPoints[pts][2] * refLength_);
-					insertParcel(position, velocity, typeId);
-					parcelAdded = true;
+					if(recvInterfaceNames_[ifacepts] == "ifs_2")
+					{
+						exactBoundaryMin[0] = 1.5e-7;
+						exactBoundaryMin[1] = 0;
+						exactBoundaryMin[2] = 0;
+
+						exactBoundaryMax[0] = 1.5e-7;
+						exactBoundaryMax[1] = 5e-8;
+						exactBoundaryMax[2] = 5e-8;
+					}
+
+					for (size_t pts = 0; pts < rcvPoints[ifacepts].size(); pts++)
+					{
+						vector velocity;
+						velocity[0] = rcvVelX[ifacepts][pts];
+						velocity[1] = rcvVelY[ifacepts][pts];
+						velocity[2] = rcvVelZ[ifacepts][pts];
+
+						point checkedPosition(exactBoundaryMin[0], rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
+
+						if(checkedPosition[1] == 0.0 || checkedPosition[2] == 0.0)
+						{
+							std::cout << "receiveCoupledMolecules(): [" << rcvPoints[ifacepts][pts][0] * refLength_ << "," << checkedPosition[1] << "," << checkedPosition[2] << "]" << std::endl;
+						}
+
+						if(checkedPosition[1] < exactBoundaryMin[1])
+						{
+							checkedPosition[1] = exactBoundaryMin[1];
+						}
+
+						if(checkedPosition[1] > exactBoundaryMax[1])
+						{
+							checkedPosition[1] = exactBoundaryMax[1];
+						}
+
+						if(checkedPosition[2] < exactBoundaryMin[2])
+						{
+							checkedPosition[2] = exactBoundaryMin[2];
+						}
+
+						if(checkedPosition[2] > exactBoundaryMax[2])
+						{
+							checkedPosition[2] = exactBoundaryMax[2];
+						}
+
+						const point position(checkedPosition[0], checkedPosition[1], checkedPosition[2]);
+						
+						std::cout << "Coupling boundary molecule received at: [" << position[0] << "," << position[1] << "," << position[2] << "]" << std::endl;
+
+						insertParcel(position, velocity, typeId);
+						parcelAdded = true;
+					}
 				}
 			}
 		}

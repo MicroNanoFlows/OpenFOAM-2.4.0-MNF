@@ -184,8 +184,7 @@ mdDsmcCoupling::mdDsmcCoupling
 		oneOverRefLength_ = 1.0 / refLength_;
 		oneOverRefTime_ = 1.0 / refTime_;
 #ifdef USE_MUI
-		//Initialise exact time and spatial samplers for MUI with a numerical tolerance of 1e-9, large value needed as dsmcFoamPlus works in non-normalised numerics.
-		spatial_sampler = new mui::sampler_exact3d<scalar>(1e-9);
+		//Initialise exact time sampler for MUI with a numerical tolerance of 1e-9, large value needed as dsmcFoamPlus works in non-normalised numerics.
 		chrono_sampler = new mui::chrono_sampler_exact3d(1e-9);
 #endif
 	}
@@ -245,7 +244,7 @@ void mdDsmcCoupling::initialConfiguration()
 {
 	if(receiving_)
     {
-        receiveCoupledRegion(true); // Receive ghost molecules in coupled regions at time = startTime
+		receiveCoupledRegion(true); // Receive ghost molecules in coupled regions at time = startTime
     }
 }
 
@@ -286,6 +285,10 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 		couplingTime = time_.time().value() * oneOverRefTime_;
 	}
 	List<std::vector<mui::point3d> > rcvPoints(recvInterfaces_.size());
+    List<std::vector<scalar> > rcvVelX(recvInterfaces_.size());
+    List<std::vector<scalar> > rcvVelY(recvInterfaces_.size());
+    List<std::vector<scalar> > rcvVelZ(recvInterfaces_.size());
+    List<std::vector<scalar> > rcvMolChanged(recvInterfaces_.size());
 	std::stringstream rcvStr;
 	const scalar temperature = 1; //This needs to be properly defined, only correct for sample Argon case
 
@@ -299,7 +302,24 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 			rcvStr << molNames_[molType] << "_" << "parc_changed"; //Receive string in format [type]_parc_changed
 
 			//- Extract a list of all molecule locations received from other solver through this interface
-			rcvPoints[iface] = recvInterfaces_[iface]->fetch_points<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
+			rcvPoints[iface] = recvInterfaces_[iface]->fetch_points<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);			
+                        
+			//- Extract a list of all molecule change status values received from other solver through this interface
+			rcvMolChanged[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);		
+
+			//- Extract a list of all molecule velocities received from other solver through this interface
+            rcvStr.str("");
+			rcvStr.clear();
+			rcvStr << molNames_[molType] << "_" << "parc_vel_x_region";
+			rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
+			rcvStr.str("");
+			rcvStr.clear();
+			rcvStr << molNames_[molType] << "_" << "parc_vel_y_region";
+			rcvVelY[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
+			rcvStr.str("");
+			rcvStr.clear();
+			rcvStr << molNames_[molType] << "_" << "parc_vel_z_region";
+			rcvVelZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);			
 		}
 	}
 
@@ -307,14 +327,13 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 	{
 		if(rcvPoints[ifacepts].size() > 0)
 		{
-			forAll(molNames_, molType)
+			bool newList = false;		
+			
+			//If list size has changed then treat this as a new list
+			if(static_cast<size_t>(molChanged_[ifacepts].size()) != rcvPoints[ifacepts].size())
 			{
-				const label molId = findIndex(idList, molNames_[molType]);
-				bool newList = false;
-
-				//If list size has changed then treat this as a new list
-				if(static_cast<size_t>(molChanged_[ifacepts].size()) != rcvPoints[ifacepts].size())
-				{
+				if(molChanged_[ifacepts].size() > 0)
+				{				
 					forAll(molHistory_[ifacepts], mol)
 					{
 						if(molHistory_[ifacepts][mol] != NULL)
@@ -325,65 +344,131 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 
 					molChanged_[ifacepts].clear();
 					molHistory_[ifacepts].clear();
-
-					molChanged_[ifacepts].setSize(rcvPoints[ifacepts].size(), false);
-					molHistory_[ifacepts].setSize(rcvPoints[ifacepts].size(), NULL);
-					newList = true;
 				}
-
-				rcvStr.str("");
-				rcvStr.clear();
-				rcvStr << molNames_[molType] << "_" << "parc_changed"; //Receive string in format [type]_parc_changed
-
-				for (size_t pts = 0; pts < rcvPoints[ifacepts].size(); pts++)
-				{
-					//Receive the parcel velocity through the interface
-					vector velocity;
-
-					velocity[0] = recvInterfaces_[ifacepts]->fetch("parc_vel_x_region", rcvPoints[ifacepts][pts], couplingTime, *spatial_sampler, *chrono_sampler);
-					velocity[1] = recvInterfaces_[ifacepts]->fetch("parc_vel_y_region", rcvPoints[ifacepts][pts], couplingTime, *spatial_sampler, *chrono_sampler);
-					velocity[2] = recvInterfaces_[ifacepts]->fetch("parc_vel_z_region", rcvPoints[ifacepts][pts], couplingTime, *spatial_sampler, *chrono_sampler);
-
-					velocity[0] /= rU_.refVelocity();
-					velocity[1] /= rU_.refVelocity();
-					velocity[2] /= rU_.refVelocity();
-
-					const point position(rcvPoints[ifacepts][pts][0] * refLength_, rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
-
-					if(newList) //This is a completely new list so all molecules to be inserted regardless of molChanged flag
-					{
-						molHistory_[ifacepts][pts] = insertMolecule(position, molId, true, temperature, velocity);
-					}
-					else //This is not a completely new list so just check for individual molecule changes
-					{
-						//Update molecule status
-						molChanged_[ifacepts][pts] = recvInterfaces_[ifacepts]->fetch(rcvStr.str(), rcvPoints[ifacepts][pts], couplingTime, *spatial_sampler, *chrono_sampler);
-
-						if(molChanged_[ifacepts][pts]) //This molecule has changed in the list since the last time
-						{
-							if(molHistory_[ifacepts][pts] != NULL)
-							{
-								molCloud_.deleteParticle(*molHistory_[ifacepts][pts]); //First delete the old molecule in this list position
-							}
-							molHistory_[ifacepts][pts] = insertMolecule(position, molId, true, temperature, velocity); //Insert the new molecule
-						}
-						else //This molecule already exists in the list so just update properties
-						{
-							if(molHistory_[ifacepts][pts] != NULL)
-							{
-								molHistory_[ifacepts][pts]->position()[0] = rcvPoints[ifacepts][pts][0];
-								molHistory_[ifacepts][pts]->position()[1] = rcvPoints[ifacepts][pts][1];
-								molHistory_[ifacepts][pts]->position()[2] = rcvPoints[ifacepts][pts][2];
-
-								molHistory_[ifacepts][pts]->v()[0] = velocity[0];
-								molHistory_[ifacepts][pts]->v()[1] = velocity[1];
-								molHistory_[ifacepts][pts]->v()[2] = velocity[2];
-							}
-						}
-					}
-				}
+				molChanged_[ifacepts].setSize(rcvPoints[ifacepts].size(), false);
+				molHistory_[ifacepts].setSize(rcvPoints[ifacepts].size(), NULL);
+				newList = true;
 			}
-			molCount += rcvPoints[ifacepts].size();
+
+			forAll(molNames_, molType)
+			{
+				const label molId = findIndex(idList, molNames_[molType]);
+
+				if(molId != -1)
+				{
+					vector exactBoundaryMin(vector::zero), exactBoundaryMax(vector::zero);
+
+					if(recvInterfaceNames_[ifacepts] == "ifs_1")
+					{
+						exactBoundaryMin[0] = 279.411765;
+						exactBoundaryMin[1] = 0;
+						exactBoundaryMin[2] = 0;
+
+						exactBoundaryMax[0] = 294.117647;
+						exactBoundaryMax[1] = 147.058824;
+						exactBoundaryMax[2] = 147.058824;
+					}
+
+					if(recvInterfaceNames_[ifacepts] == "ifs_2")
+					{
+						exactBoundaryMin[0] = 441.176471;
+						exactBoundaryMin[1] = 0;
+						exactBoundaryMin[2] = 0;
+
+						exactBoundaryMax[0] = 455.882353;
+						exactBoundaryMax[1] = 147.058824;
+						exactBoundaryMax[2] = 147.058824;
+					}
+
+					for (size_t pts = 0; pts < rcvPoints[ifacepts].size(); pts++)
+					{
+						if(rcvPoints[ifacepts][pts][0] == 0.0 || rcvPoints[ifacepts][pts][1] == 0.0 || rcvPoints[ifacepts][pts][2] == 0.0)
+						{
+							std::cout << "receiveCoupledRegion(): [" << rcvPoints[ifacepts][pts][0] << "," << rcvPoints[ifacepts][pts][1] << "," << rcvPoints[ifacepts][pts][2] << "]" << std::endl;
+						}
+
+						molChanged_[ifacepts][pts] = static_cast<bool>(rcvMolChanged[ifacepts][pts]);
+		                                
+						vector velocity;
+		                velocity[0] = rcvVelX[ifacepts][pts] / rU_.refVelocity();
+						velocity[1] = rcvVelY[ifacepts][pts] / rU_.refVelocity();
+						velocity[2] = rcvVelZ[ifacepts][pts] / rU_.refVelocity();
+						
+						point checkedPosition(rcvPoints[ifacepts][pts][0] * refLength_, rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
+
+						if(checkedPosition[0] < exactBoundaryMin[0])
+						{
+							std::cout << "Trunc 0" << std::endl;
+							checkedPosition[0] = exactBoundaryMin[0];
+						}
+
+						if(checkedPosition[0] > exactBoundaryMax[0])
+						{
+							std::cout << "Trunc 1" << std::endl;
+							checkedPosition[0] = exactBoundaryMax[0];
+						}
+
+						if(checkedPosition[1] < exactBoundaryMin[1])
+						{
+							std::cout << "Trunc 2" << std::endl;
+							checkedPosition[1] = exactBoundaryMin[1];
+						}
+
+						if(checkedPosition[1] > exactBoundaryMax[1])
+						{
+							std::cout << "Trunc 3" << std::endl;
+							checkedPosition[1] = exactBoundaryMax[1];
+						}
+
+						if(checkedPosition[2] < exactBoundaryMin[2])
+						{
+							std::cout << "Trunc 4" << std::endl;
+							checkedPosition[2] = exactBoundaryMin[2];
+						}
+
+						if(checkedPosition[2] > exactBoundaryMax[2])
+						{
+							std::cout << "Trunc 5" << std::endl;
+							checkedPosition[2] = exactBoundaryMax[2];
+						}
+
+						const point position(checkedPosition[0], checkedPosition[1], checkedPosition[2]);
+
+						if(newList) //This is a completely new list so all molecules to be inserted regardless of molChanged flag
+						{
+							molHistory_[ifacepts][pts] = insertMolecule(position, molId, true, temperature, velocity);
+							molCount++;
+						}
+						else //This is not a completely new list so just check for individual molecule changes
+						{
+							if(molChanged_[ifacepts][pts]) //This molecule has changed in the list since the last time
+							{							
+								if(molHistory_[ifacepts][pts] != NULL)
+								{
+									molCloud_.deleteParticle(*molHistory_[ifacepts][pts]); //First delete the old molecule in this list position
+								}
+								molHistory_[ifacepts][pts] = insertMolecule(position, molId, true, temperature, velocity); //Insert the new molecule
+								molCount++;					
+							}
+							else //This molecule already exists in the list so just update properties
+							{
+								if(molHistory_[ifacepts][pts] != NULL)
+								{
+									molHistory_[ifacepts][pts]->position()[0] = position[0];
+									molHistory_[ifacepts][pts]->position()[1] = position[1];
+									molHistory_[ifacepts][pts]->position()[2] = position[2];
+
+									molHistory_[ifacepts][pts]->v()[0] = velocity[0];
+									molHistory_[ifacepts][pts]->v()[1] = velocity[1];
+									molHistory_[ifacepts][pts]->v()[2] = velocity[2];
+									
+									molCount++;
+								}
+							}
+						}
+					}
+				}
+			}			
 		}
 	}
 
@@ -434,15 +519,15 @@ void mdDsmcCoupling::sendCoupledMolecules()
 						sendStr << molsToSend[mols].molType << "_" << "mol_vel_x_bound"; //Send string in format [type]_mol_vel_x_bound
 
 						// Push the molecule velocity to the interface
-						sendInterfaces_[iface]->push(sendStr.str(), molCentre, molsToSend[mols].mol->v()[0]*rU_.refVelocity());
+						sendInterfaces_[iface]->push(sendStr.str(), molCentre, molsToSend[mols].mol->v()[0] * rU_.refVelocity());
 						sendStr.str("");
 						sendStr.clear();
 						sendStr << molsToSend[mols].molType << "_" << "mol_vel_y_bound"; //Send string in format [type]_mol_vel_y_bound
-						sendInterfaces_[iface]->push(sendStr.str(), molCentre, molsToSend[mols].mol->v()[1]*rU_.refVelocity());
+						sendInterfaces_[iface]->push(sendStr.str(), molCentre, molsToSend[mols].mol->v()[1] * rU_.refVelocity());
 						sendStr.str("");
 						sendStr.clear();
 						sendStr << molsToSend[mols].molType << "_" << "mol_vel_z_bound"; //Send string in format [type]_mol_vel_z_bound
-						sendInterfaces_[iface]->push(sendStr.str(), molCentre, molsToSend[mols].mol->v()[2]*rU_.refVelocity());
+						sendInterfaces_[iface]->push(sendStr.str(), molCentre, molsToSend[mols].mol->v()[2] * rU_.refVelocity());
 
 						std::cout << "Coupling boundary molecule pushed at: [" << molCentre[0] << "," << molCentre[1] << "," << molCentre[2] << "]" << std::endl;
 					}
@@ -463,51 +548,113 @@ void mdDsmcCoupling::receiveCoupledParcels()
 {
 #ifdef USE_MUI
 	scalar couplingTime = time_.time().value() * oneOverRefTime_;
-	std::vector<mui::point3d> rcvPoints;
+	List<std::vector<mui::point3d> > rcvPoints(recvInterfaces_.size());
+    List<std::vector<scalar> > rcvVelX(recvInterfaces_.size());
+    List<std::vector<scalar> > rcvVelY(recvInterfaces_.size());
+    List<std::vector<scalar> > rcvVelZ(recvInterfaces_.size());
 	const scalar temperature = 1; //This needs to be properly defined, only correct for sample Argon case
 	std::stringstream rcvStr;
 
-	// Iterate through all receiving interfaces for this controller
+	// Iterate through all receiving interfaces for this controller and extract a points list for each molecule type handled
 	forAll(recvInterfaces_, iface)
 	{
-		forAll(molNames_, molType)
-		{
-			rcvStr.str("");
-			rcvStr.clear();
-			rcvStr << molNames_[molType] << "_" << "parc_vel_x_bound"; //Receive string in format [type]_parc_vel_x_bound
-
-			//- Extract a list of all molecule locations received from other solver through this interface
-			rcvPoints = recvInterfaces_[iface]->fetch_points<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
-
-			if(rcvPoints.size() > 0)
+			forAll(molNames_, molType)
 			{
-				const label molId = findIndex(idList, molNames_[molType]);
-
-				for (size_t pts = 0; pts < rcvPoints.size(); pts++)
-				{
-					std::cout << "Coupling boundary parcel received at: [" << rcvPoints[pts][0] << "," << rcvPoints[pts][1] << "," << rcvPoints[pts][2] << "]" << std::endl;
-
-					vector velocity;
-
 					rcvStr.str("");
 					rcvStr.clear();
 					rcvStr << molNames_[molType] << "_" << "parc_vel_x_bound";
-					velocity[0] = recvInterfaces_[iface]->fetch(rcvStr.str(), rcvPoints[pts], couplingTime, *spatial_sampler, *chrono_sampler);
+
+					//- Extract a list of all molecule locations received from other solver through this interface
+					rcvPoints[iface] = recvInterfaces_[iface]->fetch_points<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
+
+					//- Extract a list of all molecule velocities received from other solver through this interface
+					rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
 					rcvStr.str("");
 					rcvStr.clear();
 					rcvStr << molNames_[molType] << "_" << "parc_vel_y_bound";
-					velocity[1] = recvInterfaces_[iface]->fetch(rcvStr.str(), rcvPoints[pts], couplingTime, *spatial_sampler, *chrono_sampler);
+					rcvVelY[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
 					rcvStr.str("");
 					rcvStr.clear();
 					rcvStr << molNames_[molType] << "_" << "parc_vel_z_bound";
-					velocity[2] = recvInterfaces_[iface]->fetch(rcvStr.str(), rcvPoints[pts], couplingTime, *spatial_sampler, *chrono_sampler);
+					rcvVelZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
+			}
+	}
 
-					velocity[0] /= rU_.refVelocity();
-					velocity[1] /= rU_.refVelocity();
-					velocity[2] /= rU_.refVelocity();
+        // Iterate through all receiving interfaces for this controller
+	forAll(recvInterfaces_, ifacepts)
+	{
+		forAll(molNames_, molType)
+		{
+			if(rcvPoints.size() > 0)
+			{
+				const label molId = findIndex(idList, molNames_[molType]);
+				
+				if(molId != -1)
+				{
+					vector exactBoundaryMin(vector::zero), exactBoundaryMax(vector::zero);
 
-					const point position(rcvPoints[pts][0] * refLength_, rcvPoints[pts][1] * refLength_, rcvPoints[pts][2] * refLength_);
-					insertMolecule(position, molId, false, temperature, velocity);
+					if(recvInterfaceNames_[ifacepts] == "ifs_1")
+					{
+						exactBoundaryMin[0] = 279.411765;
+						exactBoundaryMin[1] = 0;
+						exactBoundaryMin[2] = 0;
+
+						exactBoundaryMax[0] = 279.411765;
+						exactBoundaryMax[1] = 147.058824;
+						exactBoundaryMax[2] = 147.058824;
+					}
+
+					if(recvInterfaceNames_[ifacepts] == "ifs_2")
+					{
+						exactBoundaryMin[0] = 441.176471;
+						exactBoundaryMin[1] = 0;
+						exactBoundaryMin[2] = 0;
+
+						exactBoundaryMax[0] = 441.176471;
+						exactBoundaryMax[1] = 147.058824;
+						exactBoundaryMax[2] = 147.058824;
+					}
+
+					for (size_t pts = 0; pts < rcvPoints[ifacepts].size(); pts++)
+					{
+						vector velocity;
+						velocity[0] = rcvVelX[ifacepts][pts] / rU_.refVelocity();
+						velocity[1] = rcvVelY[ifacepts][pts] / rU_.refVelocity();
+						velocity[2] = rcvVelZ[ifacepts][pts] / rU_.refVelocity();
+
+						point checkedPosition(exactBoundaryMin[0], rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
+
+						if(checkedPosition[1] == 0.0 || checkedPosition[2] == 0.0)
+						{
+							std::cout << "receiveCoupledParcels(): [" << rcvPoints[ifacepts][pts][0] * refLength_ << "," << checkedPosition[1] << "," << checkedPosition[2] << "]" << std::endl;
+						}
+
+						if(checkedPosition[1] < exactBoundaryMin[1])
+						{
+							checkedPosition[1] = exactBoundaryMin[1];
+						}
+
+						if(checkedPosition[1] > exactBoundaryMax[1])
+						{
+							checkedPosition[1] = exactBoundaryMax[1];
+						}
+
+						if(checkedPosition[2] < exactBoundaryMin[2])
+						{
+							checkedPosition[2] = exactBoundaryMin[2];
+						}
+
+						if(checkedPosition[2] > exactBoundaryMax[2])
+						{
+							checkedPosition[2] = exactBoundaryMax[2];
+						}
+
+						const point position(checkedPosition[0], checkedPosition[1], checkedPosition[2]);
+
+						std::cout << "Coupling boundary parcel received at: [" << position[0] << "," << position[1] << "," << position[2] << "]" << std::endl;
+
+		                insertMolecule(position, molId, false, temperature, velocity);
+					}
 				}
 			}
 		}
