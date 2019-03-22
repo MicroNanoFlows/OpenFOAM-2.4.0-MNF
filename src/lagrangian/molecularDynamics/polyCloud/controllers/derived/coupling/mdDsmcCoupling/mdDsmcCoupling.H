@@ -102,6 +102,7 @@ private:
 #endif
     	point meshMin_;
 		point meshMax_;
+		scalar roundCorr_;
 
     // Private Member Functions
 
@@ -149,6 +150,9 @@ public:
 
         //- receive molecules that fall into the MD coupled region from coupled dsmcFoamPlus
         void receiveCoupledRegion(bool init);
+
+        //- delete molecules that have passed the coupling boundary
+        void deleteBoundaryMolecules();
 
         //- send molecules to dsmcFoamPlus that have crossed a coupling boundary
         void sendCoupledMolecules();

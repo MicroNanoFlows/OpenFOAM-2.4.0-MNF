@@ -244,6 +244,25 @@ void mdDsmcCoupling::initialConfiguration()
 {
 	if(receiving_)
     {
+	    barrier(static_cast<scalar>(0.1));
+
+	    forAll(recvInterfaces_, iface)
+	    {
+            roundCorr_ = recvInterfaces_[iface]->fetch<scalar>("ref_value");
+
+            if(recvInterfaceNames_[iface] == "ifs_1")
+            {
+                roundCorr_ = 294.117647 - roundCorr_;
+            }
+
+            if(recvInterfaceNames_[iface] == "ifs_2")
+            {
+                roundCorr_ = 441.176471 - roundCorr_;
+            }
+	    }
+
+	    std::cout << "roundCorr_: " << roundCorr_ << std::endl;
+
 		receiveCoupledRegion(true); // Receive ghost molecules in coupled regions at time = startTime
     }
 }
@@ -394,6 +413,7 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 						velocity[1] = rcvVelY[ifacepts][pts] / rU_.refVelocity();
 						velocity[2] = rcvVelZ[ifacepts][pts] / rU_.refVelocity();
 						
+						/*
 						point checkedPosition(rcvPoints[ifacepts][pts][0] * refLength_, rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
 
 						if(checkedPosition[0] < exactBoundaryMin[0])
@@ -433,6 +453,9 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 						}
 
 						const point position(checkedPosition[0], checkedPosition[1], checkedPosition[2]);
+						*/
+
+						const point position((rcvPoints[ifacepts][pts][0] * refLength_) + roundCorr_, rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
 
 						if(newList) //This is a completely new list so all molecules to be inserted regardless of molChanged flag
 						{
@@ -485,6 +508,11 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 		std::cout << "Number of molecules in coupled region = " << molCount << std::endl;
 	}
 #endif
+}
+
+void mdDsmcCoupling::deleteBoundaryMolecules()
+{
+
 }
 
 void mdDsmcCoupling::sendCoupledMolecules()
@@ -595,11 +623,11 @@ void mdDsmcCoupling::receiveCoupledParcels()
 
 					if(recvInterfaceNames_[ifacepts] == "ifs_1")
 					{
-						exactBoundaryMin[0] = 279.411765;
+						exactBoundaryMin[0] = 294.117647;
 						exactBoundaryMin[1] = 0;
 						exactBoundaryMin[2] = 0;
 
-						exactBoundaryMax[0] = 279.411765;
+						exactBoundaryMax[0] = 294.117647;
 						exactBoundaryMax[1] = 147.058824;
 						exactBoundaryMax[2] = 147.058824;
 					}

@@ -177,7 +177,7 @@ dsmcMdCoupling::dsmcMdCoupling
 #endif
     }
 
-    	meshMin_[0] = VGREAT;
+    meshMin_[0] = VGREAT;
 	meshMin_[1] = VGREAT;
 	meshMin_[2] = VGREAT;
 	meshMax_[0] = -VSMALL;
@@ -232,6 +232,26 @@ void dsmcMdCoupling::initialConfiguration()
 {
     if(sending_)
     {
+      // Iterate through all sending interfaces for this controller
+        forAll(sendInterfaces_, iface)
+        {
+            scalar refPoint = 0;
+
+            if(recvInterfaceNames_[iface] == "ifs_1")
+            {
+                refPoint = 10e-8 * oneOverRefLength_;
+            }
+
+            if(recvInterfaceNames_[iface] == "ifs_2")
+            {
+                refPoint = 1.5e-7 * oneOverRefLength_;
+            }
+
+            sendInterfaces_[iface]->push("ref_value", refPoint);
+
+            sendInterfaces_[iface]->commit(static_cast<scalar>(0.1));
+        }
+
         sendCoupledRegion(true); // Send ghost parcels in coupled regions at time = startTime
         barrier(static_cast<scalar>(1.0));
     }
@@ -311,8 +331,6 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 			listSizeChanged[iface] = true;
 		}
 
-		std::cout << "Number of molecules sent to coupled region = " << currParcelsInCells.size() << std::endl;
-
 		forAll(regionIds(), id)
 		{
 			forAll(controlZone(regionIds()[id]), c)
@@ -376,6 +394,8 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 				}
 			}
 		}
+
+		std::cout << "Number of molecules sent to coupled region = " << currParcelsInCells.size() << std::endl;
 	}
 
 	forAll(sendInterfaces_, iface)
