@@ -66,7 +66,14 @@ mdDsmcCoupling::mdDsmcCoupling
 	idList(molCloud_.cP().molIds()),
 	rU_(molCloud_.redUnits()),
 	fixedBounds_(false),
-	refVal_(false)
+	fixedRegion_(false),
+	fixedRegionMin_(vector::zero),
+	fixedRegionMax_(vector::zero),
+	fixedBoundMin_(vector::zero),
+	fixedBoundMax_(vector::zero),
+	fixedBoundNorm_(vector::zero),
+	roundCorr_(vector::zero),
+	boundCorr_(vector::zero)
 {
 #ifdef USE_MUI
     //- Determine sending interfaces if defined
@@ -173,29 +180,64 @@ mdDsmcCoupling::mdDsmcCoupling
 
     molIds_ = ids.molIds();
 
-    if (propsDict_.found("refValue"))
+    bool regionMinFound = false;
+    bool regionMaxFound = false;
+
+    if (propsDict_.found("fixedRegionMin"))
 	{
-		refValue_ = propsDict_.lookup("refValue");
-		refVal_ = true;
+        fixedRegionMin_ = propsDict_.lookup("fixedRegionMin");
+        regionMinFound = true;
 	}
 
-	if (propsDict_.found("fixedBoundMin"))
-	{
-		fixedBoundMin_ = propsDict_.lookup("fixedBoundMin");
-		fixedBounds_ = true;
-	}
+    if (propsDict_.found("fixedRegionMax"))
+    {
+        fixedRegionMax_ = propsDict_.lookup("fixedRegionMax");
+        regionMaxFound = true;
+    }
 
-	if(fixedBounds_)
-	{
-		if (propsDict_.found("fixedBoundMax"))
-		{
-			fixedBoundMax_ = propsDict_.lookup("fixedBoundMax");
-		}
-		else
-		{
-			fixedBounds_ = false;
-		}
-	}
+    if((regionMinFound && !regionMaxFound) || (regionMaxFound && !regionMinFound))
+    {
+        FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
+                      << "Cannot find both fixedRegionMin and fixedRegionMax"
+                      << exit(FatalError);
+    }
+    else
+    {
+        fixedRegion_ = true;
+    }
+
+    bool boundMinFound = false;
+    bool boundMaxFound = false;
+    bool boundNormFound = false;
+
+    if (propsDict_.found("fixedBoundMin"))
+    {
+        fixedBoundMin_ = propsDict_.lookup("fixedBoundMin");
+        boundMinFound = true;
+    }
+
+    if (propsDict_.found("fixedBoundMax"))
+    {
+        fixedBoundMax_ = propsDict_.lookup("fixedBoundMax");
+        boundMaxFound = true;
+    }
+
+    if (propsDict_.found("fixedBoundNorm"))
+    {
+        fixedBoundNorm_ = propsDict_.lookup("fixedBoundNorm");
+        boundNormFound = true;
+    }
+
+    if((boundMinFound && !boundMinFound) || (boundMaxFound && !boundMaxFound) || (boundNormFound && !boundNormFound))
+    {
+        FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
+                      << "Cannot find fixedBoundMin, fixedBoundMax and fixedBoundNorm"
+                      << exit(FatalError);
+    }
+    else
+    {
+        fixedBounds_ = true;
+    }
 
     if (propsDict_.found("output"))
     {
@@ -271,28 +313,43 @@ void mdDsmcCoupling::initialConfiguration()
 	if(receiving_)
     {
 #ifdef USE_MUI
-	    barrier(static_cast<scalar>(0.1));
-
-	    forAll(recvInterfaces_, iface)
+	    if(fixedRegion_)
 	    {
-            roundCorr_[0] = recvInterfaces_[iface]->fetch<scalar>("ref_value_x");
-            roundCorr_[1] = recvInterfaces_[iface]->fetch<scalar>("ref_value_y");
-            roundCorr_[2] = recvInterfaces_[iface]->fetch<scalar>("ref_value_z");
+            barrier(static_cast<scalar>(0.1));
 
-            if(roundCorr_[0] != 0)
+            forAll(recvInterfaces_, iface)
             {
-            	roundCorr_[0] = refValue_[0] - roundCorr_[0];
+                roundCorr_[0] = recvInterfaces_[iface]->fetch<scalar>("ref_value_x");
+                roundCorr_[1] = recvInterfaces_[iface]->fetch<scalar>("ref_value_y");
+                roundCorr_[2] = recvInterfaces_[iface]->fetch<scalar>("ref_value_z");
+
+                if(roundCorr_[0] != 0)
+                {
+                    roundCorr_[0] = (fixedRegionMax_[0] - fixedRegionMin_[0]) - roundCorr_[0];
+                }
+
+                if(roundCorr_[1] != 0)
+                {
+                    roundCorr_[1] = (fixedRegionMax_[1] - fixedRegionMin_[1]) - roundCorr_[1];
+                }
+
+                if(roundCorr_[2] != 0)
+                {
+                    roundCorr_[2] = (fixedRegionMax_[2] - fixedRegionMin_[2]) - roundCorr_[2];
+                }
+
+                std::cout << "Region rounding correction [" << roundCorr_[0] << "," << roundCorr_[1] << "," << roundCorr_[2] << "]" << std::endl;
             }
 
-            if(roundCorr_[1] != 0)
-			{
-				roundCorr_[1] = refValue_[1] - roundCorr_[1];
-			}
-
-            if(roundCorr_[1] != 0)
-			{
-				roundCorr_[1] = refValue_[1] - roundCorr_[0];
-			}
+            boundCorr_[0] = (fixedRegionMax_[0] - fixedRegionMin_[0]) * 1e-9;
+            boundCorr_[1] = (fixedRegionMax_[1] - fixedRegionMin_[1]) * 1e-9;
+            boundCorr_[2] = (fixedRegionMax_[2] - fixedRegionMin_[2]) * 1e-9;
+	    }
+	    else //- No details of coupling region so define a value for the boundary correction that is likely to be suitable
+	    {
+	        boundCorr_[0] = SMALL*1e-7;
+	        boundCorr_[1] = SMALL*1e-7;
+	        boundCorr_[2] = SMALL*1e-7;
 	    }
 #endif
 		receiveCoupledRegion(true); // Receive ghost molecules in coupled regions at time = startTime
@@ -421,36 +478,36 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 						
 						point checkedPosition((rcvPoints[ifacepts][pts][0] * refLength_) + roundCorr_[0], (rcvPoints[ifacepts][pts][1] * refLength_) + roundCorr_[1], (rcvPoints[ifacepts][pts][2] * refLength_) + roundCorr_[2]);
 
-						if(fixedBounds_)
+						if(fixedRegion_)
 						{
-							if(checkedPosition[0] < fixedBoundMin_[0])
+							if(checkedPosition[0] < fixedRegionMin_[0])
 							{
-								checkedPosition[0] = fixedBoundMin_[0] + SMALL;
+								checkedPosition[0] = fixedRegionMin_[0] + SMALL;
 							}
 
-							if(checkedPosition[0] > fixedBoundMax_[0])
+							if(checkedPosition[0] > fixedRegionMax_[0])
 							{
-								checkedPosition[0] = fixedBoundMax_[0] - SMALL;
+								checkedPosition[0] = fixedRegionMax_[0] - SMALL;
 							}
 
-							if(checkedPosition[1] < fixedBoundMin_[1])
+							if(checkedPosition[1] < fixedRegionMin_[1])
 							{
-								checkedPosition[1] = fixedBoundMin_[1] + SMALL;
+								checkedPosition[1] = fixedRegionMin_[1] + SMALL;
 							}
 
-							if(checkedPosition[1] > fixedBoundMax_[1])
+							if(checkedPosition[1] > fixedRegionMax_[1])
 							{
-								checkedPosition[1] = fixedBoundMax_[1] - SMALL;
+								checkedPosition[1] = fixedRegionMax_[1] - SMALL;
 							}
 
-							if(checkedPosition[2] < fixedBoundMin_[2])
+							if(checkedPosition[2] < fixedRegionMin_[2])
 							{
-								checkedPosition[2] = fixedBoundMin_[2] + SMALL;
+								checkedPosition[2] = fixedRegionMin_[2] + SMALL;
 							}
 
-							if(checkedPosition[2] > fixedBoundMax_[2])
+							if(checkedPosition[2] > fixedRegionMax_[2])
 							{
-								checkedPosition[2] = fixedBoundMax_[2] - SMALL;
+								checkedPosition[2] = fixedRegionMax_[2] - SMALL;
 							}
 						}
 
@@ -613,30 +670,6 @@ void mdDsmcCoupling::receiveCoupledParcels()
 				
 				if(molId != -1)
 				{
-					vector exactBoundaryMin(vector::zero), exactBoundaryMax(vector::zero);
-
-					if(recvInterfaceNames_[ifacepts] == "ifs_1")
-					{
-						exactBoundaryMin[0] = 294.117647 + 1e-8;
-						exactBoundaryMin[1] = 0;
-						exactBoundaryMin[2] = 0;
-
-						exactBoundaryMax[0] = 294.117647;
-						exactBoundaryMax[1] = 147.058824;
-						exactBoundaryMax[2] = 147.058824;
-					}
-
-					if(recvInterfaceNames_[ifacepts] == "ifs_2")
-					{
-						exactBoundaryMin[0] = 441.176471 - 1e-8;
-						exactBoundaryMin[1] = 0;
-						exactBoundaryMin[2] = 0;
-
-						exactBoundaryMax[0] = 441.176471;
-						exactBoundaryMax[1] = 147.058824;
-						exactBoundaryMax[2] = 147.058824;
-					}
-
 					for (size_t pts = 0; pts < rcvPoints[ifacepts].size(); pts++)
 					{
 						vector velocity;
@@ -644,26 +677,31 @@ void mdDsmcCoupling::receiveCoupledParcels()
 						velocity[1] = rcvVelY[ifacepts][pts] / rU_.refVelocity();
 						velocity[2] = rcvVelZ[ifacepts][pts] / rU_.refVelocity();
 
-						point checkedPosition(exactBoundaryMin[0], rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
+						point checkedPosition(rcvPoints[ifacepts][pts][0] * refLength_, rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
 
-						if(checkedPosition[1] < exactBoundaryMin[1])
+						if(fixedBounds_)
 						{
-							checkedPosition[1] = exactBoundaryMin[1] + 1e-8;
-						}
+						    checkedPosition[0] = fixedBoundMin_[0] + (fixedBoundNorm_[0] * boundCorr_[0]); //- Set this to x directly, need to update code to determine which dimension bound is zero thickness in
 
-						if(checkedPosition[1] > exactBoundaryMax[1])
-						{
-							checkedPosition[1] = exactBoundaryMax[1] - 1e-8;
-						}
+                            if(checkedPosition[1] < fixedBoundMin_[1])
+                            {
+                                checkedPosition[1] = fixedBoundMin_[1] + boundCorr_[1]; //- Move the new particle away from the boundary a little
+                            }
 
-						if(checkedPosition[2] < exactBoundaryMin[2])
-						{
-							checkedPosition[2] = exactBoundaryMin[2] + 1e-8;
-						}
+                            if(checkedPosition[1] > fixedBoundMax_[1])
+                            {
+                                checkedPosition[1] = fixedBoundMax_[1] - boundCorr_[1]; //- Move the new particle away from the boundary a little
+                            }
 
-						if(checkedPosition[2] > exactBoundaryMax[2])
-						{
-							checkedPosition[2] = exactBoundaryMax[2] - 1e-8;
+                            if(checkedPosition[2] < fixedBoundMin_[2])
+                            {
+                                checkedPosition[2] = fixedBoundMin_[2] + boundCorr_[2]; //- Move the new particle away from the boundary a little
+                            }
+
+                            if(checkedPosition[2] > fixedBoundMax_[2])
+                            {
+                                checkedPosition[2] = fixedBoundMax_[2] - boundCorr_[2]; //- Move the new particle away from the boundary a little
+                            }
 						}
 
 						const point position(checkedPosition[0], checkedPosition[1], checkedPosition[2]);

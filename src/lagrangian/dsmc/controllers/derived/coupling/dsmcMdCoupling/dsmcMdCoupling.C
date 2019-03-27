@@ -62,8 +62,14 @@ dsmcMdCoupling::dsmcMdCoupling
 #endif
     sending_(false),
     receiving_(false),
-	fixedBounds_(false),
-	refVal_(false)
+    fixedBounds_(false),
+    fixedRegion_(false),
+    fixedRegionMin_(vector::zero),
+    fixedRegionMax_(vector::zero),
+    fixedBoundMin_(vector::zero),
+    fixedBoundMax_(vector::zero),
+    fixedBoundNorm_(vector::zero),
+    boundCorr_(vector::zero)
 {
 #ifdef USE_MUI
     //- Determine sending interfaces if defined
@@ -161,28 +167,63 @@ dsmcMdCoupling::dsmcMdCoupling
 		}
 	}
 
-    if (propsDict_.found("refValue"))
-	{
-		refValue_ = propsDict_.lookup("refValue");
-		refVal_ = true;
-	}
+    bool regionMinFound = false;
+    bool regionMaxFound = false;
+
+    if (propsDict_.found("fixedRegionMin"))
+    {
+        fixedRegionMin_ = propsDict_.lookup("fixedRegionMin");
+        regionMinFound = true;
+    }
+
+    if (propsDict_.found("fixedRegionMax"))
+    {
+        fixedRegionMax_ = propsDict_.lookup("fixedRegionMax");
+        regionMaxFound = true;
+    }
+
+    if((regionMinFound && !regionMaxFound) || (regionMaxFound && !regionMinFound))
+    {
+        FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
+                      << "Cannot find both fixedRegionMin and fixedRegionMax"
+                      << exit(FatalError);
+    }
+    else
+    {
+        fixedRegion_ = true;
+    }
+
+    bool boundMinFound = false;
+    bool boundMaxFound = false;
+    bool boundNormFound = false;
 
     if (propsDict_.found("fixedBoundMin"))
-	{
-    	fixedBoundMin_ = propsDict_.lookup("fixedBoundMin");
-    	fixedBounds_ = true;
-	}
-
-    if(fixedBounds_)
     {
-		if (propsDict_.found("fixedBoundMax"))
-		{
-			fixedBoundMax_ = propsDict_.lookup("fixedBoundMax");
-		}
-		else
-		{
-			fixedBounds_ = false;
-		}
+        fixedBoundMin_ = propsDict_.lookup("fixedBoundMin");
+        boundMinFound = true;
+    }
+
+    if (propsDict_.found("fixedBoundMax"))
+    {
+        fixedBoundMax_ = propsDict_.lookup("fixedBoundMax");
+        boundMaxFound = true;
+    }
+
+    if (propsDict_.found("fixedBoundNorm"))
+    {
+        fixedBoundNorm_ = propsDict_.lookup("fixedBoundNorm");
+        boundNormFound = true;
+    }
+
+    if((boundMinFound && !boundMinFound) || (boundMaxFound && !boundMaxFound) || (boundNormFound && !boundNormFound))
+    {
+        FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
+                      << "Cannot find fixedBoundMin, fixedBoundMax and fixedBoundNorm"
+                      << exit(FatalError);
+    }
+    else
+    {
+        fixedBounds_ = true;
     }
 
     if (propsDict_.found("output"))
@@ -258,17 +299,17 @@ void dsmcMdCoupling::initialConfiguration()
 {
     if(sending_)
     {
-        if(refVal_)
-        {
 #ifdef USE_MUI
+        if(fixedRegion_)
+        {
         	// Iterate through all sending interfaces for this controller
         	forAll(sendInterfaces_, iface)
 			{
 				vector refPoint(vector::zero);
 
-				refPoint[0] = refValue_[0] * oneOverRefLength_;
-				refPoint[1] = refValue_[1] * oneOverRefLength_;
-				refPoint[2] = refValue_[2] * oneOverRefLength_;
+				refPoint[0] = (fixedRegionMax_[0] - fixedRegionMin_[0]) * oneOverRefLength_;
+				refPoint[1] = (fixedRegionMax_[1] - fixedRegionMin_[1]) * oneOverRefLength_;
+				refPoint[2] = (fixedRegionMax_[2] - fixedRegionMin_[2]) * oneOverRefLength_;
 
 				sendInterfaces_[iface]->push("ref_value_x", refPoint[0]);
 				sendInterfaces_[iface]->push("ref_value_y", refPoint[1]);
@@ -276,11 +317,19 @@ void dsmcMdCoupling::initialConfiguration()
 
 				sendInterfaces_[iface]->commit(static_cast<scalar>(0.1));
 			}
-#endif
+
+        	boundCorr_[0] = (fixedRegionMax_[0] - fixedRegionMin_[0]) * 1e-9;
+            boundCorr_[1] = (fixedRegionMax_[1] - fixedRegionMin_[1]) * 1e-9;
+            boundCorr_[2] = (fixedRegionMax_[2] - fixedRegionMin_[2]) * 1e-9;
         }
-
+        else //- No details of coupling region so define a value for the boundary correction that is likely to be suitable
+        {
+            boundCorr_[0] = SMALL;
+            boundCorr_[1] = SMALL;
+            boundCorr_[2] = SMALL;
+        }
+#endif
         sendCoupledRegion(true); // Send ghost parcels in coupled regions at time = startTime
-
 #ifdef USE_MUI
         barrier(static_cast<scalar>(1.0));
 #endif
@@ -538,30 +587,6 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
 				
 				if(typeId != -1)
 				{
-					vector exactBoundaryMin(vector::zero), exactBoundaryMax(vector::zero);
-
-					if(recvInterfaceNames_[ifacepts] == "ifs_1")
-					{
-						exactBoundaryMin[0] = 1e-7 - SMALL;
-						exactBoundaryMin[1] = 0;
-						exactBoundaryMin[2] = 0;
-
-						exactBoundaryMax[0] = 1e-7;
-						exactBoundaryMax[1] = 5e-8;
-						exactBoundaryMax[2] = 5e-8;
-					}
-
-					if(recvInterfaceNames_[ifacepts] == "ifs_2")
-					{
-						exactBoundaryMin[0] = 1.5e-7 + SMALL;
-						exactBoundaryMin[1] = 0;
-						exactBoundaryMin[2] = 0;
-
-						exactBoundaryMax[0] = 1.5e-7;
-						exactBoundaryMax[1] = 5e-8;
-						exactBoundaryMax[2] = 5e-8;
-					}
-
 					for (size_t pts = 0; pts < rcvPoints[ifacepts].size(); pts++)
 					{
 						vector velocity;
@@ -569,27 +594,32 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
 						velocity[1] = rcvVelY[ifacepts][pts];
 						velocity[2] = rcvVelZ[ifacepts][pts];
 
-						point checkedPosition(exactBoundaryMin[0], rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
+						point checkedPosition(rcvPoints[ifacepts][pts][0] * refLength_, rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
 
-						if(checkedPosition[1] < exactBoundaryMin[1])
-						{
-							checkedPosition[1] = exactBoundaryMin[1];
-						}
+                        if(fixedBounds_)
+                        {
+                            checkedPosition[0] = fixedBoundMin_[0] + (fixedBoundNorm_[0] * boundCorr_[0]); //- Set this to x directly, need to update code to determine which dimension bound is zero thickness in
 
-						if(checkedPosition[1] > exactBoundaryMax[1])
-						{
-							checkedPosition[1] = exactBoundaryMax[1];
-						}
+                            if(checkedPosition[1] < fixedBoundMin_[1])
+                            {
+                                checkedPosition[1] = fixedBoundMin_[1] + boundCorr_[1]; //- Move the new particle away from the boundary a little
+                            }
 
-						if(checkedPosition[2] < exactBoundaryMin[2])
-						{
-							checkedPosition[2] = exactBoundaryMin[2];
-						}
+                            if(checkedPosition[1] > fixedBoundMax_[1])
+                            {
+                                checkedPosition[1] = fixedBoundMax_[1] - boundCorr_[1]; //- Move the new particle away from the boundary a little
+                            }
 
-						if(checkedPosition[2] > exactBoundaryMax[2])
-						{
-							checkedPosition[2] = exactBoundaryMax[2];
-						}
+                            if(checkedPosition[2] < fixedBoundMin_[2])
+                            {
+                                checkedPosition[2] = fixedBoundMin_[2] + boundCorr_[2]; //- Move the new particle away from the boundary a little
+                            }
+
+                            if(checkedPosition[2] > fixedBoundMax_[2])
+                            {
+                                checkedPosition[2] = fixedBoundMax_[2] - boundCorr_[2]; //- Move the new particle away from the boundary a little
+                            }
+                        }
 
 						const point position(checkedPosition[0], checkedPosition[1], checkedPosition[2]);
 						

@@ -102,12 +102,15 @@ private:
 #endif
     	point meshMin_;
 		point meshMax_;
-		bool refVal_;
-		vector refValue_;
+		bool fixedRegion_;
+		vector fixedRegionMin_;
+        vector fixedRegionMax_;
 		bool fixedBounds_;
 		vector fixedBoundMin_;
 		vector fixedBoundMax_;
+		vector fixedBoundNorm_;
 		vector roundCorr_;
+		vector boundCorr_;
 
     // Private Member Functions
 
