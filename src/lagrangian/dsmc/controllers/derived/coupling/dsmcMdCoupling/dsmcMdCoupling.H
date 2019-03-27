@@ -97,6 +97,11 @@ private:
 #endif
 		point meshMin_;
 		point meshMax_;
+		bool refVal_;
+		vector refValue_;
+		bool fixedBounds_;
+		vector fixedBoundMin_;
+		vector fixedBoundMax_;
 
     // Private Member Functions
 
@@ -133,9 +138,6 @@ public:
 
         //- create an initial configuration
         void initialConfiguration();
-
-        //- run before particle collisions
-        void controlParcelsBeforeCollisions();
 
         //- run at end of DSMC time step
         void calculateProperties();

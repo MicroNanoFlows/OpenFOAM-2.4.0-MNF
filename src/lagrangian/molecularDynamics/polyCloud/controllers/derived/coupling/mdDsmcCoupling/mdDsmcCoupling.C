@@ -64,7 +64,9 @@ mdDsmcCoupling::mdDsmcCoupling
     sending_(false),
     receiving_(false),
 	idList(molCloud_.cP().molIds()),
-	rU_(molCloud_.redUnits())
+	rU_(molCloud_.redUnits()),
+	fixedBounds_(false),
+	refVal_(false)
 {
 #ifdef USE_MUI
     //- Determine sending interfaces if defined
@@ -171,6 +173,30 @@ mdDsmcCoupling::mdDsmcCoupling
 
     molIds_ = ids.molIds();
 
+    if (propsDict_.found("refValue"))
+	{
+		refValue_ = propsDict_.lookup("refValue");
+		refVal_ = true;
+	}
+
+	if (propsDict_.found("fixedBoundMin"))
+	{
+		fixedBoundMin_ = propsDict_.lookup("fixedBoundMin");
+		fixedBounds_ = true;
+	}
+
+	if(fixedBounds_)
+	{
+		if (propsDict_.found("fixedBoundMax"))
+		{
+			fixedBoundMax_ = propsDict_.lookup("fixedBoundMax");
+		}
+		else
+		{
+			fixedBounds_ = false;
+		}
+	}
+
     if (propsDict_.found("output"))
     {
         output_ = Switch(propsDict_.lookup("output"));
@@ -244,25 +270,31 @@ void mdDsmcCoupling::initialConfiguration()
 {
 	if(receiving_)
     {
+#ifdef USE_MUI
 	    barrier(static_cast<scalar>(0.1));
 
 	    forAll(recvInterfaces_, iface)
 	    {
-            roundCorr_ = recvInterfaces_[iface]->fetch<scalar>("ref_value");
+            roundCorr_[0] = recvInterfaces_[iface]->fetch<scalar>("ref_value_x");
+            roundCorr_[1] = recvInterfaces_[iface]->fetch<scalar>("ref_value_y");
+            roundCorr_[2] = recvInterfaces_[iface]->fetch<scalar>("ref_value_z");
 
-            if(recvInterfaceNames_[iface] == "ifs_1")
+            if(roundCorr_[0] != 0)
             {
-                roundCorr_ = 294.117647 - roundCorr_;
+            	roundCorr_[0] = refValue_[0] - roundCorr_[0];
             }
 
-            if(recvInterfaceNames_[iface] == "ifs_2")
-            {
-                roundCorr_ = 441.176471 - roundCorr_;
-            }
+            if(roundCorr_[1] != 0)
+			{
+				roundCorr_[1] = refValue_[1] - roundCorr_[1];
+			}
+
+            if(roundCorr_[1] != 0)
+			{
+				roundCorr_[1] = refValue_[1] - roundCorr_[0];
+			}
 	    }
-
-	    std::cout << "roundCorr_: " << roundCorr_ << std::endl;
-
+#endif
 		receiveCoupledRegion(true); // Receive ghost molecules in coupled regions at time = startTime
     }
 }
@@ -270,6 +302,13 @@ void mdDsmcCoupling::initialConfiguration()
 void mdDsmcCoupling::controlAfterMove(int stage)
 {
 	if(stage == 1)
+	{
+		if(receiving_)
+		{
+			receiveCoupledRegion(false); // Receive ghost molecules in coupled region (blocking)
+		}
+	}
+	else if (stage == 2)
 	{
 		if(sending_)
 		{
@@ -280,10 +319,6 @@ void mdDsmcCoupling::controlAfterMove(int stage)
 		{
 			receiveCoupledParcels(); // Receive any molecules from dsmc coupling boundary (blocking)
 		}
-	}
-	else if (stage == 2)
-	{
-		receiveCoupledRegion(false); // Receive ghost molecules in coupled region (blocking)
     }
 }
 
@@ -375,37 +410,8 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 
 				if(molId != -1)
 				{
-					vector exactBoundaryMin(vector::zero), exactBoundaryMax(vector::zero);
-
-					if(recvInterfaceNames_[ifacepts] == "ifs_1")
-					{
-						exactBoundaryMin[0] = 279.411765;
-						exactBoundaryMin[1] = 0;
-						exactBoundaryMin[2] = 0;
-
-						exactBoundaryMax[0] = 294.117647;
-						exactBoundaryMax[1] = 147.058824;
-						exactBoundaryMax[2] = 147.058824;
-					}
-
-					if(recvInterfaceNames_[ifacepts] == "ifs_2")
-					{
-						exactBoundaryMin[0] = 441.176471;
-						exactBoundaryMin[1] = 0;
-						exactBoundaryMin[2] = 0;
-
-						exactBoundaryMax[0] = 455.882353;
-						exactBoundaryMax[1] = 147.058824;
-						exactBoundaryMax[2] = 147.058824;
-					}
-
 					for (size_t pts = 0; pts < rcvPoints[ifacepts].size(); pts++)
 					{
-						if(rcvPoints[ifacepts][pts][0] == 0.0 || rcvPoints[ifacepts][pts][1] == 0.0 || rcvPoints[ifacepts][pts][2] == 0.0)
-						{
-							std::cout << "receiveCoupledRegion(): [" << rcvPoints[ifacepts][pts][0] << "," << rcvPoints[ifacepts][pts][1] << "," << rcvPoints[ifacepts][pts][2] << "]" << std::endl;
-						}
-
 						molChanged_[ifacepts][pts] = static_cast<bool>(rcvMolChanged[ifacepts][pts]);
 		                                
 						vector velocity;
@@ -413,49 +419,42 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 						velocity[1] = rcvVelY[ifacepts][pts] / rU_.refVelocity();
 						velocity[2] = rcvVelZ[ifacepts][pts] / rU_.refVelocity();
 						
-						/*
-						point checkedPosition(rcvPoints[ifacepts][pts][0] * refLength_, rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
+						point checkedPosition((rcvPoints[ifacepts][pts][0] * refLength_) + roundCorr_[0], (rcvPoints[ifacepts][pts][1] * refLength_) + roundCorr_[1], (rcvPoints[ifacepts][pts][2] * refLength_) + roundCorr_[2]);
 
-						if(checkedPosition[0] < exactBoundaryMin[0])
+						if(fixedBounds_)
 						{
-							std::cout << "Trunc 0" << std::endl;
-							checkedPosition[0] = exactBoundaryMin[0];
-						}
+							if(checkedPosition[0] < fixedBoundMin_[0])
+							{
+								checkedPosition[0] = fixedBoundMin_[0] + SMALL;
+							}
 
-						if(checkedPosition[0] > exactBoundaryMax[0])
-						{
-							std::cout << "Trunc 1" << std::endl;
-							checkedPosition[0] = exactBoundaryMax[0];
-						}
+							if(checkedPosition[0] > fixedBoundMax_[0])
+							{
+								checkedPosition[0] = fixedBoundMax_[0] - SMALL;
+							}
 
-						if(checkedPosition[1] < exactBoundaryMin[1])
-						{
-							std::cout << "Trunc 2" << std::endl;
-							checkedPosition[1] = exactBoundaryMin[1];
-						}
+							if(checkedPosition[1] < fixedBoundMin_[1])
+							{
+								checkedPosition[1] = fixedBoundMin_[1] + SMALL;
+							}
 
-						if(checkedPosition[1] > exactBoundaryMax[1])
-						{
-							std::cout << "Trunc 3" << std::endl;
-							checkedPosition[1] = exactBoundaryMax[1];
-						}
+							if(checkedPosition[1] > fixedBoundMax_[1])
+							{
+								checkedPosition[1] = fixedBoundMax_[1] - SMALL;
+							}
 
-						if(checkedPosition[2] < exactBoundaryMin[2])
-						{
-							std::cout << "Trunc 4" << std::endl;
-							checkedPosition[2] = exactBoundaryMin[2];
-						}
+							if(checkedPosition[2] < fixedBoundMin_[2])
+							{
+								checkedPosition[2] = fixedBoundMin_[2] + SMALL;
+							}
 
-						if(checkedPosition[2] > exactBoundaryMax[2])
-						{
-							std::cout << "Trunc 5" << std::endl;
-							checkedPosition[2] = exactBoundaryMax[2];
+							if(checkedPosition[2] > fixedBoundMax_[2])
+							{
+								checkedPosition[2] = fixedBoundMax_[2] - SMALL;
+							}
 						}
 
 						const point position(checkedPosition[0], checkedPosition[1], checkedPosition[2]);
-						*/
-
-						const point position((rcvPoints[ifacepts][pts][0] * refLength_) + roundCorr_, rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
 
 						if(newList) //This is a completely new list so all molecules to be inserted regardless of molChanged flag
 						{
@@ -508,11 +507,6 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 		std::cout << "Number of molecules in coupled region = " << molCount << std::endl;
 	}
 #endif
-}
-
-void mdDsmcCoupling::deleteBoundaryMolecules()
-{
-
 }
 
 void mdDsmcCoupling::sendCoupledMolecules()
@@ -608,7 +602,7 @@ void mdDsmcCoupling::receiveCoupledParcels()
 			}
 	}
 
-        // Iterate through all receiving interfaces for this controller
+    // Iterate through all receiving interfaces for this controller
 	forAll(recvInterfaces_, ifacepts)
 	{
 		forAll(molNames_, molType)
@@ -623,7 +617,7 @@ void mdDsmcCoupling::receiveCoupledParcels()
 
 					if(recvInterfaceNames_[ifacepts] == "ifs_1")
 					{
-						exactBoundaryMin[0] = 294.117647;
+						exactBoundaryMin[0] = 294.117647 + 1e-8;
 						exactBoundaryMin[1] = 0;
 						exactBoundaryMin[2] = 0;
 
@@ -634,7 +628,7 @@ void mdDsmcCoupling::receiveCoupledParcels()
 
 					if(recvInterfaceNames_[ifacepts] == "ifs_2")
 					{
-						exactBoundaryMin[0] = 441.176471;
+						exactBoundaryMin[0] = 441.176471 - 1e-8;
 						exactBoundaryMin[1] = 0;
 						exactBoundaryMin[2] = 0;
 
@@ -652,36 +646,31 @@ void mdDsmcCoupling::receiveCoupledParcels()
 
 						point checkedPosition(exactBoundaryMin[0], rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
 
-						if(checkedPosition[1] == 0.0 || checkedPosition[2] == 0.0)
-						{
-							std::cout << "receiveCoupledParcels(): [" << rcvPoints[ifacepts][pts][0] * refLength_ << "," << checkedPosition[1] << "," << checkedPosition[2] << "]" << std::endl;
-						}
-
 						if(checkedPosition[1] < exactBoundaryMin[1])
 						{
-							checkedPosition[1] = exactBoundaryMin[1];
+							checkedPosition[1] = exactBoundaryMin[1] + 1e-8;
 						}
 
 						if(checkedPosition[1] > exactBoundaryMax[1])
 						{
-							checkedPosition[1] = exactBoundaryMax[1];
+							checkedPosition[1] = exactBoundaryMax[1] - 1e-8;
 						}
 
 						if(checkedPosition[2] < exactBoundaryMin[2])
 						{
-							checkedPosition[2] = exactBoundaryMin[2];
+							checkedPosition[2] = exactBoundaryMin[2] + 1e-8;
 						}
 
 						if(checkedPosition[2] > exactBoundaryMax[2])
 						{
-							checkedPosition[2] = exactBoundaryMax[2];
+							checkedPosition[2] = exactBoundaryMax[2] - 1e-8;
 						}
 
 						const point position(checkedPosition[0], checkedPosition[1], checkedPosition[2]);
 
 						std::cout << "Coupling boundary parcel received at: [" << position[0] << "," << position[1] << "," << position[2] << "]" << std::endl;
 
-		                insertMolecule(position, molId, false, temperature, velocity);
+						insertMolecule(position, molId, false, temperature, velocity);
 					}
 				}
 			}
@@ -813,105 +802,9 @@ polyMolecule* mdDsmcCoupling::insertMolecule
 		    molCloud_.getTrackingNumber()
 	    );
 
-	    molCloud_.updateNeighbouringRadii(newMol);
+        molCloud_.updateNeighbouringRadii(newMol);
 
         return newMol;
-    }
-    else //Received point outside of mesh, this is almost certainly a rounding error, so snap to nearest mesh boundary to avoid loosing molecule
-    {
-    	point newPosition = position;
-
-    	if(newPosition[0] < meshMin_[0])
-		{
-    		newPosition[0] = meshMin_[0];
-		}
-
-		if(newPosition[0] > meshMax_[0])
-		{
-			newPosition[0] = meshMax_[0];
-		}
-
-		if(newPosition[1] < meshMin_[1])
-		{
-			newPosition[1] = meshMin_[1];
-		}
-
-		if(newPosition[1] > meshMax_[1])
-		{
-			newPosition[1] = meshMax_[1];
-		}
-
-		if(newPosition[2] < meshMin_[2])
-		{
-			newPosition[2] = meshMin_[2];
-		}
-
-		if(newPosition[2] > meshMax_[2])
-		{
-			newPosition[2] = meshMax_[2];
-		}
-
-		cell = -1;
-		tetFace = -1;
-		tetPt = -1;
-
-		mesh_.findCellFacePt
-		(
-			newPosition,
-			cell,
-			tetFace,
-			tetPt
-		);
-
-		if(cell != -1)
-		{
-			std::cout << "WARNING. Received molecule position snapped to mesh = ("
-					  << newPosition[0] << "," << newPosition[1] << "," << newPosition[2] << ")"
-					  << std::endl;
-
-			point specialPosition(vector::zero);
-
-			label special = 0;
-
-			if (frozen)
-			{
-				specialPosition = newPosition;
-
-				special = polyMolecule::SPECIAL_FROZEN;
-			}
-
-			vector pi = vector::zero;
-
-			tensor Q = I;
-
-			polyMolecule* newMol = molCloud_.createMolecule
-			(
-				newPosition,
-				cell,
-				tetFace,
-				tetPt,
-				Q,
-				bulkVelocity,
-				vector::zero,
-				pi,
-				vector::zero,
-				specialPosition,
-				special,
-				id,
-				1.0,
-				molCloud_.getTrackingNumber()
-			);
-
-			return newMol;
-		}
-		else //Position still outside of mesh (something very odd happening)
-		{
-			std::cout << "WARNING. Received molecule position outside of mesh and not added = ("
-				 << newPosition[0] << "," << newPosition[1] << "," << newPosition[2] << ")"
-				 << std::endl;
-
-			 return NULL;
-		}
     }
 }
 

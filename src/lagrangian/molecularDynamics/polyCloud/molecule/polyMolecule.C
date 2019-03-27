@@ -312,11 +312,6 @@ void Foam::polyMolecule::hitPatch
     label patchIndex = pp.index();
     const label& patchModelId = td.cloud().boundaries().patchToModelIds()[patchIndex];
 
-    if(special_ == SPECIAL_FROZEN)
-    {
-        std::cout << "Frozen molecule being handled by boundary" << std::endl;
-    }
-
     if(patchModelId != -1)
     {
     	// apply a boundary model when a molecule collides with this poly patch

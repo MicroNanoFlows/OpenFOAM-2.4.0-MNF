@@ -61,7 +61,9 @@ dsmcMdCoupling::dsmcMdCoupling
     recvInterfaces_(),
 #endif
     sending_(false),
-    receiving_(false)
+    receiving_(false),
+	fixedBounds_(false),
+	refVal_(false)
 {
 #ifdef USE_MUI
     //- Determine sending interfaces if defined
@@ -159,6 +161,30 @@ dsmcMdCoupling::dsmcMdCoupling
 		}
 	}
 
+    if (propsDict_.found("refValue"))
+	{
+		refValue_ = propsDict_.lookup("refValue");
+		refVal_ = true;
+	}
+
+    if (propsDict_.found("fixedBoundMin"))
+	{
+    	fixedBoundMin_ = propsDict_.lookup("fixedBoundMin");
+    	fixedBounds_ = true;
+	}
+
+    if(fixedBounds_)
+    {
+		if (propsDict_.found("fixedBoundMax"))
+		{
+			fixedBoundMax_ = propsDict_.lookup("fixedBoundMax");
+		}
+		else
+		{
+			fixedBounds_ = false;
+		}
+    }
+
     if (propsDict_.found("output"))
     {
         output_ = Switch(propsDict_.lookup("output"));
@@ -232,45 +258,33 @@ void dsmcMdCoupling::initialConfiguration()
 {
     if(sending_)
     {
-      // Iterate through all sending interfaces for this controller
-        forAll(sendInterfaces_, iface)
+        if(refVal_)
         {
-            scalar refPoint = 0;
+#ifdef USE_MUI
+        	// Iterate through all sending interfaces for this controller
+        	forAll(sendInterfaces_, iface)
+			{
+				vector refPoint(vector::zero);
 
-            if(recvInterfaceNames_[iface] == "ifs_1")
-            {
-                refPoint = 10e-8 * oneOverRefLength_;
-            }
+				refPoint[0] = refValue_[0] * oneOverRefLength_;
+				refPoint[1] = refValue_[1] * oneOverRefLength_;
+				refPoint[2] = refValue_[2] * oneOverRefLength_;
 
-            if(recvInterfaceNames_[iface] == "ifs_2")
-            {
-                refPoint = 1.5e-7 * oneOverRefLength_;
-            }
+				sendInterfaces_[iface]->push("ref_value_x", refPoint[0]);
+				sendInterfaces_[iface]->push("ref_value_y", refPoint[1]);
+				sendInterfaces_[iface]->push("ref_value_z", refPoint[2]);
 
-            sendInterfaces_[iface]->push("ref_value", refPoint);
-
-            sendInterfaces_[iface]->commit(static_cast<scalar>(0.1));
+				sendInterfaces_[iface]->commit(static_cast<scalar>(0.1));
+			}
+#endif
         }
 
         sendCoupledRegion(true); // Send ghost parcels in coupled regions at time = startTime
+
+#ifdef USE_MUI
         barrier(static_cast<scalar>(1.0));
+#endif
     }
-}
-
-void dsmcMdCoupling::controlParcelsBeforeCollisions()
-{
-	if(receiving_)
-	{
-		if(receiveCoupledMolecules()) // Receive any molecules from MD coupling boundary (blocking)
-		{
-			cloud_.reBuildCellOccupancy(); // Rebuild cell occupancy if parcels received
-		}
-	}
-
-	if(sending_)
-	{
-		sendCoupledParcels(); // Send any parcels deleted by coupling boundary (non-blocking)
-	}
 }
 
 void dsmcMdCoupling::calculateProperties()
@@ -279,6 +293,16 @@ void dsmcMdCoupling::calculateProperties()
     {
     	sendCoupledRegion(false); // Send ghost molecules in coupled regions (non-blocking)
     }
+
+    if(receiving_)
+	{
+		receiveCoupledMolecules(); // Receive any molecules from MD coupling boundary (blocking)
+	}
+
+    if(sending_)
+	{
+		sendCoupledParcels(); // Send any parcels deleted by coupling boundary (non-blocking)
+	}
 }
 
 void dsmcMdCoupling::sendCoupledRegion(bool init)
@@ -474,7 +498,7 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
     List<std::vector<scalar> > rcvVelY(recvInterfaces_.size());
     List<std::vector<scalar> > rcvVelZ(recvInterfaces_.size());
 	std::stringstream rcvStr;
-	
+
 	// Iterate through all receiving interfaces for this controller and extract a points list for each molecule type handled
     forAll(recvInterfaces_, iface)
     {
@@ -518,18 +542,18 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
 
 					if(recvInterfaceNames_[ifacepts] == "ifs_1")
 					{
-						exactBoundaryMin[0] = 10e-8;
+						exactBoundaryMin[0] = 1e-7 - SMALL;
 						exactBoundaryMin[1] = 0;
 						exactBoundaryMin[2] = 0;
 
-						exactBoundaryMax[0] = 10e-8;
+						exactBoundaryMax[0] = 1e-7;
 						exactBoundaryMax[1] = 5e-8;
 						exactBoundaryMax[2] = 5e-8;
 					}
 
 					if(recvInterfaceNames_[ifacepts] == "ifs_2")
 					{
-						exactBoundaryMin[0] = 1.5e-7;
+						exactBoundaryMin[0] = 1.5e-7 + SMALL;
 						exactBoundaryMin[1] = 0;
 						exactBoundaryMin[2] = 0;
 
@@ -546,11 +570,6 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
 						velocity[2] = rcvVelZ[ifacepts][pts];
 
 						point checkedPosition(exactBoundaryMin[0], rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
-
-						if(checkedPosition[1] == 0.0 || checkedPosition[2] == 0.0)
-						{
-							std::cout << "receiveCoupledMolecules(): [" << rcvPoints[ifacepts][pts][0] * refLength_ << "," << checkedPosition[1] << "," << checkedPosition[2] << "]" << std::endl;
-						}
 
 						if(checkedPosition[1] < exactBoundaryMin[1])
 						{
@@ -714,7 +733,6 @@ void dsmcMdCoupling::insertParcel
 			RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
 		}
 
-		label stuckToWall = 0;
 		scalarField wallTemperature(4, 0.0);
 		vectorField wallVectors(4, vector::zero);
 
@@ -731,126 +749,11 @@ void dsmcMdCoupling::insertParcel
 			typeId,
 			0,
 			0,
-			stuckToWall,
+			0,
 			wallTemperature,
 			wallVectors,
 			vibLevel
 		);
-	}
-	else //Received point outside of mesh, this is almost certainly a rounding error, so snap to nearest mesh boundary to avoid loosing parcel
-	{
-		point newPosition = position;
-
-		if(newPosition[0] < meshMin_[0])
-		{
-			newPosition[0] = meshMin_[0];
-		}
-
-		if(newPosition[0] > meshMax_[0])
-		{
-			newPosition[0] = meshMax_[0];
-		}
-
-		if(newPosition[1] < meshMin_[1])
-		{
-			newPosition[1] = meshMin_[1];
-		}
-
-		if(newPosition[1] > meshMax_[1])
-		{
-			newPosition[1] = meshMax_[1];
-		}
-
-		if(newPosition[2] < meshMin_[2])
-		{
-			newPosition[2] = meshMin_[2];
-		}
-
-		if(newPosition[2] > meshMax_[2])
-		{
-			newPosition[2] = meshMax_[2];
-		}
-
-		cell = -1;
-		tetFace = -1;
-		tetPt = -1;
-
-		mesh_.findCellFacePt
-		(
-			newPosition,
-			cell,
-			tetFace,
-			tetPt
-		);
-
-		if(cell != -1)
-		{
-			std::cout << "WARNING. Received parcel position snapped to mesh = ("
-					  << newPosition[0] << "," << newPosition[1] << "," << newPosition[2] << ")"
-					  << std::endl;
-
-			const dsmcParcel::constantProperties& cP = cloud_.constProps(typeId);
-
-			scalar ERot = cloud_.equipartitionRotationalEnergy
-			(
-				rotationalTemperature,
-				cP.rotationalDegreesOfFreedom()
-			);
-
-			labelList vibLevel = cloud_.equipartitionVibrationalEnergyLevel
-			(
-				vibrationalTemperature,
-				cP.vibrationalDegreesOfFreedom(),
-				typeId
-			);
-
-			label ELevel = cloud_.equipartitionElectronicLevel
-			(
-				electronicTemperature,
-				cP.degeneracyList(),
-				cP.electronicEnergyList(),
-				typeId
-			);
-
-			scalar RWF = 1.0;
-
-			if(cloud_.axisymmetric())
-			{
-				const point& cC = mesh_.cellCentres()[cell];
-				scalar radius = cC.y();
-
-				RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
-			}
-
-			label stuckToWall = 0;
-			scalarField wallTemperature(4, 0.0);
-			vectorField wallVectors(4, vector::zero);
-
-			cloud_.addNewParcel
-			(
-				newPosition,
-				U,
-				RWF,
-				ERot,
-				ELevel,
-				cell,
-				tetFace,
-				tetPt,
-				typeId,
-				0,
-				0,
-				stuckToWall,
-				wallTemperature,
-				wallVectors,
-				vibLevel
-			);
-		}
-		else //Position still outside of mesh (something very odd happening)
-		{
-			std::cout << "WARNING. Received parcel position outside of mesh and not added = ("
-					  << newPosition[0] << "," << newPosition[1] << "," << newPosition[2] << ")"
-					  << std::endl;
-		}
 	}
 }
 

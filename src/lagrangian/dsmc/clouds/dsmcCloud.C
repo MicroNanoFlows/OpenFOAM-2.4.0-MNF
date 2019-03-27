@@ -1029,10 +1029,7 @@ void Foam::dsmcCloud::evolve()
         buildCellOccupancy();
     }
 
-    controllers_.controlBeforeCollisions();//**** // Send and receive parcels through coupled boundaries (cell occupancy updated if parcels added)
-
-	this->clearCoupledParcels();  // Clean up record of parcels that have passed coupled boundary
-
+    controllers_.controlBeforeCollisions();//****
 	boundaries_.controlBeforeCollisions();//****
 
     // Calculate new velocities via stochastic collisions
@@ -1046,7 +1043,8 @@ void Foam::dsmcCloud::evolve()
     fields_.calculateFields();//****
     fields_.writeFields();//****
 
-    controllers_.calculateProps();//**** // Coupling region send
+    controllers_.calculateProps();//**** // Coupling region send and send/receive parcels through coupled boundaries
+    this->clearCoupledParcels();  // Clean up record of parcels that have passed coupled boundary
     controllers_.outputResults();//****
 
     boundaries_.calculateProps();//****

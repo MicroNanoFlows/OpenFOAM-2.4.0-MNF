@@ -146,9 +146,6 @@ public:
         //- create an initial configuration
         virtual void initialConfiguration() = 0;
 
-        //- run before particle collisions
-		virtual void controlParcelsBeforeCollisions() = 0;
-
         //- run at end of DSMC time step
         virtual void calculateProperties() = 0;
 

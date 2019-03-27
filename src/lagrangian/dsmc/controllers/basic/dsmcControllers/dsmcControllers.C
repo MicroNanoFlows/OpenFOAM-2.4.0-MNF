@@ -592,11 +592,6 @@ void dsmcControllers::controlBeforeCollisions()
     {
         stateControllers_[sC]->controlParcelsBeforeCollisions();
     }
-
-    forAll(couplingControllers_, cC)
-	{
-    	couplingControllers_[cC]->controlParcelsBeforeCollisions();
-	}
 }
 
 void dsmcControllers::controlAfterCollisions()
