@@ -485,20 +485,6 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
 //         Info << "Cyclic boundary index = " << i << ", name = " << cyclics_.cyclicBoundaryNames()[i]
 //             << endl;
 //
-         forAll(cells, j)
-         {
-        	 List<point> cellPoints(mesh_.cellPoints()[cells[j]].size());
-
-        	 forAll(mesh_.cellPoints()[cells[j]], pts)
-        	 {
-        		 cellPoints[pts] = mesh_.points()[mesh_.cellPoints()[cells[j]][pts]];
-        	 }
-
-        	 boundedBox bb(cellPoints);
-             Info << "cell = " << bb.min() << bb.max() << endl;
-         }
-        
-        
         if(cells.size() > 0)
         {
             sourceCells[i].setSize(cells.size());
@@ -742,8 +728,6 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
     forAll(referredCells[pN], i)
     {
         referredCells[pN][i].setOffsetBoundBox();
-
-        Info << "refCell = " << referredCells[pN][i].min() << referredCells[pN][i].max() << endl;
     }
 
     /* 2 old

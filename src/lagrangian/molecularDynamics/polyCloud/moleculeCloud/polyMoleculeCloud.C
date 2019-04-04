@@ -1284,15 +1284,6 @@ void Foam::polyMoleculeCloud::calculatePairForces()
 					forAll(molsInCell, j)
 					{
 						molI = molsInCell[j];
-
-						/*
-						if(molJ->sitePositions()[0][1] < -1.0 || molJ->sitePositions()[0][2] < -1.0)
-						{
-							std::cout << "molJ-r-ref: [" << molJ->sitePositions()[0][0] << "," << molJ->sitePositions()[0][1] << "," << molJ->sitePositions()[0][2] << "]" << std::endl << std::flush;
-							std::cout << "molI-r-ref: [" << molI->sitePositions()[0][0] << "," << molI->sitePositions()[0][1] << "," << molI->sitePositions()[0][2] << "]" << std::endl << std::endl << std::flush;
-						}
-						*/
-
 						evaluatePair(molI, molJ);
 					}
 				}
