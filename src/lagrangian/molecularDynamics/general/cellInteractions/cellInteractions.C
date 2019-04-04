@@ -189,7 +189,7 @@ void Foam::cellInteractions<ParticleType>::buildOptimisedDIL()
 
     forAll(dil, c)
     {
-        dil[c].shrink();
+        //dil[c].shrink();
         dil_[c].setSize(dil[c].size());
         dil_[c].transfer(dil[c]);
     }
@@ -225,7 +225,7 @@ void Foam::cellInteractions<ParticleType>::buildComplexDIL()
         Info << "WARNING - YOUR MESH IS NOT OPTIMISED FOR MD..." << endl;
     }
     
-    Info << nl << "Building direct interacion lists (arbitrary mesh version)" << endl;
+    Info << nl << "Building direct interaction lists (arbitrary mesh version)" << endl;
     
     List<DynamicList<label> > dil(mesh_.nCells());
 
@@ -248,7 +248,7 @@ void Foam::cellInteractions<ParticleType>::buildComplexDIL()
 
     forAll(dil, c)
     {
-        dil[c].shrink();
+        //dil[c].shrink();
         dil_[c].setSize(dil[c].size());
         dil_[c].transfer(dil[c]);
     }
@@ -277,7 +277,7 @@ void Foam::cellInteractions<ParticleType>::buildFullInteractionList()
 
     forAll(fil, c)
     {
-        fil[c].shrink();
+        //fil[c].shrink();
         fil_[c].setSize(fil[c].size());
         fil_[c].transfer(fil[c]);
     }
@@ -300,7 +300,7 @@ void Foam::cellInteractions<ParticleType>::buildInverseDirectInteractionList()
 
     forAll(inverseDIL, d)
     {
-        inverseDIL[d].shrink();
+        //inverseDIL[d].shrink();
         inverseDIL_[d].setSize(inverseDIL[d].size());
         inverseDIL_[d].transfer(inverseDIL[d]);
     }
@@ -343,7 +343,8 @@ Foam::labelList Foam::cellInteractions<ParticleType>::returnNeighbouringCells(co
 
     labelList cells;
 
-    cells.transfer(neighbCells.shrink());
+    //cells.transfer(neighbCells.shrink());
+    cells.transfer(neighbCells);
 
 //     forAll(cells, c)
 //     {
@@ -413,7 +414,7 @@ Foam::boundedBox Foam::cellInteractions<ParticleType>::cellToBoundBox(const labe
 
     boundedBox bb(points, false);
 
-//     Info << "bounding box -- min: " << bb.min() << " max: " << bb.max() << endl;
+  //   Info << "bounding box -- min: " << bb.min() << " max: " << bb.max() << endl;
 
     return bb;
 }
@@ -483,11 +484,19 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
         // Testing
 //         Info << "Cyclic boundary index = " << i << ", name = " << cyclics_.cyclicBoundaryNames()[i]
 //             << endl;
-//             
-//         forAll(cells, j)
-//         {
-//             Info << "cell = " << cells[j] << ", cellCentre = " << mesh_.cellCentres()[cells[j]] << endl;
-//         }
+//
+         forAll(cells, j)
+         {
+        	 List<point> cellPoints(mesh_.cellPoints()[cells[j]].size());
+
+        	 forAll(mesh_.cellPoints()[cells[j]], pts)
+        	 {
+        		 cellPoints[pts] = mesh_.points()[mesh_.cellPoints()[cells[j]][pts]];
+        	 }
+
+        	 boundedBox bb(cellPoints);
+             Info << "cell = " << bb.min() << bb.max() << endl;
+         }
         
         
         if(cells.size() > 0)
@@ -500,13 +509,11 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
             }
         }
         
-//         Info << "Test separation vector = " 
+//         Info << "Test separation vector = "
 //         << cyclics_.cyclicBoundaryModels()[i]->separationVector()
 //         << endl;
     }
-    
-//     Info << "sourceCells = " << sourceCells << endl;
-    
+
     /* 1-old
     //- each source cell is made a referred cell,
     //- referred using translation and rotational transforms
@@ -544,7 +551,7 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
     // outer list = no of cells on mesh
     // inner list = index to cyclic boundary - i.e. size of inner list = no of boundaries the cell touches 
     List<DynamicList<label> > ovSrcCells(mesh_.nCells());
-    
+
     forAll(sourceCells, i)
     {
         forAll(sourceCells[i], j)
@@ -570,7 +577,7 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
                 }
             }
         }
-    } 
+    }
     
 //     Info << "ovSrcCells = " << ovSrcCells << endl;
     
@@ -666,7 +673,7 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
             }
         }
     }
-    
+
 //     Info << "number of referredCells = " << nRefCells << ", " << referredCells[pN].size() << endl;
     
     
@@ -735,8 +742,10 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
     forAll(referredCells[pN], i)
     {
         referredCells[pN][i].setOffsetBoundBox();
+
+        Info << "refCell = " << referredCells[pN][i].min() << referredCells[pN][i].max() << endl;
     }
-    
+
     /* 2 old
     //- referred cells 
     // for all cells on mesh
@@ -824,14 +833,14 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
                         srcCells.append(sProcCells[i]);
                     }
                 }
-//                 Info<< "name = " << patch.name() 
+//                 Info<< "name = " << patch.name()
 //                     << ", faces = " << patch.size()
 //                     <<", sourceCells = " << srcCells
 //                     << endl;
             }
         }
         
-        srcCells.shrink();
+        //srcCells.shrink();
         
         forAll(srcCells, i)
         {
@@ -843,7 +852,7 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
         }        
     }
     
-    referredCells[pN].shrink();
+    //referredCells[pN].shrink();
     
     //- send/receive referredCells to all processors
 
@@ -868,7 +877,7 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
             }
         }
         
-        referredCells[pN].shrink();
+        //referredCells[pN].shrink();
         
         //- sending
         for (int p = 0; p < Pstream::nProcs(); p++)
@@ -909,7 +918,7 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
     DynamicList<referredCell> localRefCells;
     
     List<DynamicList<label> > sendSrcCells(Pstream::nProcs());
-    List<DynamicList<label> > recRefIds(Pstream::nProcs());    
+    List<DynamicList<label> > recRefIds(Pstream::nProcs());
     
     label count = 0;
     
@@ -917,7 +926,7 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
     {
         forAll(referredCells[p], i)
         {
-            DynamicList<label> cellsN;
+        	DynamicList<label> cellsN;
             
             forAll(mesh_.cells(), c)
             {
@@ -927,7 +936,7 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
                 }
             }
             
-            cellsN.shrink();
+            //cellsN.shrink();
             List<label> neighbCells(cellsN.size());
             neighbCells.transfer(cellsN);
             referredCells[p][i].setNeighbouringCells(neighbCells);
@@ -942,7 +951,7 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
         }
     }
 
-    localRefCells.shrink();
+    //localRefCells.shrink();
 
     refCells_.setSize(localRefCells.size());
     
@@ -964,15 +973,15 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
 //                 << refCells_[i].midpoint()
 //                 << ", translation = " << refCells_[i].translation()
 //                 << endl;
-//                 
+//
 //             const labelList& realCells =refCells_[i].neighbouringCells();
-//             
+//
 //             forAll(realCells, j)
 //             {
-//                 Info << "real cell = " << realCells[j] 
+//                 Info << "real cell = " << realCells[j]
 //                 << ", cell centre = " << mesh_.cellCentres()[realCells[j]]
 //                 << endl;
-//                 
+//
 //             }
 //         }
 //     }
@@ -983,7 +992,7 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
     
     forAll(recRefIds_, p)
     {
-        recRefIds[p].shrink();
+        //recRefIds[p].shrink();
         recRefIds_[p].transfer(recRefIds[p]);
     }    
 
@@ -991,7 +1000,7 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
         //- sending
         for (int p = 0; p < Pstream::nProcs(); p++)
         {
-            sendSrcCells[p].shrink();
+            //sendSrcCells[p].shrink();
             
             labelList srcCellsToProc(sendSrcCells[p].size());
             
@@ -1049,7 +1058,7 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
 
     forAll(sourceCellToRefs, r)
     {
-        sourceCellToRefs[r].shrink();
+        //sourceCellToRefs[r].shrink();
         sourceCellToRefs_[r].setSize(sourceCellToRefs[r].size());
         sourceCellToRefs_[r].transfer(sourceCellToRefs[r]);
     }    
@@ -1074,7 +1083,7 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
 
     forAll(inverseFRIL, c)
     {
-        inverseFRIL[c].shrink();
+        //inverseFRIL[c].shrink();
         inverseFRIL_[c].setSize(inverseFRIL[c].size());
         inverseFRIL_[c].transfer(inverseFRIL[c]);
     }    
@@ -1088,18 +1097,18 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
     
     // Testing
     
-//     forAll(refCells_, i)
-//     {
-//         vector t = refCells_[i].midpoint();
-//         refCells_[i].transformPoint(t);
-//         vector m = refCells_[i].midpoint();
-//         
-//         Info<< "rotate = " << refCells_[i].rotate() 
-//             << ", midpoint = " << m 
-//             << ", translation = " << refCells_[i].translation()
-//             << ", transform midpoint = " << t
-//             << endl;
-//     }
+ //    forAll(refCells_, i)
+ //    {
+ //        vector t = refCells_[i].midpoint();
+ //        refCells_[i].transformPoint(t);
+ //        vector m = refCells_[i].midpoint();
+ //
+ //        Info<< "rotate = " << refCells_[i].rotate()
+ //            << ", midpoint = " << m
+ //            << ", translation = " << refCells_[i].translation()
+ //            << ", transform midpoint = " << t
+ //            << endl;
+ //    }
      
 }
 
@@ -1133,7 +1142,7 @@ Foam::labelList Foam::cellInteractions<ParticleType>::getProcessorSourceCells
         }
     }
     
-    cells.shrink();
+    //cells.shrink();
     
     labelList sourceCells(cells.size());
     
@@ -1211,11 +1220,12 @@ void Foam::cellInteractions<ParticleType>::setRIPL()
             }
         }
     }
-    
+/*
     forAll(ripl_, c)
     {
         ripl_[c].shrink();
     }
+    */
 }
 
 
@@ -1296,32 +1306,10 @@ void Foam::cellInteractions<ParticleType>::setReferredParticles
             }
         }
     }
-    
-    labelListList allNTrans(Pstream::nProcs());
 
-    pBufs.finishedSends(allNTrans);
+	labelListList allNTrans(Pstream::nProcs());
+	pBufs.finishedSends(allNTrans, true); //- Set this to blocking send
 
-    bool transfered;
-    transfered = false;
-
-    forAll(allNTrans, i)
-    {
-        forAll(allNTrans[i], j)
-        {
-            if (allNTrans[i][j])
-            {
-                transfered = true;
-                break; // not sure
-            }
-        }
-    }
-
-/*    if (!transfered)
-    {
-        break;
-    }*/    
-
-    
     //- receiving 
     for (label p = 0; p < Pstream::nProcs(); p++)
     {
@@ -1353,7 +1341,8 @@ void Foam::cellInteractions<ParticleType>::setReferredParticles
                     {
                         for(label i = 0; i < particleCount[j]; i++)
                         {
-                            ParticleType& newp = newpIter();                        
+                            ParticleType& newp = newpIter();
+
                             label r = recRefIds_[p][refCellIdCounter];
                                 
                             refCells_[r].transformPoint(newp.position());
@@ -1403,7 +1392,7 @@ void Foam::cellInteractions<ParticleType>::setReferredParticles
                     {
                         ParticleType& newp = newpIter();                        
                         label r = recRefIds_[p][refCellIdCounter];
-                            
+
                         refCells_[r].transformPoint(newp.position());
                         newp.transformProperties(refCells_[r].translation());
                         newp.setAsReferred();
@@ -1480,8 +1469,8 @@ void Foam::cellInteractions<ParticleType>::checkForOverlaps()
         mols.append(&mol());
     }
     
-    mols.shrink();
-    
+    //mols.shrink();
+
     forAll(mols, i)
     {
         vector rI = mols[i]->position();
@@ -1553,7 +1542,7 @@ void Foam::cellInteractions<ParticleType>::addParticle
             forAll(realCells, rC)
             {
                 ripl_[realCells[rC]].append(newMol);
-                ripl_[realCells[rC]].shrink();
+                //ripl_[realCells[rC]].shrink();
             }            
             
             newRefParticles.append(newMol);
@@ -1561,8 +1550,8 @@ void Foam::cellInteractions<ParticleType>::addParticle
         }
     }
     
-    newRefParticles.shrink();
-    refIds.shrink();
+    //newRefParticles.shrink();
+    //refIds.shrink();
 }
 
 template<class ParticleType>
@@ -1638,14 +1627,14 @@ void Foam::cellInteractions<ParticleType>::deleteParticle
                 }
                 
                 ripl_[realCells[rC]].clear();
-                newList.shrink();
+                //newList.shrink();
                 ripl_[realCells[rC]].transfer(newList);
             } 
         }
     }
     
-    newRefParticles.shrink();
-    refIds.shrink();
+    //newRefParticles.shrink();
+    //refIds.shrink();
 }
 
 

@@ -138,11 +138,6 @@ void Foam::polyMoleculeCloud::buildCellOccupancy()
     {
         cellOccupancy_[mol().cell()].append(&mol());
     }
-    
-    forAll(cellOccupancy_, cO)
-    {
-        cellOccupancy_[cO].shrink();
-    }
 }
 
 // NEW //
@@ -1071,7 +1066,6 @@ void Foam::polyMoleculeCloud::updateAfterMove(const scalar& trackTime)
     }
 }
 
-
 void Foam::polyMoleculeCloud::controlAfterMove()
 {
     boundaries_.controlAfterMove();
@@ -1080,8 +1074,6 @@ void Foam::polyMoleculeCloud::controlAfterMove()
     //Clean up record of any coupled molecules that have passed a boundary and been sent
 	this->clearCoupledMols();
 }
-
-
 
 // control
 void Foam::polyMoleculeCloud::controlBeforeForces()
@@ -1251,7 +1243,7 @@ void Foam::polyMoleculeCloud::calculatePairForces()
             {
                 molI = cellOccupancy_[d][cellIMols];
 
-				forAll(dil[d], interactingCells)
+               	forAll(dil[d], interactingCells)
 				{
 					List<polyMolecule*> cellJ =
 						cellOccupancy_[dil[d][interactingCells]];
@@ -1259,7 +1251,6 @@ void Foam::polyMoleculeCloud::calculatePairForces()
 					forAll(cellJ, cellJMols)
 					{
 						molJ = cellJ[cellJMols];
-
 						evaluatePair(molI, molJ);
 					}
 				}
@@ -1293,6 +1284,15 @@ void Foam::polyMoleculeCloud::calculatePairForces()
 					forAll(molsInCell, j)
 					{
 						molI = molsInCell[j];
+
+						/*
+						if(molJ->sitePositions()[0][1] < -1.0 || molJ->sitePositions()[0][2] < -1.0)
+						{
+							std::cout << "molJ-r-ref: [" << molJ->sitePositions()[0][0] << "," << molJ->sitePositions()[0][1] << "," << molJ->sitePositions()[0][2] << "]" << std::endl << std::flush;
+							std::cout << "molI-r-ref: [" << molI->sitePositions()[0][0] << "," << molI->sitePositions()[0][1] << "," << molI->sitePositions()[0][2] << "]" << std::endl << std::endl << std::flush;
+						}
+						*/
+
 						evaluatePair(molI, molJ);
 					}
 				}

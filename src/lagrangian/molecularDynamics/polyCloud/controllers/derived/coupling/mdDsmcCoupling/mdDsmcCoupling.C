@@ -313,46 +313,44 @@ void mdDsmcCoupling::initialConfiguration()
 	if(receiving_)
     {
 #ifdef USE_MUI
-	    if(fixedRegion_)
-	    {
-            barrier(static_cast<scalar>(0.1));
+		if(fixedRegion_)
+		{
+			forAll(recvInterfaces_, iface)
+			{
+				roundCorr_[0] = recvInterfaces_[iface]->fetch<scalar>("ref_value_x");
+				roundCorr_[1] = recvInterfaces_[iface]->fetch<scalar>("ref_value_y");
+				roundCorr_[2] = recvInterfaces_[iface]->fetch<scalar>("ref_value_z");
 
-            forAll(recvInterfaces_, iface)
-            {
-                roundCorr_[0] = recvInterfaces_[iface]->fetch<scalar>("ref_value_x");
-                roundCorr_[1] = recvInterfaces_[iface]->fetch<scalar>("ref_value_y");
-                roundCorr_[2] = recvInterfaces_[iface]->fetch<scalar>("ref_value_z");
+				if(roundCorr_[0] != 0)
+				{
+					roundCorr_[0] = (fixedRegionMax_[0] - fixedRegionMin_[0]) - roundCorr_[0];
+				}
 
-                if(roundCorr_[0] != 0)
-                {
-                    roundCorr_[0] = (fixedRegionMax_[0] - fixedRegionMin_[0]) - roundCorr_[0];
-                }
+				if(roundCorr_[1] != 0)
+				{
+					roundCorr_[1] = (fixedRegionMax_[1] - fixedRegionMin_[1]) - roundCorr_[1];
+				}
 
-                if(roundCorr_[1] != 0)
-                {
-                    roundCorr_[1] = (fixedRegionMax_[1] - fixedRegionMin_[1]) - roundCorr_[1];
-                }
+				if(roundCorr_[2] != 0)
+				{
+					roundCorr_[2] = (fixedRegionMax_[2] - fixedRegionMin_[2]) - roundCorr_[2];
+				}
 
-                if(roundCorr_[2] != 0)
-                {
-                    roundCorr_[2] = (fixedRegionMax_[2] - fixedRegionMin_[2]) - roundCorr_[2];
-                }
+				std::cout << "Region rounding correction [" << roundCorr_[0] << "," << roundCorr_[1] << "," << roundCorr_[2] << "]" << std::endl;
+			}
 
-                std::cout << "Region rounding correction [" << roundCorr_[0] << "," << roundCorr_[1] << "," << roundCorr_[2] << "]" << std::endl;
-            }
-
-            boundCorr_[0] = (fixedRegionMax_[0] - fixedRegionMin_[0]) * 1e-9;
-            boundCorr_[1] = (fixedRegionMax_[1] - fixedRegionMin_[1]) * 1e-9;
-            boundCorr_[2] = (fixedRegionMax_[2] - fixedRegionMin_[2]) * 1e-9;
-	    }
-	    else //- No details of coupling region so define a value for the boundary correction that is likely to be suitable
-	    {
-	        boundCorr_[0] = SMALL*1e-7;
-	        boundCorr_[1] = SMALL*1e-7;
-	        boundCorr_[2] = SMALL*1e-7;
-	    }
+			boundCorr_[0] = (fixedRegionMax_[0] - fixedRegionMin_[0]) * 1e-9;
+			boundCorr_[1] = (fixedRegionMax_[1] - fixedRegionMin_[1]) * 1e-9;
+			boundCorr_[2] = (fixedRegionMax_[2] - fixedRegionMin_[2]) * 1e-9;
+		}
+		else //- No details of coupling region so define a value for the boundary correction that is likely to be suitable
+		{
+			boundCorr_[0] = SMALL*1e-7;
+			boundCorr_[1] = SMALL*1e-7;
+			boundCorr_[2] = SMALL*1e-7;
+		}
 #endif
-		receiveCoupledRegion(true); // Receive ghost molecules in coupled regions at time = startTime
+		receiveCoupledRegion(true); // Receive ghost molecules in coupled regions at time = startTime and commit time=1 to release other side
     }
 }
 
@@ -371,7 +369,9 @@ void mdDsmcCoupling::controlAfterMove(int stage)
 		{
 			sendCoupledMolecules(); // Send any molecules deleted by coupling boundary (non-blocking)
 		}
-
+	}
+	else if (stage == 3)
+	{
 		if(receiving_)
 		{
 			receiveCoupledParcels(); // Receive any molecules from dsmc coupling boundary (blocking)
@@ -541,6 +541,8 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 									molHistory_[ifacepts][pts]->v()[1] = velocity[1];
 									molHistory_[ifacepts][pts]->v()[2] = velocity[2];
 									
+									molHistory_[ifacepts][pts]->updateAfterMove(molCloud_.cP(), time_.time().deltaT().value());
+
 									molCount++;
 								}
 							}
@@ -840,9 +842,11 @@ polyMolecule* mdDsmcCoupling::insertMolecule
 		    molCloud_.getTrackingNumber()
 	    );
 
-        molCloud_.updateNeighbouringRadii(newMol);
-
         return newMol;
+    }
+    else
+    {
+    	Info << "mdDsmcCoupling::insertMolecule(): Molecule insertion attempted outside of mesh, molecule not inserted" << endl;
     }
 }
 

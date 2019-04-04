@@ -206,7 +206,7 @@ void cyclicBoundary::setCoupledPatchInfo
     separationVector_ = centroid - centroid_;
     
 //     Info << "separationVector CPP = " << separationVector_
-//          << ", new separationVector = " << separationVector 
+//          << ", new separationVector = " << separationVector()
 //          << endl;
          
     theta_ = acos(nF_ & nF); 

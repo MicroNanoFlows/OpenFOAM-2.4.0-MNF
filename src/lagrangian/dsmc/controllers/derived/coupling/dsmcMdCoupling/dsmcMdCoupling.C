@@ -300,10 +300,10 @@ void dsmcMdCoupling::initialConfiguration()
     if(sending_)
     {
 #ifdef USE_MUI
-        if(fixedRegion_)
-        {
-        	// Iterate through all sending interfaces for this controller
-        	forAll(sendInterfaces_, iface)
+		// Iterate through all sending interfaces for this controller
+		forAll(sendInterfaces_, iface)
+		{
+			if(fixedRegion_)
 			{
 				vector refPoint(vector::zero);
 
@@ -314,10 +314,13 @@ void dsmcMdCoupling::initialConfiguration()
 				sendInterfaces_[iface]->push("ref_value_x", refPoint[0]);
 				sendInterfaces_[iface]->push("ref_value_y", refPoint[1]);
 				sendInterfaces_[iface]->push("ref_value_z", refPoint[2]);
-
-				sendInterfaces_[iface]->commit(static_cast<scalar>(0.1));
 			}
 
+			sendInterfaces_[iface]->commit(static_cast<scalar>(0.1));
+		}
+
+        if(fixedRegion_)
+		{
         	boundCorr_[0] = (fixedRegionMax_[0] - fixedRegionMin_[0]) * 1e-9;
             boundCorr_[1] = (fixedRegionMax_[1] - fixedRegionMin_[1]) * 1e-9;
             boundCorr_[2] = (fixedRegionMax_[2] - fixedRegionMin_[2]) * 1e-9;
@@ -330,28 +333,32 @@ void dsmcMdCoupling::initialConfiguration()
         }
 #endif
         sendCoupledRegion(true); // Send ghost parcels in coupled regions at time = startTime
-#ifdef USE_MUI
-        barrier(static_cast<scalar>(1.0));
-#endif
     }
 }
 
-void dsmcMdCoupling::calculateProperties()
+void dsmcMdCoupling::calculateProperties(int stage)
 {
-    if(sending_)
+    if(stage == 1)
     {
-    	sendCoupledRegion(false); // Send ghost molecules in coupled regions (non-blocking)
+		if(sending_)
+		{
+			sendCoupledRegion(false); // Send ghost molecules in coupled regions (non-blocking)
+		}
     }
-
-    if(receiving_)
-	{
-		receiveCoupledMolecules(); // Receive any molecules from MD coupling boundary (blocking)
-	}
-
-    if(sending_)
-	{
-		sendCoupledParcels(); // Send any parcels deleted by coupling boundary (non-blocking)
-	}
+    else if (stage == 2)
+    {
+    	if(receiving_)
+		{
+			receiveCoupledMolecules(); // Receive any molecules from MD coupling boundary (blocking)
+		}
+    }
+    else if (stage == 3)
+    {
+    	if(sending_)
+		{
+			sendCoupledParcels(); // Send any parcels deleted by coupling boundary (non-blocking)
+		}
+    }
 }
 
 void dsmcMdCoupling::sendCoupledRegion(bool init)
@@ -784,6 +791,10 @@ void dsmcMdCoupling::insertParcel
 			wallVectors,
 			vibLevel
 		);
+	}
+	else
+	{
+		Info << "dsmcMdCoupling::insertParcel(): Parcel insertion attempted outside of mesh, parcel not inserted" << endl;
 	}
 }
 

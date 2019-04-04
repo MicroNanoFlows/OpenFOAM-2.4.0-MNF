@@ -147,7 +147,7 @@ public:
         virtual void initialConfiguration() = 0;
 
         //- run at end of DSMC time step
-        virtual void calculateProperties() = 0;
+        virtual void calculateProperties(int stage) = 0;
 
         //- send parcels that fall into the MD coupled region to coupled mdFoamPlus
         virtual void sendCoupledRegion(bool init) = 0;

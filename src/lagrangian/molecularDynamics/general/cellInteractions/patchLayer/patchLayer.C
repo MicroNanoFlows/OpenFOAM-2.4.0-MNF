@@ -77,14 +77,12 @@ void patchLayer::findCells()
     forAll(mesh_.cells(), c)
     {
         boundedBox bb = cellToBoundBox(c);
-        
+
         if(bb_.justOverlaps(bb))
         {
             cells.append(c);
         }
     }
-    
-    cells.shrink();
     
     cells_.setSize(cells.size());
     cells_.transfer(cells);
@@ -92,20 +90,19 @@ void patchLayer::findCells()
 
 void patchLayer::createBox()
 {
-    t1_ = (boundaryPoints_[0] - boundaryPoints_[1])/
-            mag(boundaryPoints_[0] - boundaryPoints_[1]);
+    t1_ = (boundaryPoints_[0] - boundaryPoints_[1]) / mag(boundaryPoints_[0] - boundaryPoints_[1]);
     t2_ = nF_ ^ t1_;
-    t2_ /= Foam::mag(t2_);
+    t2_ /= mag(t2_);
 
-    scalar xMax = 0.0;
-    scalar xMin = GREAT;
+    scalar xMax = -VSMALL;
+    scalar xMin = VGREAT;
 
-    scalar yMax = 0.0;
-    scalar yMin = GREAT;
+    scalar yMax = -VSMALL;
+    scalar yMin = VGREAT;
     
     forAll(boundaryPoints_, i)
     {
-        scalar x = (boundaryPoints_[i]-centroid_) & t1_;
+    	scalar x = (boundaryPoints_[i]-centroid_) & t1_;
         scalar y = (boundaryPoints_[i]-centroid_) & t2_;
         
         if(x > xMax)
@@ -131,7 +128,7 @@ void patchLayer::createBox()
     vector max(xMax, yMax, offset_);
     
     boundedBox bb (min, max);
-    
+
     bb_ = bb;
 }
 

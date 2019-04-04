@@ -572,6 +572,11 @@ void dsmcControllers::initialConfig()
 
     forAll(couplingControllers_, cC)
 	{
+		couplingControllers_[cC]->barrier(static_cast<scalar>(1.0));
+	}
+
+    forAll(couplingControllers_, cC)
+	{
 		couplingControllers_[cC]->forget(static_cast<scalar>(1.0));
 	}
 }
@@ -619,7 +624,17 @@ void dsmcControllers::calculateProps()
 
     forAll(couplingControllers_, cC)
 	{
-		couplingControllers_[cC]->calculateProperties();
+		couplingControllers_[cC]->calculateProperties(1);
+	}
+
+    forAll(couplingControllers_, cC)
+	{
+		couplingControllers_[cC]->calculateProperties(2);
+	}
+
+    forAll(couplingControllers_, cC)
+	{
+		couplingControllers_[cC]->calculateProperties(3);
 	}
 
     forAll(couplingControllers_, cC)

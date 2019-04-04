@@ -587,13 +587,18 @@ void polyControllers::initialConfig()
     }
 
     forAll(couplingControllers_, cC)
+	{
+    	couplingControllers_[cC]->barrier(static_cast<scalar>(0.1));
+	}
+
+    forAll(couplingControllers_, cC)
     {
         couplingControllers_[cC]->initialConfiguration();
     }
 
     forAll(couplingControllers_, cC)
 	{
-	  couplingControllers_[cC]->forget(static_cast<scalar>(1.0));
+    	couplingControllers_[cC]->forget(static_cast<scalar>(1.0));
 	}
 }
 
@@ -628,6 +633,11 @@ void polyControllers::controlAfterMove()
 	forAll(couplingControllers_, cC)
 	{
 	  couplingControllers_[cC]->controlAfterMove(2);
+	}
+
+	forAll(couplingControllers_, cC)
+	{
+	  couplingControllers_[cC]->controlAfterMove(3);
 	}
 
 	forAll(couplingControllers_, cC)

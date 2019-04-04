@@ -168,7 +168,7 @@ void Foam::polyMolecule::updateAfterMove
 {   
     if (!cP.pointMolecule(id_))
     {
-        const diagTensor& momentOfInertia(cP.momentOfInertia(id_));
+    	const diagTensor& momentOfInertia(cP.momentOfInertia(id_));
 
         tensor R;
 
@@ -205,7 +205,7 @@ void Foam::polyMolecule::updateAfterMove
 
 void Foam::polyMolecule::transformProperties(const tensor& T)
 {
-    particle::transformProperties(T);
+	particle::transformProperties(T);
     
     Q_ = T & Q_;
 
@@ -219,15 +219,15 @@ void Foam::polyMolecule::transformProperties(const tensor& T)
 
     rf_ = transform(T, rf_);
 
-    sitePositions_ = position_ + (T & (sitePositions_ - position_));
+   	sitePositions_ = position_ + (T & (sitePositions_ - position_));
 
-    siteForces_ = T & siteForces_;    
+    siteForces_ = T & siteForces_;
 }
 
 
 void Foam::polyMolecule::transformProperties(const vector& separation)
 {
-    particle::transformProperties(separation);
+	particle::transformProperties(separation);
 
     if (special_ == SPECIAL_TETHERED)
     {
@@ -250,7 +250,7 @@ void Foam::polyMolecule::setSitePositions(const constantMoleculeProperties& cP)
 {
     forAll(cP.siteRefPositions()[id_], s)
     {
-        sitePositions_[s] = position_ + (Q_ & cP.siteRefPositions()[id_][s]);
+    	sitePositions_[s] = position_ + (Q_ & cP.siteRefPositions()[id_][s]);
     }
 }
 
