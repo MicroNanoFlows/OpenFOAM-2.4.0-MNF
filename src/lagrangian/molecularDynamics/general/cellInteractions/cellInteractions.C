@@ -189,7 +189,7 @@ void Foam::cellInteractions<ParticleType>::buildOptimisedDIL()
 
     forAll(dil, c)
     {
-        //dil[c].shrink();
+        dil[c].shrink();
         dil_[c].setSize(dil[c].size());
         dil_[c].transfer(dil[c]);
     }
@@ -248,7 +248,7 @@ void Foam::cellInteractions<ParticleType>::buildComplexDIL()
 
     forAll(dil, c)
     {
-        //dil[c].shrink();
+        dil[c].shrink();
         dil_[c].setSize(dil[c].size());
         dil_[c].transfer(dil[c]);
     }
@@ -277,7 +277,7 @@ void Foam::cellInteractions<ParticleType>::buildFullInteractionList()
 
     forAll(fil, c)
     {
-        //fil[c].shrink();
+        fil[c].shrink();
         fil_[c].setSize(fil[c].size());
         fil_[c].transfer(fil[c]);
     }
@@ -300,7 +300,7 @@ void Foam::cellInteractions<ParticleType>::buildInverseDirectInteractionList()
 
     forAll(inverseDIL, d)
     {
-        //inverseDIL[d].shrink();
+        inverseDIL[d].shrink();
         inverseDIL_[d].setSize(inverseDIL[d].size());
         inverseDIL_[d].transfer(inverseDIL[d]);
     }
@@ -343,8 +343,7 @@ Foam::labelList Foam::cellInteractions<ParticleType>::returnNeighbouringCells(co
 
     labelList cells;
 
-    //cells.transfer(neighbCells.shrink());
-    cells.transfer(neighbCells);
+    cells.transfer(neighbCells.shrink());
 
 //     forAll(cells, c)
 //     {
@@ -824,7 +823,7 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
             }
         }
         
-        //srcCells.shrink();
+        srcCells.shrink();
         
         forAll(srcCells, i)
         {
@@ -836,7 +835,7 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
         }        
     }
     
-    //referredCells[pN].shrink();
+    referredCells[pN].shrink();
     
     //- send/receive referredCells to all processors
 
@@ -861,7 +860,7 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
             }
         }
         
-        //referredCells[pN].shrink();
+        referredCells[pN].shrink();
         
         //- sending
         for (int p = 0; p < Pstream::nProcs(); p++)
@@ -920,7 +919,7 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
                 }
             }
             
-            //cellsN.shrink();
+            cellsN.shrink();
             List<label> neighbCells(cellsN.size());
             neighbCells.transfer(cellsN);
             referredCells[p][i].setNeighbouringCells(neighbCells);
@@ -935,7 +934,7 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
         }
     }
 
-    //localRefCells.shrink();
+    localRefCells.shrink();
 
     refCells_.setSize(localRefCells.size());
     
@@ -976,7 +975,7 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
     
     forAll(recRefIds_, p)
     {
-        //recRefIds[p].shrink();
+        recRefIds[p].shrink();
         recRefIds_[p].transfer(recRefIds[p]);
     }    
 
@@ -984,7 +983,7 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
         //- sending
         for (int p = 0; p < Pstream::nProcs(); p++)
         {
-            //sendSrcCells[p].shrink();
+            sendSrcCells[p].shrink();
             
             labelList srcCellsToProc(sendSrcCells[p].size());
             
@@ -1042,11 +1041,10 @@ void Foam::cellInteractions<ParticleType>::buildReferredCells()
 
     forAll(sourceCellToRefs, r)
     {
-        //sourceCellToRefs[r].shrink();
+        sourceCellToRefs[r].shrink();
         sourceCellToRefs_[r].setSize(sourceCellToRefs[r].size());
         sourceCellToRefs_[r].transfer(sourceCellToRefs[r]);
-    }    
-    
+    }
     
 
     //- build inverseFRIL_

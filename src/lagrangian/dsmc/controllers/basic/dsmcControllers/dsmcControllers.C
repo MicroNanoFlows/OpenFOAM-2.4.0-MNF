@@ -572,7 +572,9 @@ void dsmcControllers::initialConfig()
 
     forAll(couplingControllers_, cC)
 	{
+    	std::cout << "Start barrier at 1.0" << std::endl;
 		couplingControllers_[cC]->barrier(static_cast<scalar>(1.0));
+		std::cout << "End barrier at 1.0" << std::endl;
 	}
 
     forAll(couplingControllers_, cC)

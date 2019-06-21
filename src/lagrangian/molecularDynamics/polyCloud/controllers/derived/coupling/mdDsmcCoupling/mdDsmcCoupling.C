@@ -252,8 +252,8 @@ mdDsmcCoupling::mdDsmcCoupling
 		oneOverRefLength_ = 1.0 / refLength_;
 		oneOverRefTime_ = 1.0 / refTime_;
 #ifdef USE_MUI
-		//Initialise exact time sampler for MUI with a numerical tolerance of 1e-9, large value needed as dsmcFoamPlus works in non-normalised numerics.
-		chrono_sampler = new mui::chrono_sampler_exact3d(1e-9);
+		//Initialise exact time sampler for MUI
+		chrono_sampler = new mui::chrono_sampler_sum3d(1e-9, 1e-9);
 #endif
 	}
 
@@ -317,9 +317,11 @@ void mdDsmcCoupling::initialConfiguration()
 		{
 			forAll(recvInterfaces_, iface)
 			{
+				std::cout << "Start fetch's" << std::endl;
 				roundCorr_[0] = recvInterfaces_[iface]->fetch<scalar>("ref_value_x");
 				roundCorr_[1] = recvInterfaces_[iface]->fetch<scalar>("ref_value_y");
 				roundCorr_[2] = recvInterfaces_[iface]->fetch<scalar>("ref_value_z");
+				std::cout << "End fetch's" << std::endl;
 
 				if(roundCorr_[0] != 0)
 				{
@@ -339,15 +341,15 @@ void mdDsmcCoupling::initialConfiguration()
 				std::cout << "Region rounding correction [" << roundCorr_[0] << "," << roundCorr_[1] << "," << roundCorr_[2] << "]" << std::endl;
 			}
 
-			boundCorr_[0] = (fixedRegionMax_[0] - fixedRegionMin_[0]) * 1e-9;
-			boundCorr_[1] = (fixedRegionMax_[1] - fixedRegionMin_[1]) * 1e-9;
-			boundCorr_[2] = (fixedRegionMax_[2] - fixedRegionMin_[2]) * 1e-9;
+			boundCorr_[0] = (fixedRegionMax_[0] - fixedRegionMin_[0]) * 1e-8;
+			boundCorr_[1] = (fixedRegionMax_[1] - fixedRegionMin_[1]) * 1e-8;
+			boundCorr_[2] = (fixedRegionMax_[2] - fixedRegionMin_[2]) * 1e-8;
 		}
 		else //- No details of coupling region so define a value for the boundary correction that is likely to be suitable
 		{
-			boundCorr_[0] = SMALL*1e-7;
-			boundCorr_[1] = SMALL*1e-7;
-			boundCorr_[2] = SMALL*1e-7;
+			boundCorr_[0] = SMALL;
+			boundCorr_[1] = SMALL;
+			boundCorr_[2] = SMALL;
 		}
 #endif
 		receiveCoupledRegion(true); // Receive ghost molecules in coupled regions at time = startTime and commit time=1 to release other side
@@ -401,7 +403,6 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
     List<std::vector<scalar> > rcvVelZ(recvInterfaces_.size());
     List<std::vector<scalar> > rcvMolChanged(recvInterfaces_.size());
 	std::stringstream rcvStr;
-	const scalar temperature = 1; //This needs to be properly defined, only correct for sample Argon case
 
 	// Iterate through all receiving interfaces for this controller and extract a points list for each molecule type handled
 	forAll(recvInterfaces_, iface)
@@ -413,24 +414,24 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 			rcvStr << molNames_[molType] << "_" << "parc_changed"; //Receive string in format [type]_parc_changed
 
 			//- Extract a list of all molecule locations received from other solver through this interface
-			rcvPoints[iface] = recvInterfaces_[iface]->fetch_points<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);			
-                        
+			rcvPoints[iface] = recvInterfaces_[iface]->fetch_points<scalar>(rcvStr.str(), couplingTime, *chrono_sampler, true, chrono_sampler->get_lower_bound(couplingTime));
+
 			//- Extract a list of all molecule change status values received from other solver through this interface
-			rcvMolChanged[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);		
+			rcvMolChanged[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler, true, chrono_sampler->get_lower_bound(couplingTime));
 
 			//- Extract a list of all molecule velocities received from other solver through this interface
             rcvStr.str("");
 			rcvStr.clear();
 			rcvStr << molNames_[molType] << "_" << "parc_vel_x_region";
-			rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
+			rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler, true, chrono_sampler->get_lower_bound(couplingTime));
 			rcvStr.str("");
 			rcvStr.clear();
 			rcvStr << molNames_[molType] << "_" << "parc_vel_y_region";
-			rcvVelY[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
+			rcvVelY[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler, true, chrono_sampler->get_lower_bound(couplingTime));
 			rcvStr.str("");
 			rcvStr.clear();
 			rcvStr << molNames_[molType] << "_" << "parc_vel_z_region";
-			rcvVelZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);			
+			rcvVelZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler, true, chrono_sampler->get_lower_bound(couplingTime));
 		}
 	}
 
@@ -459,6 +460,7 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 				molChanged_[ifacepts].setSize(rcvPoints[ifacepts].size(), false);
 				molHistory_[ifacepts].setSize(rcvPoints[ifacepts].size(), NULL);
 				newList = true;
+				molCloud_.rebuildCellOccupancy();
 			}
 
 			forAll(molNames_, molType)
@@ -476,46 +478,50 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 						velocity[1] = rcvVelY[ifacepts][pts] / rU_.refVelocity();
 						velocity[2] = rcvVelZ[ifacepts][pts] / rU_.refVelocity();
 						
+						/*
 						point checkedPosition((rcvPoints[ifacepts][pts][0] * refLength_) + roundCorr_[0], (rcvPoints[ifacepts][pts][1] * refLength_) + roundCorr_[1], (rcvPoints[ifacepts][pts][2] * refLength_) + roundCorr_[2]);
 
 						if(fixedRegion_)
 						{
 							if(checkedPosition[0] < fixedRegionMin_[0])
 							{
-								checkedPosition[0] = fixedRegionMin_[0] + SMALL;
+								checkedPosition[0] = fixedRegionMin_[0] + ROOTVSMALL;
 							}
 
 							if(checkedPosition[0] > fixedRegionMax_[0])
 							{
-								checkedPosition[0] = fixedRegionMax_[0] - SMALL;
+								checkedPosition[0] = fixedRegionMax_[0] - ROOTVSMALL;
 							}
 
 							if(checkedPosition[1] < fixedRegionMin_[1])
 							{
-								checkedPosition[1] = fixedRegionMin_[1] + SMALL;
+								checkedPosition[1] = fixedRegionMin_[1] + ROOTVSMALL;
 							}
 
 							if(checkedPosition[1] > fixedRegionMax_[1])
 							{
-								checkedPosition[1] = fixedRegionMax_[1] - SMALL;
+								checkedPosition[1] = fixedRegionMax_[1] - ROOTVSMALL;
 							}
 
 							if(checkedPosition[2] < fixedRegionMin_[2])
 							{
-								checkedPosition[2] = fixedRegionMin_[2] + SMALL;
+								checkedPosition[2] = fixedRegionMin_[2] + ROOTVSMALL;
 							}
 
 							if(checkedPosition[2] > fixedRegionMax_[2])
 							{
-								checkedPosition[2] = fixedRegionMax_[2] - SMALL;
+								checkedPosition[2] = fixedRegionMax_[2] - ROOTVSMALL;
 							}
 						}
 
 						const point position(checkedPosition[0], checkedPosition[1], checkedPosition[2]);
+						*/
+
+						const point position(rcvPoints[ifacepts][pts][0] * refLength_, rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
 
 						if(newList) //This is a completely new list so all molecules to be inserted regardless of molChanged flag
 						{
-							molHistory_[ifacepts][pts] = insertMolecule(position, molId, true, temperature, velocity);
+							molHistory_[ifacepts][pts] = insertMolecule(position, molId, true, velocity);
 							molCount++;
 						}
 						else //This is not a completely new list so just check for individual molecule changes
@@ -525,8 +531,9 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 								if(molHistory_[ifacepts][pts] != NULL)
 								{
 									molCloud_.deleteParticle(*molHistory_[ifacepts][pts]); //First delete the old molecule in this list position
+									molCloud_.rebuildCellOccupancy();
 								}
-								molHistory_[ifacepts][pts] = insertMolecule(position, molId, true, temperature, velocity); //Insert the new molecule
+								molHistory_[ifacepts][pts] = insertMolecule(position, molId, true, velocity); //Insert the new molecule
 								molCount++;					
 							}
 							else //This molecule already exists in the list so just update properties
@@ -633,7 +640,6 @@ void mdDsmcCoupling::receiveCoupledParcels()
     List<std::vector<scalar> > rcvVelX(recvInterfaces_.size());
     List<std::vector<scalar> > rcvVelY(recvInterfaces_.size());
     List<std::vector<scalar> > rcvVelZ(recvInterfaces_.size());
-	const scalar temperature = 1; //This needs to be properly defined, only correct for sample Argon case
 	std::stringstream rcvStr;
 
 	// Iterate through all receiving interfaces for this controller and extract a points list for each molecule type handled
@@ -646,18 +652,19 @@ void mdDsmcCoupling::receiveCoupledParcels()
 					rcvStr << molNames_[molType] << "_" << "parc_vel_x_bound";
 
 					//- Extract a list of all molecule locations received from other solver through this interface
-					rcvPoints[iface] = recvInterfaces_[iface]->fetch_points<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
+					rcvPoints[iface] = recvInterfaces_[iface]->fetch_points<scalar>(rcvStr.str(), couplingTime, *chrono_sampler, true, chrono_sampler->get_lower_bound(couplingTime));
 
 					//- Extract a list of all molecule velocities received from other solver through this interface
-					rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
+					rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler, true, chrono_sampler->get_lower_bound(couplingTime));
+
 					rcvStr.str("");
 					rcvStr.clear();
 					rcvStr << molNames_[molType] << "_" << "parc_vel_y_bound";
-					rcvVelY[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
+					rcvVelY[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler, true, chrono_sampler->get_lower_bound(couplingTime));
 					rcvStr.str("");
 					rcvStr.clear();
 					rcvStr << molNames_[molType] << "_" << "parc_vel_z_bound";
-					rcvVelZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
+					rcvVelZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler, true, chrono_sampler->get_lower_bound(couplingTime));
 			}
 	}
 
@@ -710,7 +717,7 @@ void mdDsmcCoupling::receiveCoupledParcels()
 
 						std::cout << "Coupling boundary parcel received at: [" << position[0] << "," << position[1] << "," << position[2] << "]" << std::endl;
 
-						insertMolecule(position, molId, false, temperature, velocity);
+						insertMolecule(position, molId, false, velocity);
 					}
 				}
 			}
@@ -737,7 +744,7 @@ void mdDsmcCoupling::updateProperties(const dictionary& newDict)
 
 void mdDsmcCoupling::barrier()
 {
-	scalar barrierTime = chrono_sampler->get_lower_bound(time_.time().value() * oneOverRefTime_);
+	scalar barrierTime = time_.time().value() * oneOverRefTime_;
 
 	forAll(sendInterfaces_, iface)
 	{
@@ -755,7 +762,7 @@ void mdDsmcCoupling::barrier(scalar time)
 
 void mdDsmcCoupling::barrier(label interface)
 {
-	scalar barrierTime = chrono_sampler->get_lower_bound(time_.time().value() * oneOverRefTime_);
+	scalar barrierTime = time_.time().value() * oneOverRefTime_;
 	sendInterfaces_[interface]->barrier(barrierTime);
 }
 
@@ -769,7 +776,7 @@ void mdDsmcCoupling::forget()
 	scalar time = time_.time().value() * oneOverRefTime_;
 	forAll(recvInterfaces_, iface)
 	{
-		recvInterfaces_[iface]->forget(chrono_sampler->get_upper_bound(time), true);
+		recvInterfaces_[iface]->forget(time, true);
 	}
 }
 
@@ -777,13 +784,13 @@ void mdDsmcCoupling::forget(scalar time)
 {
 	forAll(recvInterfaces_, iface)
 	{
-		recvInterfaces_[iface]->forget(chrono_sampler->get_upper_bound(time), true);
+		recvInterfaces_[iface]->forget(time, true);
 	}
 }
 
 void mdDsmcCoupling::forget(scalar time, label interface)
 {
-	recvInterfaces_[interface]->forget(chrono_sampler->get_upper_bound(time), true);
+	recvInterfaces_[interface]->forget(time, true);
 }
 
 polyMolecule* mdDsmcCoupling::insertMolecule
@@ -791,8 +798,7 @@ polyMolecule* mdDsmcCoupling::insertMolecule
     const point& position,
     const label& id,
     const bool& frozen,
-    const scalar& temperature,
-    vector& bulkVelocity
+    vector& velocity
 )
 {
     label cell = -1;
@@ -809,14 +815,13 @@ polyMolecule* mdDsmcCoupling::insertMolecule
 
     if(cell != -1)
     {
-        point specialPosition(vector::zero);
+    	point specialPosition(vector::zero);
 
         label special = 0;
 
         if (frozen)
         {
             specialPosition = position;
-
             special = polyMolecule::SPECIAL_FROZEN;
         }
 
@@ -831,7 +836,7 @@ polyMolecule* mdDsmcCoupling::insertMolecule
 		    tetFace,
 		    tetPt,
 		    Q,
-		    bulkVelocity,
+			velocity,
 		    vector::zero,
 		    pi,
 		    vector::zero,
@@ -842,12 +847,69 @@ polyMolecule* mdDsmcCoupling::insertMolecule
 		    molCloud_.getTrackingNumber()
 	    );
 
+        molCloud_.updateNeighbouringRadii(newMol);
+		molCloud_.insertMolInCellOccupancy(newMol);
+
+		if(checkForOverlaps(newMol))
+		{
+			std::cout << "!!Inserted molecule exceeded energy limit!!" << std::endl;
+		}
+
         return newMol;
     }
     else
     {
     	Info << "mdDsmcCoupling::insertMolecule(): Molecule insertion attempted outside of mesh, molecule not inserted" << endl;
+
+    	return NULL;
     }
+}
+
+bool mdDsmcCoupling::checkForOverlaps(polyMolecule* newMol)
+{
+	const scalar& potLim = molCloud_.pot().potentialEnergyLimit();
+
+	polyMolecule* molJ = NULL;
+	const labelListList& dil = molCloud_.il().dil();
+
+	forAll(dil, d)
+	{
+		forAll(dil[d], interactingCells)
+		{
+			List<polyMolecule*> cellJ =	molCloud_.cellOccupancy()[dil[d][interactingCells]];
+
+			forAll(cellJ, cellJMols)
+			{
+				molJ = cellJ[cellJMols];
+
+				if(newMol->origId() != molJ->origId() && (newMol->special() != -2 && molJ->special() != -2))
+				{
+					if(molCloud_.evaluatePotentialLimit(newMol, molJ, potLim))
+					{
+						return true;
+					}
+				}
+			}
+		}
+
+		forAll(molCloud_.cellOccupancy()[d], cellIOtherMols)
+		{
+			molJ = molCloud_.cellOccupancy()[d][cellIOtherMols];
+
+			if(newMol->origId() != molJ->origId() && (newMol->special() != -2 && molJ->special() != -2))
+			{
+				if (molJ > newMol)
+				{
+					if(molCloud_.evaluatePotentialLimit(newMol, molJ, potLim))
+					{
+						return true;
+					}
+				}
+			}
+		}
+	}
+
+	return false;
 }
 
 } // End namespace Foam

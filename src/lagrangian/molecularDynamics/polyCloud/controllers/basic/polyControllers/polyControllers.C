@@ -588,8 +588,12 @@ void polyControllers::initialConfig()
 
     forAll(couplingControllers_, cC)
 	{
+    	std::cout << "Start barrier at 0.1" << std::endl;
     	couplingControllers_[cC]->barrier(static_cast<scalar>(0.1));
+    	std::cout << "End barrier at 0.1" << std::endl;
 	}
+
+    std::cout << "Barrier end" << std::endl;
 
     forAll(couplingControllers_, cC)
     {

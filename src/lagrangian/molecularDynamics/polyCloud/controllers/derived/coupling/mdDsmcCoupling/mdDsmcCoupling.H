@@ -98,7 +98,7 @@ private:
         List<List<polyMolecule*> > molHistory_;
         List<List<bool> > molChanged_;
 #ifdef USE_MUI    	
-    	mui::chrono_sampler_exact3d* chrono_sampler;
+    	mui::chrono_sampler_sum3d* chrono_sampler;
 #endif
     	point meshMin_;
 		point meshMax_;
@@ -119,9 +119,9 @@ private:
 		   const point& position,
 		   const label& id,
 		   const bool& frozen,
-		   const scalar& temperature,
-		   vector& bulkVelocity
+		   vector& velocity
 		);
+        bool checkForOverlaps(polyMolecule* newMol);
 
 public:
 

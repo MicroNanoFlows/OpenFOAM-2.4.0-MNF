@@ -48,7 +48,7 @@ inline void Foam::polyMoleculeCloud::evaluatePair
 
     if(!molI->frozen() || !molJ->frozen())
     {
-        // fraction
+    	// fraction
         scalar f = molI->fraction();
     
         if(molJ->fraction() < f)

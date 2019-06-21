@@ -416,7 +416,7 @@
                         extentsDir = 0;
                     }
 
-                    //Check mesh is 2D
+                    //Check mesh is 2D or 3D
                     if(extentsDir > 0)
                     {
                         mui::point2d start, end;
@@ -497,11 +497,9 @@
                             twoDInterfaces.interfaces->getInterface(i)->announce_recv_span((runTime.startTime().value() / twoDInterfaces.refTime), runTime.endTime().value() / twoDInterfaces.refTime, region_2d);
                         }
 
-                        mui::chrono_sampler_exact2d chrono_sampler(1e-9);
-
                         twoDInterfaces.interfaces->getInterface(i)->commit(runTime.startTime().value() / twoDInterfaces.refTime);
-                        twoDInterfaces.interfaces->getInterface(i)->barrier(chrono_sampler.get_lower_bound(runTime.startTime().value() / twoDInterfaces.refTime));
-                        twoDInterfaces.interfaces->getInterface(i)->forget(chrono_sampler.get_upper_bound(runTime.startTime().value() / twoDInterfaces.refTime), true);
+                        twoDInterfaces.interfaces->getInterface(i)->barrier(runTime.startTime().value() / twoDInterfaces.refTime);
+                        twoDInterfaces.interfaces->getInterface(i)->forget(runTime.startTime().value() / twoDInterfaces.refTime, true);
                     }
                     else if (extentsDir == 0) //Mesh is 3D
                     {
@@ -579,11 +577,9 @@
                             threeDInterfaces.interfaces->getInterface(i)->announce_recv_span((runTime.startTime().value() / threeDInterfaces.refTime), (runTime.endTime().value() / threeDInterfaces.refTime), region_3d);
                         }
 
-                        mui::chrono_sampler_exact3d chrono_sampler(1e-9);
-
                         threeDInterfaces.interfaces->getInterface(i)->commit(runTime.startTime().value() / threeDInterfaces.refTime);
-                        threeDInterfaces.interfaces->getInterface(i)->barrier(chrono_sampler.get_lower_bound(runTime.startTime().value() / threeDInterfaces.refTime));
-                        threeDInterfaces.interfaces->getInterface(i)->forget(chrono_sampler.get_upper_bound(runTime.startTime().value() / threeDInterfaces.refTime), true);
+                        threeDInterfaces.interfaces->getInterface(i)->barrier(runTime.startTime().value() / threeDInterfaces.refTime);
+                        threeDInterfaces.interfaces->getInterface(i)->forget(runTime.startTime().value() / threeDInterfaces.refTime, true);
                     }
                     else
                     {

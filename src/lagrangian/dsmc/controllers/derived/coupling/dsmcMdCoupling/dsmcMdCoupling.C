@@ -239,8 +239,8 @@ dsmcMdCoupling::dsmcMdCoupling
 		oneOverRefLength_ = 1.0 / refLength_;
 		oneOverRefTime_ = 1.0 / refTime_;
 #ifdef USE_MUI
-		//Initialise exact time sampler for MUI with a numerical tolerance of 1e-9, large value needed as dsmcFoamPlus works in non-normalised numerics.
-		chrono_sampler = new mui::chrono_sampler_exact3d(1e-9);
+		//Initialise exact time sampler for MUI
+		chrono_sampler = new mui::chrono_sampler_sum3d(1e-9, 1e-9);
 #endif
     }
 
@@ -315,21 +315,20 @@ void dsmcMdCoupling::initialConfiguration()
 				sendInterfaces_[iface]->push("ref_value_y", refPoint[1]);
 				sendInterfaces_[iface]->push("ref_value_z", refPoint[2]);
 			}
-
 			sendInterfaces_[iface]->commit(static_cast<scalar>(0.1));
 		}
 
         if(fixedRegion_)
 		{
-        	boundCorr_[0] = (fixedRegionMax_[0] - fixedRegionMin_[0]) * 1e-9;
-            boundCorr_[1] = (fixedRegionMax_[1] - fixedRegionMin_[1]) * 1e-9;
-            boundCorr_[2] = (fixedRegionMax_[2] - fixedRegionMin_[2]) * 1e-9;
+        	boundCorr_[0] = (fixedRegionMax_[0] - fixedRegionMin_[0]) * 1e-8;
+            boundCorr_[1] = (fixedRegionMax_[1] - fixedRegionMin_[1]) * 1e-8;
+            boundCorr_[2] = (fixedRegionMax_[2] - fixedRegionMin_[2]) * 1e-8;
         }
         else //- No details of coupling region so define a value for the boundary correction that is likely to be suitable
         {
-            boundCorr_[0] = SMALL;
-            boundCorr_[1] = SMALL;
-            boundCorr_[2] = SMALL;
+            boundCorr_[0] = ROOTVSMALL;
+            boundCorr_[1] = ROOTVSMALL;
+            boundCorr_[2] = ROOTVSMALL;
         }
 #endif
         sendCoupledRegion(true); // Send ghost parcels in coupled regions at time = startTime
@@ -479,10 +478,10 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 	}
 
 	forAll(sendInterfaces_, iface)
-    	{
+	{
 		// Commit (transmit) values to the MUI interface
-        	sendInterfaces_[iface]->commit(couplingTime);
-    	}
+		sendInterfaces_[iface]->commit(couplingTime);
+    }
 #endif
 }
 
@@ -565,24 +564,23 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
             rcvStr << typeNames_[molType] << "_" << "mol_vel_x_bound";
 
             //- Extract a list of all molecule locations received from other solver through this interface
-            rcvPoints[iface] = recvInterfaces_[iface]->fetch_points<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
-			
+            rcvPoints[iface] = recvInterfaces_[iface]->fetch_points<scalar>(rcvStr.str(), couplingTime, *chrono_sampler, true, chrono_sampler->get_lower_bound(couplingTime));
             if(rcvPoints[iface].size() > 0)
             {
                 //- Extract a list of all molecule velocities received from other solver through this interface
-				rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
+				rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler, true, chrono_sampler->get_lower_bound(couplingTime));
 				rcvStr.str("");
 				rcvStr.clear();
 				rcvStr << typeNames_[molType] << "_" << "mol_vel_y_bound";
-				rcvVelY[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
+				rcvVelY[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler, true, chrono_sampler->get_lower_bound(couplingTime));
 				rcvStr.str("");
 				rcvStr.clear();
 				rcvStr << typeNames_[molType] << "_" << "mol_vel_z_bound";
-				rcvVelZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler);
+				rcvVelZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler, true, chrono_sampler->get_lower_bound(couplingTime));
            }
        }
     }
-		
+
 	// Iterate through all receiving interfaces for this controller
 	forAll(recvInterfaces_, ifacepts)
 	{
@@ -609,22 +607,22 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
 
                             if(checkedPosition[1] < fixedBoundMin_[1])
                             {
-                                checkedPosition[1] = fixedBoundMin_[1] + boundCorr_[1]; //- Move the new particle away from the boundary a little
+                                checkedPosition[1] = fixedBoundMin_[1] + boundCorr_[1]; //- Move the new particle away from the boundary minimum a little
                             }
 
                             if(checkedPosition[1] > fixedBoundMax_[1])
                             {
-                                checkedPosition[1] = fixedBoundMax_[1] - boundCorr_[1]; //- Move the new particle away from the boundary a little
+                                checkedPosition[1] = fixedBoundMax_[1] - boundCorr_[1]; //- Move the new particle away from the boundary maximum a little
                             }
 
                             if(checkedPosition[2] < fixedBoundMin_[2])
                             {
-                                checkedPosition[2] = fixedBoundMin_[2] + boundCorr_[2]; //- Move the new particle away from the boundary a little
+                                checkedPosition[2] = fixedBoundMin_[2] + boundCorr_[2]; //- Move the new particle away from the boundary minimum a little
                             }
 
                             if(checkedPosition[2] > fixedBoundMax_[2])
                             {
-                                checkedPosition[2] = fixedBoundMax_[2] - boundCorr_[2]; //- Move the new particle away from the boundary a little
+                                checkedPosition[2] = fixedBoundMax_[2] - boundCorr_[2]; //- Move the new particle away from the boundary maximum a little
                             }
                         }
 
@@ -661,7 +659,7 @@ void dsmcMdCoupling::updateProperties(const dictionary& newDict)
 
 void dsmcMdCoupling::barrier()
 {
-	scalar barrierTime = chrono_sampler->get_lower_bound(time_.time().value() * oneOverRefTime_);
+	scalar barrierTime = time_.time().value() * oneOverRefTime_;
 
 	forAll(sendInterfaces_, iface)
 	{
@@ -679,7 +677,7 @@ void dsmcMdCoupling::barrier(scalar time)
 
 void dsmcMdCoupling::barrier(label interface)
 {
-	scalar barrierTime = chrono_sampler->get_lower_bound(time_.time().value() * oneOverRefTime_);
+	scalar barrierTime = time_.time().value() * oneOverRefTime_;
 	sendInterfaces_[interface]->barrier(barrierTime);
 }
 
@@ -694,7 +692,7 @@ void dsmcMdCoupling::forget()
 	scalar time = time_.time().value() * oneOverRefTime_;
 	forAll(recvInterfaces_, iface)
 	{
-		recvInterfaces_[iface]->forget(chrono_sampler->get_upper_bound(time), true);
+		recvInterfaces_[iface]->forget(time, true);
 	}
 }
 
@@ -702,13 +700,13 @@ void dsmcMdCoupling::forget(scalar time)
 {
 	forAll(recvInterfaces_, iface)
 	{
-		recvInterfaces_[iface]->forget(chrono_sampler->get_upper_bound(time), true);
+		recvInterfaces_[iface]->forget(time, true);
 	}
 }
 
 void dsmcMdCoupling::forget(scalar time, label interface)
 {
-	recvInterfaces_[interface]->forget(chrono_sampler->get_upper_bound(time), true);
+	recvInterfaces_[interface]->forget(time, true);
 }
 
 void dsmcMdCoupling::insertParcel

@@ -93,7 +93,7 @@ private:
 		scalar refTime_;
 		scalar oneOverRefTime_;
 #ifdef USE_MUI
-		mui::chrono_sampler_exact3d* chrono_sampler;
+		mui::chrono_sampler_sum3d* chrono_sampler;
 #endif
 		point meshMin_;
 		point meshMax_;
