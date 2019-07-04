@@ -142,33 +142,35 @@ void noTimeCounter::collide()
 
             scalar sigmaTcRMax = cloud_.sigmaTcRMax()[cellI];
             
+//             Info << "sigmaTcRMax = " << sigmaTcRMax << endl;
+            
             scalar selectedPairs = 0.0;
                
             if(cloud_.axisymmetric())
             {               
                 scalar RWF = 0.0;
-                scalar nMols = 0.0;
+//                 scalar nMols = 0.0;
+//                 
+//                 forAll(cellParcels, i)
+//                 {
+//                     const dsmcParcel& p = *cellParcels[i];
+//                     
+//                     scalar radius = sqrt(sqr(p.position().y()) 
+//                                         + sqr(p.position().z()));
+// 
+//                     RWF += 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
+//                     
+//                     nMols += 1.0;
+//                 }
+//                 
+//                 RWF /= nMols;
                 
-                forAll(cellParcels, i)
-                {
-                    const dsmcParcel& p = *cellParcels[i];
-                    
-                    scalar radius = sqrt(sqr(p.position().y()) 
-                                        + sqr(p.position().z()));
-
-                    RWF += 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
-                    
-                    nMols += 1.0;
-                }
+                const point& cC = mesh.cellCentres()[cellI];
                 
-                RWF /= nMols;
+                scalar radius = cC.y();
                 
-//                 const point& cC = mesh.cellCentres()[cellI];
-                
-//                 scalar radius = cC.y();
-                
-//                 RWF = 1.0 + cloud_.maxRWF()
-//                                         *(radius/cloud_.radialExtent());
+                RWF = 1.0 + cloud_.maxRWF()
+                                        *(radius/cloud_.radialExtent());
                 
                 selectedPairs =
                 cloud_.collisionSelectionRemainder()[cellI]

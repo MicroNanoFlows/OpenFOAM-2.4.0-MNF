@@ -237,6 +237,7 @@ void noTimeCounterAdaptiveSubcelling::collide()
             {
                 const dsmcParcel& p = *cellParcels[i];
                 pS = p.position() - startPoints_[cellI];
+
                 nX = label((pS & vector(1, 0, 0))/binWidths_[cellI].x());
                 nY = label((pS & vector(0, 1, 0))/binWidths_[cellI].y());
                 nZ = label((pS & vector(0, 0, 1))/binWidths_[cellI].z());
@@ -325,24 +326,29 @@ void noTimeCounterAdaptiveSubcelling::collide()
 
                     } while (candidateP == candidateQ);
                 }
-
-                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                // uniform candidate selection procedure
-
-                // // Select the first collision candidate
-                // label candidateP = rndGen_.integer(0, nC-1);
-
-                // // Select a possible second collision candidate
-                // label candidateQ = rndGen_.integer(0, nC-1);
-
-                // // If the same candidate is chosen, choose again
-                // while (candidateP == candidateQ)
-                // {
-                //     candidateQ = rndGen_.integer(0, nC-1);
-                // }
-
-                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+                
+//                 Info << "candidateP = " << candidateP << endl;
+//                 Info << "candidateQ = " << candidateQ << endl;
+//                 Info << "subCellPs = " << subCellPs << endl;
+// //                 Info << "cellParcels.size() = " << cellParcels.size() << endl;
+// 
+//                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//                 // uniform candidate selection procedure
+// 
+//                 // // Select the first collision candidate
+//                 // label candidateP = rndGen_.integer(0, nC-1);
+// 
+//                 // // Select a possible second collision candidate
+//                 // label candidateQ = rndGen_.integer(0, nC-1);
+// 
+//                 // // If the same candidate is chosen, choose again
+//                 // while (candidateP == candidateQ)
+//                 // {
+//                 //     candidateQ = rndGen_.integer(0, nC-1);
+//                 // }
+// 
+//                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// 
                 dsmcParcel& parcelP = *cellParcels[candidateP];
                 dsmcParcel& parcelQ = *cellParcels[candidateQ];
 
