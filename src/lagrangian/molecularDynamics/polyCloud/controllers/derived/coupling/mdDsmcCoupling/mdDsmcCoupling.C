@@ -852,16 +852,40 @@ polyMolecule* mdDsmcCoupling::insertMolecule
 
 		if(checkForOverlaps(newMol))
 		{
-			std::cout << "!!Inserted molecule exceeded energy limit!!" << std::endl;
+		  Info << "mdDsmcCoupling::insertMolecule(): Molecule insertion would create overlap, finding new insertion position" << endl;
+
+		  // Delete the created molecule
+		  molCloud_.deleteParticle(*newMol);
+
+		  // Perturb the Z position of the molecule to find a free space
+
+
+		  // Create in the newly perturbed location
+		  newMol = molCloud_.createMolecule
+          (
+              position,
+              cell,
+              tetFace,
+              tetPt,
+              Q,
+              velocity,
+              vector::zero,
+              pi,
+              vector::zero,
+              specialPosition,
+              special,
+              id,
+              1.0,
+              molCloud_.getTrackingNumber()
+          );
 		}
 
         return newMol;
     }
     else
     {
-    	Info << "mdDsmcCoupling::insertMolecule(): Molecule insertion attempted outside of mesh, molecule not inserted" << endl;
-
-    	return NULL;
+      Info << "mdDsmcCoupling::insertMolecule(): Molecule insertion attempted outside of mesh, molecule not inserted" << endl;
+      return NULL;
     }
 }
 
