@@ -850,34 +850,39 @@ polyMolecule* mdDsmcCoupling::insertMolecule
         molCloud_.updateNeighbouringRadii(newMol);
 		molCloud_.insertMolInCellOccupancy(newMol);
 
-		if(checkForOverlaps(newMol))
+		// No need to perform overlap check for ghost molecules
+		if(!frozen)
 		{
-		  Info << "mdDsmcCoupling::insertMolecule(): Molecule insertion would create overlap, finding new insertion position" << endl;
+		    if(checkForOverlaps(newMol))
+            {
+              Info << "mdDsmcCoupling::insertMolecule(): Molecule insertion would create overlap, finding new insertion position" << endl;
 
-		  // Delete the created molecule
-		  molCloud_.deleteParticle(*newMol);
+              // Delete the created molecule
+              molCloud_.deleteParticle(*newMol);
 
-		  // Perturb the Z position of the molecule to find a free space
+              // Perturb the Z position of the molecule to find a free space in the cell it is being inserted into
 
 
-		  // Create in the newly perturbed location
-		  newMol = molCloud_.createMolecule
-          (
-              position,
-              cell,
-              tetFace,
-              tetPt,
-              Q,
-              velocity,
-              vector::zero,
-              pi,
-              vector::zero,
-              specialPosition,
-              special,
-              id,
-              1.0,
-              molCloud_.getTrackingNumber()
-          );
+              // Create in the newly perturbed location
+              newMol = molCloud_.createMolecule
+              (
+                  position,
+                  cell,
+                  tetFace,
+                  tetPt,
+                  Q,
+                  velocity,
+                  vector::zero,
+                  pi,
+                  vector::zero,
+                  specialPosition,
+                  special,
+                  id,
+                  1.0,
+                  molCloud_.getTrackingNumber()
+              );
+
+            }
 		}
 
         return newMol;
@@ -906,11 +911,11 @@ bool mdDsmcCoupling::checkForOverlaps(polyMolecule* newMol)
 			{
 				molJ = cellJ[cellJMols];
 
-				if(newMol->origId() != molJ->origId() && (newMol->special() != -2 && molJ->special() != -2))
+				if(newMol->origId() != molJ->origId() && (newMol->special() != polyMolecule::SPECIAL_FROZEN && molJ->special() != polyMolecule::SPECIAL_FROZEN))
 				{
-					if(molCloud_.evaluatePotentialLimit(newMol, molJ, potLim))
+				    if(molCloud_.evaluatePotentialLimit(newMol, molJ, potLim))
 					{
-						return true;
+					   return true;
 					}
 				}
 			}
@@ -920,11 +925,11 @@ bool mdDsmcCoupling::checkForOverlaps(polyMolecule* newMol)
 		{
 			molJ = molCloud_.cellOccupancy()[d][cellIOtherMols];
 
-			if(newMol->origId() != molJ->origId() && (newMol->special() != -2 && molJ->special() != -2))
+			if(newMol->origId() != molJ->origId() && (newMol->special() != polyMolecule::SPECIAL_FROZEN && molJ->special() != polyMolecule::SPECIAL_FROZEN))
 			{
 				if (molJ > newMol)
 				{
-					if(molCloud_.evaluatePotentialLimit(newMol, molJ, potLim))
+				    if(molCloud_.evaluatePotentialLimit(newMol, molJ, potLim))
 					{
 						return true;
 					}
