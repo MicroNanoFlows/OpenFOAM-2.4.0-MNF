@@ -2,7 +2,8 @@ EXE_INC = \
     -I$(LIB_SRC)/finiteVolume/lnInclude \
     -I$(LIB_SRC)/fvOptions/lnInclude \
     -I$(LIB_SRC)/lagrangian/basic/lnInclude \
-    -I$(LIB_SRC)/lagrangian/dsmc/lnInclude \
+    -I$(LIB_SRC)/lagrangian/molecularDynamics/general/lnInclude \
+    -I$(LIB_SRC)/lagrangian/picDsmc/lnInclude \
     -I$(LIB_SRC)/meshTools/lnInclude \
     -I$(LIB_SRC)/sampling/lnInclude \
     -I$(LIB_SRC)/transportModels \
@@ -18,7 +19,8 @@ LIB_LIBS = \
     -lmeshTools \
     -lsampling \
     -llagrangian \
-    -ldsmcFOAM \
+    -lgeneralMolecule \
+    -lpicDsmc \
     -lincompressibleTransportModels \
     -lcompressibleRASModels \
     -lincompressibleRASModels \

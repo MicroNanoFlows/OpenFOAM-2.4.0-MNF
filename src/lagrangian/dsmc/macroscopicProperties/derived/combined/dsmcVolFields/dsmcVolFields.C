@@ -1043,6 +1043,8 @@ void dsmcVolFields::calculateWallUnitVectors()
         if(isA<wallPolyPatch>(pPatch))
         {
             const vectorField& fC = pPatch.faceCentres();
+            
+            Info << "mesh_.magSf().boundaryField()[patchi] = " << mesh_.magSf().boundaryField()[patchi] << endl;
 
             forAll(n_[patchi], facei)
             {
