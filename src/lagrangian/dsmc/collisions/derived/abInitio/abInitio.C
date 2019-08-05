@@ -233,9 +233,9 @@ void Foam::abInitio::collide
     
 //     scalar g = g_[i];
 
-    label j = rndGen.integer(0,99);
+    label j = rndGen.integer(0, (nColumns_ - 3));
     
-    if(j > 99 || j < 0)
+    if(j > (nColumns_ - 3) || j < 0)
     {
         FatalErrorIn("abInitio::collide")
                 << "Ab initio cos(theta) out of scope."
