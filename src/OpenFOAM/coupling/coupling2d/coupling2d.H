@@ -71,6 +71,7 @@ private:
         vector dom_send_end;
         vector dom_rcv_start;
         vector dom_rcv_end;
+        bool iterationCoupling;
     };
 
     word domainName_;
@@ -83,6 +84,7 @@ private:
     List<vector> dom_send_end_;
     List<vector> dom_rcv_start_;
     List<vector> dom_rcv_end_;
+    List<bool> iterationCoupling_;
 
 public:
 
@@ -98,7 +100,8 @@ public:
             List<vector>& dom_send_start,
             List<vector>& dom_send_end,
             List<vector>& dom_rcv_start,
-            List<vector>& dom_rcv_end
+            List<vector>& dom_rcv_end,
+            List<bool>& iterationCoupling
         );
 
     // Destructor
@@ -119,6 +122,7 @@ public:
         vector getInterfaceSendDomEnd(int index) const;
         vector getInterfaceReceiveDomStart(int index) const;
         vector getInterfaceReceiveDomEnd(int index) const;
+        bool getInterfaceItCouplingStatus(int index) const;
 };
 
 struct couplingInterface2d

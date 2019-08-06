@@ -57,6 +57,13 @@ class mdDsmcCoupling
     public polyCouplingController
 {
 
+    struct coupledMolecule
+    {
+        word molType;
+        point position;
+        vector velocity;
+    };
+
 private:
 
     // Private data
@@ -91,6 +98,8 @@ private:
 
         scalar refLength_;
         scalar oneOverRefLength_;
+        scalar refVelocity_;
+        scalar oneOverRefVelocity_;
         scalar refTime_;
         scalar oneOverRefTime_;
         const List<word>& idList;
@@ -98,30 +107,34 @@ private:
         List<List<polyMolecule*> > molHistory_;
         List<List<bool> > molChanged_;
 #ifdef USE_MUI    	
-    	mui::chrono_sampler_sum3d* chrono_sampler;
+    	mui::chrono_sampler_exact3d* chrono_sampler;
 #endif
-    	point meshMin_;
-		point meshMax_;
-		bool fixedRegion_;
-		vector fixedRegionMin_;
+    	bool fixedRegion_;
+        vector fixedRegionMin_;
         vector fixedRegionMax_;
-		bool fixedBounds_;
-		vector fixedBoundMin_;
-		vector fixedBoundMax_;
-		vector fixedBoundNorm_;
-		vector roundCorr_;
-		vector boundCorr_;
+        bool fixedBounds_;
+        vector fixedBoundMin_;
+        vector fixedBoundMax_;
+        vector fixedBoundNorm_;
+        vector fixedBoundZeroThick_;
+        vector boundCorr_;
+        scalar overlapEnergyLimit_;
+        label overlapIterations_;
+        label prevMolCount_;
+        label currIteration_;
+        DynamicList<label> intersectingCells_;
+        DynamicList<coupledMolecule> molsToSend_;
 
     // Private Member Functions
 
         polyMolecule* insertMolecule
-		(
-		   const point& position,
-		   const label& id,
-		   const bool& frozen,
-		   vector& velocity
-		);
-        bool checkForOverlaps(polyMolecule* newMol);
+	(
+	    point& position,
+	    const label& id,
+	    const bool& ghost,
+	    vector& velocity
+	);
+        polyMolecule* checkForOverlaps(polyMolecule* newMol, const scalar& potEnergyLimit);
 
 public:
 
@@ -150,26 +163,26 @@ public:
         //- create an initial configuration
         void initialConfiguration();
 
-        //- run at start of MD time step before molecules move
+        //- run at start of time step before molecules move
         void controlAfterMove(int stage);
 
-        //- run at end of MD time step
-        void calculateProperties();
-
-        //- receive molecules that fall into the MD coupled region from coupled dsmcFoamPlus
+        //- receive molecules that fall into the coupled region
         void receiveCoupledRegion(bool init);
 
-        //- send molecules to dsmcFoamPlus that have crossed a coupling boundary
+        //- Collate and delete molecules that have crossed a coupling boundary
+        bool findCoupledMolecules();
+
+        //- send molecules that have crossed a coupling boundary
         void sendCoupledMolecules();
 
-        //- receive parcels from dsmcFoamPlus that have crossed a coupling boundary
+        //- receive molecules that have crossed a coupling boundary
         void receiveCoupledParcels();
 
         //- output data (optional)
         void output
         (
             const fileName& fixedPathName,
-            const List<fileName>& timePaths
+            const fileName& timePath
         );
 
         //- update properties from a modified dictionary (optional)
@@ -178,23 +191,20 @@ public:
         //- Create a coupling barrier at current coupling time for all sending interfaces
         void barrier();
 
-        //- Create a coupling barrier at specific coupling time for all sending interfaces
-        void barrier(scalar time);
+        //- Create a coupling barrier at specific coupling iteration for all sending interfaces
+        void barrier(label iteration);
 
-        //- Create a coupling barrier at current coupling time for all sending interfaces
-        void barrier(label interface);
+        //- Create a coupling barrier at specific coupling iteration for specific sending interface
+        void barrier(label iteration, label interface);
 
-        //- Create a coupling barrier at specific coupling time for specific sending interface
-        void barrier(scalar time, label interface);
-
-        //- Forget the time frame received at current coupling time for all interfaces
+        //- Forget the time frame received at current coupling iteration for all interfaces
         void forget();
 
-        //- Forget the time frame received at specific time for all interfaces
-        void forget(scalar time);
+        //- Forget the time frame received at specific iteration for all interfaces
+        void forget(label iteration);
 
-        //- Forget the time frame received at specific time for specific interfaces
-        void forget(scalar time, label interface);
+        //- Forget the time frame received at specific iteration for specific interfaces
+        void forget(label iteration, label interface);
 };
 
 

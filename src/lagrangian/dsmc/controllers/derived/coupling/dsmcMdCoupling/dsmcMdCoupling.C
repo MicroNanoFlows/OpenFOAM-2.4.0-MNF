@@ -54,7 +54,6 @@ dsmcMdCoupling::dsmcMdCoupling
     propsDict_(dict.subDict(typeName + "Properties")),
     propsDictSend_(dict.subDict(typeName + "Sending")),
     propsDictRecv_(dict.subDict(typeName + "Receiving")),
-    output_(false),
 #ifdef USE_MUI
     cellCentres_(),
     sendInterfaces_(),
@@ -69,7 +68,9 @@ dsmcMdCoupling::dsmcMdCoupling
     fixedBoundMin_(vector::zero),
     fixedBoundMax_(vector::zero),
     fixedBoundNorm_(vector::zero),
-    boundCorr_(vector::zero)
+    fixedBoundZeroThick_(vector(-1, -1, -1)),
+    boundCorr_(vector::zero),
+    currIteration_(0)
 {
 #ifdef USE_MUI
     //- Determine sending interfaces if defined
@@ -212,23 +213,243 @@ dsmcMdCoupling::dsmcMdCoupling
     if (propsDict_.found("fixedBoundNorm"))
     {
         fixedBoundNorm_ = propsDict_.lookup("fixedBoundNorm");
+
+        if(fixedBoundMax_[0] - fixedBoundMin_[0] == 0.0)
+        {
+            fixedBoundZeroThick_[0] = 1;
+        }
+
+        if(fixedBoundMax_[1] - fixedBoundMin_[1] == 0.0)
+        {
+            fixedBoundZeroThick_[1] = 1;
+        }
+
+        if(fixedBoundMax_[2] - fixedBoundMin_[2] == 0.0)
+        {
+            fixedBoundZeroThick_[2] = 1;
+        }
+
+        if(fixedBoundZeroThick_[0] == -1 && fixedBoundZeroThick_[1] == -1 && fixedBoundZeroThick_[2] == -1)
+        {
+            FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
+                         << "A fixed boundary must have a zero thickness in at least one direction"
+                         << exit(FatalError);
+        }
+
         boundNormFound = true;
     }
 
-    if((boundMinFound && !boundMinFound) || (boundMaxFound && !boundMaxFound) || (boundNormFound && !boundNormFound))
+    if((boundMinFound && !boundMaxFound && !boundNormFound) ||
+       (boundMaxFound && !boundMinFound && !boundNormFound) ||
+       (boundNormFound && !boundMinFound && !boundMaxFound))
     {
-        FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
-                      << "Cannot find fixedBoundMin, fixedBoundMax and fixedBoundNorm"
-                      << exit(FatalError);
+        FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
+                     << "Cannot find fixedBoundMin, fixedBoundMax and fixedBoundNorm together"
+                     << exit(FatalError);
     }
     else
     {
         fixedBounds_ = true;
-    }
 
-    if (propsDict_.found("output"))
-    {
-        output_ = Switch(propsDict_.lookup("output"));
+        const cellList& cells = mesh_.cells();
+        const List<point>& pts = mesh_.points();
+
+        point cellMin;
+        point cellMax;
+
+        //- Determine which cells the fixed boundary intersects
+        forAll(cells, cell)
+        {
+            const labelList& pointList = mesh_.cellPoints(cell);
+
+            cellMin[0] = VGREAT;
+            cellMin[1] = VGREAT;
+            cellMin[2] = VGREAT;
+            cellMax[0] = -VSMALL;
+            cellMax[1] = -VSMALL;
+            cellMax[2] = -VSMALL;
+
+            forAll(pointList, cellPoint)
+            {
+                if(pts[pointList[cellPoint]][0] < cellMin[0])
+                {
+                    cellMin[0] = pts[pointList[cellPoint]][0];
+                }
+
+                if(pts[pointList[cellPoint]][0] > cellMax[0])
+                {
+                    cellMax[0] = pts[pointList[cellPoint]][0];
+                }
+
+                if(pts[pointList[cellPoint]][1] < cellMin[1])
+                {
+                    cellMin[1] = pts[pointList[cellPoint]][1];
+                }
+
+                if(pts[pointList[cellPoint]][1] > cellMax[1])
+                {
+                    cellMax[1] = pts[pointList[cellPoint]][1];
+                }
+
+                if(pts[pointList[cellPoint]][2] < cellMin[2])
+                {
+                    cellMin[2] = pts[pointList[cellPoint]][2];
+                }
+
+                if(pts[pointList[cellPoint]][2] > cellMax[2])
+                {
+                    cellMax[2] = pts[pointList[cellPoint]][2];
+                }
+            }
+
+            if(fixedBoundZeroThick_[0] == 1)
+            {
+                if(fixedBoundNorm_[0] != 0)
+                {
+                    if(fixedBoundMin_[0] >= cellMin[0] && fixedBoundMax_[0] <= cellMax[0])
+                    {
+                        if((cellMin[1] >= fixedBoundMin_[1] && cellMax[1] <= fixedBoundMax_[1]) &&
+                           (cellMin[2] >= fixedBoundMin_[2] && cellMax[2] <= fixedBoundMax_[2]))
+                        {
+                            if(findIndex(intersectingCells_, cell) == -1)
+                            {
+                                intersectingCells_.append(cell);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
+                                 << "Fixed boundary zero thickness in x direction but normal value zero"
+                                 << exit(FatalError);
+                }
+            }
+
+            if(fixedBoundZeroThick_[1] == 1)
+            {
+               if(fixedBoundNorm_[1] != 0)
+               {
+                   if(fixedBoundMin_[1] >= cellMin[1] && fixedBoundMax_[1] <= cellMax[1])
+                   {
+                       if((cellMin[0] >= fixedBoundMin_[0] && cellMax[0] <= fixedBoundMax_[0]) &&
+                          (cellMin[2] >= fixedBoundMin_[2] && cellMax[2] <= fixedBoundMax_[2]))
+                       {
+                           if(findIndex(intersectingCells_, cell) == -1)
+                           {
+                               intersectingCells_.append(cell);
+                           }
+                       }
+                   }
+               }
+               else
+               {
+                   FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
+                                << "Fixed boundary zero thickness in y direction but normal value zero"
+                                << exit(FatalError);
+               }
+            }
+
+            if(fixedBoundZeroThick_[2] == 1)
+            {
+               if(fixedBoundNorm_[2] != 0)
+               {
+                   if(fixedBoundMin_[2] >= cellMin[2] && fixedBoundMax_[2] <= cellMax[2])
+                   {
+                       if((cellMin[0] >= fixedBoundMin_[0] && cellMax[0] <= fixedBoundMax_[0]) &&
+                          (cellMin[1] >= fixedBoundMin_[1] && cellMax[1] <= fixedBoundMax_[1]))
+                       {
+                           if(findIndex(intersectingCells_, cell) == -1)
+                           {
+                               intersectingCells_.append(cell);
+                           }
+                       }
+                   }
+               }
+               else
+               {
+                   FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
+                                << "Fixed boundary zero thickness in z direction but normal value zero"
+                                << exit(FatalError);
+               }
+            }
+        }
+
+        if(intersectingCells_.size() > 0)
+        {
+            std::cout << "Fixed boundary intersecting cell count: " << intersectingCells_.size() << std::endl;
+        }
+        else
+        {
+            //- Determine if fixed boundary falls within mesh bounds
+            point meshMin(VGREAT, VGREAT, VGREAT);
+            point meshMax(-VSMALL, -VSMALL, -VSMALL);
+
+            const pointField& meshPoints = mesh_.points();
+
+            forAll(meshPoints, pts)
+            {
+                if(meshPoints[pts][0] < meshMin[0])
+                {
+                    meshMin[0] = meshPoints[pts][0];
+                }
+
+                if(meshPoints[pts][1] < meshMin[1])
+                {
+                    meshMin[1] = meshPoints[pts][1];
+                }
+
+                if(meshPoints[pts][2] < meshMin[2])
+                {
+                    meshMin[2] = meshPoints[pts][2];
+                }
+
+                if(meshPoints[pts][0] > meshMax[0])
+                {
+                    meshMax[0] = meshPoints[pts][0];
+                }
+
+                if(meshPoints[pts][1] > meshMax[1])
+                {
+                    meshMax[1] = meshPoints[pts][1];
+                }
+
+                if(meshPoints[pts][2] > meshMax[2])
+                {
+                    meshMax[2] = meshPoints[pts][2];
+                }
+            }
+
+            vector meshHalfWidth(((meshMax[0] - meshMin[0]) * 0.5),
+                                 ((meshMax[1] - meshMin[1]) * 0.5),
+                                 ((meshMax[2] - meshMin[2]) * 0.5));
+            vector fixedBoundHalfWidth(((fixedBoundMax_[0] - fixedBoundMin_[0]) * 0.5),
+                                       ((fixedBoundMax_[1] - fixedBoundMin_[1]) * 0.5),
+                                       ((fixedBoundMax_[2] - fixedBoundMin_[2]) * 0.5));
+            point meshCentre(meshMin[0] + meshHalfWidth[0],
+                             meshMin[1] + meshHalfWidth[1],
+                             meshMin[2] + meshHalfWidth[2]);
+            point fixedBoundCentre(fixedBoundMin_[0] + fixedBoundHalfWidth[0],
+                                   fixedBoundMin_[1] + fixedBoundHalfWidth[1],
+                                   fixedBoundMin_[2] + fixedBoundHalfWidth[2]);
+
+            bool noOverlap = false;
+
+            if ((std::fabs(meshCentre[0] - fixedBoundCentre[0]) > (meshHalfWidth[0] + fixedBoundHalfWidth[0])) ||
+               (std::fabs(meshCentre[1] - fixedBoundCentre[1]) > (meshHalfWidth[1] + fixedBoundHalfWidth[1])) ||
+               (std::fabs(meshCentre[2] - fixedBoundCentre[2]) > (meshHalfWidth[2] + fixedBoundHalfWidth[2])))
+            {
+                noOverlap = true;
+            }
+
+            //- There is an overlap between the fixed boundary and the local mesh so should have found at least 1 intersecting cell
+            if(!noOverlap)
+            {
+                FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
+                             << "Fixed boundary defined but no intersecting cells found"
+                             << exit(FatalError);
+            }
+        }
     }
 
     if(sending_ || receiving_)
@@ -240,51 +461,9 @@ dsmcMdCoupling::dsmcMdCoupling
 		oneOverRefTime_ = 1.0 / refTime_;
 #ifdef USE_MUI
 		//Initialise exact time sampler for MUI
-		chrono_sampler = new mui::chrono_sampler_sum3d(1e-9, 1e-9);
+		chrono_sampler = new mui::chrono_sampler_exact3d();
 #endif
     }
-
-    meshMin_[0] = VGREAT;
-	meshMin_[1] = VGREAT;
-	meshMin_[2] = VGREAT;
-	meshMax_[0] = -VSMALL;
-	meshMax_[1] = -VSMALL;
-	meshMax_[2] = -VSMALL;
-
-	const pointField& meshPoints = mesh_.points();
-
-	forAll(meshPoints, pts)
-	{
-		if(meshPoints[pts][0] < meshMin_[0])
-		{
-			meshMin_[0] = meshPoints[pts][0];
-		}
-
-		if(meshPoints[pts][1] < meshMin_[1])
-		{
-			meshMin_[1] = meshPoints[pts][1];
-		}
-
-		if(meshPoints[pts][2] < meshMin_[2])
-		{
-			meshMin_[2] = meshPoints[pts][2];
-		}
-
-		if(meshPoints[pts][0] > meshMax_[0])
-		{
-			meshMax_[0] = meshPoints[pts][0];
-		}
-
-		if(meshPoints[pts][1] > meshMax_[1])
-		{
-			meshMax_[1] = meshPoints[pts][1];
-		}
-
-		if(meshPoints[pts][2] > meshMax_[2])
-		{
-			meshMax_[2] = meshPoints[pts][2];
-		}
-	}
 }
 
 
@@ -300,38 +479,99 @@ void dsmcMdCoupling::initialConfiguration()
     if(sending_)
     {
 #ifdef USE_MUI
-		// Iterate through all sending interfaces for this controller
-		forAll(sendInterfaces_, iface)
-		{
-			if(fixedRegion_)
-			{
-				vector refPoint(vector::zero);
-
-				refPoint[0] = (fixedRegionMax_[0] - fixedRegionMin_[0]) * oneOverRefLength_;
-				refPoint[1] = (fixedRegionMax_[1] - fixedRegionMin_[1]) * oneOverRefLength_;
-				refPoint[2] = (fixedRegionMax_[2] - fixedRegionMin_[2]) * oneOverRefLength_;
-
-				sendInterfaces_[iface]->push("ref_value_x", refPoint[0]);
-				sendInterfaces_[iface]->push("ref_value_y", refPoint[1]);
-				sendInterfaces_[iface]->push("ref_value_z", refPoint[2]);
-			}
-			sendInterfaces_[iface]->commit(static_cast<scalar>(0.1));
-		}
-
-        if(fixedRegion_)
-		{
-        	boundCorr_[0] = (fixedRegionMax_[0] - fixedRegionMin_[0]) * 1e-8;
-            boundCorr_[1] = (fixedRegionMax_[1] - fixedRegionMin_[1]) * 1e-8;
-            boundCorr_[2] = (fixedRegionMax_[2] - fixedRegionMin_[2]) * 1e-8;
-        }
-        else //- No details of coupling region so define a value for the boundary correction that is likely to be suitable
-        {
-            boundCorr_[0] = ROOTVSMALL;
-            boundCorr_[1] = ROOTVSMALL;
-            boundCorr_[2] = ROOTVSMALL;
-        }
+        boundCorr_[0] = ROOTVSMALL * 1e9;
+        boundCorr_[1] = ROOTVSMALL * 1e9;
+        boundCorr_[2] = ROOTVSMALL * 1e9;
 #endif
         sendCoupledRegion(true); // Send ghost parcels in coupled regions at time = startTime
+    }
+}
+
+void dsmcMdCoupling::controlParcelsBeforeCollisions()
+{
+    forAll(intersectingCells_, cell)
+    {
+        const List<dsmcParcel*>& parcelsInCell = cloud_.cellOccupancy()[intersectingCells_[cell]];
+
+        forAll(parcelsInCell, parcel)
+        {
+            const word& parcType = cloud_.typeIdList()[parcelsInCell[parcel]->typeId()];
+            label typeIndex = findIndex(typeNames_, parcType);
+
+            //- Only delete and store particles that are of the coupled type
+            if(typeIndex != -1)
+            {
+                bool removeParcel = false;
+
+                if(fixedBoundZeroThick_[0] == 1)
+                {
+                    if(fixedBoundNorm_[0] > 0) //- Boundary is positive facing in the x
+                    {
+                        if(parcelsInCell[parcel]->position()[0] <= fixedBoundMin_[0])
+                        {
+                           removeParcel = true;
+                        }
+                    }
+                    else if (fixedBoundNorm_[0] < 0) //- Boundary is negative facing in the x
+                    {
+                        if(parcelsInCell[parcel]->position()[0] >= fixedBoundMax_[0])
+                        {
+                            removeParcel = true;
+                        }
+                    }
+                }
+
+                if(fixedBoundZeroThick_[1] == 1)
+                {
+                    if(fixedBoundNorm_[1] > 0) //- Boundary is positive facing in the y
+                    {
+                        if(parcelsInCell[parcel]->position()[1] <= fixedBoundMin_[1])
+                        {
+                           removeParcel = true;
+                        }
+                    }
+                    else if (fixedBoundNorm_[1] < 0) //- Boundary is negative facing in the x
+                    {
+                        if(parcelsInCell[parcel]->position()[1] >= fixedBoundMax_[1])
+                        {
+                            removeParcel = true;
+                        }
+                    }
+                }
+
+                if(fixedBoundZeroThick_[2] == 1)
+                {
+                    if(fixedBoundNorm_[2] > 0) //- Boundary is positive facing in the z
+                    {
+                        if(parcelsInCell[parcel]->position()[2] <= fixedBoundMin_[2])
+                        {
+                           removeParcel = true;
+                        }
+                    }
+                    else if (fixedBoundNorm_[2] < 0) //- Boundary is negative facing in the x
+                    {
+                        if(parcelsInCell[parcel]->position()[2] >= fixedBoundMax_[2])
+                        {
+                            removeParcel = true;
+                        }
+                    }
+                }
+
+                if(removeParcel)
+                {
+                    //- Store the required details of the parcel
+                    coupledParcel newParcToSend;
+                    newParcToSend.parcType = cloud_.typeIdList()[parcelsInCell[parcel]->typeId()];
+                    newParcToSend.position = parcelsInCell[parcel]->position();
+                    newParcToSend.velocity = parcelsInCell[parcel]->U();
+                    parcsToSend_.append(newParcToSend);
+
+                    //- Delete parcel from cellOccupancy (before deleting it from cloud)
+                    cloud_.removeParcelFromCellOccupancy(parcelsInCell[parcel]->origId(), intersectingCells_[cell]);
+                    cloud_.deleteParticle(*parcelsInCell[parcel]);
+                }
+            }
+        }
     }
 }
 
@@ -339,6 +579,8 @@ void dsmcMdCoupling::calculateProperties(int stage)
 {
     if(stage == 1)
     {
+        currIteration_++; //- Increment current iteration
+
 		if(sending_)
 		{
 			sendCoupledRegion(false); // Send ghost molecules in coupled regions (non-blocking)
@@ -364,15 +606,6 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 {
 #ifdef USE_MUI
     dsmcParcel* parcel = NULL;
-    scalar couplingTime;
-    if(init)
-    {
-    	couplingTime = 1.0;
-    }
-    else
-    {
-    	couplingTime = time_.time().value() * oneOverRefTime_;
-    }
     List<bool> listSizeChanged(sendInterfaces_.size(), false);
     bool parcelChanged = false;
     std::stringstream sendStr;
@@ -387,18 +620,13 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 		{
 			forAll(controlZone(regionIds()[id]), c)
 			{
-				const label& cellI = controlZone(regionIds()[id])[c];
-				const List<dsmcParcel*>& parcelsInCell = cloud_.cellOccupancy()[cellI];
+				const label& cell = controlZone(regionIds()[id])[c];
+				const List<dsmcParcel*>& parcelsInCell = cloud_.cellOccupancy()[cell];
 
 				forAll(parcelsInCell, p) //Iterate through parcels in cell to determine if list size has changed
 				{
 					parcel = parcelsInCell[p];
-					const label typeIndex = findIndex(cloud_.typeIdList(), cloud_.typeIdList()[parcel->typeId()]);
-
-					if(typeIndex != -1)
-					{
-						currParcelsInCells.append(parcel->origId());
-					}
+                    currParcelsInCells.append(parcel->origId());
 				}
 			}
 		}
@@ -414,14 +642,15 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 		{
 			forAll(controlZone(regionIds()[id]), c)
 			{
-				const label& cellI = controlZone(regionIds()[id])[c];
-				const List<dsmcParcel*>& parcelsInCell = cloud_.cellOccupancy()[cellI];
+				const label& cell = controlZone(regionIds()[id])[c];
+				const List<dsmcParcel*>& parcelsInCell = cloud_.cellOccupancy()[cell];
 
 				forAll(parcelsInCell, p) // Iterate through parcels in cell
 				{
 					parcel = parcelsInCell[p];
 
-					const label typeIndex = findIndex(cloud_.typeIdList(), cloud_.typeIdList()[parcel->typeId()]);
+					//- Determine whether parcel is of a type set to send
+					const label typeIndex = findIndex(typeNames_, cloud_.typeIdList()[parcel->typeId()]);
 
 					if(typeIndex != -1)
 					{
@@ -449,26 +678,16 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 						parcCentre[1] = parcel->position()[1] * oneOverRefLength_;
 						parcCentre[2] = parcel->position()[2] * oneOverRefLength_;
 
-						sendStr.str("");
-						sendStr.clear();
-						sendStr << typeNames_[typeIndex] << "_" << "parc_changed"; //Send string in format [type]_parc_changed
+                        // Push parcel type
+                        sendInterfaces_[iface]->push("type_region", parcCentre, static_cast<std::string>(typeNames_[typeIndex]));
 
-						// Send flag to say whether this parcel is new or not (to avoid creating mdFoamPlus molecules where they don't have to be)
-						sendInterfaces_[iface]->push(sendStr.str(), parcCentre, static_cast<scalar>(parcelChanged));
+						// Push flag to say whether this parcel is new or not (to avoid creating molecules where they don't have to be)
+						sendInterfaces_[iface]->push("changed_region", parcCentre, static_cast<scalar>(parcelChanged));
 
 						// Push the parcel velocity to the interface
-						sendStr.str("");
-						sendStr.clear();
-						sendStr << typeNames_[typeIndex] << "_" << "parc_vel_x_region"; //Send string in format [type]_parc_vel_x_region
-						sendInterfaces_[iface]->push(sendStr.str(), parcCentre, parcel->U()[0]);
-						sendStr.str("");
-						sendStr.clear();
-						sendStr << typeNames_[typeIndex] << "_" << "parc_vel_y_region"; //Send string in format [type]_parc_vel_y_region
-						sendInterfaces_[iface]->push(sendStr.str(), parcCentre, parcel->U()[1]);
-						sendStr.str("");
-						sendStr.clear();
-						sendStr << typeNames_[typeIndex] << "_" << "parc_vel_z_region"; //Send string in format [type]_parc_vel_z_region
-						sendInterfaces_[iface]->push(sendStr.str(), parcCentre, parcel->U()[2]);
+						sendInterfaces_[iface]->push("vel_x_region", parcCentre, parcel->U()[0]);
+						sendInterfaces_[iface]->push("vel_y_region", parcCentre, parcel->U()[1]);
+						sendInterfaces_[iface]->push("vel_z_region", parcCentre, parcel->U()[2]);
 					}
 				}
 			}
@@ -480,7 +699,7 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 	forAll(sendInterfaces_, iface)
 	{
 		// Commit (transmit) values to the MUI interface
-		sendInterfaces_[iface]->commit(couplingTime);
+		sendInterfaces_[iface]->commit(currIteration_);
     }
 #endif
 }
@@ -488,67 +707,50 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 void dsmcMdCoupling::sendCoupledParcels()
 {
 #ifdef USE_MUI
-	const DynamicList<dsmcCloud::coupledParcs>& parcsToSend = cloud_.coupledParcels();
-	scalar couplingTime = time_.time().value() * oneOverRefTime_;
 	std::stringstream sendStr;
 
-	if(parcsToSend.size() != 0)
+	if(parcsToSend_.size() != 0)
 	{
-		forAll(parcsToSend, parcs)
+		forAll(parcsToSend_, parcs)
 		{
-			const label typeIndex = findIndex(typeNames_, parcsToSend[parcs].parcType);
+            forAll(sendInterfaces_, iface)
+            {
+                // Get the parcel centre
+                mui::point3d parcCentre;
+                parcCentre[0] = parcsToSend_[parcs].position[0] * oneOverRefLength_;
+                parcCentre[1] = parcsToSend_[parcs].position[1] * oneOverRefLength_;
+                parcCentre[2] = parcsToSend_[parcs].position[2] * oneOverRefLength_;
 
-			if(typeIndex != -1)
-			{
-				forAll(parcsToSend[parcs].sendingInterfaces, interface)
-				{
-					const label iface = findIndex(sendInterfaceNames_, parcsToSend[parcs].sendingInterfaces[interface]);
+                // Push parcel type
+                sendInterfaces_[iface]->push("type_bound", parcCentre, static_cast<std::string>(parcsToSend_[parcs].parcType));
 
-					if(iface != -1)
-					{
-						// Get the parcel centre
-						mui::point3d parcCentre;
-						parcCentre[0] = parcsToSend[parcs].parcel->position()[0] * oneOverRefLength_;
-						parcCentre[1] = parcsToSend[parcs].parcel->position()[1] * oneOverRefLength_;
-						parcCentre[2] = parcsToSend[parcs].parcel->position()[2] * oneOverRefLength_;
+                // Push parcel velocity
+                sendInterfaces_[iface]->push("vel_x_bound", parcCentre, parcsToSend_[parcs].velocity[0]);
+                sendInterfaces_[iface]->push("vel_y_bound", parcCentre, parcsToSend_[parcs].velocity[1]);
+                sendInterfaces_[iface]->push("vel_z_bound", parcCentre, parcsToSend_[parcs].velocity[2]);
 
-						// Push the molecule velocity to the interface
-						sendStr.str("");
-						sendStr.clear();
-						sendStr << parcsToSend[parcs].parcType << "_" << "parc_vel_x_bound";
-						sendInterfaces_[iface]->push(sendStr.str(), parcCentre, parcsToSend[parcs].parcel->U()[0]);
-
-						sendStr.str("");
-						sendStr.clear();
-						sendStr << parcsToSend[parcs].parcType << "_" << "parc_vel_y_bound";
-						sendInterfaces_[iface]->push(sendStr.str(), parcCentre, parcsToSend[parcs].parcel->U()[1]);
-
-						sendStr.str("");
-						sendStr.clear();
-						sendStr << parcsToSend[parcs].parcType << "_" << "parc_vel_z_bound";
-						sendInterfaces_[iface]->push(sendStr.str(), parcCentre, parcsToSend[parcs].parcel->U()[2]);
-
-						std::cout << "Coupling boundary parcel pushed at: " << "[" << parcCentre[0] << "," << parcCentre[1] << "," << parcCentre[2] << "]" << std::endl;
-					}
-				}
-			}
+                std::cout << "Coupling boundary parcel pushed at: " << "[" << parcCentre[0] << "," << parcCentre[1] << "," << parcCentre[2] << "]" << std::endl;
+            }
 		}
+
+		//- Clear the sent parcels
+		parcsToSend_.clear();
 	}
 
 	forAll(sendInterfaces_, iface)
 	{
 		// Commit (transmit) values to the MUI interface
-		sendInterfaces_[iface]->commit(couplingTime);
+		sendInterfaces_[iface]->commit(currIteration_);
 	}
 #endif
 }
 
 bool dsmcMdCoupling::receiveCoupledMolecules()
 {
-	bool parcelAdded = false;
+    bool parcelAdded = false;
 #ifdef USE_MUI
-	scalar couplingTime = time_.time().value() * oneOverRefTime_;
 	List<std::vector<mui::point3d> > rcvPoints(recvInterfaces_.size());
+	List<std::vector<std::string> > rcvParcType(recvInterfaces_.size());
 	List<std::vector<scalar> > rcvVelX(recvInterfaces_.size());
     List<std::vector<scalar> > rcvVelY(recvInterfaces_.size());
     List<std::vector<scalar> > rcvVelZ(recvInterfaces_.size());
@@ -557,85 +759,141 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
 	// Iterate through all receiving interfaces for this controller and extract a points list for each molecule type handled
     forAll(recvInterfaces_, iface)
     {
-    	forAll(typeNames_, molType)
-        {
-            rcvStr.str("");
-            rcvStr.clear();
-            rcvStr << typeNames_[molType] << "_" << "mol_vel_x_bound";
+        //- Extract a list of all parcel locations
+        rcvPoints[iface] = recvInterfaces_[iface]->fetch_points<std::string>("type_bound", currIteration_, *chrono_sampler);
 
-            //- Extract a list of all molecule locations received from other solver through this interface
-            rcvPoints[iface] = recvInterfaces_[iface]->fetch_points<scalar>(rcvStr.str(), couplingTime, *chrono_sampler, true, chrono_sampler->get_lower_bound(couplingTime));
-            if(rcvPoints[iface].size() > 0)
+        if(rcvPoints[iface].size() > 0)
+        {
+            //- Extract a list of all parcel types
+            rcvParcType[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_bound", currIteration_, *chrono_sampler);
+
+            //- Extract a list of all molecule velocities received from other solver through this interface
+            rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_x_bound", currIteration_, *chrono_sampler);
+            rcvVelY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_y_bound", currIteration_, *chrono_sampler);
+            rcvVelZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_z_bound", currIteration_, *chrono_sampler);
+        }
+    }
+
+    List<DynamicList<label> > valuesToRemove(rcvParcType.size());
+
+    //- Go through received values and find any that are not of the type set to be received
+    forAll(rcvParcType, ifacepts)
+    {
+        if(rcvParcType[ifacepts].size() > 0)
+        {
+            for (size_t pts = 0; pts < rcvParcType[ifacepts].size(); ++pts)
             {
-                //- Extract a list of all molecule velocities received from other solver through this interface
-				rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler, true, chrono_sampler->get_lower_bound(couplingTime));
-				rcvStr.str("");
-				rcvStr.clear();
-				rcvStr << typeNames_[molType] << "_" << "mol_vel_y_bound";
-				rcvVelY[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler, true, chrono_sampler->get_lower_bound(couplingTime));
-				rcvStr.str("");
-				rcvStr.clear();
-				rcvStr << typeNames_[molType] << "_" << "mol_vel_z_bound";
-				rcvVelZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>(rcvStr.str(), couplingTime, *chrono_sampler, true, chrono_sampler->get_lower_bound(couplingTime));
-           }
-       }
+                const label typeIndex = findIndex(typeNames_, rcvParcType[ifacepts][pts]);
+
+                if(typeIndex == -1) //- parcId not found in local list as one to receive so store it as one to remove from lists
+                {
+                    valuesToRemove[ifacepts].append(pts);
+                }
+            }
+        }
+    }
+
+    //- Now remove any stored in the list not of a type to be received
+    forAll(valuesToRemove, ifacepts)
+    {
+        if(valuesToRemove[ifacepts].size() > 0)
+        {
+            forAll(valuesToRemove[ifacepts], value)
+            {
+                rcvPoints[ifacepts].erase(rcvPoints[ifacepts].begin() + valuesToRemove[ifacepts][value]);
+                rcvParcType[ifacepts].erase(rcvParcType[ifacepts].begin() + valuesToRemove[ifacepts][value]);
+                rcvVelX[ifacepts].erase(rcvVelX[ifacepts].begin() + valuesToRemove[ifacepts][value]);
+                rcvVelY[ifacepts].erase(rcvVelY[ifacepts].begin() + valuesToRemove[ifacepts][value]);
+                rcvVelZ[ifacepts].erase(rcvVelZ[ifacepts].begin() + valuesToRemove[ifacepts][value]);
+            }
+        }
     }
 
 	// Iterate through all receiving interfaces for this controller
 	forAll(recvInterfaces_, ifacepts)
 	{
-		forAll(typeNames_, molType)
-		{
-			if(rcvPoints[ifacepts].size() > 0)
-			{
-				const label typeId = findIndex(cloud_.typeIdList(), typeNames_[molType]);
-				
-				if(typeId != -1)
-				{
-					for (size_t pts = 0; pts < rcvPoints[ifacepts].size(); pts++)
-					{
-						vector velocity;
-						velocity[0] = rcvVelX[ifacepts][pts];
-						velocity[1] = rcvVelY[ifacepts][pts];
-						velocity[2] = rcvVelZ[ifacepts][pts];
+        if(rcvPoints[ifacepts].size() > 0)
+        {
+            for (size_t pts = 0; pts < rcvPoints[ifacepts].size(); pts++)
+            {
+                vector velocity;
+                velocity[0] = rcvVelX[ifacepts][pts];
+                velocity[1] = rcvVelY[ifacepts][pts];
+                velocity[2] = rcvVelZ[ifacepts][pts];
 
-						point checkedPosition(rcvPoints[ifacepts][pts][0] * refLength_, rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
+                point checkedPosition(rcvPoints[ifacepts][pts][0] * refLength_, rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
 
-                        if(fixedBounds_)
+                if(fixedBounds_)
+                {
+                    if(fixedBoundZeroThick_[0] == 1) //- Boundary has zero thickness in the x
+                    {
+                        if(fixedBoundNorm_[0] != 0)
                         {
-                            checkedPosition[0] = fixedBoundMin_[0] + (fixedBoundNorm_[0] * boundCorr_[0]); //- Set this to x directly, need to update code to determine which dimension bound is zero thickness in
-
-                            if(checkedPosition[1] < fixedBoundMin_[1])
-                            {
-                                checkedPosition[1] = fixedBoundMin_[1] + boundCorr_[1]; //- Move the new particle away from the boundary minimum a little
-                            }
-
-                            if(checkedPosition[1] > fixedBoundMax_[1])
-                            {
-                                checkedPosition[1] = fixedBoundMax_[1] - boundCorr_[1]; //- Move the new particle away from the boundary maximum a little
-                            }
-
-                            if(checkedPosition[2] < fixedBoundMin_[2])
-                            {
-                                checkedPosition[2] = fixedBoundMin_[2] + boundCorr_[2]; //- Move the new particle away from the boundary minimum a little
-                            }
-
-                            if(checkedPosition[2] > fixedBoundMax_[2])
-                            {
-                                checkedPosition[2] = fixedBoundMax_[2] - boundCorr_[2]; //- Move the new particle away from the boundary maximum a little
-                            }
+                            checkedPosition[0] = fixedBoundMin_[0] + (fixedBoundNorm_[0] * boundCorr_[0]); //- Move the new particle away from the boundary a little
+                        }
+                    }
+                    else
+                    {
+                        if(checkedPosition[0] < fixedBoundMin_[0])
+                        {
+                            checkedPosition[0] = fixedBoundMin_[0] + boundCorr_[0];
                         }
 
-						const point position(checkedPosition[0], checkedPosition[1], checkedPosition[2]);
-						
-						std::cout << "Coupling boundary molecule received at: [" << position[0] << "," << position[1] << "," << position[2] << "]" << std::endl;
+                        if(checkedPosition[0] > fixedBoundMax_[0])
+                        {
+                            checkedPosition[0] = fixedBoundMax_[0] - boundCorr_[0];
+                        }
+                    }
 
-						insertParcel(position, velocity, typeId);
-						parcelAdded = true;
-					}
-				}
-			}
-		}
+                    if(fixedBoundZeroThick_[1] == 1) //- Boundary has zero thickness in the y
+                    {
+                        if(fixedBoundNorm_[1] != 0)
+                        {
+                            checkedPosition[1] = fixedBoundMin_[1] + (fixedBoundNorm_[1] * boundCorr_[1]); //- Move the new particle away from the boundary a little
+                        }
+                    }
+                    else
+                    {
+                        if(checkedPosition[1] < fixedBoundMin_[1])
+                        {
+                            checkedPosition[1] = fixedBoundMin_[1] + boundCorr_[1];
+                        }
+
+                        if(checkedPosition[1] > fixedBoundMax_[1])
+                        {
+                            checkedPosition[1] = fixedBoundMax_[1] - boundCorr_[1];
+                        }
+                    }
+
+                    if(fixedBoundZeroThick_[2] == 1) //- Boundary has zero thickness in the z
+                    {
+                        if(fixedBoundNorm_[2] != 0)
+                        {
+                            checkedPosition[2] = fixedBoundMin_[2] + (fixedBoundNorm_[2] * boundCorr_[2]); //- Move the new particle away from the boundary a little
+                        }
+                    }
+                    else
+                    {
+                        if(checkedPosition[2] < fixedBoundMin_[2])
+                        {
+                            checkedPosition[2] = fixedBoundMin_[2] + boundCorr_[2];
+                        }
+
+                        if(checkedPosition[2] > fixedBoundMax_[2])
+                        {
+                            checkedPosition[2] = fixedBoundMax_[2] - boundCorr_[2];
+                        }
+                    }
+                }
+
+                const label typeIndex = findIndex(typeNames_, rcvParcType[ifacepts][pts]);
+
+                insertParcel(checkedPosition, velocity, typeIndex);
+                parcelAdded = true;
+
+                std::cout << "Coupling boundary molecule inserted at: [" << checkedPosition[0] << "," << checkedPosition[1] << "," << checkedPosition[2] << "]" << std::endl;
+            }
+        }
 	}
 #endif
 	return parcelAdded;
@@ -643,10 +901,40 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
 
 void dsmcMdCoupling::output
 (
-    const fileName& fixedPathName,
-    const List<fileName>& timePaths
+     const fileName& fixedPathName,
+     const fileName& timePath
 )
-{}
+{
+    const Time& runTime = time_.time();
+
+    if(runTime.outputTime())
+    {
+        label singleStepNParcs = cloud_.size();
+        scalar singleStepTotalLinearKE = 0.0;
+
+        IDLList<dsmcParcel>::iterator parc(cloud_.begin());
+
+        for(; parc != cloud_.end(); ++parc)
+        {
+            scalar parcMass(cloud_.constProps(parc().typeId()).mass());
+
+            singleStepTotalLinearKE += 0.5*parcMass*magSqr(parc().U());
+        }
+
+        if (Pstream::parRun())
+        {
+            reduce(singleStepTotalLinearKE, sumOp<scalar>());
+            reduce(singleStepNParcs, sumOp<label>());
+        }
+
+        if(Pstream::master())
+        {
+            OFstream os1(timePath/"avg_lin_KE");
+            os1 << "Time " << time_.time().value() << endl;
+            os1 << singleStepTotalLinearKE/singleStepNParcs << endl;
+        }
+    }
+}
 
 void dsmcMdCoupling::updateProperties(const dictionary& newDict)
 {
@@ -659,141 +947,133 @@ void dsmcMdCoupling::updateProperties(const dictionary& newDict)
 
 void dsmcMdCoupling::barrier()
 {
-	scalar barrierTime = time_.time().value() * oneOverRefTime_;
-
 	forAll(sendInterfaces_, iface)
 	{
-		sendInterfaces_[iface]->barrier(barrierTime);
+		sendInterfaces_[iface]->barrier(currIteration_);
 	}
 }
 
-void dsmcMdCoupling::barrier(scalar time)
+void dsmcMdCoupling::barrier(label iteration)
 {
 	forAll(sendInterfaces_, iface)
 	{
-		sendInterfaces_[iface]->barrier(time);
+		sendInterfaces_[iface]->barrier(iteration);
 	}
 }
 
-void dsmcMdCoupling::barrier(label interface)
-{
-	scalar barrierTime = time_.time().value() * oneOverRefTime_;
-	sendInterfaces_[interface]->barrier(barrierTime);
-}
-
-void dsmcMdCoupling::barrier(scalar time, label interface)
+void dsmcMdCoupling::barrier(label iteration, label interface)
 {
 	// Wait for the other side to catch up
-	sendInterfaces_[interface]->barrier(time);
+	sendInterfaces_[interface]->barrier(iteration);
 }
 
 void dsmcMdCoupling::forget()
 {
-	scalar time = time_.time().value() * oneOverRefTime_;
 	forAll(recvInterfaces_, iface)
 	{
-		recvInterfaces_[iface]->forget(time, true);
+		recvInterfaces_[iface]->forget(currIteration_, true);
 	}
 }
 
-void dsmcMdCoupling::forget(scalar time)
+void dsmcMdCoupling::forget(label iteration)
 {
 	forAll(recvInterfaces_, iface)
 	{
-		recvInterfaces_[iface]->forget(time, true);
+		recvInterfaces_[iface]->forget(iteration, true);
 	}
 }
 
-void dsmcMdCoupling::forget(scalar time, label interface)
+void dsmcMdCoupling::forget(label iteration, label interface)
 {
-	recvInterfaces_[interface]->forget(time, true);
+	recvInterfaces_[interface]->forget(iteration, true);
 }
 
 void dsmcMdCoupling::insertParcel
 (
-    const point& position,
+    point& position,
 	const vector& U,
 	const label& typeId
 )
 {
-	//These need to be properly defined, only correct for sample Argon case
-	const scalar rotationalTemperature = 0;
-	const scalar vibrationalTemperature = 0;
-	const scalar electronicTemperature = 0;
+    //These need to be properly defined, only correct for sample Argon case
+    const scalar rotationalTemperature = 0;
+    const scalar vibrationalTemperature = 0;
+    const scalar electronicTemperature = 0;
 
-    label cell = -1;
-    label tetFace = -1;
-    label tetPt = -1;
+    label cell = mesh_.findCell(position);
 
-	mesh_.findCellFacePt
-	(
-		position,
-		cell,
-		tetFace,
-		tetPt
-	);
+    if(cell != -1)
+    {
+        label tetFace = -1;
+        label tetPt = -1;
 
-	if(cell != -1)
-	{
-		const dsmcParcel::constantProperties& cP = cloud_.constProps(typeId);
+        mesh_.findCellFacePt
+        (
+            position,
+            cell,
+            tetFace,
+            tetPt
+        );
 
-		scalar ERot = cloud_.equipartitionRotationalEnergy
-		(
-			rotationalTemperature,
-			cP.rotationalDegreesOfFreedom()
-		);
+        const dsmcParcel::constantProperties& cP = cloud_.constProps(typeId);
 
-		labelList vibLevel = cloud_.equipartitionVibrationalEnergyLevel
-		(
-			vibrationalTemperature,
-			cP.vibrationalDegreesOfFreedom(),
-			typeId
-		);
+        scalar ERot = cloud_.equipartitionRotationalEnergy
+        (
+            rotationalTemperature,
+            cP.rotationalDegreesOfFreedom()
+        );
 
-		label ELevel = cloud_.equipartitionElectronicLevel
-		(
-			electronicTemperature,
-			cP.degeneracyList(),
-			cP.electronicEnergyList(),
-			typeId
-		);
+        labelList vibLevel = cloud_.equipartitionVibrationalEnergyLevel
+        (
+            vibrationalTemperature,
+            cP.vibrationalDegreesOfFreedom(),
+            typeId
+        );
 
-		scalar RWF = 1.0;
+        label ELevel = cloud_.equipartitionElectronicLevel
+        (
+            electronicTemperature,
+            cP.degeneracyList(),
+            cP.electronicEnergyList(),
+            typeId
+        );
 
-		if(cloud_.axisymmetric())
-		{
-			const point& cC = mesh_.cellCentres()[cell];
-			scalar radius = cC.y();
+        scalar RWF = 1.0;
 
-			RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
-		}
+        if(cloud_.axisymmetric())
+        {
+            const point& cC = mesh_.cellCentres()[cell];
+            scalar radius = cC.y();
 
-		scalarField wallTemperature(4, 0.0);
-		vectorField wallVectors(4, vector::zero);
+            RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
+        }
 
-		cloud_.addNewParcel
-		(
-			position,
-			U,
-			RWF,
-			ERot,
-			ELevel,
-			cell,
-			tetFace,
-			tetPt,
-			typeId,
-			0,
-			0,
-			0,
-			wallTemperature,
-			wallVectors,
-			vibLevel
-		);
-	}
-	else
-	{
-		Info << "dsmcMdCoupling::insertParcel(): Parcel insertion attempted outside of mesh, parcel not inserted" << endl;
-	}
+        scalarField wallTemperature(4, 0.0);
+        vectorField wallVectors(4, vector::zero);
+
+        cloud_.addNewParcel
+        (
+            position,
+            U,
+            RWF,
+            ERot,
+            ELevel,
+            cell,
+            tetFace,
+            tetPt,
+            typeId,
+            0,
+            0,
+            0,
+            wallTemperature,
+            wallVectors,
+            vibLevel 
+        );
+    }
+    else
+    {
+        std::cout << "dsmcMdCoupling::insertParcel(): Parcel insertion attempted outside of mesh, parcel not inserted" << std::endl;
+    }
 }
 
 } // End namespace Foam

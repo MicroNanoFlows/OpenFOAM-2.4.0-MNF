@@ -40,7 +40,8 @@ Foam::coupling3d::coupling3d
     List<vector>& dom_send_start,
     List<vector>& dom_send_end,
     List<vector>& dom_rcv_start,
-    List<vector>& dom_rcv_end
+    List<vector>& dom_rcv_end,
+    List<bool>& iterationCoupling
 )
 :
     domainName_(domainName),
@@ -51,7 +52,8 @@ Foam::coupling3d::coupling3d
     dom_send_start_(dom_send_start),
     dom_send_end_(dom_send_end),
     dom_rcv_start_(dom_rcv_start),
-    dom_rcv_end_(dom_rcv_end)
+    dom_rcv_end_(dom_rcv_end),
+    iterationCoupling_(iterationCoupling)
 {
     interfaces_.setSize(interfaceNames_.size());
 
@@ -69,6 +71,7 @@ Foam::coupling3d::coupling3d
         newInterface.dom_send_end = dom_send_end_[i];
         newInterface.dom_rcv_start = dom_rcv_start_[i];
         newInterface.dom_rcv_end = dom_rcv_end_[i];
+        newInterface.iterationCoupling = iterationCoupling[i];
 
         #ifdef USE_MUI
             auto returnInterfaces_ = mui::create_uniface<mui::config_3d>(static_cast<std::string>(domainName_), interfaceList);
@@ -143,6 +146,11 @@ Foam::vector Foam::coupling3d::getInterfaceReceiveDomStart(int index) const
 Foam::vector Foam::coupling3d::getInterfaceReceiveDomEnd(int index) const
 {
     return interfaces_[index].dom_rcv_end;
+}
+
+bool Foam::coupling3d::getInterfaceItCouplingStatus(int index) const
+{
+    return interfaces_[index].iterationCoupling;
 }
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //

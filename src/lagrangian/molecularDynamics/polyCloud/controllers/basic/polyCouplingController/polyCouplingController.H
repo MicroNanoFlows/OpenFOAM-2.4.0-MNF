@@ -144,9 +144,6 @@ public:
         //- run at start of MD time step before molecules move
         virtual void controlAfterMove(int stage) = 0;
 
-        //- run at end of DSMC time step
-        virtual void calculateProperties() = 0;
-
         //- receive molecules that fall into the MD coupled region from coupled dsmcFoamPlus
         virtual void receiveCoupledRegion(bool init) = 0;
 
@@ -160,7 +157,7 @@ public:
         virtual void output
         (
             const fileName& fixedPathName,
-            const List<fileName>& timePaths
+            const fileName& timePath
         ) = 0;
 
         //- update properties from a modified dictionary
@@ -172,22 +169,19 @@ public:
 		virtual void barrier() = 0;
 
 		//- create a coupling barrier for a specific sending interface
-		virtual void barrier(scalar time, label interface) = 0;
-
-		//- create a coupling barrier at current coupling time for a specific sending interface
-		virtual void barrier(label interface) = 0;
+		virtual void barrier(label time, label interface) = 0;
 
 		//- create a coupling barrier for all sending interfaces
-		virtual void barrier(scalar time) = 0;
+		virtual void barrier(label iteration) = 0;
 
 		//- Forget the time frame received at current coupling time for all interfaces
 		virtual void forget() = 0;
 
 		//- Forget the time frame received at specific time for all interfaces
-		virtual void forget(scalar time) = 0;
+		virtual void forget(label iteration) = 0;
 
 		//- Forget the time frame received at specific time for specific interfaces
-		virtual void forget(scalar time, label interface) = 0;
+		virtual void forget(label iteration, label interface) = 0;
 
     // Access
 

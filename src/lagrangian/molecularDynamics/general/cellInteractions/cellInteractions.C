@@ -1220,22 +1220,21 @@ void Foam::cellInteractions<ParticleType>::setReferredParticles
     const List<DynamicList<ParticleType*> >& cellOccupancy
 )
 {
-        
+    std::cout << "1" << std::endl;
     //- clear
     referredCloud_.clear();
-    
+    std::cout << "2" << std::endl;
     forAll(refCellsParticles_, i)
     {
         refCellsParticles_[i].clear();
     }
-    
+    std::cout << "3" << std::endl;
     // Allocate transfer buffers
     PstreamBuffers pBufs(Pstream::nonBlocking);
-    
+    std::cout << "4" << std::endl;
     IDLList<ParticleType> ownMeshTransferList;
     labelList ownMeshParticleCount;
-    
-    
+    std::cout << "5" << std::endl;
     //- sending 
     for (label p = 0; p < Pstream::nProcs(); p++)
     {
@@ -1289,8 +1288,10 @@ void Foam::cellInteractions<ParticleType>::setReferredParticles
         }
     }
 
-	labelListList allNTrans(Pstream::nProcs());
-	pBufs.finishedSends(allNTrans, true); //- Set this to blocking send
+    std::cout << "6" << std::endl;
+
+    labelListList allNTrans(Pstream::nProcs());
+    pBufs.finishedSends(allNTrans, true); //- Set this to blocking send
 
     //- receiving 
     for (label p = 0; p < Pstream::nProcs(); p++)
@@ -1336,29 +1337,7 @@ void Foam::cellInteractions<ParticleType>::setReferredParticles
                         }
                         
                         refCellIdCounter++;
-                    }                    
-                    
-                    // old method
-//                     label refCellIdCounter = 0;
-//                     label pCount = 0;
-//                     
-//                     forAllIter(typename Cloud<ParticleType>, newParticles, newpIter)
-//                     {
-//                         ParticleType& newp = newpIter();
-//                         
-//                         label r = recRefIds_[p][refCellIdCounter];
-//                         refCells_[r].transformPoint(newp.position());
-//                         newp.transformProperties(refCells_[r].translation());
-//                         referredCloud_.append(newParticles.remove(&newp));
-//                         refCellsParticles_[r].append(referredCloud_.last());
-//                         
-//                         pCount++;
-//                         if(pCount >= particleCount[refCellIdCounter])
-//                         {
-//                             refCellIdCounter++;
-//                             pCount = 0;
-//                         }
-//                     }
+                    }
                 }
             }
             else
@@ -1385,55 +1364,12 @@ void Foam::cellInteractions<ParticleType>::setReferredParticles
                     
                     refCellIdCounter++;
                 }
-                /*     
-                // old method           
-                label pCount = 0;
-                
-                label refCellIdCounter = 0;
-
-
-                forAllIter(typename Cloud<ParticleType>, ownMeshTransferList, newpIter)
-                {
-                    
-                    ParticleType& newp = newpIter();
-                    
-                    // MB: Solving bug due to empty cells
-                    if(ownMeshParticleCount[refCellIdCounter] == 0)
-                    {
-                        while (ownMeshParticleCount[refCellIdCounter] == 0)
-                        {
-//                             Info << "ownMeshParticleCount[" << refCellIdCounter << "] = "
-//                                 << ownMeshParticleCount[refCellIdCounter] << endl;
-                                
-                            refCellIdCounter++;
-//                             Info << "++ ->" << refCellIdCounter << endl;
-                            
-                        }
-                    }
-                    
-                    label r = recRefIds_[p][refCellIdCounter];
-                        
-                    refCells_[r].transformPoint(newp.position());
-                    newp.transformProperties(refCells_[r].translation());
-
-                    referredCloud_.append(ownMeshTransferList.remove(&newp));
-                    refCellsParticles_[r].append(referredCloud_.last());
-                        
-                    pCount++;
-                    if(pCount >= ownMeshParticleCount[refCellIdCounter])
-                    {
-                        refCellIdCounter++;
-                        pCount = 0;
-                    }
-
-                }
-                */
             }
         }
     }
-    
+
     // only for debugging
-//     checkForOverlaps();
+    //checkForOverlaps();
 }
 
 template<class ParticleType>

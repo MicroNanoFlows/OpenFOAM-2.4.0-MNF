@@ -40,7 +40,8 @@ Foam::coupling2d::coupling2d
     List<vector>& dom_send_start,
     List<vector>& dom_send_end,
     List<vector>& dom_rcv_start,
-    List<vector>& dom_rcv_end
+    List<vector>& dom_rcv_end,
+    List<bool>& iterationCoupling
 )
 :
     domainName_(domainName),
@@ -51,7 +52,8 @@ Foam::coupling2d::coupling2d
     dom_send_start_(dom_send_start),
     dom_send_end_(dom_send_end),
     dom_rcv_start_(dom_rcv_start),
-    dom_rcv_end_(dom_rcv_end)
+    dom_rcv_end_(dom_rcv_end),
+    iterationCoupling_(iterationCoupling)
 {
     interfaces_.setSize(interfaceNames.size());
 
@@ -69,6 +71,7 @@ Foam::coupling2d::coupling2d
         newInterface.dom_send_end = dom_send_end_[i];
         newInterface.dom_rcv_start = dom_rcv_start_[i];
         newInterface.dom_rcv_end = dom_rcv_end_[i];
+        newInterface.iterationCoupling = iterationCoupling[i];
 
         #ifdef USE_MUI
             auto returnInterfaces = mui::create_uniface<mui::config_2d>(static_cast<std::string>(domainName_), interfaceList);
@@ -143,6 +146,11 @@ Foam::vector Foam::coupling2d::getInterfaceReceiveDomStart(int index) const
 Foam::vector Foam::coupling2d::getInterfaceReceiveDomEnd(int index) const
 {
     return interfaces_[index].dom_rcv_end;
+}
+
+bool Foam::coupling2d::getInterfaceItCouplingStatus(int index) const
+{
+    return interfaces_[index].iterationCoupling;
 }
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //

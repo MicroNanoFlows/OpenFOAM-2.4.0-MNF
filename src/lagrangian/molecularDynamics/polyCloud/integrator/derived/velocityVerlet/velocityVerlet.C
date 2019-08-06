@@ -10,7 +10,7 @@ License
 
     OpenFOAM is free software; you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by the
-    Free Software Foundation; either version 2 of the License, or (at your
+    Free Software Foundation; eitherF version 2 of the License, or (at your
     option) any later version.
 
     OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
@@ -76,8 +76,8 @@ void velocityVerlet::evolve()
     molCloud_.controlBeforeVelocity();
     updateVelocity(mesh_.time().deltaT().value());
     molCloud_.controlBeforeMove();
-    molCloud_.move(); // Molecules that pass through coupling boundary are deleted here and added to list to be sent
-    molCloud_.controlAfterMove(); // Coupled boundary molecules sent/received and coupling regions received and populated
+    molCloud_.move();
+    molCloud_.controlAfterMove(); // Coupled boundary molecules collated then sent and received and coupling region(s) received and populated
     molCloud_.buildCellOccupancy();
     molCloud_.controlBeforeForces();
     molCloud_.clearLagrangianFields();

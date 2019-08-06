@@ -71,16 +71,6 @@ class polyMoleculeCloud
     public Cloud<polyMolecule>
 {
 
-public:
-
-	struct coupledMols
-	{
-		polyMolecule* mol;
-		List<word> sendingInterfaces;
-		List<word> receivingInterfaces;
-		word molType;
-	};
-
 private:
 
     // Private data
@@ -105,9 +95,6 @@ private:
         
         //- boundaries
         polyBoundaries boundaries_;
-
-        //- Copy of molecules deleted by coupling boundary
-        DynamicList<coupledMols> coupledMols_;
 
         //- controllers
         polyControllers controllers_;
@@ -300,15 +287,6 @@ public:
         void resetTrackingNumbers();
         void writeReferredCloud();
         
-        void insertCoupledMol
-        (
-        	polyMolecule* mol,
-			List<word>& sending,
-			List<word>& receiving
-        );
-
-        void clearCoupledMols();
-
         // Access
 
             label nSites() const;
@@ -334,7 +312,6 @@ public:
             inline trackingNumber& moleculeTracking();
             inline cellInteractions<polyMolecule>& il();
             inline clockTimer& clock();
-            inline const DynamicList<polyMoleculeCloud::coupledMols>& coupledMolecules() const;
             
     // Member Operators
 

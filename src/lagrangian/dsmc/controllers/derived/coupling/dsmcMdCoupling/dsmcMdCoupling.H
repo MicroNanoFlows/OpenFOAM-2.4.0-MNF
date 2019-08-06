@@ -57,6 +57,13 @@ class dsmcMdCoupling
     public dsmcCouplingController
 {
 
+    struct coupledParcel
+    {
+        word parcType;
+        point position;
+        vector velocity;
+    };
+
 private:
 
     // Private data
@@ -67,7 +74,6 @@ private:
         dictionary propsDictRecv_;
 
         List<word> typeNames_;
-        bool output_;
 
 #ifdef USE_MUI
         //- Calculated cell centres
@@ -89,30 +95,34 @@ private:
 
         List<List<label> > parcelsInCellHistory_;
         scalar refLength_;
-		scalar oneOverRefLength_;
-		scalar refTime_;
-		scalar oneOverRefTime_;
+        scalar oneOverRefLength_;
+        scalar refTime_;
+        scalar oneOverRefTime_;
 #ifdef USE_MUI
-		mui::chrono_sampler_sum3d* chrono_sampler;
+	mui::chrono_sampler_exact3d* chrono_sampler;
 #endif
-		point meshMin_;
-		point meshMax_;
-		bool fixedRegion_;
+	    point meshMin_;
+	    point meshMax_;
+	    bool fixedRegion_;
         vector fixedRegionMin_;
         vector fixedRegionMax_;
         bool fixedBounds_;
         vector fixedBoundMin_;
         vector fixedBoundMax_;
         vector fixedBoundNorm_;
+        vector fixedBoundZeroThick_;
         vector boundCorr_;
+        label currIteration_;
+        DynamicList<label> intersectingCells_;
+        DynamicList<coupledParcel> parcsToSend_;
 
     // Private Member Functions
 
         void insertParcel
         (
-            const point& position,
-        	const vector& U,
-        	const label& typeId
+            point& position,
+            const vector& U,
+            const label& typeId
         );
 
 public:
@@ -145,6 +155,9 @@ public:
         //- run at end of DSMC time step
         void calculateProperties(int stage);
 
+        //- Run after move
+        void controlParcelsBeforeCollisions();
+
         //- send parcels that fall into the MD coupled region to coupled mdFoamPlus
         void sendCoupledRegion(bool init);
 
@@ -158,32 +171,29 @@ public:
         void output
         (
             const fileName& fixedPathName,
-            const List<fileName>& timePaths
+            const fileName& timePaths
         );
 
         //- update properties from a modified dictionary (optional)
         void updateProperties(const dictionary&);
 
         //- Create a coupling barrier at current coupling time for all sending interfaces
-	void barrier();
+        void barrier();
 
-        //- Create a coupling barrier at specific coupling time for all sending interfaces
-        void barrier(scalar time);
+	    //- Create a coupling barrier at specific coupling iteration for all sending interfaces
+        void barrier(label iteration);
 
-        //- Create a coupling barrier at current coupling time for all sending interfaces
-	void barrier(label interface);
+        //- Create a coupling barrier at specific coupling iteration for specific sending interface
+        void barrier(label iteration, label interface);
 
-        //- Create a coupling barrier at specific coupling time for specific sending interface
-	void barrier(scalar time, label interface);
+        //- Forget the time frame received at current coupling time for all interfaces
+        void forget();
 
-	//- Forget the time frame received at current coupling time for all interfaces
-	void forget();
+        //- Forget the time frame received at specific iteration for all interfaces
+        void forget(label iteration);
 
-	//- Forget the time frame received at specific time for all interfaces
-	void forget(scalar time);
-
-	//- Forget the time frame received at specific time for specific interfaces
-	void forget(scalar time, label interface);
+        //- Forget the time frame received at specific iteration for specific interfaces
+        void forget(label iteration, label interface);
 };
 
 

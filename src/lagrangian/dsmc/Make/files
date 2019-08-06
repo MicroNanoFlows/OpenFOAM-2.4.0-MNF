@@ -76,7 +76,6 @@ boundaries/basic/dsmcPatchBoundary/dsmcPatchBoundary.C
 
 /* PATCH BOUNDARY MODELS */
 boundaries/derived/patchBoundaries/dsmcDeletionPatch/dsmcDeletionPatch.C
-boundaries/derived/patchBoundaries/dsmcCouplingPatch/dsmcCouplingPatch.C
 boundaries/derived/patchBoundaries/dsmcAdiabaticWallPatch/dsmcAdiabaticWallPatch.C
 boundaries/derived/patchBoundaries/dsmcSpecularWallPatch/dsmcSpecularWallPatch.C
 boundaries/derived/patchBoundaries/dsmcDiffuseWallPatch/dsmcDiffuseWallPatch.C

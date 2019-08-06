@@ -586,23 +586,22 @@ void polyControllers::initialConfig()
         fluxControllers_[fC]->initialConfiguration();
     }
 
+    //- Wait here until other side has finished sending initialisation values (blocking)
     forAll(couplingControllers_, cC)
 	{
-    	std::cout << "Start barrier at 0.1" << std::endl;
-    	couplingControllers_[cC]->barrier(static_cast<scalar>(0.1));
-    	std::cout << "End barrier at 0.1" << std::endl;
+    	couplingControllers_[cC]->barrier(static_cast<label>(0));
 	}
 
-    std::cout << "Barrier end" << std::endl;
-
+    //- Run initial configuration
     forAll(couplingControllers_, cC)
     {
         couplingControllers_[cC]->initialConfiguration();
     }
 
+    //- Forget initial configuration time frame
     forAll(couplingControllers_, cC)
 	{
-    	couplingControllers_[cC]->forget(static_cast<scalar>(1.0));
+    	couplingControllers_[cC]->forget(static_cast<label>(0));
 	}
 }
 
@@ -624,26 +623,31 @@ void polyControllers::controlBeforeMove()
 
 void polyControllers::controlAfterMove()
 {
+    //- Receive the coupled region from the other side (blocking)
 	forAll(couplingControllers_, cC)
 	{
 	  couplingControllers_[cC]->controlAfterMove(1);
 	}
 
+	//- Forget the time frame in the coupling interface so the same frame can be received for coupling boundary molecules
 	forAll(couplingControllers_, cC)
 	{
 	  couplingControllers_[cC]->forget();
 	}
 
+	//- Send any molecules that passed through a coupling boundary
 	forAll(couplingControllers_, cC)
 	{
 	  couplingControllers_[cC]->controlAfterMove(2);
 	}
 
+	//- Receive any coupling boundary molecules (blocking)
 	forAll(couplingControllers_, cC)
 	{
 	  couplingControllers_[cC]->controlAfterMove(3);
 	}
 
+	//- Forget the time frame in the coupling interface
 	forAll(couplingControllers_, cC)
 	{
 	  couplingControllers_[cC]->forget();
@@ -673,7 +677,7 @@ void polyControllers::controlDuringForceComputation
     }
 }
 
-//- control molecular state -- call this after the intermolecular force calulation
+//- control molecular state -- call this after the intermolecular force calculation
 void polyControllers::controlAfterForces()
 {
     forAll(stateControllers_, sC)
@@ -871,7 +875,7 @@ void polyControllers::outputStateResults()
 
         // -- creating a set of directories in the current time directory
         {
-            List<List<fileName> > timePathNames(cCFixedPathNames_.size());
+            List<fileName> timePathNames(cCFixedPathNames_.size());
 
             if(nCouplingControllers_ > 0)
             {

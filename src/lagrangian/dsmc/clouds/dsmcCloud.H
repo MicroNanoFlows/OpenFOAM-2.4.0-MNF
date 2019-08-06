@@ -75,17 +75,6 @@ class dsmcCloud
 :
     public Cloud<dsmcParcel>
 {
-
-public:
-
-	struct coupledParcs
-	{
-		dsmcParcel* parcel;
-		List<word> sendingInterfaces;
-		List<word> receivingInterfaces;
-		word parcType;
-	};
-
 private:
 
     // Private data
@@ -191,9 +180,6 @@ private:
 
         //- boundaries
         dsmcBoundaries boundaries_;
-
-        //- Copy of parcels deleted by coupling boundary
-        DynamicList<coupledParcs> coupledParcels_;
 
         // flux-face tracking 
         dsmcFaceTracker trackingInfo_;
@@ -327,15 +313,6 @@ public:
 
 
     // Member Functions
-
-     void insertCoupledParcel
-     (
-         dsmcParcel* parcel,
-		 List<word>& sending,
-		 List<word>& receiving
-     );
-
-     void clearCoupledParcels();
 
         // Access
 
@@ -614,8 +591,6 @@ public:
 
             //- Clear the Cloud
             inline void clear();
-
-            inline const DynamicList<dsmcCloud::coupledParcs>& coupledParcels() const;
 };
 
 

@@ -684,8 +684,7 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     cyclics_(t, mesh_, -1), 
     iL_(mesh, rU, cyclics_, p_.rCutMax(), "poly"),
     ipl_(mesh.nCells()),
-	clock_(t, "evolve", true),
-    coupledMols_()
+	clock_(t, "evolve", true)
   {
     polyMolecule::readFields(*this);
 
@@ -747,7 +746,6 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     fields_(t, mesh_, *this),
     boundaries_(t, mesh, *this),
     controllers_(t, mesh, *this, twoDInterfaces, threeDInterfaces),
-    coupledMols_(),
     trackingInfo_(mesh, *this),
     moleculeTracking_(),
     cyclics_(t, mesh_, -1),
@@ -816,8 +814,7 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     cyclics_(t, mesh_, -1),
     iL_(mesh, rU, cyclics_, p_.rCutMax(), "poly"),
     ipl_(mesh.nCells()),
-	clock_(t, "evolve", true),
-    coupledMols_()
+	clock_(t, "evolve", true)
 {
     polyMolecule::readFields(*this);
 
@@ -1070,9 +1067,6 @@ void Foam::polyMoleculeCloud::controlAfterMove()
 {
     boundaries_.controlAfterMove();
     controllers_.controlAfterMove();
-
-    //Clean up record of any coupled molecules that have passed a boundary and been sent
-	this->clearCoupledMols();
 }
 
 // control
@@ -1227,7 +1221,6 @@ void Foam::polyMoleculeCloud::prepareInteractions()
 
 void Foam::polyMoleculeCloud::calculatePairForces()
 {
-
     prepareInteractions();
 
     polyMolecule* molI = NULL;
@@ -1267,6 +1260,7 @@ void Foam::polyMoleculeCloud::calculatePairForces()
             }
         }
     }
+
     {
         // Real-Referred interactions
         forAll(iL_.refCellsParticles(), r)
@@ -1290,7 +1284,6 @@ void Foam::polyMoleculeCloud::calculatePairForces()
             }
         }
     }
-
 }
 
 void Foam::polyMoleculeCloud::writeXYZ(const fileName& fName) const
@@ -1526,28 +1519,5 @@ void Foam::polyMoleculeCloud::removeMolFromCellOccupancy
     cellOccupancy_[cell].clear();
     cellOccupancy_[cell].transfer(molsInCell);
 }
-
-void Foam::polyMoleculeCloud::insertCoupledMol(polyMolecule* mol, List<word>& sending, List<word>& receiving)
-{
-	coupledMols newCplMol;
-	newCplMol.mol = mol;
-	newCplMol.sendingInterfaces = sending;
-	newCplMol.receivingInterfaces = receiving;
-	newCplMol.molType = this->cP().molIds()[mol->id()];
-
-    //Create a copy of the molecule before it is deleted
-    coupledMols_.append(newCplMol);
-}
-
-void Foam::polyMoleculeCloud::clearCoupledMols()
-{
-    forAll(coupledMols_, mol)
-    {
-    	delete coupledMols_[mol].mol;
-    }
-
-    coupledMols_.clear();
-}
-
 
 // ************************************************************************* //

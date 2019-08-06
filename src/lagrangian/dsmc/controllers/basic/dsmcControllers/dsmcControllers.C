@@ -565,25 +565,26 @@ void dsmcControllers::initialConfig()
         fluxControllers_[fC]->initialConfiguration();
     }
 
+    //- Run initial configuration
     forAll(couplingControllers_, cC)
     {
         couplingControllers_[cC]->initialConfiguration();
     }
 
+    //- Wait here until other side has finished sending initialisation values (blocking)
     forAll(couplingControllers_, cC)
 	{
-    	std::cout << "Start barrier at 1.0" << std::endl;
-		couplingControllers_[cC]->barrier(static_cast<scalar>(1.0));
-		std::cout << "End barrier at 1.0" << std::endl;
+    	couplingControllers_[cC]->barrier(static_cast<label>(0));
 	}
 
+    //- Forget initial configuration time frame
     forAll(couplingControllers_, cC)
 	{
-		couplingControllers_[cC]->forget(static_cast<scalar>(1.0));
+		couplingControllers_[cC]->forget(static_cast<label>(0));
 	}
 }
 
-        //- different control stages 
+//- different control stages
 void dsmcControllers::controlBeforeMove()
 {
     forAll(stateControllers_, sC)
@@ -592,12 +593,17 @@ void dsmcControllers::controlBeforeMove()
     }
 }
 
-
 void dsmcControllers::controlBeforeCollisions()
 {
     forAll(stateControllers_, sC)
     {
         stateControllers_[sC]->controlParcelsBeforeCollisions();
+    }
+
+    //- Determine and collate parcels that have passed a coupling boundary
+    forAll(couplingControllers_, cC)
+    {
+        couplingControllers_[cC]->controlParcelsBeforeCollisions();
     }
 }
 
@@ -608,8 +614,6 @@ void dsmcControllers::controlAfterCollisions()
         stateControllers_[sC]->controlParcelsAfterCollisions();
     }
 }
-
-
 
 //- calculate properties -- call this at the end of the DSMC time-step.
 void dsmcControllers::calculateProps()
@@ -624,16 +628,19 @@ void dsmcControllers::calculateProps()
         fluxControllers_[fC]->calculateProperties();
     }
 
+    //- Send the coupled region to the other side
     forAll(couplingControllers_, cC)
 	{
 		couplingControllers_[cC]->calculateProperties(1);
 	}
 
+    // Receive new parcels from the other side (blocking)
     forAll(couplingControllers_, cC)
 	{
 		couplingControllers_[cC]->calculateProperties(2);
 	}
 
+    //- Send parcels that passed a coupling boundary
     forAll(couplingControllers_, cC)
 	{
 		couplingControllers_[cC]->calculateProperties(3);
@@ -825,7 +832,7 @@ void dsmcControllers::outputResults()
         }
 
         {
-            List<List<fileName> > timePathNames(cCFixedPathNames_.size());
+            List<fileName> timePathNames(cCFixedPathNames_.size());
 
             if(nCouplingControllers_ > 0)
             {
