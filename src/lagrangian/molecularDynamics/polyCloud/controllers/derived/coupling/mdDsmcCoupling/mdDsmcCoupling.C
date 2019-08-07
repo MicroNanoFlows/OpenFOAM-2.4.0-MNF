@@ -1244,10 +1244,6 @@ polyMolecule* mdDsmcCoupling::insertMolecule
 
                 for (label i=0; i<overlapIterations_; i++)
                 {
-                    // Delete the created molecule as it will exceed energy limit according to force-field calculation
-                    molCloud_.removeMolFromCellOccupancy(newMol->origId(), newMol->cell());
-                    molCloud_.deleteParticle(*newMol);
-
                     // Perturb the position of the molecule to find a free space in the cell it is being inserted into
                     vector overLap = position - overlapMol->position();
                     scalar overLapMag = mag(overLap);
@@ -1259,6 +1255,16 @@ polyMolecule* mdDsmcCoupling::insertMolecule
                     position[0] += perturbDistance * overlapNorm[0];
                     position[1] += perturbDistance * overlapNorm[1];
                     position[2] += perturbDistance * overlapNorm[2];
+
+                    overlapMol = NULL;
+
+                    if(newMol != NULL)
+                    {
+                        // Delete the created molecule as it will exceed energy limit according to force-field calculation
+                        molCloud_.removeMolFromCellOccupancy(newMol->origId(), newMol->cell());
+                        molCloud_.deleteParticle(*newMol);
+                        newMol = NULL;
+                    }
 
                     if(fixedBounds_)
                     {
@@ -1401,8 +1407,9 @@ polyMolecule* mdDsmcCoupling::insertMolecule
                     }
                     else
                     {
-                        if(iterCount < overlapIterations_) //- Attempted cell was out of cscope so
+                        if(iterCount < overlapIterations_) //- Attempted cell was out of scope
                         {
+                            std::cout << "mdDsmcCoupling::insertMolecule(): Molecule insertion attempted outside of mesh whilst finding new location, trying again" << std::endl;
                             iterCount++;
                         }
                         else //- Run out of iterations to find a new cell so abort insertion with warning
@@ -1414,7 +1421,7 @@ polyMolecule* mdDsmcCoupling::insertMolecule
                 }
             }
 
-            if(overlapMol != NULL) //The iterative process to perturb the molecule away from any it might overlap failed after nIter tries
+            if(overlapMol != NULL) //The iterative process to perturb the molecule away from overlap failed after nIter tries
             {
                 std::cout << "mdDsmcCoupling::insertMolecule(): Failed to find new location for molecule. molecule not inserted" << std::endl;
             }
