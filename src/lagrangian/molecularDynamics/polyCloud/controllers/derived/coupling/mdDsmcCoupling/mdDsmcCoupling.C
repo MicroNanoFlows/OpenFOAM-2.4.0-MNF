@@ -520,10 +520,7 @@ void mdDsmcCoupling::controlAfterMove(int stage)
 	{
 	    if(sending_)
 		{
-	        if(findCoupledMolecules()) //- Find, collate and delete any molecules that have passed a coupling boundary
-	        {
-	            molCloud_.rebuildCellOccupancy();
-	        }
+	        findCoupledMolecules(); //- Find, collate and delete any molecules that have passed a coupling boundary
 	        sendCoupledMolecules(); // Send any molecules deleted by coupling boundary (non-blocking)
 		}
 	}
@@ -685,7 +682,7 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
                 {
                     if(molChanged_[ifacepts][pts]) //This molecule has changed in the list since the last time
                     {
-                        molCloud_.removeMolFromCellOccupancy(molHistory_[ifacepts][pts]);
+                        molCloud_.removeMolFromCellOccupancy(molHistory_[ifacepts][pts]->origId(), molHistory_[ifacepts][pts]->cell());
                         molCloud_.deleteParticle(*molHistory_[ifacepts][pts]); //Delete the old molecule in this list position
 
                         molHistory_[ifacepts][pts] = insertMolecule(checkedPosition, molIds_[molId], true, velocity); //Insert the new molecule
@@ -766,10 +763,8 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 #endif
 }
 
-bool mdDsmcCoupling::findCoupledMolecules()
+void mdDsmcCoupling::findCoupledMolecules()
 {
-    bool molRemoved = false;
-
     forAll(intersectingCells_, cell)
     {
         const List<polyMolecule*>& molsInCell = molCloud_.cellOccupancy()[intersectingCells_[cell]];
@@ -850,16 +845,13 @@ bool mdDsmcCoupling::findCoupledMolecules()
                         molsToSend_.append(newMolToSend);
 
                         //- Delete molecule from cellOccupancy (before deleting it from cloud)
-                        molCloud_.removeMolFromCellOccupancy(molsInCell[molecule]);
+                        molCloud_.removeMolFromCellOccupancy(molsInCell[molecule]->origId(), molsInCell[molecule]->cell());
                         molCloud_.deleteParticle(*molsInCell[molecule]);
-                        molRemoved = true;
                     }
                 }
             }
         }
     }
-
-    return molRemoved;
 }
 
 void mdDsmcCoupling::sendCoupledMolecules()
@@ -1253,7 +1245,7 @@ polyMolecule* mdDsmcCoupling::insertMolecule
                 for (label i=0; i<overlapIterations_; i++)
                 {
                     // Delete the created molecule as it will exceed energy limit according to force-field calculation
-                    molCloud_.removeMolFromCellOccupancy(newMol);
+                    molCloud_.removeMolFromCellOccupancy(newMol->origId(), newMol->cell());
                     molCloud_.deleteParticle(*newMol);
 
                     // Perturb the position of the molecule to find a free space in the cell it is being inserted into

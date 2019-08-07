@@ -170,7 +170,7 @@ public:
         void receiveCoupledRegion(bool init);
 
         //- Collate and delete molecules that have crossed a coupling boundary
-        bool findCoupledMolecules();
+        void findCoupledMolecules();
 
         //- send molecules that have crossed a coupling boundary
         void sendCoupledMolecules();

@@ -1220,21 +1220,19 @@ void Foam::cellInteractions<ParticleType>::setReferredParticles
     const List<DynamicList<ParticleType*> >& cellOccupancy
 )
 {
-    std::cout << "1" << std::endl;
     //- clear
     referredCloud_.clear();
-    std::cout << "2" << std::endl;
     forAll(refCellsParticles_, i)
     {
         refCellsParticles_[i].clear();
     }
-    std::cout << "3" << std::endl;
+
     // Allocate transfer buffers
     PstreamBuffers pBufs(Pstream::nonBlocking);
-    std::cout << "4" << std::endl;
+
     IDLList<ParticleType> ownMeshTransferList;
     labelList ownMeshParticleCount;
-    std::cout << "5" << std::endl;
+
     //- sending 
     for (label p = 0; p < Pstream::nProcs(); p++)
     {
@@ -1287,8 +1285,6 @@ void Foam::cellInteractions<ParticleType>::setReferredParticles
             }
         }
     }
-
-    std::cout << "6" << std::endl;
 
     labelListList allNTrans(Pstream::nProcs());
     pBufs.finishedSends(allNTrans, true); //- Set this to blocking send
