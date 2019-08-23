@@ -1550,8 +1550,8 @@ polyMolecule* mdDsmcCoupling::insertMolecule
                             stuckIter++;
                         }
 
-                        //- Check if particle has been stuck for 2 iterations, if so reset its position and randomise normal to try again
-                        if(stuckIter == 2)
+                        //- Check if particle has been stuck for 3 iterations, if so reset its position and randomise normal to try again
+                        if(stuckIter == 3)
                         {
                             randomNorm = 0; // Set randomNorm to 0 so a new random normal will be generated during the next iteration
                             stuckIter = 0; // Reset the stuckIter counter
