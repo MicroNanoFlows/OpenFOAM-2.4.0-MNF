@@ -623,25 +623,25 @@ void polyControllers::controlBeforeMove()
 
 void polyControllers::controlAfterMove()
 {
-    //- Receive the coupled region from the other side (blocking)
+    //- Collate, delete and send any molecules that passed through a coupling boundary
 	forAll(couplingControllers_, cC)
 	{
 	  couplingControllers_[cC]->controlAfterMove(1);
 	}
 
-	//- Forget the time frame in the coupling interface so the same frame can be received for coupling boundary molecules
-	forAll(couplingControllers_, cC)
-	{
-	  couplingControllers_[cC]->forget();
-	}
-
-	//- Send any molecules that passed through a coupling boundary
+	//- Receive any coupling boundary molecules (blocking)
 	forAll(couplingControllers_, cC)
 	{
 	  couplingControllers_[cC]->controlAfterMove(2);
 	}
 
-	//- Receive any coupling boundary molecules (blocking)
+	//- Forget the time frame in the coupling interface so the same frame can be received for coupling region molecules
+    forAll(couplingControllers_, cC)
+    {
+      couplingControllers_[cC]->forget();
+    }
+
+	//- Receive any coupling region molecules (blocking)
 	forAll(couplingControllers_, cC)
 	{
 	  couplingControllers_[cC]->controlAfterMove(3);
@@ -683,6 +683,12 @@ void polyControllers::controlAfterForces()
     forAll(stateControllers_, sC)
     {
         stateControllers_[sC]->controlAfterForces();
+    }
+
+    //- Send forces acting on molecules in coupling region(s)
+    forAll(couplingControllers_, cC)
+    {
+      couplingControllers_[cC]->controlAfterForces();
     }
 }
 

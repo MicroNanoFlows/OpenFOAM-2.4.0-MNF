@@ -75,6 +75,7 @@ public:
     {
         SPECIAL_TETHERED = -1,
         SPECIAL_FROZEN   = -2,
+        SPECIAL_GHOST    = -3,
         NOT_SPECIAL      = 0,
         SPECIAL_REFERRED = 1,
         SPECIAL_USER     = 2
@@ -380,7 +381,6 @@ public:
             inline label& trackingNumber();
 
             inline bool frozen();
-            
             inline bool referred();
 
     // Member Operators

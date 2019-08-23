@@ -1026,7 +1026,7 @@ void Foam::dsmcCloud::evolve()
         buildCellOccupancy();
     }
 
-    controllers_.controlBeforeCollisions();//**** // Parcels that have passed through a coupling boundary are collated and deleted here
+    controllers_.controlBeforeCollisions();//**** // Coupling boundaries handled (receive/send)
 	boundaries_.controlBeforeCollisions();//****
 
     // Calculate new velocities via stochastic collisions
@@ -1034,14 +1034,13 @@ void Foam::dsmcCloud::evolve()
 
     // Update cell occupancy (reactions may have changed it)
     buildCellOccupancy();
-    controllers_.controlAfterCollisions();//****
+    controllers_.controlAfterCollisions();//**** // Coupling region send and region forces received
     boundaries_.controlAfterCollisions();//****
     reactions_.outputData();
     fields_.calculateFields();//****
     fields_.writeFields();//****
 
-    controllers_.calculateProps();//**** // Coupling region send and send/receive parcels through coupled boundaries
-    buildCellOccupancy(); //**** Update cell occupancy (coupling insertions may have changed it)
+    controllers_.calculateProps();//****
     controllers_.outputResults();//****
 
     boundaries_.calculateProps();//****

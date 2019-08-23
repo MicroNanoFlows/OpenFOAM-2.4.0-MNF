@@ -48,76 +48,170 @@ inline void Foam::polyMoleculeCloud::evaluatePair
 
     if(!molI->frozen() || !molJ->frozen())
     {
-    	// fraction
-        scalar f = molI->fraction();
-    
-        if(molJ->fraction() < f)
+        // make sure both molecules aren't of a ghost type
+        if(!molI->ghost() || !molJ->ghost())
         {
-            f = molJ->fraction();
-        }
+            // fraction
+            scalar f = molI->fraction();
 
-        // looping over just pair potential sites
-        forAll(cP_.pairSitesLinks()[idI], i)
-        {
-            // sI is the index of the full list of sites
-            label sI = cP_.pairSitesLinks()[idI][i];
-            
-            forAll(cP_.pairSitesLinks()[idJ], j)
+            if(molJ->fraction() < f)
             {
-                // sJ is the index of the full list of sites
-                label sJ = cP_.pairSitesLinks()[idJ][j];
-
-                vector rsIsJ = molI->sitePositions()[sI] - molJ->sitePositions()[sJ];
-
-                scalar rsIsJMagSq = magSqr(rsIsJ);
+                f = molJ->fraction();
+            }
+    
+            // looping over just pair potential sites
+            forAll(cP_.pairSitesLinks()[idI], i)
+            {
+                // sI is the index of the full list of sites
+                label sI = cP_.pairSitesLinks()[idI][i];
                 
-                // determine index of pairPotential from list of pairPotentials_
-                
-//                 label k = p_.pairPots().getIndexFromPairPotentialSites(idI, idJ, i, j);
-                
-                label k = p_.pairPots().pairPotentialIndex(idI, idJ, sI, sJ);
-                
-//                 Info << nl << "idI = " << idI << " = " << cP_.siteNames(idI) 
-//                      << ", idJ = " << idJ << " = " << cP_.siteNames(idJ)
-//                      << endl;
-//                      
-//                 Info << "posI = " << molI->position() 
-//                      << ", posJ = " << molJ->position() 
-//                      << endl;
-//                      
-//                 Info << "sIdI = " << sI << ", sIdJ = " << sJ 
-//                      << ", siteI = " << molI->sitePositions()[sI]
-//                      << ", siteJ = " << molJ->sitePositions()[sJ]
-//                      << ", mag = " << mag(rsIsJ)        
-//                      << endl;                
-//                      
-//                 Info << "k = " << k << endl;
-                     
-                if(p_.pairPots().rCutSqr(k, rsIsJMagSq))
+                forAll(cP_.pairSitesLinks()[idJ], j)
                 {
-//                     if(!p_.pairPots().excludeSites(molI, molJ, sI, sJ, k))
+                    // sJ is the index of the full list of sites
+                    label sJ = cP_.pairSitesLinks()[idJ][j];
+
+                    vector rsIsJ = molI->sitePositions()[sI] - molJ->sitePositions()[sJ];
+
+                    scalar rsIsJMagSq = magSqr(rsIsJ);
+
+                    // determine index of pairPotential from list of pairPotentials_
+
+    //                 label k = p_.pairPots().getIndexFromPairPotentialSites(idI, idJ, i, j);
+
+                    label k = p_.pairPots().pairPotentialIndex(idI, idJ, sI, sJ);
+
+    //                 Info << nl << "idI = " << idI << " = " << cP_.siteNames(idI)
+    //                      << ", idJ = " << idJ << " = " << cP_.siteNames(idJ)
+    //                      << endl;
+    //
+    //                 Info << "posI = " << molI->position()
+    //                      << ", posJ = " << molJ->position()
+    //                      << endl;
+    //
+    //                 Info << "sIdI = " << sI << ", sIdJ = " << sJ
+    //                      << ", siteI = " << molI->sitePositions()[sI]
+    //                      << ", siteJ = " << molJ->sitePositions()[sJ]
+    //                      << ", mag = " << mag(rsIsJ)
+    //                      << endl;
+    //
+    //                 Info << "k = " << k << endl;
+
+                    if(p_.pairPots().rCutSqr(k, rsIsJMagSq))
+                    {
+    //                     if(!p_.pairPots().excludeSites(molI, molJ, sI, sJ, k))
+                        {
+                            scalar rsIsJMag = mag(rsIsJ);
+
+                            vector fsIsJ = f*(rsIsJ/rsIsJMag)*p_.pairPots().force(k, rsIsJMag);
+
+    //                         Info << "force mag = "<< p_.pairPots().force(k, rsIsJMag) << endl;
+    //                         Info << "force = " << fsIsJ << endl;
+
+                            molI->siteForces()[sI] += fsIsJ;
+                            molJ->siteForces()[sJ] += -fsIsJ;
+
+                            scalar potentialEnergy
+                            (
+                                f*p_.pairPots().energy(k, rsIsJMag)
+                            );
+
+                            molI->potentialEnergy() += 0.5*potentialEnergy;
+                            molJ->potentialEnergy() += 0.5*potentialEnergy;
+                
+                            vector rIJ = molI->position() - molJ->position();
+                
+                            tensor virialContribution = (rsIsJ*fsIsJ)*(rsIsJ & rIJ)/rsIsJMagSq;
+                
+                            molI->rf() += virialContribution;
+                            molJ->rf() += virialContribution;
+
+                            fields_.measurementsDuringForceComputationSite
+                            (
+                                molI,
+                                molJ,
+                                sI,
+                                sJ
+                            );
+                        }
+                    }
+                }
+            }
+
+            {
+                Foam::vector rIJ = molI->position() - molJ->position();
+
+                scalar rIJMag = mag(rIJ);
+
+                if(molI->R() > rIJMag)
+                {
+                    molI->R() = rIJMag;
+                }
+
+                if(molJ->R() > rIJMag)
+                {
+                    molJ->R() = rIJMag;
+                }
+            }
+
+
+            //chargePotNamesToSites
+            forAll(cP_.chargeSitesLinks()[idI], pI)
+            {
+                label sI = cP_.chargeSitesLinks()[idI][pI];
+
+                forAll(cP_.chargeSitesLinks()[idJ], pJ)
+                {
+                    label sJ = cP_.chargeSitesLinks()[idJ][pJ];
+
+                    vector rsIsJ =
+                    molI->sitePositions()[sI] - molJ->sitePositions()[sJ];
+
+                    scalar rsIsJMagSq = magSqr(rsIsJ);
+
+    /*                Info << "idI = " << idI << " = " << cP_.siteNames(idI)
+                         << ", idJ = " << idJ << " = " << cP_.siteNames(idJ)
+                         << endl;
+
+                    Info << "posI = " << molI->position()
+                         << ", posJ = " << molJ->position()
+                         << endl;
+
+                    Info << "sIdI = " << sI << ", sIdJ = " << sJ
+                         << ", siteI = " << molI->sitePositions()[sI]
+                         << ", siteJ = " << molJ->sitePositions()[sJ]
+                         << ", mag = " << mag(rsIsJ)
+                         << endl;    */
+                    //if(rsIsJMagSq <= p_.pairPots().electrostaticPot()->rCutSqr())
+                    if(rsIsJMagSq < p_.pairPots().electrostaticPot()->rCutSqr())
                     {
                         scalar rsIsJMag = mag(rsIsJ);
 
-                        vector fsIsJ = f*(rsIsJ/rsIsJMag)*p_.pairPots().force(k, rsIsJMag);
+                        scalar chargeI = cP_.siteCharges(idI)[sI];
+                        scalar chargeJ = cP_.siteCharges(idJ)[sJ];
 
-//                         Info << "force mag = "<< p_.pairPots().force(k, rsIsJMag) << endl;
-//                         Info << "force = " << fsIsJ << endl;
-                             
+                        vector fsIsJ =
+                            f*(rsIsJ/rsIsJMag)
+                            *chargeI*chargeJ
+                            *p_.pairPots().electrostaticPot()->force(rsIsJMag);
+
+    //                     Info << "force = " << fsIsJ << endl;
+
                         molI->siteForces()[sI] += fsIsJ;
+
                         molJ->siteForces()[sJ] += -fsIsJ;
 
-                        scalar potentialEnergy
-                        (
-                            f*p_.pairPots().energy(k, rsIsJMag)
-                        );
+                        scalar potentialEnergy =
+                            f*chargeI*chargeJ
+                            *p_.pairPots().electrostaticPot()->energy(rsIsJMag);
 
                         molI->potentialEnergy() += 0.5*potentialEnergy;
+
                         molJ->potentialEnergy() += 0.5*potentialEnergy;
             
                         vector rIJ = molI->position() - molJ->position();
             
-                        tensor virialContribution = (rsIsJ*fsIsJ)*(rsIsJ & rIJ)/rsIsJMagSq;
+                        tensor virialContribution =
+                            (rsIsJ*fsIsJ)*(rsIsJ & rIJ)/rsIsJMagSq;
             
                         molI->rf() += virialContribution;
                         molJ->rf() += virialContribution;
@@ -130,96 +224,6 @@ inline void Foam::polyMoleculeCloud::evaluatePair
                             sJ
                         );
                     }
-                }
-            }
-        }
- 
-        {
-            Foam::vector rIJ = molI->position() - molJ->position();
-    
-            scalar rIJMag = mag(rIJ);
-    
-            if(molI->R() > rIJMag)
-            {
-                molI->R() = rIJMag;
-            }
-    
-            if(molJ->R() > rIJMag)
-            {
-                molJ->R() = rIJMag;
-            }
-        }
-
-        
-        //chargePotNamesToSites
-        forAll(cP_.chargeSitesLinks()[idI], pI)
-        {
-            label sI = cP_.chargeSitesLinks()[idI][pI];
-    
-            forAll(cP_.chargeSitesLinks()[idJ], pJ)
-            {
-                label sJ = cP_.chargeSitesLinks()[idJ][pJ];
-    
-                vector rsIsJ =
-                molI->sitePositions()[sI] - molJ->sitePositions()[sJ];
-    
-                scalar rsIsJMagSq = magSqr(rsIsJ);
-
-/*                Info << "idI = " << idI << " = " << cP_.siteNames(idI) 
-                     << ", idJ = " << idJ << " = " << cP_.siteNames(idJ)
-                     << endl;
-                     
-                Info << "posI = " << molI->position() 
-                     << ", posJ = " << molJ->position() 
-                     << endl;
-                     
-                Info << "sIdI = " << sI << ", sIdJ = " << sJ 
-                     << ", siteI = " << molI->sitePositions()[sI]
-                     << ", siteJ = " << molJ->sitePositions()[sJ]
-                     << ", mag = " << mag(rsIsJ)        
-                     << endl;    */                   
-                //if(rsIsJMagSq <= p_.pairPots().electrostaticPot()->rCutSqr())
-                if(rsIsJMagSq < p_.pairPots().electrostaticPot()->rCutSqr())
-                {
-                    scalar rsIsJMag = mag(rsIsJ);
-
-                    scalar chargeI = cP_.siteCharges(idI)[sI];
-                    scalar chargeJ = cP_.siteCharges(idJ)[sJ];
-        
-                    vector fsIsJ =
-                        f*(rsIsJ/rsIsJMag)
-                        *chargeI*chargeJ
-                        *p_.pairPots().electrostaticPot()->force(rsIsJMag);
-
-//                     Info << "force = " << fsIsJ << endl;                        
-                        
-                    molI->siteForces()[sI] += fsIsJ;
-        
-                    molJ->siteForces()[sJ] += -fsIsJ;
-        
-                    scalar potentialEnergy =
-                        f*chargeI*chargeJ
-                        *p_.pairPots().electrostaticPot()->energy(rsIsJMag);
-        
-                    molI->potentialEnergy() += 0.5*potentialEnergy;
-        
-                    molJ->potentialEnergy() += 0.5*potentialEnergy;
-        
-                    vector rIJ = molI->position() - molJ->position();
-        
-                    tensor virialContribution =
-                        (rsIsJ*fsIsJ)*(rsIsJ & rIJ)/rsIsJMagSq;
-        
-                    molI->rf() += virialContribution;
-                    molJ->rf() += virialContribution;
-    
-                    fields_.measurementsDuringForceComputationSite
-                    (
-                        molI,
-                        molJ,
-                        sI,
-                        sJ
-                    );
                 }
             }
         }
@@ -239,111 +243,115 @@ inline bool Foam::polyMoleculeCloud::evaluatePotentialLimit
 
     if(!molI->frozen() || !molJ->frozen())
     {
-        // fraction
-        scalar f = molI->fraction();
-    
-        if(molJ->fraction() < f)
+        // make sure both molecules aren't of a ghost type
+        if(!molI->ghost() || !molJ->ghost())
         {
-            f = molJ->fraction();
-        }
+            // fraction
+            scalar f = molI->fraction();
         
-        // looping over just pair potential sites
-        forAll(cP_.pairSitesLinks()[idI], i)
-        {
-            // sI is the index of the full list of sites
-            label sI = cP_.pairSitesLinks()[idI][i];
-            
-            forAll(cP_.pairSitesLinks()[idJ], j)
+            if(molJ->fraction() < f)
             {
-                // sJ is the index of the full list of sites
-                label sJ = cP_.pairSitesLinks()[idJ][j];
+                f = molJ->fraction();
+            }
+            
+            // looping over just pair potential sites
+            forAll(cP_.pairSitesLinks()[idI], i)
+            {
+                // sI is the index of the full list of sites
+                label sI = cP_.pairSitesLinks()[idI][i];
 
-                vector rsIsJ = molI->sitePositions()[sI] - molJ->sitePositions()[sJ];
-
-                scalar rsIsJMagSq = magSqr(rsIsJ);
-                
-                label k = p_.pairPots().pairPotentialIndex(idI, idJ, sI, sJ);
-                
-                if(p_.pairPots().rCutSqr(k, rsIsJMagSq))
+                forAll(cP_.pairSitesLinks()[idJ], j)
                 {
-                    if(!p_.pairPots().excludeSites(molI, molJ, sI, sJ, k))
+                    // sJ is the index of the full list of sites
+                    label sJ = cP_.pairSitesLinks()[idJ][j];
+
+                    vector rsIsJ = molI->sitePositions()[sI] - molJ->sitePositions()[sJ];
+
+                    scalar rsIsJMagSq = magSqr(rsIsJ);
+
+                    label k = p_.pairPots().pairPotentialIndex(idI, idJ, sI, sJ);
+
+                    if(p_.pairPots().rCutSqr(k, rsIsJMagSq))
+                    {
+                        if(!p_.pairPots().excludeSites(molI, molJ, sI, sJ, k))
+                        {
+                            scalar rsIsJMag = mag(rsIsJ);
+
+                            scalar rMin = p_.pairPots().rMin(k);
+
+                            // Guard against pairPot.energy being evaluated
+                            // if rIJMag < SMALL. A floating point exception will
+                            // happen otherwise.
+
+
+                            if (rsIsJMag < SMALL)
+                            {
+                                return true;
+                            }
+                
+                            // Guard against pairPot.energy being evaluated if rIJMag <
+                            // rMin.  A tabulation lookup error will occur otherwise.
+                
+                            if (rsIsJMag < rMin)
+                            {
+                                return true;
+                            }
+
+                            if
+                            (
+                                mag(p_.pairPots().energy(k, rsIsJMag))
+                                > potentialEnergyLimit
+                            )
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            forAll(cP_.chargeSitesLinks()[idI], pI)
+            {
+                label sI = cP_.chargeSitesLinks()[idI][pI];
+
+                forAll(cP_.chargeSitesLinks()[idJ], pJ)
+                {
+                    label sJ = cP_.chargeSitesLinks()[idJ][pJ];
+
+                    vector rsIsJ =
+                    molI->sitePositions()[sI] - molJ->sitePositions()[sJ];
+
+                    scalar rsIsJMagSq = magSqr(rsIsJ);
+
+                    if(rsIsJMagSq < p_.pairPots().electrostaticPot()->rCutSqr())
                     {
                         scalar rsIsJMag = mag(rsIsJ);
-
-                        scalar rMin = p_.pairPots().rMin(k);
                         
                         // Guard against pairPot.energy being evaluated
                         // if rIJMag < SMALL. A floating point exception will
                         // happen otherwise.
-                        
-                        
+
                         if (rsIsJMag < SMALL)
                         {
                             return true;
                         }
-            
-                        // Guard against pairPot.energy being evaluated if rIJMag <
-                        // rMin.  A tabulation lookup error will occur otherwise.
-            
-                        if (rsIsJMag < rMin)
+
+                        if (rsIsJMag <  p_.pairPots().electrostaticPot()->rMin())
                         {
                             return true;
                         }
+
+                        scalar chargeI = cP_.siteCharges(idI)[sI];
+                        scalar chargeJ = cP_.siteCharges(idJ)[sJ];
         
                         if
                         (
-                            mag(p_.pairPots().energy(k, rsIsJMag))
+                            mag(chargeI*chargeJ*p_.pairPots().electrostaticPot()->energy(rsIsJMag))
                             > potentialEnergyLimit
                         )
                         {
                             return true;
                         }
-                    }
-                }
-            }
-        }
-        
-        forAll(cP_.chargeSitesLinks()[idI], pI)
-        {
-            label sI = cP_.chargeSitesLinks()[idI][pI];
-    
-            forAll(cP_.chargeSitesLinks()[idJ], pJ)
-            {
-                label sJ = cP_.chargeSitesLinks()[idJ][pJ];
-    
-                vector rsIsJ =
-                molI->sitePositions()[sI] - molJ->sitePositions()[sJ];
-    
-                scalar rsIsJMagSq = magSqr(rsIsJ);
-
-                if(rsIsJMagSq < p_.pairPots().electrostaticPot()->rCutSqr())
-                {
-                    scalar rsIsJMag = mag(rsIsJ);
-                    
-                    // Guard against pairPot.energy being evaluated
-                    // if rIJMag < SMALL. A floating point exception will
-                    // happen otherwise.
-    
-                    if (rsIsJMag < SMALL)
-                    {
-                        return true;
-                    }
-    
-                    if (rsIsJMag <  p_.pairPots().electrostaticPot()->rMin())
-                    {
-                        return true;
-                    }
-                    
-                    scalar chargeI = cP_.siteCharges(idI)[sI];
-                    scalar chargeJ = cP_.siteCharges(idJ)[sJ];
-    
-                    if
-                    (
-                        mag(chargeI*chargeJ*p_.pairPots().electrostaticPot()->energy(rsIsJMag))
-                        > potentialEnergyLimit
-                    )
-                    {
-                        return true;
                     }
                 }
             }

@@ -603,7 +603,25 @@ void dsmcControllers::controlBeforeCollisions()
     //- Determine and collate parcels that have passed a coupling boundary
     forAll(couplingControllers_, cC)
     {
-        couplingControllers_[cC]->controlParcelsBeforeCollisions();
+        couplingControllers_[cC]->controlParcelsBeforeCollisions(1);
+    }
+
+    //- Receive new molecules that have passed through a coupling boundary (blocking)
+    forAll(couplingControllers_, cC)
+    {
+        couplingControllers_[cC]->controlParcelsBeforeCollisions(2);
+    }
+
+    //- Forget received data
+    forAll(couplingControllers_, cC)
+    {
+        couplingControllers_[cC]->forget();
+    }
+
+    //- Send parcels that have passed through a coupling boundary
+    forAll(couplingControllers_, cC)
+    {
+        couplingControllers_[cC]->controlParcelsBeforeCollisions(3);
     }
 }
 
@@ -612,6 +630,23 @@ void dsmcControllers::controlAfterCollisions()
     forAll(stateControllers_, sC)
     {
         stateControllers_[sC]->controlParcelsAfterCollisions();
+    }
+
+    //- Send the coupled region
+    forAll(couplingControllers_, cC)
+    {
+        couplingControllers_[cC]->controlParcelsAfterCollisions(1);
+    }
+
+    // Receive forces for parcels in the coupled region (blocking)
+    forAll(couplingControllers_, cC)
+    {
+        couplingControllers_[cC]->controlParcelsAfterCollisions(2);
+    }
+
+    forAll(couplingControllers_, cC)
+    {
+        couplingControllers_[cC]->forget();
     }
 }
 
@@ -627,29 +662,6 @@ void dsmcControllers::calculateProps()
     {
         fluxControllers_[fC]->calculateProperties();
     }
-
-    //- Send the coupled region to the other side
-    forAll(couplingControllers_, cC)
-	{
-		couplingControllers_[cC]->calculateProperties(1);
-	}
-
-    // Receive new parcels from the other side (blocking)
-    forAll(couplingControllers_, cC)
-	{
-		couplingControllers_[cC]->calculateProperties(2);
-	}
-
-    //- Send parcels that passed a coupling boundary
-    forAll(couplingControllers_, cC)
-	{
-		couplingControllers_[cC]->calculateProperties(3);
-	}
-
-    forAll(couplingControllers_, cC)
-	{
-		couplingControllers_[cC]->forget();
-	}
 }
 
 //- this function is to be called at the beginning of the MD time-step. 

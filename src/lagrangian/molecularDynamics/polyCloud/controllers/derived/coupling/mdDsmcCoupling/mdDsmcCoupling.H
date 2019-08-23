@@ -105,7 +105,7 @@ private:
         const List<word>& idList;
         const reducedUnits& rU_;
         List<List<polyMolecule*> > molHistory_;
-        List<List<bool> > molChanged_;
+        List<List<label> > molId_;
 #ifdef USE_MUI    	
     	mui::chrono_sampler_exact3d* chrono_sampler;
 #endif
@@ -117,13 +117,13 @@ private:
         vector fixedBoundMax_;
         vector fixedBoundNorm_;
         vector fixedBoundZeroThick_;
-        vector boundCorr_;
         scalar overlapEnergyLimit_;
         label overlapIterations_;
         label prevMolCount_;
         label currIteration_;
         DynamicList<label> intersectingCells_;
         DynamicList<coupledMolecule> molsToSend_;
+        DynamicList<coupledMolecule> molsReceived_;
 
     // Private Member Functions
 
@@ -131,7 +131,7 @@ private:
 	(
 	    point& position,
 	    const label& id,
-	    const bool& ghost,
+	    const bool ghost,
 	    vector& velocity
 	);
         polyMolecule* checkForOverlaps(polyMolecule* newMol, const scalar& potEnergyLimit);
@@ -164,10 +164,16 @@ public:
         void initialConfiguration();
 
         //- run at start of time step before molecules move
-        void controlAfterMove(int stage);
+        void controlAfterMove(label stage);
+
+        //- run after forces are calculated
+        void controlAfterForces();
 
         //- receive molecules that fall into the coupled region
         void receiveCoupledRegion(bool init);
+
+        //- send forces acting on molecules in coupled region
+        void sendCoupledRegionForces();
 
         //- Collate and delete molecules that have crossed a coupling boundary
         void findCoupledMolecules();
@@ -177,6 +183,9 @@ public:
 
         //- receive molecules that have crossed a coupling boundary
         void receiveCoupledParcels();
+
+        //- Insert parcels that have been received through a coupling boundary
+        bool insertCoupledMolecules();
 
         //- output data (optional)
         void output

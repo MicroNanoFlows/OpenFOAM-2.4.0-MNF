@@ -44,7 +44,8 @@ Foam::particle::particle(const polyMesh& mesh, Istream& is, bool readFields)
     tetFaceI_(-1),
     tetPtI_(-1),
     origProc_(Pstream::myProcNo()),
-    origId_(-1)
+    origId_(-1),
+    ghost_(false)
 {
     // readFields : read additional data. Should be consistent with writeFields.
 
@@ -73,6 +74,7 @@ Foam::particle::particle(const polyMesh& mesh, Istream& is, bool readFields)
               + sizeof(tetPtI_)
               + sizeof(origProc_)
               + sizeof(origId_)
+              + sizeof(ghost_)
             );
         }
         else
@@ -105,7 +107,8 @@ void Foam::particle::write(Ostream& os, bool writeFields) const
                 << token::SPACE << tetFaceI_
                 << token::SPACE << tetPtI_
                 << token::SPACE << origProc_
-                << token::SPACE << origId_;
+                << token::SPACE << origId_
+                << token::SPACE << ghost_;
         }
         else
         {
@@ -129,6 +132,7 @@ void Foam::particle::write(Ostream& os, bool writeFields) const
               + sizeof(tetPtI_)
               + sizeof(origProc_)
               + sizeof(origId_)
+              + sizeof(ghost_)
             );
         }
         else

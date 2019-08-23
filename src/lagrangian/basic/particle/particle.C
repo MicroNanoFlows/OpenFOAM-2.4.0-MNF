@@ -61,7 +61,8 @@ Foam::particle::particle
     tetFaceI_(tetFaceI),
     tetPtI_(tetPtI),
     origProc_(Pstream::myProcNo()),
-    origId_(getNewParticleID())
+    origId_(getNewParticleID()),
+    ghost_(false)
 {}
 
 
@@ -81,7 +82,8 @@ Foam::particle::particle
     tetFaceI_(-1),
     tetPtI_(-1),
     origProc_(Pstream::myProcNo()),
-    origId_(getNewParticleID())
+    origId_(getNewParticleID()),
+    ghost_(false)
 {
     if (doCellFacePt)
     {
@@ -100,7 +102,8 @@ Foam::particle::particle(const particle& p)
     tetFaceI_(p.tetFaceI_),
     tetPtI_(p.tetPtI_),
     origProc_(p.origProc_),
-    origId_(p.origId_)
+    origId_(p.origId_),
+    ghost_(p.ghost_)
 {}
 
 
@@ -114,7 +117,8 @@ Foam::particle::particle(const particle& p, const polyMesh& mesh)
     tetFaceI_(p.tetFaceI_),
     tetPtI_(p.tetPtI_),
     origProc_(p.origProc_),
-    origId_(p.origId_)
+    origId_(p.origId_),
+    ghost_(p.ghost_)
 {}
 
 

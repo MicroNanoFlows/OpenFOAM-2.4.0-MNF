@@ -936,5 +936,15 @@ inline Foam::label Foam::particle::faceInterpolation() const
     return faceI_;
 }
 
+inline bool Foam::particle::ghost() const
+{
+    return ghost_;
+}
+
+inline void Foam::particle::setGhost(bool isGhost)
+{
+    ghost_ = isGhost;
+}
+
 
 // ************************************************************************* //

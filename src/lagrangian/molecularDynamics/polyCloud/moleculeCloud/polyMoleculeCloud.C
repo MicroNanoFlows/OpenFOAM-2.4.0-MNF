@@ -1024,7 +1024,7 @@ void Foam::polyMoleculeCloud::velocityUpdate(const scalar& trackTime)
 {
     forAllIter(polyMoleculeCloud, *this, mol)
     {
-        if(!mol().frozen())
+        if(!mol().frozen() && !mol().ghost())
         {
             mol().updateHalfVelocity(cP_, trackTime);
         }
@@ -1111,7 +1111,7 @@ void Foam::polyMoleculeCloud::accelerationUpdate()
 {
     forAllIter(polyMoleculeCloud, *this, mol)
     {
-        if(!mol().frozen())
+        if(!mol().frozen() && !mol().ghost())
         {
             mol().updateAcceleration(cP_);
         }

@@ -142,10 +142,16 @@ public:
         virtual void initialConfiguration() = 0;
 
         //- run at start of MD time step before molecules move
-        virtual void controlAfterMove(int stage) = 0;
+        virtual void controlAfterMove(label stage) = 0;
 
-        //- receive molecules that fall into the MD coupled region from coupled dsmcFoamPlus
+        //- run after forces are calculated
+        virtual void controlAfterForces() = 0;
+
+        //- receive positions and velocities of molecules that fall into the coupled region
         virtual void receiveCoupledRegion(bool init) = 0;
+
+        //- send forces acting on molecules in coupled region
+        virtual void sendCoupledRegionForces() = 0;
 
         //- send molecules to dsmcFoamPlus that have crossed a coupling boundary
         virtual void sendCoupledMolecules() = 0;

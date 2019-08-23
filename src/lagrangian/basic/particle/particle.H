@@ -155,6 +155,9 @@ protected:
         //- Local particle id on originating processor
         label origId_;
 
+        //- Define whether this particle is a ghost type or not
+        bool ghost_;
+
 
     // Private Member Functions
        
@@ -467,6 +470,12 @@ public:
 
             //- Return the particle current time
             inline scalar currentTime() const;
+
+            //- Return the ghost status of the particle
+            inline bool ghost() const;
+
+            //- Set the status of the particle to ghost
+            inline void setGhost(bool isGhost);
 
 
         // Check

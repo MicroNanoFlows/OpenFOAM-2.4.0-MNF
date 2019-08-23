@@ -93,7 +93,7 @@ private:
         bool receiving_;        //- Determine whether this controller will receive
         DynamicList<word> recvInterfaceNames_;
 
-        List<List<label> > parcelsInCellHistory_;
+        DynamicList<List<label> > parcelsInCellHistory_;
         scalar refLength_;
         scalar oneOverRefLength_;
         scalar refTime_;
@@ -111,7 +111,6 @@ private:
         vector fixedBoundMax_;
         vector fixedBoundNorm_;
         vector fixedBoundZeroThick_;
-        vector boundCorr_;
         label currIteration_;
         DynamicList<label> intersectingCells_;
         DynamicList<coupledParcel> parcsToSend_;
@@ -152,14 +151,20 @@ public:
         //- create an initial configuration
         void initialConfiguration();
 
-        //- run at end of DSMC time step
-        void calculateProperties(int stage);
+        //- Run after move and before collisions
+        void controlParcelsBeforeCollisions(label stage);
 
-        //- Run after move
-        void controlParcelsBeforeCollisions();
+        //- Run after collisions
+        void controlParcelsAfterCollisions(label stage);
+
+        //- Collate and delete parcels that have crossed a coupling boundary
+        void findCoupledParcels();
 
         //- send parcels that fall into the MD coupled region to coupled mdFoamPlus
         void sendCoupledRegion(bool init);
+
+        //- Receive forces for parcels that fall into MD coupled region
+        void receiveCoupledRegionForces();
 
         //- send parcels to mdFoamPlus that have crossed a coupling boundary
         void sendCoupledParcels();

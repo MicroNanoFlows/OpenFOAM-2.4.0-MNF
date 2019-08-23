@@ -88,18 +88,14 @@
             twoDInterfaces.domainName = mainCouplingName;
             threeDInterfaces.domainName = mainCouplingName;
 
-            scalar refLength;
+            scalar refLength = 1.0;
 
-            if (!(couplingDict.readIfPresent("refLength", refLength)))
-            {
-                FatalIOErrorIn("", couplingDict)
-                               << "Missing refLength entry" << exit(FatalIOError);
-            }
+            couplingDict.readIfPresent("refLength", refLength);
 
             twoDInterfaces.refLength = refLength;
             threeDInterfaces.refLength = refLength;
 
-            scalar refTime;
+            scalar refTime = 1.0;
 
             couplingDict.readIfPresent("refTime", refTime);
 

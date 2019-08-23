@@ -393,6 +393,11 @@ inline Foam::polyMolecule::polyMolecule
     sitePositions_(cP.siteNames(id).size())
 {
     setSitePositions(cP);
+
+    if(special_ == SPECIAL_GHOST)
+    {
+        setGhost(true);
+    }
 }
 
 /*

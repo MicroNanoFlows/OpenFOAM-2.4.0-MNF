@@ -73,7 +73,6 @@ mdDsmcCoupling::mdDsmcCoupling
     fixedBoundMax_(vector::zero),
     fixedBoundNorm_(vector::zero),
     fixedBoundZeroThick_(vector(-1, -1, -1)),
-    boundCorr_(vector::zero),
     overlapEnergyLimit_(molCloud_.pot().potentialEnergyLimit()),
     overlapIterations_(100),
     prevMolCount_(0),
@@ -135,7 +134,7 @@ mdDsmcCoupling::mdDsmcCoupling
 				      << interfaces[i] << ") to receive for domain " << threeDInterfaces.domainName << std::endl;
         }
 
-        molChanged_.setSize(recvInterfaces_.size());
+        molId_.setSize(recvInterfaces_.size());
         molHistory_.setSize(recvInterfaces_.size());
     }
 
@@ -251,6 +250,8 @@ mdDsmcCoupling::mdDsmcCoupling
         const cellList& cells = mesh_.cells();
         const List<point>& pts = mesh_.points();
 
+        vector meshExtents = mesh_.bounds().max() - mesh_.bounds().min();
+
         point cellMin;
         point cellMax;
 
@@ -299,11 +300,24 @@ mdDsmcCoupling::mdDsmcCoupling
                 }
             }
 
-            if(fixedBoundZeroThick_[0] == 1)
+            if(fixedBoundZeroThick_[0] == 1) //- fixedBoundMin_ and fixedBoundMax_ are the same in the x
             {
                 if(fixedBoundNorm_[0] != 0)
                 {
-                    if(fixedBoundMin_[0] >= cellMin[0] && fixedBoundMax_[0] <= cellMax[0])
+                    scalar boundaryExtend = meshExtents[0] * 0.01;
+                    bool test = false;
+
+                    if((fixedBoundMin_[0]-boundaryExtend) >= cellMin[0] && (fixedBoundMin_[0]-boundaryExtend) <= cellMax[0])
+                    {
+                        test = true;
+                    }
+
+                    if((fixedBoundMin_[0]+boundaryExtend) >= cellMin[0] && (fixedBoundMin_[0]+boundaryExtend) <= cellMax[0])
+                    {
+                        test = true;
+                    }
+
+                    if(test)
                     {
                         if((cellMin[1] >= fixedBoundMin_[1] && cellMax[1] <= fixedBoundMax_[1]) &&
                            (cellMin[2] >= fixedBoundMin_[2] && cellMax[2] <= fixedBoundMax_[2]))
@@ -323,11 +337,24 @@ mdDsmcCoupling::mdDsmcCoupling
                 }
             }
 
-            if(fixedBoundZeroThick_[1] == 1)
+            if(fixedBoundZeroThick_[1] == 1) //- fixedBoundMin_ and fixedBoundMax_ are the same in the y
             {
                if(fixedBoundNorm_[1] != 0)
                {
-                   if(fixedBoundMin_[1] >= cellMin[1] && fixedBoundMax_[1] <= cellMax[1])
+                   scalar boundaryExtend = meshExtents[1] * 0.01;
+                   bool test = false;
+
+                   if((fixedBoundMin_[1]-boundaryExtend) >= cellMin[1] && (fixedBoundMin_[1]-boundaryExtend) <= cellMax[1])
+                   {
+                       test = true;
+                   }
+
+                   if((fixedBoundMin_[1]+boundaryExtend) >= cellMin[1] && (fixedBoundMin_[1]+boundaryExtend) <= cellMax[1])
+                   {
+                       test = true;
+                   }
+
+                   if(test)
                    {
                        if((cellMin[0] >= fixedBoundMin_[0] && cellMax[0] <= fixedBoundMax_[0]) &&
                           (cellMin[2] >= fixedBoundMin_[2] && cellMax[2] <= fixedBoundMax_[2]))
@@ -347,11 +374,24 @@ mdDsmcCoupling::mdDsmcCoupling
                }
             }
 
-            if(fixedBoundZeroThick_[2] == 1)
+            if(fixedBoundZeroThick_[2] == 1) //- fixedBoundMin_ and fixedBoundMax_ are the same in the z
             {
                if(fixedBoundNorm_[2] != 0)
                {
-                   if(fixedBoundMin_[2] >= cellMin[2] && fixedBoundMax_[2] <= cellMax[2])
+                   scalar boundaryExtend = meshExtents[2] * 0.01;
+                   bool test = false;
+
+                   if((fixedBoundMin_[2]-boundaryExtend) >= cellMin[2] && (fixedBoundMin_[2]-boundaryExtend) <= cellMax[2])
+                   {
+                       test = true;
+                   }
+
+                   if((fixedBoundMin_[2]+boundaryExtend) >= cellMin[2] && (fixedBoundMin_[2]+boundaryExtend) <= cellMax[2])
+                   {
+                       test = true;
+                   }
+
+                   if(test)
                    {
                        if((cellMin[0] >= fixedBoundMin_[0] && cellMax[0] <= fixedBoundMax_[0]) &&
                           (cellMin[1] >= fixedBoundMin_[1] && cellMax[1] <= fixedBoundMax_[1]))
@@ -493,43 +533,50 @@ void mdDsmcCoupling::initialConfiguration()
 {
 	if(receiving_)
     {
-#ifdef USE_MUI
-	    boundCorr_[0] = SMALL * 1e9;
-        boundCorr_[1] = SMALL * 1e9;
-        boundCorr_[2] = SMALL * 1e9;
-#endif
 		receiveCoupledRegion(true); // Receive ghost molecules in coupled regions at time = startTime and commit time=1 to release other side
 		molCloud_.rebuildCellOccupancy();
 		molCloud_.prepareInteractions();
     }
 }
 
-void mdDsmcCoupling::controlAfterMove(int stage)
+void mdDsmcCoupling::controlAfterMove(label stage)
 {
 	if(stage == 1)
 	{
         currIteration_++; //- Increment the current iteration
 
-		if(receiving_)
-		{
-			receiveCoupledRegion(false); // Receive ghost molecules in coupled region (blocking)
-			molCloud_.rebuildCellOccupancy();
-		}
+        if(sending_)
+        {
+            findCoupledMolecules(); //- Find, collate and delete any molecules that have passed a coupling boundary
+            sendCoupledMolecules(); // Send any molecules deleted by coupling boundary (non-blocking)
+        }
 	}
 	else if (stage == 2)
 	{
-	    if(sending_)
-		{
-	        findCoupledMolecules(); //- Find, collate and delete any molecules that have passed a coupling boundary
-	        sendCoupledMolecules(); // Send any molecules deleted by coupling boundary (non-blocking)
-		}
+	    if(receiving_)
+        {
+            receiveCoupledParcels(); // Receive any molecules coupling boundary (blocking)
+        }
 	}
 	else if (stage == 3)
 	{
 		if(receiving_)
-		{
-		    receiveCoupledParcels(); // Receive any molecules coupling boundary (blocking)
-		}
+        {
+            receiveCoupledRegion(false); // Receive ghost molecules in coupled region (blocking)
+            molCloud_.rebuildCellOccupancy();
+            if(insertCoupledMolecules())
+            {
+                molCloud_.rebuildCellOccupancy();
+            }
+        }
+    }
+}
+
+void mdDsmcCoupling::controlAfterForces()
+{
+    if(sending_)
+    {
+        sendCoupledRegionForces(); // Send the forces acting on molecules in the coupling region(s) (non-blocking)
     }
 }
 
@@ -539,7 +586,7 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 	label molCount = 0;
 	List<std::vector<mui::point3d> > rcvPoints(recvInterfaces_.size());
 	List<std::vector<std::string> > rcvMolType(recvInterfaces_.size());
-	List<std::vector<scalar> > rcvMolChanged(recvInterfaces_.size());
+	List<std::vector<label> > rcvMolId(recvInterfaces_.size());
     List<std::vector<scalar> > rcvVelX(recvInterfaces_.size());
     List<std::vector<scalar> > rcvVelY(recvInterfaces_.size());
     List<std::vector<scalar> > rcvVelZ(recvInterfaces_.size());
@@ -555,8 +602,8 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
             //- Extract a list of all molecule change status values received from other solver through this interface
             rcvMolType[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_region", currIteration_, *chrono_sampler);
 
-            //- Extract a list of all molecule change status values received from other solver through this interface
-            rcvMolChanged[iface] = recvInterfaces_[iface]->fetch_values<scalar>("changed_region", currIteration_, *chrono_sampler);
+            //- Extract a list of all molecule Id's received from other solver through this interface
+            rcvMolId[iface] = recvInterfaces_[iface]->fetch_values<label>("id_region", currIteration_, *chrono_sampler);
 
             //- Extract a list of all molecule velocities received from other solver through this interface
             rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_x_region", currIteration_, *chrono_sampler);
@@ -565,41 +612,39 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
         }
 	}
 
-	List<DynamicList<label> > valuesToRemove(rcvMolType.size());
-
 	//- Go through received values and find any that are not of the type set to be received
-	forAll(rcvMolType, ifacepts)
+    forAll(rcvMolType, ifacepts)
     {
         if(rcvMolType[ifacepts].size() > 0)
         {
-            for (size_t pts = 0; pts < rcvMolType[ifacepts].size(); ++pts)
-            {
-                const label molId = findIndex(molNames_, rcvMolType[ifacepts][pts]);
+            std::vector<std::string>::iterator rcvMolTypeIt;
+            std::vector<mui::point3d>::iterator rcvPointsIt = rcvPoints[ifacepts].begin();
+            std::vector<label>::iterator rcvMolIdIt = rcvMolId[ifacepts].begin();
+            std::vector<scalar>::iterator rcvVelXIt = rcvVelX[ifacepts].begin();
+            std::vector<scalar>::iterator rcvVelYIt = rcvVelY[ifacepts].begin();
+            std::vector<scalar>::iterator rcvVelZIt = rcvVelZ[ifacepts].begin();
+
+            for (rcvMolTypeIt = rcvMolType[ifacepts].begin(); rcvMolTypeIt != rcvMolType[ifacepts].end(); rcvMolTypeIt++) {
+                const label molId = findIndex(molNames_, *rcvMolTypeIt);
 
                 if(molId == -1) //- molId not found in local list as one to receive so store it as one to remove from lists
                 {
-                    valuesToRemove[ifacepts].append(pts);
+                    rcvMolType[ifacepts].erase(rcvMolTypeIt--);
+                    rcvPoints[ifacepts].erase(rcvPointsIt--);
+                    rcvMolId[ifacepts].erase(rcvMolIdIt--);
+                    rcvVelX[ifacepts].erase(rcvVelXIt--);
+                    rcvVelY[ifacepts].erase(rcvVelYIt--);
+                    rcvVelZ[ifacepts].erase(rcvVelZIt--);
                 }
+
+                rcvPointsIt++;
+                rcvMolIdIt++;
+                rcvVelXIt++;
+                rcvVelYIt++;
+                rcvVelZIt++;
             }
         }
     }
-
-	//- Now remove any stored in the list not of a type to be received
-	forAll(valuesToRemove, ifacepts)
-	{
-	    if(valuesToRemove[ifacepts].size() > 0)
-        {
-	        forAll(valuesToRemove[ifacepts], value)
-            {
-                rcvPoints[ifacepts].erase(rcvPoints[ifacepts].begin() + valuesToRemove[ifacepts][value]);
-                rcvMolType[ifacepts].erase(rcvMolType[ifacepts].begin() + valuesToRemove[ifacepts][value]);
-                rcvMolChanged[ifacepts].erase(rcvMolChanged[ifacepts].begin() + valuesToRemove[ifacepts][value]);
-                rcvVelX[ifacepts].erase(rcvVelX[ifacepts].begin() + valuesToRemove[ifacepts][value]);
-                rcvVelY[ifacepts].erase(rcvVelY[ifacepts].begin() + valuesToRemove[ifacepts][value]);
-                rcvVelZ[ifacepts].erase(rcvVelZ[ifacepts].begin() + valuesToRemove[ifacepts][value]);
-            }
-        }
-	}
 
 	//- Insert/update the ghost molecules
 	forAll(rcvPoints, ifacepts)
@@ -609,29 +654,28 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 		    bool newList = false;
 			
 			//If list size has changed then treat this as a new list
-			if(prevMolCount_ != rcvMolChanged[ifacepts].size())
+			if(prevMolCount_ != rcvMolId[ifacepts].size())
 			{
-				if(molChanged_[ifacepts].size() > 0)
+				if(molId_[ifacepts].size() > 0)
 				{
 					forAll(molHistory_[ifacepts], mol)
 					{
-						molCloud_.deleteParticle(*molHistory_[ifacepts][mol]);
+					    molCloud_.removeMolFromCellOccupancy(molHistory_[ifacepts][mol]->origId(), molHistory_[ifacepts][mol]->cell());
+					    molCloud_.deleteParticle(*molHistory_[ifacepts][mol]);
 					}
 
-					molChanged_[ifacepts].clear();
+					molId_[ifacepts].clear();
 					molHistory_[ifacepts].clear();
-					molCloud_.rebuildCellOccupancy();
 				}
 
-				molChanged_[ifacepts].setSize(rcvMolChanged[ifacepts].size(), false);
-				molHistory_[ifacepts].setSize(rcvMolChanged[ifacepts].size(), NULL);
+				molId_[ifacepts].setSize(rcvMolId[ifacepts].size(), -1);
+				molHistory_[ifacepts].setSize(rcvMolId[ifacepts].size(), NULL);
 				newList = true;
 			}
 
             for (size_t pts = 0; pts < rcvPoints[ifacepts].size(); pts++)
             {
                 const label molId = findIndex(molNames_, rcvMolType[ifacepts][pts]);
-                molChanged_[ifacepts][pts] = static_cast<bool>(rcvMolChanged[ifacepts][pts]);
 
                 vector velocity;
                 velocity[0] = rcvVelX[ifacepts][pts] * oneOverRefVelocity_;
@@ -644,52 +688,55 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
                 {
                     if(checkedPosition[0] < fixedRegionMin_[0])
                     {
-                        checkedPosition[0] = fixedRegionMin_[0] + boundCorr_[0];
+                        checkedPosition[0] = fixedRegionMin_[0] + SMALL;
                     }
 
                     if(checkedPosition[0] > fixedRegionMax_[0])
                     {
-                        checkedPosition[0] = fixedRegionMax_[0] - boundCorr_[0];
+                        checkedPosition[0] = fixedRegionMax_[0] - SMALL;
                     }
 
                     if(checkedPosition[1] < fixedRegionMin_[1])
                     {
-                        checkedPosition[1] = fixedRegionMin_[1] + boundCorr_[1];
+                        checkedPosition[1] = fixedRegionMin_[1] + SMALL;
                     }
 
                     if(checkedPosition[1] > fixedRegionMax_[1])
                     {
-                        checkedPosition[1] = fixedRegionMax_[1] - boundCorr_[1];
+                        checkedPosition[1] = fixedRegionMax_[1] - SMALL;
                     }
 
                     if(checkedPosition[2] < fixedRegionMin_[2])
                     {
-                        checkedPosition[2] = fixedRegionMin_[2] + boundCorr_[2];
+                        checkedPosition[2] = fixedRegionMin_[2] + SMALL;
                     }
 
                     if(checkedPosition[2] > fixedRegionMax_[2])
                     {
-                        checkedPosition[2] = fixedRegionMax_[2] - boundCorr_[2];
+                        checkedPosition[2] = fixedRegionMax_[2] - SMALL;
                     }
                 }
 
-                if(newList) //This is a completely new list so all molecules to be inserted regardless of molChanged flag
+                if(newList) //This is a completely new list so all molecules to be inserted
                 {
+                    molId_[ifacepts][pts] = rcvMolId[ifacepts][pts];
                     molHistory_[ifacepts][pts] = insertMolecule(checkedPosition, molIds_[molId], true, velocity);
                     molCount++;
                 }
                 else //This is not a completely new list so just check for individual molecule changes
                 {
-                    if(molChanged_[ifacepts][pts]) //This molecule has changed in the list since the last time
+                    if(molId_[ifacepts][pts] != rcvMolId[ifacepts][pts]) //This molecule has changed in the list since the last time
                     {
+                        molId_[ifacepts][pts] = rcvMolId[ifacepts][pts]; // Update ID history
+
                         molCloud_.removeMolFromCellOccupancy(molHistory_[ifacepts][pts]->origId(), molHistory_[ifacepts][pts]->cell());
-                        molCloud_.deleteParticle(*molHistory_[ifacepts][pts]); //Delete the old molecule in this list position
+                        molCloud_.deleteParticle(*molHistory_[ifacepts][pts]); //Delete the molecule in this list position
 
                         molHistory_[ifacepts][pts] = insertMolecule(checkedPosition, molIds_[molId], true, velocity); //Insert the new molecule
 
                         molCount++;
                     }
-                    else //This molecule already exists in the list so just update properties
+                    else //This molecule is the same as received last time, so just update it's properties
                     {
                         molHistory_[ifacepts][pts]->position()[0] = checkedPosition[0];
                         molHistory_[ifacepts][pts]->position()[1] = checkedPosition[1];
@@ -698,8 +745,6 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
                         molHistory_[ifacepts][pts]->v()[0] = velocity[0];
                         molHistory_[ifacepts][pts]->v()[1] = velocity[1];
                         molHistory_[ifacepts][pts]->v()[2] = velocity[2];
-
-                        molHistory_[ifacepts][pts]->updateAfterMove(molCloud_.cP(), time_.time().deltaTValue());
 
                         molCount++;
                     }
@@ -763,8 +808,64 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 #endif
 }
 
+void mdDsmcCoupling::sendCoupledRegionForces()
+{
+#ifdef USE_MUI
+    polyMolecule* molecule = NULL;
+
+    // Iterate through all sending interfaces for this controller
+    forAll(sendInterfaces_, iface)
+    {
+        forAll(molHistory_[iface], mol) // Iterate through molecules received by this controller
+        {
+            molecule = molHistory_[iface][mol];
+
+            //- Determine whether parcel is of a type set to send by this controller
+            const label typeIndex = findIndex(molNames_, molCloud_.cP().molIds()[molecule->id()]);
+
+            if(typeIndex != -1)
+            {
+                // Get the molecule centre
+                mui::point3d molCentre;
+                molCentre[0] = molecule->position()[0] * oneOverRefLength_;
+                molCentre[1] = molecule->position()[1] * oneOverRefLength_;
+                molCentre[2] = molecule->position()[2] * oneOverRefLength_;
+
+                // Push molecule type
+                sendInterfaces_[iface]->push("type_region", molCentre, static_cast<std::string>(molNames_[typeIndex]));
+
+                // Push molecule ID from receive history
+                sendInterfaces_[iface]->push("id_region", molCentre, static_cast<label>(molId_[iface][mol]));
+
+                vector siteForcesAccum(vector::zero);
+
+                forAll(molecule->siteForces(), s)
+                {
+                    siteForcesAccum[0] += molecule->siteForces()[s][0];
+                    siteForcesAccum[1] += molecule->siteForces()[s][1];
+                    siteForcesAccum[2] += molecule->siteForces()[s][2];
+                }
+
+                // Push the molecule site forces to the interface
+                sendInterfaces_[iface]->push("force_x_region", molCentre, siteForcesAccum[0] * rU_.refForce());
+                sendInterfaces_[iface]->push("force_y_region", molCentre, siteForcesAccum[1] * rU_.refForce());
+                sendInterfaces_[iface]->push("force_z_region", molCentre, siteForcesAccum[2] * rU_.refForce());
+            }
+        }
+    }
+
+    forAll(sendInterfaces_, iface)
+    {
+        // Commit (transmit) values to the MUI interface
+        sendInterfaces_[iface]->commit(currIteration_);
+    }
+#endif
+}
+
 void mdDsmcCoupling::findCoupledMolecules()
 {
+    DynamicList<polyMolecule*> molsToRemove;
+
     forAll(intersectingCells_, cell)
     {
         const List<polyMolecule*>& molsInCell = molCloud_.cellOccupancy()[intersectingCells_[cell]];
@@ -772,12 +873,12 @@ void mdDsmcCoupling::findCoupledMolecules()
         forAll(molsInCell, molecule)
         {
             const word& molType = molCloud_.cP().molIds()[molsInCell[molecule]->id()];
-            label typeIndex = findIndex(molNames_, molType);
+            const label typeIndex = findIndex(molNames_, molType);
 
             //- Only delete and store particles that are of the coupled type
             if(typeIndex != -1)
             {
-                if(molsInCell[molecule]->special() != polyMolecule::SPECIAL_FROZEN)
+                if(!molsInCell[molecule]->ghost() && !molsInCell[molecule]->frozen())
                 {
                     bool removeMolecule = false;
 
@@ -844,13 +945,20 @@ void mdDsmcCoupling::findCoupledMolecules()
                         newMolToSend.velocity = molsInCell[molecule]->v();
                         molsToSend_.append(newMolToSend);
 
-                        //- Delete molecule from cellOccupancy (before deleting it from cloud)
-                        molCloud_.removeMolFromCellOccupancy(molsInCell[molecule]->origId(), molsInCell[molecule]->cell());
-                        molCloud_.deleteParticle(*molsInCell[molecule]);
+                        //- Store that this molecule needs to be removed
+                        molsToRemove.append(molsInCell[molecule]);
                     }
                 }
             }
         }
+    }
+
+    //- Iterate through all parcels to be removed
+    forAll(molsToRemove, molecule)
+    {
+        //- Delete molecule from cellOccupancy (before deleting it from cloud)
+        molCloud_.removeMolFromCellOccupancy(molsToRemove[molecule]->origId(), molsToRemove[molecule]->cell());
+        molCloud_.deleteParticle(*molsToRemove[molecule]);
     }
 }
 
@@ -934,37 +1042,33 @@ void mdDsmcCoupling::receiveCoupledParcels()
         }
 	}
 
-	List<DynamicList<label> > valuesToRemove(rcvMolType.size());
-
-    //- Go through received values and find any that are not of the type set to be received
+	//- Go through received values and find any that are not of the type set to be received
     forAll(rcvMolType, ifacepts)
     {
         if(rcvMolType[ifacepts].size() > 0)
         {
-            for (size_t pts = 0; pts < rcvMolType[ifacepts].size(); ++pts)
-            {
-                const label molId = findIndex(molNames_, rcvMolType[ifacepts][pts]);
+            std::vector<std::string>::iterator rcvMolTypeIt;
+            std::vector<mui::point3d>::iterator rcvPointsIt = rcvPoints[ifacepts].begin();
+            std::vector<scalar>::iterator rcvVelXIt = rcvVelX[ifacepts].begin();
+            std::vector<scalar>::iterator rcvVelYIt = rcvVelY[ifacepts].begin();
+            std::vector<scalar>::iterator rcvVelZIt = rcvVelZ[ifacepts].begin();
+
+            for (rcvMolTypeIt = rcvMolType[ifacepts].begin(); rcvMolTypeIt != rcvMolType[ifacepts].end(); rcvMolTypeIt++) {
+                const label molId = findIndex(molNames_, *rcvMolTypeIt);
 
                 if(molId == -1) //- molId not found in local list as one to receive so store it as one to remove from lists
                 {
-                    valuesToRemove[ifacepts].append(pts);
+                    rcvMolType[ifacepts].erase(rcvMolTypeIt--);
+                    rcvPoints[ifacepts].erase(rcvPointsIt--);
+                    rcvVelX[ifacepts].erase(rcvVelXIt--);
+                    rcvVelY[ifacepts].erase(rcvVelYIt--);
+                    rcvVelZ[ifacepts].erase(rcvVelZIt--);
                 }
-            }
-        }
-    }
 
-    //- Now remove any stored in the list not of a type to be received
-    forAll(valuesToRemove, ifacepts)
-    {
-        if(valuesToRemove[ifacepts].size() > 0)
-        {
-            forAll(valuesToRemove[ifacepts], value)
-            {
-                rcvPoints[ifacepts].erase(rcvPoints[ifacepts].begin() + valuesToRemove[ifacepts][value]);
-                rcvMolType[ifacepts].erase(rcvMolType[ifacepts].begin() + valuesToRemove[ifacepts][value]);
-                rcvVelX[ifacepts].erase(rcvVelX[ifacepts].begin() + valuesToRemove[ifacepts][value]);
-                rcvVelY[ifacepts].erase(rcvVelY[ifacepts].begin() + valuesToRemove[ifacepts][value]);
-                rcvVelZ[ifacepts].erase(rcvVelZ[ifacepts].begin() + valuesToRemove[ifacepts][value]);
+                rcvPointsIt++;
+                rcvVelXIt++;
+                rcvVelYIt++;
+                rcvVelZIt++;
             }
         }
     }
@@ -989,19 +1093,19 @@ void mdDsmcCoupling::receiveCoupledParcels()
                     {
                         if(fixedBoundNorm_[0] != 0)
                         {
-                            checkedPosition[0] = fixedBoundMin_[0] + (fixedBoundNorm_[0] * boundCorr_[0]); //- Move the new particle away from the boundary a little
+                            checkedPosition[0] = fixedBoundMin_[0] + (fixedBoundNorm_[0] * SMALL);
                         }
                     }
                     else
                     {
                         if(checkedPosition[0] < fixedBoundMin_[0])
                         {
-                            checkedPosition[0] = fixedBoundMin_[0] + boundCorr_[0];
+                            checkedPosition[0] = fixedBoundMin_[0] + SMALL;
                         }
 
                         if(checkedPosition[0] > fixedBoundMax_[0])
                         {
-                            checkedPosition[0] = fixedBoundMax_[0] - boundCorr_[0];
+                            checkedPosition[0] = fixedBoundMax_[0] - SMALL;
                         }
                     }
 
@@ -1009,19 +1113,19 @@ void mdDsmcCoupling::receiveCoupledParcels()
                     {
                         if(fixedBoundNorm_[1] != 0)
                         {
-                            checkedPosition[1] = fixedBoundMin_[1] + (fixedBoundNorm_[1] * boundCorr_[1]); //- Move the new particle away from the boundary a little
+                            checkedPosition[1] = fixedBoundMin_[1] + (fixedBoundNorm_[1] * SMALL);
                         }
                     }
                     else
                     {
                         if(checkedPosition[1] < fixedBoundMin_[1])
                         {
-                            checkedPosition[1] = fixedBoundMin_[1] + boundCorr_[1];
+                            checkedPosition[1] = fixedBoundMin_[1] + SMALL;
                         }
 
                         if(checkedPosition[1] > fixedBoundMax_[1])
                         {
-                            checkedPosition[1] = fixedBoundMax_[1] - boundCorr_[1];
+                            checkedPosition[1] = fixedBoundMax_[1] - SMALL;
                         }
                     }
 
@@ -1029,19 +1133,19 @@ void mdDsmcCoupling::receiveCoupledParcels()
                     {
                         if(fixedBoundNorm_[2] != 0)
                         {
-                            checkedPosition[2] = fixedBoundMin_[2] + (fixedBoundNorm_[2] * boundCorr_[2]); //- Move the new particle away from the boundary a little
+                            checkedPosition[2] = fixedBoundMin_[2] + (fixedBoundNorm_[2] * SMALL);
                         }
                     }
                     else
                     {
                         if(checkedPosition[2] < fixedBoundMin_[2])
                         {
-                            checkedPosition[2] = fixedBoundMin_[2] + boundCorr_[2];
+                            checkedPosition[2] = fixedBoundMin_[2] + SMALL;
                         }
 
                         if(checkedPosition[2] > fixedBoundMax_[2])
                         {
-                            checkedPosition[2] = fixedBoundMax_[2] - boundCorr_[2];
+                            checkedPosition[2] = fixedBoundMax_[2] - SMALL;
                         }
                     }
                 }
@@ -1062,29 +1166,56 @@ void mdDsmcCoupling::receiveCoupledParcels()
                     std::cout << "Coupling boundary parcel received at: [" << checkedPosition[0] << "," << checkedPosition[1] << "," << checkedPosition[2] << "]" << std::endl;
                 }
 
-                const label molId = findIndex(molNames_, rcvMolType[ifacepts][pts]);
+                coupledMolecule newMol;
+                newMol.molType = rcvMolType[ifacepts][pts];
+                newMol.position = checkedPosition;
+                newMol.velocity = velocity;
 
-                insertMolecule(checkedPosition, molIds_[molId], false, velocity);
-
-                if (Pstream::parRun())
-                {
-                    if(Pstream::master())
-                    {
-                        std::cout << "Coupling boundary parcel inserted at: [" << checkedPosition[0] << "," << checkedPosition[1] << "," << checkedPosition[2] << "]" << std::endl;
-                    }
-                    else
-                    {
-                        std::cout << "[" << time_.time().value() << "s] Coupling boundary parcel inserted at: [" << checkedPosition[0] << "," << checkedPosition[1] << "," << checkedPosition[2] << "]" << std::endl;
-                    }
-                }
-                else
-                {
-                    std::cout << "Coupling boundary parcel inserted at: [" << checkedPosition[0] << "," << checkedPosition[1] << "," << checkedPosition[2] << "]" << std::endl;
-                }
+                molsReceived_.append(newMol);
             }
         }
 	}
 #endif
+}
+
+bool mdDsmcCoupling::insertCoupledMolecules()
+{
+    bool molInserted = false;
+#ifdef USE_MUI
+    if(molsReceived_.size() > 0)
+    {
+        forAll(molsReceived_, mol)
+        {
+            const label molId = findIndex(molNames_, molsReceived_[mol].molType);
+
+            point molPosition = molsReceived_[mol].position;
+
+            if(insertMolecule(molPosition, molIds_[molId], false, molsReceived_[mol].velocity) != NULL)
+            {
+                if (Pstream::parRun())
+                {
+                    if(Pstream::master())
+                    {
+                        std::cout << "Coupling boundary parcel inserted at: [" << molPosition[0] << "," << molPosition[1] << "," << molPosition[2] << "]" << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << "[" << time_.time().value() << "s] Coupling boundary parcel inserted at: [" << molPosition[0] << "," << molPosition[1] << "," << molPosition[2] << "]" << std::endl;
+                    }
+                }
+                else
+                {
+                    std::cout << "Coupling boundary parcel inserted at: [" << molPosition[0] << "," << molPosition[1] << "," << molPosition[2] << "]" << std::endl;
+                }
+
+                molInserted = true;
+            }
+        }
+
+        molsReceived_.clear();
+    }
+#endif
+    return molInserted;
 }
 
 void mdDsmcCoupling::output
@@ -1179,7 +1310,7 @@ polyMolecule* mdDsmcCoupling::insertMolecule
 (
     point& position,
     const label& id,
-    const bool& ghost,
+    const bool ghost,
     vector& velocity
 )
 {
@@ -1205,7 +1336,7 @@ polyMolecule* mdDsmcCoupling::insertMolecule
         if (ghost)
         {
             specialPosition = position;
-            special = polyMolecule::SPECIAL_FROZEN;
+            special = polyMolecule::SPECIAL_GHOST;
         }
 
         vector pi = vector::zero;
@@ -1242,47 +1373,104 @@ polyMolecule* mdDsmcCoupling::insertMolecule
             {
                 std::cout << "mdDsmcCoupling::insertMolecule(): Molecule insertion would create overlap, finding new insertion position" << std::endl;
 
+                vector origPosition = newMol->position();
+                vector overLap;
+                scalar overLapMag;
+                vector overlapNorm;
+                scalar perturbPerc = 0.5;
+                scalar perturbDistance;
+                bool trunkX, trunkY, trunkZ;
+                label stuckIter = 0;
+                label randomNorm = -1;
+
                 for (label i=0; i<overlapIterations_; i++)
                 {
-                    // Perturb the position of the molecule to find a free space in the cell it is being inserted into
-                    vector overLap = position - overlapMol->position();
-                    scalar overLapMag = mag(overLap);
-                    vector overlapNorm = overLap / overLapMag;
+                    trunkX = false;
+                    trunkY = false;
+                    trunkZ = false;
 
-                    scalar perturbDistance = overLapMag * 0.2; //Perturb molecule by 20% away from overlapping molecule
+                    // Delete the created molecule that is causing the overlap
+                    if(newMol != NULL)
+                    {
+                        molCloud_.removeMolFromCellOccupancy(newMol->origId(), newMol->cell());
+                        molCloud_.deleteParticle(*newMol);
+                        newMol = NULL;
+                    }
+
+                    // Find perturbation for the position of the molecule based on the one it is overlapping
+                    if(overlapMol != NULL)
+                    {
+                        overLap = position - overlapMol->position();
+                        overLapMag = mag(overLap);
+
+                        if(randomNorm == -1) //- Calculate normal if not using randomised values due to stuck molecule
+                        {
+                            overlapNorm = overLap / overLapMag;
+                        }
+
+                        if(overLapMag < 1)
+                        {
+                            perturbDistance = (1.0 / overLapMag) * perturbPerc; //Perturb molecule away from new overlapping molecule
+                        }
+                        else
+                        {
+                            perturbDistance = overLapMag * perturbPerc; //Perturb molecule away from new overlapping molecule
+                        }
+
+                        overlapMol = NULL;
+                    }
+
+                    if(randomNorm == 0) //- Calculate normal using random values
+                    {
+                        std::cout << "Creating random norm..." << std::endl;
+
+                        if(overlapNorm[0] < 0) //- Original normal was negative so generate new random negative normal to keep repulsion direction
+                        {
+                            overlapNorm[0] = -(molCloud_.rndGen().sample01<scalar>());
+                        }
+                        else
+                        {
+                            overlapNorm[0] = molCloud_.rndGen().sample01<scalar>();
+                        }
+
+                        if(overlapNorm[1] < 0) //- Original normal was negative so generate new random negative normal to keep repulsion direction
+                        {
+                            overlapNorm[1] = -(molCloud_.rndGen().sample01<scalar>());
+                        }
+                        else
+                        {
+                            overlapNorm[1] = molCloud_.rndGen().sample01<scalar>();
+                        }
+
+                        if(overlapNorm[2] < 0) //- Original normal was negative so generate new random negative normal to keep repulsion direction
+                        {
+                            overlapNorm[2] = -(molCloud_.rndGen().sample01<scalar>());
+                        }
+                        else
+                        {
+                            overlapNorm[2] = molCloud_.rndGen().sample01<scalar>();
+                        }
+
+                        //- Set randomNorm to 1 so a new random (or standard) norm won't be calculated (until a new stuck molecule is detected)
+                        randomNorm = 1;
+                    }
 
                     //Add perturbation to molecule position
                     position[0] += perturbDistance * overlapNorm[0];
                     position[1] += perturbDistance * overlapNorm[1];
                     position[2] += perturbDistance * overlapNorm[2];
 
-                    overlapMol = NULL;
-
-                    if(newMol != NULL)
-                    {
-                        // Delete the created molecule as it will exceed energy limit according to force-field calculation
-                        molCloud_.removeMolFromCellOccupancy(newMol->origId(), newMol->cell());
-                        molCloud_.deleteParticle(*newMol);
-                        newMol = NULL;
-                    }
-
+                    //- If there are fixed boundary details then make sure the perturbed position doesn't fall outside of it
                     if(fixedBounds_)
                     {
                         if(fixedBoundZeroThick_[0] == 1) //- Boundary has zero thickness in the x
                         {
-                            if(fixedBoundNorm_[0] > 0) //- Positive normal
+                            if(fixedBoundNorm_[0] != 0)
                             {
                                 if(position[0] < fixedBoundMin_[0])
                                 {
-                                    position[0] = fixedBoundMin_[0] + (fixedBoundNorm_[0] * boundCorr_[0]); //- Move the new particle away from the boundary a little
-                                }
-                            }
-
-                            if(fixedBoundNorm_[0] < 0) //- Negative normal
-                            {
-                                if(position[0] > fixedBoundMax_[0])
-                                {
-                                    position[0] = fixedBoundMax_[0] - (fixedBoundNorm_[0] * boundCorr_[0]); //- Move the new particle away from the boundary a little
+                                    position[0] = fixedBoundMin_[0] + (fixedBoundNorm_[0] * SMALL);
+                                    trunkX = true;
                                 }
                             }
                         }
@@ -1290,30 +1478,25 @@ polyMolecule* mdDsmcCoupling::insertMolecule
                         {
                             if(position[0] < fixedBoundMin_[0])
                             {
-                                position[0] = fixedBoundMin_[0] + boundCorr_[0];
+                                position[0] = fixedBoundMin_[0] + SMALL;
+                                trunkX = true;
                             }
 
                             if(position[0] > fixedBoundMax_[0])
                             {
-                                position[0] = fixedBoundMax_[0] - boundCorr_[0];
+                                position[0] = fixedBoundMax_[0] - SMALL;
+                                trunkX = true;
                             }
                         }
 
                         if(fixedBoundZeroThick_[1] == 1) //- Boundary has zero thickness in the y
                         {
-                            if(fixedBoundNorm_[1] > 0) //- Positive normal
+                            if(fixedBoundNorm_[1] != 0) //- Positive normal
                             {
                                 if(position[1] < fixedBoundMin_[1])
                                 {
-                                    position[1] = fixedBoundMin_[1] + (fixedBoundNorm_[1] * boundCorr_[1]); //- Move the new particle away from the boundary a little
-                                }
-                            }
-
-                            if(fixedBoundNorm_[1] < 0) //- Negative normal
-                            {
-                                if(position[1] > fixedBoundMax_[1])
-                                {
-                                    position[1] = fixedBoundMax_[1] - (fixedBoundNorm_[1] * boundCorr_[1]); //- Move the new particle away from the boundary a little
+                                    position[1] = fixedBoundMin_[1] + (fixedBoundNorm_[1] * SMALL);
+                                    trunkY = true;
                                 }
                             }
                         }
@@ -1321,30 +1504,25 @@ polyMolecule* mdDsmcCoupling::insertMolecule
                         {
                             if(position[1] < fixedBoundMin_[1])
                             {
-                                position[1] = fixedBoundMin_[1] + boundCorr_[1];
+                                position[1] = fixedBoundMin_[1] + SMALL;
+                                trunkY = true;
                             }
 
                             if(position[1] > fixedBoundMax_[1])
                             {
-                                position[1] = fixedBoundMax_[1] - boundCorr_[1];
+                                position[1] = fixedBoundMax_[1] - SMALL;
+                                trunkY = true;
                             }
                         }
 
                         if(fixedBoundZeroThick_[2] == 1) //- Boundary has zero thickness in the z
                         {
-                            if(fixedBoundNorm_[2] > 0) //- Positive normal
+                            if(fixedBoundNorm_[2] != 0) //- Positive normal
                             {
                                 if(position[2] < fixedBoundMin_[2])
                                 {
-                                    position[2] = fixedBoundMin_[2] + (fixedBoundNorm_[2] * boundCorr_[2]); //- Move the new particle away from the boundary a little
-                                }
-                            }
-
-                            if(fixedBoundNorm_[2] < 0) //- Negative normal
-                            {
-                                if(position[2] > fixedBoundMax_[2])
-                                {
-                                    position[2] = fixedBoundMax_[2] - (fixedBoundNorm_[2] * boundCorr_[2]); //- Move the new particle away from the boundary a little
+                                    position[2] = fixedBoundMin_[2] + (fixedBoundNorm_[2] * SMALL);
+                                    trunkZ = true;
                                 }
                             }
                         }
@@ -1352,70 +1530,96 @@ polyMolecule* mdDsmcCoupling::insertMolecule
                         {
                             if(position[2] < fixedBoundMin_[2])
                             {
-                                position[2] = fixedBoundMin_[2] + boundCorr_[2];
+                                position[2] = fixedBoundMin_[2] + SMALL;
+                                trunkZ = true;
                             }
 
                             if(position[2] > fixedBoundMax_[2])
                             {
-                                position[2] = fixedBoundMax_[2] - boundCorr_[2];
+                                position[2] = fixedBoundMax_[2] - SMALL;
+                                trunkZ = true;
                             }
                         }
-                    }
 
-                    cell = mesh_.findCell(position);
-
-                    if(cell != -1)
-                    {
-                        // Update cell data before new insertion as perturbation may have moved things
-                        mesh_.findCellFacePt
-                        (
-                            position,
-                            cell,
-                            tetFace,
-                            tetPt
-                        );
-
-                        // Create in the newly perturbed location
-                        newMol = molCloud_.createMolecule
-                        (
-                            position,
-                            cell,
-                            tetFace,
-                            tetPt,
-                            Q,
-                            velocity,
-                            vector::zero,
-                            pi,
-                            vector::zero,
-                            specialPosition,
-                            special,
-                            id,
-                            1.0,
-                            molCloud_.getTrackingNumber()
-                        );
-
-                        molCloud_.insertMolInCellOccupancy(newMol);
-
-                        overlapMol = checkForOverlaps(newMol, overlapEnergyLimit_);
-
-                        iterCount++;
-
-                        if(overlapMol == NULL) // The molecule no longer overlaps so break for loop and carry on
+                        //- Check if truncation has happened in 2 or more directions (if so the particle is stuck)
+                        if((trunkX && trunkY && trunkZ) ||
+                           (trunkX && trunkY && !trunkZ) ||
+                           (trunkX && !trunkY && trunkZ) ||
+                           (!trunkX && trunkY && trunkZ))
                         {
-                            break;
+                            stuckIter++;
+                        }
+
+                        //- Check if particle has been stuck for 2 iterations, if so reset its position and randomise normal to try again
+                        if(stuckIter == 2)
+                        {
+                            randomNorm = 0; // Set randomNorm to 0 so a new random normal will be generated during the next iteration
+                            stuckIter = 0; // Reset the stuckIter counter
                         }
                     }
-                    else
+
+                    if(randomNorm != 0) //- Only perform test on new position if randomised normal is not requested
                     {
-                        if(iterCount < overlapIterations_) //- Attempted cell was out of scope
+                        //- Perturbation may have changed the cell, make sure the new position is a valid cell
+                        cell = mesh_.findCell(position);
+
+                        if(cell != -1)
                         {
-                            std::cout << "mdDsmcCoupling::insertMolecule(): Molecule insertion attempted outside of mesh whilst finding new location, trying again" << std::endl;
+                            std::cout << "Pos: " << position[0] << "," << position[1] << "," << position[2] << std::endl;
+                            std::cout << "OverlapMag: " << overLapMag << std::endl;
+                            std::cout << "OverlapNorm: " << overlapNorm[0] << "," << overlapNorm[1] << "," << overlapNorm[2] << std::endl << std::endl;
+
+                            // Update cell data before new insertion as perturbation may have moved things
+                            mesh_.findCellFacePt
+                            (
+                                position,
+                                cell,
+                                tetFace,
+                                tetPt
+                            );
+
+                            // Create in the newly perturbed location
+                            newMol = molCloud_.createMolecule
+                            (
+                                position,
+                                cell,
+                                tetFace,
+                                tetPt,
+                                Q,
+                                velocity,
+                                vector::zero,
+                                pi,
+                                vector::zero,
+                                specialPosition,
+                                special,
+                                id,
+                                1.0,
+                                molCloud_.getTrackingNumber()
+                            );
+
+                            molCloud_.insertMolInCellOccupancy(newMol);
+
+                            overlapMol = checkForOverlaps(newMol, overlapEnergyLimit_);
+
                             iterCount++;
+
+                            if(overlapMol == NULL) // The molecule no longer overlaps so break for loop and carry on
+                            {
+                                break;
+                            }
                         }
-                        else //- Run out of iterations to find a new cell so abort insertion with warning
+                        else
                         {
-                            std::cout << "mdDsmcCoupling::insertMolecule(): Molecule insertion attempted outside of mesh whilst finding new location, molecule not inserted" << std::endl;
-                            return NULL;
+                            if(iterCount < overlapIterations_) //- Attempted cell was out of scope but there are more iterations remaining
+                            {
+                                std::cout << "mdDsmcCoupling::insertMolecule(): Molecule insertion attempted outside of mesh whilst finding new location, trying again" << std::endl;
+                                iterCount++;
+                            }
+                            else //- Run out of iterations to find a new cell so abort insertion with warning
+                            {
+                                std::cout << "mdDsmcCoupling::insertMolecule(): Molecule insertion attempted outside of mesh whilst finding new location, molecule not inserted" << std::endl;
+                                return NULL;
+                            }
                         }
                     }
                 }
@@ -1423,7 +1627,17 @@ polyMolecule* mdDsmcCoupling::insertMolecule
 
             if(overlapMol != NULL) //The iterative process to perturb the molecule away from overlap failed after nIter tries
             {
+                if(newMol != NULL)
+                {
+                    // Delete the created molecule as it will exceed energy limit according to force-field calculation
+                    molCloud_.removeMolFromCellOccupancy(newMol->origId(), newMol->cell());
+                    molCloud_.deleteParticle(*newMol);
+                    newMol = NULL;
+                }
+
                 std::cout << "mdDsmcCoupling::insertMolecule(): Failed to find new location for molecule. molecule not inserted" << std::endl;
+
+                return NULL;
             }
             else if (iterCount > 0)
             {
@@ -1443,44 +1657,70 @@ polyMolecule* mdDsmcCoupling::insertMolecule
 polyMolecule* mdDsmcCoupling::checkForOverlaps(polyMolecule* newMol, const scalar& potEnergyLimit)
 {
 	polyMolecule* molJ = NULL;
-	const labelListList& dil = molCloud_.il().dil();
 
-	forAll(dil, d)
-	{
-		forAll(dil[d], interactingCells)
-		{
-			List<polyMolecule*> cellJ =	molCloud_.cellOccupancy()[dil[d][interactingCells]];
+	// Real-Real interactions
 
-			forAll(cellJ, cellJMols)
-			{
-				molJ = cellJ[cellJMols];
+    forAll(molCloud_.il().dil(), d)
+    {
+        forAll(molCloud_.cellOccupancy()[d],cellIMols)
+        {
+            forAll(molCloud_.il().dil()[d], interactingCells)
+            {
+                List<polyMolecule*> cellJ =	molCloud_.cellOccupancy()[molCloud_.il().dil()[d][interactingCells]];
 
-				if(newMol->origId() != molJ->origId())
-				{
-				    if(molCloud_.evaluatePotentialLimit(newMol, molJ, potEnergyLimit))
-					{
-				       return molJ;
-					}
-				}
-			}
-		}
+                forAll(cellJ, cellJMols)
+                {
+                    molJ = cellJ[cellJMols];
 
-		forAll(molCloud_.cellOccupancy()[d], cellIOtherMols)
-		{
-			molJ = molCloud_.cellOccupancy()[d][cellIOtherMols];
+                     if(newMol->origId() != molJ->origId())
+                     {
+                         if(molCloud_.evaluatePotentialLimit(newMol, molJ, potEnergyLimit))
+                         {
+                             return molJ;
+                         }
+                     }
+                }
+            }
+        }
 
-			if(newMol->origId() != molJ->origId())
-			{
-				if (molJ > newMol)
-				{
-				    if(molCloud_.evaluatePotentialLimit(newMol, molJ, potEnergyLimit))
-					{
-				        return molJ;
-					}
-				}
-			}
-		}
-	}
+        forAll(molCloud_.cellOccupancy()[d], cellIOtherMols)
+        {
+            molJ = molCloud_.cellOccupancy()[d][cellIOtherMols];
+
+            if (molJ > newMol)
+            {
+                if(newMol->origId() != molJ->origId())
+                {
+                    if(molCloud_.evaluatePotentialLimit(newMol, molJ, potEnergyLimit))
+                    {
+                        return molJ;
+                    }
+                }
+            }
+        }
+    }
+
+    // Real-Referred interactions
+    forAll(molCloud_.il().refCellsParticles(), r)
+    {
+        const List<label>& realCells = molCloud_.il().refCells()[r].neighbouringCells();
+
+        forAll(molCloud_.il().refCellsParticles()[r], i)
+        {
+            molJ = molCloud_.il().refCellsParticles()[r][i];
+
+            forAll(realCells, rC)
+            {
+                if(newMol->origId() != molJ->origId())
+                {
+                    if(molCloud_.evaluatePotentialLimit(newMol, molJ, potEnergyLimit))
+                    {
+                        return molJ;
+                    }
+                }
+            }
+        }
+    }
 
 	return NULL;
 }

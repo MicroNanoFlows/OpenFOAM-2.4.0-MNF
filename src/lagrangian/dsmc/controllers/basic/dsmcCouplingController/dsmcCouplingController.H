@@ -146,11 +146,11 @@ public:
         //- create an initial configuration
         virtual void initialConfiguration() = 0;
 
-        //- run after move
-        virtual void controlParcelsBeforeCollisions() = 0;
+        //- run after move and before collisions
+        virtual void controlParcelsBeforeCollisions(label stage) = 0;
 
-        //- run at end of DSMC time step
-        virtual void calculateProperties(int stage) = 0;
+        //- run after move and collisions
+        virtual void controlParcelsAfterCollisions(label stage) = 0;
 
         //- send parcels that fall into the MD coupled region to coupled mdFoamPlus
         virtual void sendCoupledRegion(bool init) = 0;

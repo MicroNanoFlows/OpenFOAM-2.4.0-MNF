@@ -220,7 +220,7 @@ Foam::scalar Foam::particle::trackToFace
     const vector& endPosition,
     TrackData& td
 )
-{    
+{
     typedef typename TrackData::cloudType cloudType;
     typedef typename cloudType::particleType particleType;
 
@@ -385,7 +385,7 @@ Foam::scalar Foam::particle::trackToFace
         tetAreas[1] = tet.Sb();
         tetAreas[2] = tet.Sc();
         tetAreas[3] = tet.Sd();
-        
+
 //         //******
 //         for (label i = 0; i < 4; i++)
 //         {
@@ -484,7 +484,8 @@ Foam::scalar Foam::particle::trackToFace
         }
         else if (triI > 0)
         {
-            // A tri was found to be crossed before a wall face was hit (if any)
+            // A tri was found to be crossed before a wall face was hit
+            // (if any)
             faceI_ = -1;
         }
 
@@ -547,6 +548,7 @@ Foam::scalar Foam::particle::trackToFace
     } while (faceI_ < 0);
 
     particleType& p = static_cast<particleType&>(*this);
+
     p.hitFace(td);
 
     if (internalFace(faceI_))
@@ -623,26 +625,35 @@ Foam::scalar Foam::particle::trackToFace
             }
             else if (isA<cyclicPolyPatch>(patch))
             {
-                p.hitCyclicPatch
-                (
-                    static_cast<const cyclicPolyPatch&>(patch), td
-                );
+                if(!p.ghost())
+                {
+                    p.hitCyclicPatch
+                    (
+                        static_cast<const cyclicPolyPatch&>(patch), td
+                    );
+                }
             }
             else if (isA<cyclicAMIPolyPatch>(patch))
             {
-                p.hitCyclicAMIPatch
-                (
-                    static_cast<const cyclicAMIPolyPatch&>(patch),
-                    td,
-                    endPosition - position_
-                );
+                if(!p.ghost())
+                {
+                    p.hitCyclicAMIPatch
+                    (
+                        static_cast<const cyclicAMIPolyPatch&>(patch),
+                        td,
+                        endPosition - position_
+                    );
+                }
             }
             else if (isA<processorPolyPatch>(patch))
             {
-                p.hitProcessorPatch
-                (
-                    static_cast<const processorPolyPatch&>(patch), td
-                );
+                if(!p.ghost())
+                {
+                    p.hitProcessorPatch
+                    (
+                        static_cast<const processorPolyPatch&>(patch), td
+                    );
+                }
             }
             else if (isA<wallPolyPatch>(patch))
             {

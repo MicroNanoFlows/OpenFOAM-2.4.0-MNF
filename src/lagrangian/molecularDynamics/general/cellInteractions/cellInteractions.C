@@ -1287,7 +1287,23 @@ void Foam::cellInteractions<ParticleType>::setReferredParticles
     }
 
     labelListList allNTrans(Pstream::nProcs());
-    pBufs.finishedSends(allNTrans, true); //- Set this to blocking send
+
+    pBufs.finishedSends(allNTrans);
+
+    bool transfered;
+    transfered = false;
+
+    forAll(allNTrans, i)
+    {
+        forAll(allNTrans[i], j)
+        {
+            if (allNTrans[i][j])
+            {
+                transfered = true;
+                break; // not sure
+            }
+        }
+    }
 
     //- receiving 
     for (label p = 0; p < Pstream::nProcs(); p++)

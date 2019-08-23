@@ -79,7 +79,7 @@ bool Foam::polyMolecule::move
     td.switchProcessor = false;
     td.keepParticle = true;
 
-    if (special_ != SPECIAL_FROZEN)
+    if (special_ != SPECIAL_FROZEN && special_ != SPECIAL_GHOST)
     {
         scalar tEnd = (1.0 - stepFraction())*trackTime;
         scalar dtMax = tEnd;
@@ -111,7 +111,7 @@ bool Foam::polyMolecule::move
 
 void Foam::polyMolecule::setAsReferred()
 {
-    special_ = 1;
+    special_ = SPECIAL_REFERRED;
 }
 
 void Foam::polyMolecule::updateHalfVelocity

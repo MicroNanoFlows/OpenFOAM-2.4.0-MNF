@@ -247,5 +247,6 @@ boundaries/derived/cyclicBoundaries/polyStandardCyclic/polyStandardCyclic.C
 
 boundaries/derived/patchBoundaries/polySpecularPatch/polySpecularPatch.C
 boundaries/derived/patchBoundaries/polyDeletionPatch/polyDeletionPatch.C
+boundaries/derived/patchBoundaries/polyBlankPatch/polyBlankPatch.C
 
 LIB = $(FOAM_LIBBIN)/libpolyCloud
