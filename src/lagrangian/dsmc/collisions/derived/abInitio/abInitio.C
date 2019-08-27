@@ -163,12 +163,12 @@ Foam::scalar Foam::abInitio::sigmaTcR
             sigmaTPQ = y0 + (cR - x0)*((y1 - y0)/(x1 - x0));
         }
     }
-    else if (g < cR)
-    {
-        Info << "g = " << g << endl;
-        Info << "g+1 = " << g_[i+1] << endl;
-        Info << "cR = " << cR << endl;
-    }
+//     else if (g < cR)
+//     {
+//         Info << "g = " << g << endl;
+//         Info << "g+1 = " << g_[i+1] << endl;
+//         Info << "cR = " << cR << endl;
+//     }
     else
     {
         sigmaTPQ = sigmaT_[i];

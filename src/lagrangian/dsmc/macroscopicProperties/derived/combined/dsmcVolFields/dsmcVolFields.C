@@ -1044,7 +1044,7 @@ void dsmcVolFields::calculateWallUnitVectors()
         {
             const vectorField& fC = pPatch.faceCentres();
             
-            Info << "mesh_.magSf().boundaryField()[patchi] = " << mesh_.magSf().boundaryField()[patchi] << endl;
+//             Info << "mesh_.magSf().boundaryField()[patchi] = " << mesh_.magSf().boundaryField()[patchi] << endl;
 
             forAll(n_[patchi], facei)
             {
@@ -1115,8 +1115,8 @@ void dsmcVolFields::calculateField()
                     {
                         const point& cC = cloud_.mesh().cellCentres()[cell];
 
-                        //scalar radius = cC.y();
-                        scalar radius = sqrt((p.position().y()*p.position().y()) + (p.position().z()*p.position().z()));
+                        scalar radius = cC.y();
+                        //scalar radius = sqrt((p.position().y()*p.position().y()) + (p.position().z()*p.position().z()));
                         scalar RWF = 1.0;
                         RWF = 1.0 + 
                             cloud_.maxRWF()*(radius/cloud_.radialExtent());
@@ -1191,8 +1191,8 @@ void dsmcVolFields::calculateField()
                     {
                         const point& cC = cloud_.mesh().cellCentres()[cell];
 
-                        //scalar radius = cC.y();
-                        scalar radius = sqrt((p.position().y()*p.position().y()) + (p.position().z()*p.position().z()));
+                        scalar radius = cC.y();
+                        //scalar radius = sqrt((p.position().y()*p.position().y()) + (p.position().z()*p.position().z()));
                         scalar RWF = 1.0;
                         RWF = 1.0 + 
                             cloud_.maxRWF()*(radius/cloud_.radialExtent());
