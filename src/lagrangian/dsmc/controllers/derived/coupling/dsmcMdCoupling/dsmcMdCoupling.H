@@ -114,6 +114,7 @@ private:
         label currIteration_;
         DynamicList<label> intersectingCells_;
         DynamicList<coupledParcel> parcsToSend_;
+        scalar boundCorr_;
 
     // Private Member Functions
 

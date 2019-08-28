@@ -1305,6 +1305,11 @@ void Foam::cellInteractions<ParticleType>::setReferredParticles
         }
     }
 
+    /*if (!transfered)
+    {
+        break;
+    }*/
+
     //- receiving 
     for (label p = 0; p < Pstream::nProcs(); p++)
     {

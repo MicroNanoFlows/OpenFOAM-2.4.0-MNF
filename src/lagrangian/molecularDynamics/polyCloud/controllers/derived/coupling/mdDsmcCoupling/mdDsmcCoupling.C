@@ -76,7 +76,8 @@ mdDsmcCoupling::mdDsmcCoupling
     overlapEnergyLimit_(molCloud_.pot().potentialEnergyLimit()),
     overlapIterations_(100),
     prevMolCount_(0),
-    currIteration_(0)
+    currIteration_(0),
+    boundCorr_(0)
 {
 #ifdef USE_MUI
     //- Determine sending interfaces if defined
@@ -251,6 +252,45 @@ mdDsmcCoupling::mdDsmcCoupling
         const List<point>& pts = mesh_.points();
 
         vector meshExtents = mesh_.bounds().max() - mesh_.bounds().min();
+
+        vector boundCorr = meshExtents * 1e-4;
+
+        //- Ensure boundary correction value not larger than 1e-8
+        if(boundCorr[0] > 1e-8)
+        {
+            boundCorr[0] = 1e-8;
+        }
+
+        if(boundCorr[1] > 1e-8)
+        {
+            boundCorr[1] = 1e-8;
+        }
+
+        if(boundCorr[2] > 1e-8)
+        {
+            boundCorr[2] = 1e-8;
+        }
+
+        // Pick largest correction value as global
+        if(boundCorr[0] > boundCorr[1] && boundCorr[0] > boundCorr[2])
+        {
+            boundCorr_ = boundCorr[0];
+        }
+
+        if(boundCorr[1] > boundCorr[0] && boundCorr[1] > boundCorr[2])
+        {
+            boundCorr_ = boundCorr[1];
+        }
+
+        if(boundCorr[2] > boundCorr[0] && boundCorr[2] > boundCorr[1])
+        {
+            boundCorr_ = boundCorr[2];
+        }
+
+        if(boundCorr[0] == boundCorr[1] && boundCorr[0] == boundCorr[2])
+        {
+            boundCorr_ = boundCorr[0];
+        }
 
         point cellMin;
         point cellMax;
@@ -534,8 +574,6 @@ void mdDsmcCoupling::initialConfiguration()
 	if(receiving_)
     {
 		receiveCoupledRegion(true); // Receive ghost molecules in coupled regions at time = startTime and commit time=1 to release other side
-		molCloud_.rebuildCellOccupancy();
-		molCloud_.prepareInteractions();
     }
 }
 
@@ -563,13 +601,15 @@ void mdDsmcCoupling::controlAfterMove(label stage)
 		if(receiving_)
         {
             receiveCoupledRegion(false); // Receive ghost molecules in coupled region (blocking)
-            molCloud_.rebuildCellOccupancy();
-            if(insertCoupledMolecules())
-            {
-                molCloud_.rebuildCellOccupancy();
-            }
         }
     }
+	else if (stage == 4)
+	{
+	    if(receiving_)
+	    {
+	        insertCoupledMolecules(); // Insert any coupling boundary molecules from stage 2
+	    }
+	}
 }
 
 void mdDsmcCoupling::controlAfterForces()
@@ -686,34 +726,34 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 
                 if(fixedRegion_)
                 {
-                    if(checkedPosition[0] < fixedRegionMin_[0])
+                    if(checkedPosition[0] <= fixedRegionMin_[0])
                     {
-                        checkedPosition[0] = fixedRegionMin_[0] + SMALL;
+                        checkedPosition[0] = fixedRegionMin_[0] + boundCorr_;
                     }
 
-                    if(checkedPosition[0] > fixedRegionMax_[0])
+                    if(checkedPosition[0] >= fixedRegionMax_[0])
                     {
-                        checkedPosition[0] = fixedRegionMax_[0] - SMALL;
+                        checkedPosition[0] = fixedRegionMax_[0] - boundCorr_;
                     }
 
-                    if(checkedPosition[1] < fixedRegionMin_[1])
+                    if(checkedPosition[1] <= fixedRegionMin_[1])
                     {
-                        checkedPosition[1] = fixedRegionMin_[1] + SMALL;
+                        checkedPosition[1] = fixedRegionMin_[1] + boundCorr_;
                     }
 
-                    if(checkedPosition[1] > fixedRegionMax_[1])
+                    if(checkedPosition[1] >= fixedRegionMax_[1])
                     {
-                        checkedPosition[1] = fixedRegionMax_[1] - SMALL;
+                        checkedPosition[1] = fixedRegionMax_[1] - boundCorr_;
                     }
 
-                    if(checkedPosition[2] < fixedRegionMin_[2])
+                    if(checkedPosition[2] <= fixedRegionMin_[2])
                     {
-                        checkedPosition[2] = fixedRegionMin_[2] + SMALL;
+                        checkedPosition[2] = fixedRegionMin_[2] + boundCorr_;
                     }
 
-                    if(checkedPosition[2] > fixedRegionMax_[2])
+                    if(checkedPosition[2] >= fixedRegionMax_[2])
                     {
-                        checkedPosition[2] = fixedRegionMax_[2] - SMALL;
+                        checkedPosition[2] = fixedRegionMax_[2] - boundCorr_;
                     }
                 }
 
@@ -942,6 +982,61 @@ void mdDsmcCoupling::findCoupledMolecules()
                         coupledMolecule newMolToSend;
                         newMolToSend.molType = molCloud_.cP().molIds()[molsInCell[molecule]->id()];
                         newMolToSend.position = molsInCell[molecule]->position();
+
+                        if(fixedBounds_)
+                        {
+                            if(fixedBoundZeroThick_[0] == 1) //- Boundary has zero thickness in the x
+                            {
+                                newMolToSend.position[0] = fixedBoundMin_[0];
+                            }
+                            else
+                            {
+                                if(newMolToSend.position[0] <= fixedBoundMin_[0])
+                                {
+                                    newMolToSend.position[0] = fixedBoundMin_[0];
+                                }
+
+                                if(newMolToSend.position[0] >= fixedBoundMax_[0])
+                                {
+                                    newMolToSend.position[0] = fixedBoundMax_[0];
+                                }
+                            }
+
+                            if(fixedBoundZeroThick_[1] == 1) //- Boundary has zero thickness in the y
+                            {
+                                newMolToSend.position[1] = fixedBoundMin_[1];
+                            }
+                            else
+                            {
+                                if(newMolToSend.position[1] <= fixedBoundMin_[1])
+                                {
+                                    newMolToSend.position[1] = fixedBoundMin_[1];
+                                }
+
+                                if(newMolToSend.position[1] >= fixedBoundMax_[1])
+                                {
+                                    newMolToSend.position[1] = fixedBoundMax_[1];
+                                }
+                            }
+
+                            if(fixedBoundZeroThick_[2] == 1) //- Boundary has zero thickness in the z
+                            {
+                                newMolToSend.position[2] = fixedBoundMin_[2];
+                            }
+                            else
+                            {
+                                if(newMolToSend.position[2] <= fixedBoundMin_[2])
+                                {
+                                    newMolToSend.position[2] = fixedBoundMin_[2];
+                                }
+
+                                if(newMolToSend.position[2] >= fixedBoundMax_[2])
+                                {
+                                    newMolToSend.position[2] = fixedBoundMax_[2];
+                                }
+                            }
+                        }
+
                         newMolToSend.velocity = molsInCell[molecule]->v();
                         molsToSend_.append(newMolToSend);
 
@@ -1081,9 +1176,9 @@ void mdDsmcCoupling::receiveCoupledParcels()
             for (size_t pts = 0; pts < rcvPoints[ifacepts].size(); pts++)
             {
                 vector velocity;
-                velocity[0] = rcvVelX[ifacepts][pts] / rU_.refVelocity();
-                velocity[1] = rcvVelY[ifacepts][pts] / rU_.refVelocity();
-                velocity[2] = rcvVelZ[ifacepts][pts] / rU_.refVelocity();
+                velocity[0] = rcvVelX[ifacepts][pts] * oneOverRefVelocity_;
+                velocity[1] = rcvVelY[ifacepts][pts] * oneOverRefVelocity_;
+                velocity[2] = rcvVelZ[ifacepts][pts] * oneOverRefVelocity_;
 
                 point checkedPosition(rcvPoints[ifacepts][pts][0] * refLength_, rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
 
@@ -1091,61 +1186,52 @@ void mdDsmcCoupling::receiveCoupledParcels()
                 {
                     if(fixedBoundZeroThick_[0] == 1) //- Boundary has zero thickness in the x
                     {
-                        if(fixedBoundNorm_[0] != 0)
-                        {
-                            checkedPosition[0] = fixedBoundMin_[0] + (fixedBoundNorm_[0] * SMALL);
-                        }
+                        checkedPosition[0] = fixedBoundMin_[0] + (fixedBoundNorm_[0] * boundCorr_);
                     }
                     else
                     {
-                        if(checkedPosition[0] < fixedBoundMin_[0])
+                        if(checkedPosition[0] <= fixedBoundMin_[0])
                         {
-                            checkedPosition[0] = fixedBoundMin_[0] + SMALL;
+                            checkedPosition[0] = fixedBoundMin_[0] + boundCorr_;
                         }
 
-                        if(checkedPosition[0] > fixedBoundMax_[0])
+                        if(checkedPosition[0] >= fixedBoundMax_[0])
                         {
-                            checkedPosition[0] = fixedBoundMax_[0] - SMALL;
+                            checkedPosition[0] = fixedBoundMax_[0] - boundCorr_;
                         }
                     }
 
                     if(fixedBoundZeroThick_[1] == 1) //- Boundary has zero thickness in the y
                     {
-                        if(fixedBoundNorm_[1] != 0)
-                        {
-                            checkedPosition[1] = fixedBoundMin_[1] + (fixedBoundNorm_[1] * SMALL);
-                        }
+                        checkedPosition[1] = fixedBoundMin_[1] + (fixedBoundNorm_[1] * boundCorr_);
                     }
                     else
                     {
-                        if(checkedPosition[1] < fixedBoundMin_[1])
+                        if(checkedPosition[1] <= fixedBoundMin_[1])
                         {
-                            checkedPosition[1] = fixedBoundMin_[1] + SMALL;
+                            checkedPosition[1] = fixedBoundMin_[1] + boundCorr_;
                         }
 
-                        if(checkedPosition[1] > fixedBoundMax_[1])
+                        if(checkedPosition[1] >= fixedBoundMax_[1])
                         {
-                            checkedPosition[1] = fixedBoundMax_[1] - SMALL;
+                            checkedPosition[1] = fixedBoundMax_[1] - boundCorr_;
                         }
                     }
 
                     if(fixedBoundZeroThick_[2] == 1) //- Boundary has zero thickness in the z
                     {
-                        if(fixedBoundNorm_[2] != 0)
-                        {
-                            checkedPosition[2] = fixedBoundMin_[2] + (fixedBoundNorm_[2] * SMALL);
-                        }
+                        checkedPosition[2] = fixedBoundMin_[2] + (fixedBoundNorm_[2] * boundCorr_);
                     }
                     else
                     {
-                        if(checkedPosition[2] < fixedBoundMin_[2])
+                        if(checkedPosition[2] <= fixedBoundMin_[2])
                         {
-                            checkedPosition[2] = fixedBoundMin_[2] + SMALL;
+                            checkedPosition[2] = fixedBoundMin_[2] + boundCorr_;
                         }
 
-                        if(checkedPosition[2] > fixedBoundMax_[2])
+                        if(checkedPosition[2] >= fixedBoundMax_[2])
                         {
-                            checkedPosition[2] = fixedBoundMax_[2] - SMALL;
+                            checkedPosition[2] = fixedBoundMax_[2] - boundCorr_;
                         }
                     }
                 }
@@ -1373,22 +1459,20 @@ polyMolecule* mdDsmcCoupling::insertMolecule
             {
                 std::cout << "mdDsmcCoupling::insertMolecule(): Molecule insertion would create overlap, finding new insertion position" << std::endl;
 
-                vector origPosition = newMol->position();
-                vector overLap;
-                scalar overLapMag;
-                vector overlapNorm;
+                vector startPos = position;
+                vector overLap(vector::zero);
+                scalar overLapMag = 0;
+                vector overlapNorm(vector::zero);
                 scalar perturbPerc = 0.5;
-                scalar perturbDistance;
-                bool trunkX, trunkY, trunkZ;
+                scalar perturbDistance = 0;
+                bool trunkX = false, trunkY = false, trunkZ = false;
                 label stuckIter = 0;
-                label randomNorm = -1;
+                label randomNorm = -1; // Set at -1 so norm calculated using geometry initially
+                label randOI = 25; // Trigger random normal generation every 25 iterations
+                label currOIIt = 0; // Iteration block counter before random norm triggered
 
                 for (label i=0; i<overlapIterations_; i++)
                 {
-                    trunkX = false;
-                    trunkY = false;
-                    trunkZ = false;
-
                     // Delete the created molecule that is causing the overlap
                     if(newMol != NULL)
                     {
@@ -1406,9 +1490,40 @@ polyMolecule* mdDsmcCoupling::insertMolecule
                         if(randomNorm == -1) //- Calculate normal if not using randomised values due to stuck molecule
                         {
                             overlapNorm = overLap / overLapMag;
+
+                            //- Correct for rounding errors in normal calculation
+                            if(overlapNorm[0] < -1.0)
+                            {
+                                overlapNorm[0] = -1.0;
+                            }
+
+                            if(overlapNorm[0] > 1.0)
+                            {
+                                overlapNorm[0] = 1.0;
+                            }
+
+                            if(overlapNorm[1] < -1.0)
+                            {
+                                overlapNorm[1] = -1.0;
+                            }
+
+                            if(overlapNorm[1] > 1.0)
+                            {
+                                overlapNorm[1] = 1.0;
+                            }
+
+                            if(overlapNorm[2] < -1.0)
+                            {
+                                overlapNorm[2] = -1.0;
+                            }
+
+                            if(overlapNorm[2] > 1.0)
+                            {
+                                overlapNorm[2] = 1.0;
+                            }
                         }
 
-                        if(overLapMag < 1)
+                        if(overLapMag < 1.0)
                         {
                             perturbDistance = (1.0 / overLapMag) * perturbPerc; //Perturb molecule away from new overlapping molecule
                         }
@@ -1420,40 +1535,7 @@ polyMolecule* mdDsmcCoupling::insertMolecule
                         overlapMol = NULL;
                     }
 
-                    if(randomNorm == 0) //- Calculate normal using random values
-                    {
-                        std::cout << "Creating random norm..." << std::endl;
-
-                        if(overlapNorm[0] < 0) //- Original normal was negative so generate new random negative normal to keep repulsion direction
-                        {
-                            overlapNorm[0] = -(molCloud_.rndGen().sample01<scalar>());
-                        }
-                        else
-                        {
-                            overlapNorm[0] = molCloud_.rndGen().sample01<scalar>();
-                        }
-
-                        if(overlapNorm[1] < 0) //- Original normal was negative so generate new random negative normal to keep repulsion direction
-                        {
-                            overlapNorm[1] = -(molCloud_.rndGen().sample01<scalar>());
-                        }
-                        else
-                        {
-                            overlapNorm[1] = molCloud_.rndGen().sample01<scalar>();
-                        }
-
-                        if(overlapNorm[2] < 0) //- Original normal was negative so generate new random negative normal to keep repulsion direction
-                        {
-                            overlapNorm[2] = -(molCloud_.rndGen().sample01<scalar>());
-                        }
-                        else
-                        {
-                            overlapNorm[2] = molCloud_.rndGen().sample01<scalar>();
-                        }
-
-                        //- Set randomNorm to 1 so a new random (or standard) norm won't be calculated (until a new stuck molecule is detected)
-                        randomNorm = 1;
-                    }
+                    vector origPos(position); //- Store the position before any perturbation
 
                     //Add perturbation to molecule position
                     position[0] += perturbDistance * overlapNorm[0];
@@ -1463,80 +1545,108 @@ polyMolecule* mdDsmcCoupling::insertMolecule
                     //- If there are fixed boundary details then make sure the perturbed position doesn't fall outside of it
                     if(fixedBounds_)
                     {
+                        trunkX = false;
+                        trunkY = false;
+                        trunkZ = false;
+
                         if(fixedBoundZeroThick_[0] == 1) //- Boundary has zero thickness in the x
                         {
-                            if(fixedBoundNorm_[0] != 0)
+                            if(fixedBoundNorm_[0] > 0)
                             {
-                                if(position[0] < fixedBoundMin_[0])
+                                if(position[0] <= fixedBoundMin_[0])
                                 {
-                                    position[0] = fixedBoundMin_[0] + (fixedBoundNorm_[0] * SMALL);
+                                    position[0] = fixedBoundMin_[0] + boundCorr_;
+                                    trunkX = true;
+                                }
+                            }
+                            else if (fixedBoundNorm_[0] < 0)
+                            {
+                                if(position[0] >= fixedBoundMax_[0])
+                                {
+                                    position[0] = fixedBoundMax_[0] - boundCorr_;
                                     trunkX = true;
                                 }
                             }
                         }
                         else
                         {
-                            if(position[0] < fixedBoundMin_[0])
+                            if(position[0] <= fixedBoundMin_[0])
                             {
-                                position[0] = fixedBoundMin_[0] + SMALL;
+                                position[0] = fixedBoundMin_[0] + boundCorr_;
                                 trunkX = true;
                             }
 
-                            if(position[0] > fixedBoundMax_[0])
+                            if(position[0] >= fixedBoundMax_[0])
                             {
-                                position[0] = fixedBoundMax_[0] - SMALL;
+                                position[0] = fixedBoundMax_[0] - boundCorr_;
                                 trunkX = true;
                             }
                         }
 
                         if(fixedBoundZeroThick_[1] == 1) //- Boundary has zero thickness in the y
                         {
-                            if(fixedBoundNorm_[1] != 0) //- Positive normal
+                            if(fixedBoundNorm_[1] > 0)
                             {
-                                if(position[1] < fixedBoundMin_[1])
+                                if(position[1] <= fixedBoundMin_[1])
                                 {
-                                    position[1] = fixedBoundMin_[1] + (fixedBoundNorm_[1] * SMALL);
+                                    position[1] = fixedBoundMin_[1] + boundCorr_;
+                                    trunkY = true;
+                                }
+                            }
+                            else if(fixedBoundNorm_[1] < 0)
+                            {
+                                if(position[1] >= fixedBoundMax_[1])
+                                {
+                                    position[1] = fixedBoundMax_[1] - boundCorr_;
                                     trunkY = true;
                                 }
                             }
                         }
                         else
                         {
-                            if(position[1] < fixedBoundMin_[1])
+                            if(position[1] <= fixedBoundMin_[1])
                             {
-                                position[1] = fixedBoundMin_[1] + SMALL;
+                                position[1] = fixedBoundMin_[1] + boundCorr_;
                                 trunkY = true;
                             }
 
-                            if(position[1] > fixedBoundMax_[1])
+                            if(position[1] >= fixedBoundMax_[1])
                             {
-                                position[1] = fixedBoundMax_[1] - SMALL;
+                                position[1] = fixedBoundMax_[1] - boundCorr_;
                                 trunkY = true;
                             }
                         }
 
                         if(fixedBoundZeroThick_[2] == 1) //- Boundary has zero thickness in the z
                         {
-                            if(fixedBoundNorm_[2] != 0) //- Positive normal
+                            if(fixedBoundNorm_[2] > 0)
                             {
-                                if(position[2] < fixedBoundMin_[2])
+                                if(position[2] <= fixedBoundMin_[2])
                                 {
-                                    position[2] = fixedBoundMin_[2] + (fixedBoundNorm_[2] * SMALL);
+                                    position[2] = fixedBoundMin_[2] + boundCorr_;
+                                    trunkZ = true;
+                                }
+                            }
+                            else if(fixedBoundNorm_[2] < 0)
+                            {
+                                if(position[2] >= fixedBoundMax_[2])
+                                {
+                                    position[2] = fixedBoundMax_[2] - boundCorr_;
                                     trunkZ = true;
                                 }
                             }
                         }
                         else
                         {
-                            if(position[2] < fixedBoundMin_[2])
+                            if(position[2] <= fixedBoundMin_[2])
                             {
-                                position[2] = fixedBoundMin_[2] + SMALL;
+                                position[2] = fixedBoundMin_[2] + boundCorr_;
                                 trunkZ = true;
                             }
 
-                            if(position[2] > fixedBoundMax_[2])
+                            if(position[2] >= fixedBoundMax_[2])
                             {
-                                position[2] = fixedBoundMax_[2] - SMALL;
+                                position[2] = fixedBoundMax_[2] - boundCorr_;
                                 trunkZ = true;
                             }
                         }
@@ -1550,77 +1660,199 @@ polyMolecule* mdDsmcCoupling::insertMolecule
                             stuckIter++;
                         }
 
-                        //- Check if particle has been stuck for 3 iterations, if so reset its position and randomise normal to try again
-                        if(stuckIter == 3)
+                        //- Check if particle has been stuck for 2 iterations, if so reset its position and randomise normal to try again
+                        if(stuckIter == 2)
                         {
-                            randomNorm = 0; // Set randomNorm to 0 so a new random normal will be generated during the next iteration
+                            randomNorm = 0; // Set randomNorm to 0 so a new random normal will be generated
                             stuckIter = 0; // Reset the stuckIter counter
                         }
                     }
 
-                    if(randomNorm != 0) //- Only perform test on new position if randomised normal is not requested
+                    if(randomNorm == 0) //- Calculate normal using random values
                     {
-                        //- Perturbation may have changed the cell, make sure the new position is a valid cell
-                        cell = mesh_.findCell(position);
+                        std::cout << "Generating random normal" << std::endl;
 
-                        if(cell != -1)
+                        //- Undo the initial perturbation so new randomised normal can be used instead
+                        position = origPos;
+
+                        overlapNorm[0] = molCloud_.rndGen().position<scalar>(-1.0, 1.0);
+                        overlapNorm[1] = molCloud_.rndGen().position<scalar>(-1.0, 1.0);
+                        overlapNorm[2] = molCloud_.rndGen().position<scalar>(-1.0, 1.0);
+
+                        //Add perturbation to molecule position using new randomised normal
+                        position[0] += perturbDistance * overlapNorm[0];
+                        position[1] += perturbDistance * overlapNorm[1];
+                        position[2] += perturbDistance * overlapNorm[2];
+
+                        //- If there are fixed boundary details then make sure the perturbed position doesn't fall outside of it
+                        if(fixedBounds_)
                         {
-                            std::cout << "Pos: " << position[0] << "," << position[1] << "," << position[2] << std::endl;
-                            std::cout << "OverlapMag: " << overLapMag << std::endl;
-                            std::cout << "OverlapNorm: " << overlapNorm[0] << "," << overlapNorm[1] << "," << overlapNorm[2] << std::endl << std::endl;
+                            if(fixedBoundZeroThick_[0] == 1) //- Boundary has zero thickness in the x
+                            {
+                                if(fixedBoundNorm_[0] > 0)
+                                {
+                                    if(position[0] <= fixedBoundMin_[0])
+                                    {
+                                        position[0] = fixedBoundMin_[0] + boundCorr_;
+                                    }
+                                }
+                                else if (fixedBoundNorm_[0] < 0)
+                                {
+                                    if(position[0] >= fixedBoundMax_[0])
+                                    {
+                                        position[0] = fixedBoundMax_[0] - boundCorr_;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if(position[0] <= fixedBoundMin_[0])
+                                {
+                                    position[0] = fixedBoundMin_[0] + boundCorr_;
+                                }
 
-                            // Update cell data before new insertion as perturbation may have moved things
-                            mesh_.findCellFacePt
-                            (
-                                position,
-                                cell,
-                                tetFace,
-                                tetPt
-                            );
+                                if(position[0] >= fixedBoundMax_[0])
+                                {
+                                    position[0] = fixedBoundMax_[0] - boundCorr_;
+                                }
+                            }
 
-                            // Create in the newly perturbed location
-                            newMol = molCloud_.createMolecule
-                            (
-                                position,
-                                cell,
-                                tetFace,
-                                tetPt,
-                                Q,
-                                velocity,
-                                vector::zero,
-                                pi,
-                                vector::zero,
-                                specialPosition,
-                                special,
-                                id,
-                                1.0,
-                                molCloud_.getTrackingNumber()
-                            );
+                            if(fixedBoundZeroThick_[1] == 1) //- Boundary has zero thickness in the y
+                            {
+                                if(fixedBoundNorm_[1] > 0)
+                                {
+                                    if(position[1] <= fixedBoundMin_[1])
+                                    {
+                                        position[1] = fixedBoundMin_[1] + boundCorr_;
+                                    }
+                                }
+                                else if(fixedBoundNorm_[1] < 0)
+                                {
+                                    if(position[1] >= fixedBoundMax_[1])
+                                    {
+                                        position[1] = fixedBoundMax_[1] - boundCorr_;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if(position[1] <= fixedBoundMin_[1])
+                                {
+                                    position[1] = fixedBoundMin_[1] + boundCorr_;
+                                }
 
-                            molCloud_.insertMolInCellOccupancy(newMol);
+                                if(position[1] >= fixedBoundMax_[1])
+                                {
+                                    position[1] = fixedBoundMax_[1] - boundCorr_;
+                                }
+                            }
 
-                            overlapMol = checkForOverlaps(newMol, overlapEnergyLimit_);
+                            if(fixedBoundZeroThick_[2] == 1) //- Boundary has zero thickness in the z
+                            {
+                                if(fixedBoundNorm_[2] > 0)
+                                {
+                                    if(position[2] <= fixedBoundMin_[2])
+                                    {
+                                        position[2] = fixedBoundMin_[2] + boundCorr_;
+                                    }
+                                }
+                                else if(fixedBoundNorm_[2] < 0)
+                                {
+                                    if(position[2] >= fixedBoundMax_[2])
+                                    {
+                                        position[2] = fixedBoundMax_[2] - boundCorr_;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if(position[2] <= fixedBoundMin_[2])
+                                {
+                                    position[2] = fixedBoundMin_[2] + boundCorr_;
+                                }
 
+                                if(position[2] >= fixedBoundMax_[2])
+                                {
+                                    position[2] = fixedBoundMax_[2] - boundCorr_;
+                                }
+                            }
+                        }
+
+                        //- Set randomNorm to 1 so a new random (or standard) norm won't be calculated (until a new stuck molecule is detected or iteration block reached)
+                        randomNorm = 1;
+                    }
+
+                    //- Perturbation may have changed the cell, make sure the new position is a valid cell
+                    cell = mesh_.findCell(position);
+
+                    if(cell != -1)
+                    {
+                        tetFace = -1;
+                        tetPt = -1;
+
+                        // Update cell data before new insertion as perturbation may have moved things
+                        mesh_.findCellFacePt
+                        (
+                            position,
+                            cell,
+                            tetFace,
+                            tetPt
+                        );
+
+                        // Create in the newly perturbed location
+                        newMol = molCloud_.createMolecule
+                        (
+                            position,
+                            cell,
+                            tetFace,
+                            tetPt,
+                            Q,
+                            velocity,
+                            vector::zero,
+                            pi,
+                            vector::zero,
+                            specialPosition,
+                            special,
+                            id,
+                            1.0,
+                            molCloud_.getTrackingNumber()
+                        );
+
+                        molCloud_.insertMolInCellOccupancy(newMol);
+
+                        overlapMol = checkForOverlaps(newMol, overlapEnergyLimit_);
+
+                        iterCount++;
+
+                        if(overlapMol == NULL) // The molecule no longer overlaps so break loop and carry on
+                        {
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        if(iterCount < overlapIterations_) //- Attempted cell was out of scope but there are more iterations remaining, reset position and trigger random normal
+                        {
+                            std::cout << "mdDsmcCoupling::insertMolecule(): Molecule insertion attempted outside of mesh whilst finding new location, trying again" << std::endl;
+                            std::cout << "Attempted pos: " << position[0] << "," << position[1] << "," << position[2] << std::endl;
+                            position = startPos;
+                            randomNorm = 0;
                             iterCount++;
-
-                            if(overlapMol == NULL) // The molecule no longer overlaps so break for loop and carry on
-                            {
-                                break;
-                            }
                         }
-                        else
+                        else //- Run out of iterations to find a new cell so abort insertion with warning
                         {
-                            if(iterCount < overlapIterations_) //- Attempted cell was out of scope but there are more iterations remaining
-                            {
-                                std::cout << "mdDsmcCoupling::insertMolecule(): Molecule insertion attempted outside of mesh whilst finding new location, trying again" << std::endl;
-                                iterCount++;
-                            }
-                            else //- Run out of iterations to find a new cell so abort insertion with warning
-                            {
-                                std::cout << "mdDsmcCoupling::insertMolecule(): Molecule insertion attempted outside of mesh whilst finding new location, molecule not inserted" << std::endl;
-                                return NULL;
-                            }
+                            std::cout << "mdDsmcCoupling::insertMolecule(): Molecule insertion attempted outside of mesh whilst finding new location, molecule not inserted" << std::endl;
+                            std::cout << "Attempted pos: " << position[0] << "," << position[1] << "," << position[2] << std::endl;
+                            return NULL;
                         }
+                    }
+
+                    currOIIt++; //- Increment counter to trigger random norm calculation
+
+                    if(currOIIt == randOI) //- Have reached the next block of the overall iteration count, trigger random norm generation
+                    {
+                        randomNorm = 0; //Set to zero so a new random norm will be generated during the next iteration
+                        currOIIt = 0;
                     }
                 }
             }
@@ -1650,6 +1882,7 @@ polyMolecule* mdDsmcCoupling::insertMolecule
     else
     {
         std::cout << "mdDsmcCoupling::insertMolecule(): Molecule insertion attempted outside of mesh, molecule not inserted" << std::endl;
+        std::cout << "Attempted pos: " << position[0] << "," << position[1] << "," << position[2] << std::endl;
         return NULL;
     }
 }

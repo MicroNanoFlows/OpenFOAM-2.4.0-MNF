@@ -205,6 +205,9 @@ public:
 
         const bool& writeInTimeDir() const;
         const bool& writeInCase() const;
+
+        void rebuildCellOccupancy();
+        void prepareInteractions();
 };
 
 

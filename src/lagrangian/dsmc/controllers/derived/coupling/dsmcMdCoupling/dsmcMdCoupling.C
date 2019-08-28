@@ -69,7 +69,8 @@ dsmcMdCoupling::dsmcMdCoupling
     fixedBoundMax_(vector::zero),
     fixedBoundNorm_(vector::zero),
     fixedBoundZeroThick_(vector(-1, -1, -1)),
-    currIteration_(0)
+    currIteration_(0),
+    boundCorr_(0)
 {
 #ifdef USE_MUI
     //- Determine sending interfaces if defined
@@ -254,6 +255,45 @@ dsmcMdCoupling::dsmcMdCoupling
         const List<point>& pts = mesh_.points();
 
         vector meshExtents = mesh_.bounds().max() - mesh_.bounds().min();
+
+        vector boundCorr = meshExtents * 1e-4;
+
+        //- Ensure boundary correction value not larger than 1e-8
+        if(boundCorr[0] > 1e-8)
+        {
+            boundCorr[0] = 1e-8;
+        }
+
+        if(boundCorr[1] > 1e-8)
+        {
+            boundCorr[1] = 1e-8;
+        }
+
+        if(boundCorr[2] > 1e-8)
+        {
+            boundCorr[2] = 1e-8;
+        }
+
+        // Pick largest correction value as global
+        if(boundCorr[0] > boundCorr[1] && boundCorr[0] > boundCorr[2])
+        {
+            boundCorr_ = boundCorr[0];
+        }
+
+        if(boundCorr[1] > boundCorr[0] && boundCorr[1] > boundCorr[2])
+        {
+            boundCorr_ = boundCorr[1];
+        }
+
+        if(boundCorr[2] > boundCorr[0] && boundCorr[2] > boundCorr[1])
+        {
+            boundCorr_ = boundCorr[2];
+        }
+
+        if(boundCorr[0] == boundCorr[1] && boundCorr[0] == boundCorr[2])
+        {
+            boundCorr_ = boundCorr[0];
+        }
 
         point cellMin;
         point cellMax;
@@ -957,61 +997,52 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
                 {
                     if(fixedBoundZeroThick_[0] == 1) //- Boundary has zero thickness in the x
                     {
-                        if(fixedBoundNorm_[0] != 0)
-                        {
-                            checkedPosition[0] = fixedBoundMin_[0] + (fixedBoundNorm_[0] * SMALL);
-                        }
+                        checkedPosition[0] = fixedBoundMin_[0] + (fixedBoundNorm_[0] * boundCorr_);
                     }
                     else
                     {
-                        if(checkedPosition[0] < fixedBoundMin_[0])
+                        if(checkedPosition[0] <= fixedBoundMin_[0])
                         {
-                            checkedPosition[0] = fixedBoundMin_[0] + SMALL;
+                            checkedPosition[0] = fixedBoundMin_[0] + boundCorr_;
                         }
 
-                        if(checkedPosition[0] > fixedBoundMax_[0])
+                        if(checkedPosition[0] >= fixedBoundMax_[0])
                         {
-                            checkedPosition[0] = fixedBoundMax_[0] - SMALL;
+                            checkedPosition[0] = fixedBoundMax_[0] - boundCorr_;
                         }
                     }
 
                     if(fixedBoundZeroThick_[1] == 1) //- Boundary has zero thickness in the y
                     {
-                        if(fixedBoundNorm_[1] != 0)
-                        {
-                            checkedPosition[1] = fixedBoundMin_[1] + (fixedBoundNorm_[1] * SMALL);
-                        }
+                        checkedPosition[1] = fixedBoundMin_[1] + (fixedBoundNorm_[1] * boundCorr_);
                     }
                     else
                     {
-                        if(checkedPosition[1] < fixedBoundMin_[1])
+                        if(checkedPosition[1] <= fixedBoundMin_[1])
                         {
-                            checkedPosition[1] = fixedBoundMin_[1] + SMALL;
+                            checkedPosition[1] = fixedBoundMin_[1] + boundCorr_;
                         }
 
-                        if(checkedPosition[1] > fixedBoundMax_[1])
+                        if(checkedPosition[1] >= fixedBoundMax_[1])
                         {
-                            checkedPosition[1] = fixedBoundMax_[1] - SMALL;
+                            checkedPosition[1] = fixedBoundMax_[1] - boundCorr_;
                         }
                     }
 
                     if(fixedBoundZeroThick_[2] == 1) //- Boundary has zero thickness in the z
                     {
-                        if(fixedBoundNorm_[2] != 0)
-                        {
-                            checkedPosition[2] = fixedBoundMin_[2] + (fixedBoundNorm_[2] * SMALL);
-                        }
+                        checkedPosition[2] = fixedBoundMin_[2] + (fixedBoundNorm_[2] * boundCorr_);
                     }
                     else
                     {
-                        if(checkedPosition[2] < fixedBoundMin_[2])
+                        if(checkedPosition[2] <= fixedBoundMin_[2])
                         {
-                            checkedPosition[2] = fixedBoundMin_[2] + SMALL;
+                            checkedPosition[2] = fixedBoundMin_[2] + boundCorr_;
                         }
 
-                        if(checkedPosition[2] > fixedBoundMax_[2])
+                        if(checkedPosition[2] >= fixedBoundMax_[2])
                         {
-                            checkedPosition[2] = fixedBoundMax_[2] - SMALL;
+                            checkedPosition[2] = fixedBoundMax_[2] - boundCorr_;
                         }
                     }
                 }

@@ -124,6 +124,7 @@ private:
         DynamicList<label> intersectingCells_;
         DynamicList<coupledMolecule> molsToSend_;
         DynamicList<coupledMolecule> molsReceived_;
+        scalar boundCorr_;
 
     // Private Member Functions
 

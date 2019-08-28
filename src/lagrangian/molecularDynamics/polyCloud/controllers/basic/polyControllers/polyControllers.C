@@ -598,6 +598,13 @@ void polyControllers::initialConfig()
         couplingControllers_[cC]->initialConfiguration();
     }
 
+    //- Rebuild cell occupancy (only need to do with one controller)
+    if(couplingControllers_.size() > 0)
+    {
+        couplingControllers_[0]->rebuildCellOccupancy();
+        couplingControllers_[0]->prepareInteractions();
+    }
+
     //- Forget initial configuration time frame
     forAll(couplingControllers_, cC)
 	{
@@ -629,6 +636,13 @@ void polyControllers::controlAfterMove()
 	  couplingControllers_[cC]->controlAfterMove(1);
 	}
 
+	//- Rebuild cell occupancy (only need to do with one controller)
+    if(couplingControllers_.size() > 0)
+    {
+        couplingControllers_[0]->rebuildCellOccupancy();
+        couplingControllers_[0]->prepareInteractions();
+    }
+
 	//- Receive any coupling boundary molecules (blocking)
 	forAll(couplingControllers_, cC)
 	{
@@ -646,6 +660,26 @@ void polyControllers::controlAfterMove()
 	{
 	  couplingControllers_[cC]->controlAfterMove(3);
 	}
+
+	//- Rebuild cell occupancy (only need to do with one controller)
+	if(couplingControllers_.size() > 0)
+	{
+	    couplingControllers_[0]->rebuildCellOccupancy();
+	    couplingControllers_[0]->prepareInteractions();
+	}
+
+    //- Insert any coupling boundary molecules from stage 2
+    forAll(couplingControllers_, cC)
+    {
+      couplingControllers_[cC]->controlAfterMove(4);
+    }
+
+    //- Rebuild cell occupancy (only need to do with one controller)
+    if(couplingControllers_.size() > 0)
+    {
+        couplingControllers_[0]->rebuildCellOccupancy();
+        couplingControllers_[0]->prepareInteractions();
+    }
 
 	//- Forget the time frame in the coupling interface
 	forAll(couplingControllers_, cC)

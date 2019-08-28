@@ -186,6 +186,16 @@ const bool& polyCouplingController::writeInCase() const
     return writeInCase_;
 }
 
+void polyCouplingController::rebuildCellOccupancy()
+{
+    molCloud_.rebuildCellOccupancy();
+}
+
+void polyCouplingController::prepareInteractions()
+{
+    molCloud_.prepareInteractions();
+}
+
 } // End namespace Foam
 
 // ************************************************************************* //
