@@ -77,7 +77,9 @@ mdDsmcCoupling::mdDsmcCoupling
     overlapIterations_(100),
     prevMolCount_(0),
     currIteration_(0),
-    boundCorr_(0)
+    boundCorr_(0),
+    meshMin_(VGREAT, VGREAT, VGREAT),
+    meshMax_(-VSMALL, -VSMALL, -VSMALL)
 {
 #ifdef USE_MUI
     //- Determine sending interfaces if defined
@@ -249,10 +251,48 @@ mdDsmcCoupling::mdDsmcCoupling
         fixedBounds_ = true;
 
         const cellList& cells = mesh_.cells();
-        const List<point>& pts = mesh_.points();
+        const List<point>& meshPoints = mesh_.points();
 
+        //- Determine this rank's mesh extents
+        forAll(meshPoints, pts)
+        {
+            if(meshPoints[pts][0] < meshMin_[0])
+            {
+                meshMin_[0] = meshPoints[pts][0];
+            }
+
+            if(meshPoints[pts][1] < meshMin_[1])
+            {
+                meshMin_[1] = meshPoints[pts][1];
+            }
+
+            if(meshPoints[pts][2] < meshMin_[2])
+            {
+                meshMin_[2] = meshPoints[pts][2];
+            }
+
+            if(meshPoints[pts][0] > meshMax_[0])
+            {
+                meshMax_[0] = meshPoints[pts][0];
+            }
+
+            if(meshPoints[pts][1] > meshMax_[1])
+            {
+                meshMax_[1] = meshPoints[pts][1];
+            }
+
+            if(meshPoints[pts][2] > meshMax_[2])
+            {
+                meshMax_[2] = meshPoints[pts][2];
+            }
+        }
+
+        vector localMeshExtents = meshMax_ - meshMin_;
+
+        //- Find the whole mesh extents
         vector meshExtents = mesh_.bounds().max() - mesh_.bounds().min();
 
+        // Initial boundary correction value calculated against whole mesh extents
         vector boundCorr = meshExtents * 1e-4;
 
         //- Ensure boundary correction value not larger than 1e-8
@@ -309,34 +349,34 @@ mdDsmcCoupling::mdDsmcCoupling
 
             forAll(pointList, cellPoint)
             {
-                if(pts[pointList[cellPoint]][0] < cellMin[0])
+                if(meshPoints[pointList[cellPoint]][0] < cellMin[0])
                 {
-                    cellMin[0] = pts[pointList[cellPoint]][0];
+                    cellMin[0] = meshPoints[pointList[cellPoint]][0];
                 }
 
-                if(pts[pointList[cellPoint]][0] > cellMax[0])
+                if(meshPoints[pointList[cellPoint]][0] > cellMax[0])
                 {
-                    cellMax[0] = pts[pointList[cellPoint]][0];
+                    cellMax[0] = meshPoints[pointList[cellPoint]][0];
                 }
 
-                if(pts[pointList[cellPoint]][1] < cellMin[1])
+                if(meshPoints[pointList[cellPoint]][1] < cellMin[1])
                 {
-                    cellMin[1] = pts[pointList[cellPoint]][1];
+                    cellMin[1] = meshPoints[pointList[cellPoint]][1];
                 }
 
-                if(pts[pointList[cellPoint]][1] > cellMax[1])
+                if(meshPoints[pointList[cellPoint]][1] > cellMax[1])
                 {
-                    cellMax[1] = pts[pointList[cellPoint]][1];
+                    cellMax[1] = meshPoints[pointList[cellPoint]][1];
                 }
 
-                if(pts[pointList[cellPoint]][2] < cellMin[2])
+                if(meshPoints[pointList[cellPoint]][2] < cellMin[2])
                 {
-                    cellMin[2] = pts[pointList[cellPoint]][2];
+                    cellMin[2] = meshPoints[pointList[cellPoint]][2];
                 }
 
-                if(pts[pointList[cellPoint]][2] > cellMax[2])
+                if(meshPoints[pointList[cellPoint]][2] > cellMax[2])
                 {
-                    cellMax[2] = pts[pointList[cellPoint]][2];
+                    cellMax[2] = meshPoints[pointList[cellPoint]][2];
                 }
             }
 
@@ -344,7 +384,7 @@ mdDsmcCoupling::mdDsmcCoupling
             {
                 if(fixedBoundNorm_[0] != 0)
                 {
-                    scalar boundaryExtend = meshExtents[0] * 0.01;
+                    scalar boundaryExtend = localMeshExtents[0] * 0.01;
                     bool test = false;
 
                     if((fixedBoundMin_[0]-boundaryExtend) >= cellMin[0] && (fixedBoundMin_[0]-boundaryExtend) <= cellMax[0])
@@ -381,7 +421,7 @@ mdDsmcCoupling::mdDsmcCoupling
             {
                if(fixedBoundNorm_[1] != 0)
                {
-                   scalar boundaryExtend = meshExtents[1] * 0.01;
+                   scalar boundaryExtend = localMeshExtents[1] * 0.01;
                    bool test = false;
 
                    if((fixedBoundMin_[1]-boundaryExtend) >= cellMin[1] && (fixedBoundMin_[1]-boundaryExtend) <= cellMax[1])
@@ -418,7 +458,7 @@ mdDsmcCoupling::mdDsmcCoupling
             {
                if(fixedBoundNorm_[2] != 0)
                {
-                   scalar boundaryExtend = meshExtents[2] * 0.01;
+                   scalar boundaryExtend = localMeshExtents[2] * 0.01;
                    bool test = false;
 
                    if((fixedBoundMin_[2]-boundaryExtend) >= cellMin[2] && (fixedBoundMin_[2]-boundaryExtend) <= cellMax[2])
@@ -458,54 +498,15 @@ mdDsmcCoupling::mdDsmcCoupling
         }
         else
         {
-            //- Determine if fixed boundary falls within mesh bounds
-            point meshMin(VGREAT, VGREAT, VGREAT);
-            point meshMax(-VSMALL, -VSMALL, -VSMALL);
-
-            const pointField& meshPoints = mesh_.points();
-
-            forAll(meshPoints, pts)
-            {
-                if(meshPoints[pts][0] < meshMin[0])
-                {
-                    meshMin[0] = meshPoints[pts][0];
-                }
-
-                if(meshPoints[pts][1] < meshMin[1])
-                {
-                    meshMin[1] = meshPoints[pts][1];
-                }
-
-                if(meshPoints[pts][2] < meshMin[2])
-                {
-                    meshMin[2] = meshPoints[pts][2];
-                }
-
-                if(meshPoints[pts][0] > meshMax[0])
-                {
-                    meshMax[0] = meshPoints[pts][0];
-                }
-
-                if(meshPoints[pts][1] > meshMax[1])
-                {
-                    meshMax[1] = meshPoints[pts][1];
-                }
-
-                if(meshPoints[pts][2] > meshMax[2])
-                {
-                    meshMax[2] = meshPoints[pts][2];
-                }
-            }
-
-            vector meshHalfWidth(((meshMax[0] - meshMin[0]) * 0.5),
-                                 ((meshMax[1] - meshMin[1]) * 0.5),
-                                 ((meshMax[2] - meshMin[2]) * 0.5));
+            vector meshHalfWidth(((meshMax_[0] - meshMin_[0]) * 0.5),
+                                 ((meshMax_[1] - meshMin_[1]) * 0.5),
+                                 ((meshMax_[2] - meshMin_[2]) * 0.5));
             vector fixedBoundHalfWidth(((fixedBoundMax_[0] - fixedBoundMin_[0]) * 0.5),
                                        ((fixedBoundMax_[1] - fixedBoundMin_[1]) * 0.5),
                                        ((fixedBoundMax_[2] - fixedBoundMin_[2]) * 0.5));
-            point meshCentre(meshMin[0] + meshHalfWidth[0],
-                             meshMin[1] + meshHalfWidth[1],
-                             meshMin[2] + meshHalfWidth[2]);
+            point meshCentre(meshMin_[0] + meshHalfWidth[0],
+                             meshMin_[1] + meshHalfWidth[1],
+                             meshMin_[2] + meshHalfWidth[2]);
             point fixedBoundCentre(fixedBoundMin_[0] + fixedBoundHalfWidth[0],
                                    fixedBoundMin_[1] + fixedBoundHalfWidth[1],
                                    fixedBoundMin_[2] + fixedBoundHalfWidth[2]);
@@ -1470,6 +1471,8 @@ polyMolecule* mdDsmcCoupling::insertMolecule
                 label randomNorm = -1; // Set at -1 so norm calculated using geometry initially
                 label randOI = 25; // Trigger random normal generation every 25 iterations
                 label currOIIt = 0; // Iteration block counter before random norm triggered
+                vector maxPerturb = meshMax_ - meshMin_;
+                maxPerturb *= 0.25; // Limit for maximim perturbation distance calculation equal to quarter of total extents of local mesh
 
                 for (label i=0; i<overlapIterations_; i++)
                 {
@@ -1537,10 +1540,29 @@ polyMolecule* mdDsmcCoupling::insertMolecule
 
                     vector origPos(position); //- Store the position before any perturbation
 
+                    //- Calculate perturbed position
+                    vector perturbation(perturbDistance * overlapNorm[0], perturbDistance * overlapNorm[1], perturbDistance * overlapNorm[2]);
+
+                    //Ensure perturbation doesn't exceed maximum for the local mesh extents
+                    if(perturbation[0] > maxPerturb[0])
+                    {
+                        perturbation[0] = maxPerturb[0];
+                    }
+
+                    if(perturbation[1] > maxPerturb[1])
+                    {
+                        perturbation[1] = maxPerturb[1];
+                    }
+
+                    if(perturbation[2] > maxPerturb[2])
+                    {
+                        perturbation[2] = maxPerturb[2];
+                    }
+
                     //Add perturbation to molecule position
-                    position[0] += perturbDistance * overlapNorm[0];
-                    position[1] += perturbDistance * overlapNorm[1];
-                    position[2] += perturbDistance * overlapNorm[2];
+                    position[0] += perturbation[0];
+                    position[1] += perturbation[1];
+                    position[2] += perturbation[2];
 
                     //- If there are fixed boundary details then make sure the perturbed position doesn't fall outside of it
                     if(fixedBounds_)
@@ -1651,6 +1673,43 @@ polyMolecule* mdDsmcCoupling::insertMolecule
                             }
                         }
 
+                        //Check against local mesh extents
+                        if(position[0] <= meshMin_[0])
+                        {
+                            position[0] = meshMin_[0] + boundCorr_;
+                            trunkX = true;
+                        }
+
+                        if(position[0] >= meshMax_[0])
+                        {
+                            position[0] = meshMax_[0] - boundCorr_;
+                            trunkX = true;
+                        }
+
+                        if(position[1] <= meshMin_[1])
+                        {
+                            position[1] = meshMin_[1] + boundCorr_;
+                            trunkY = true;
+                        }
+
+                        if(position[1] >= meshMax_[1])
+                        {
+                            position[1] = meshMax_[1] - boundCorr_;
+                            trunkY = true;
+                        }
+
+                        if(position[2] <= meshMin_[2])
+                        {
+                            position[2] = meshMin_[2] + boundCorr_;
+                            trunkZ = true;
+                        }
+
+                        if(position[2] >= meshMax_[2])
+                        {
+                            position[2] = meshMax_[2] - boundCorr_;
+                            trunkZ = true;
+                        }
+
                         //- Check if truncation has happened in 2 or more directions (if so the particle is stuck)
                         if((trunkX && trunkY && trunkZ) ||
                            (trunkX && trunkY && !trunkZ) ||
@@ -1679,10 +1738,29 @@ polyMolecule* mdDsmcCoupling::insertMolecule
                         overlapNorm[1] = molCloud_.rndGen().position<scalar>(-1.0, 1.0);
                         overlapNorm[2] = molCloud_.rndGen().position<scalar>(-1.0, 1.0);
 
+                        //- Calculate perturbed position
+                        vector perturbation(perturbDistance * overlapNorm[0], perturbDistance * overlapNorm[1], perturbDistance * overlapNorm[2]);
+
+                        //Ensure perturbation doesn't exceed maximum for the local mesh extents
+                        if(perturbation[0] > maxPerturb[0])
+                        {
+                            perturbation[0] = maxPerturb[0];
+                        }
+
+                        if(perturbation[1] > maxPerturb[1])
+                        {
+                            perturbation[1] = maxPerturb[1];
+                        }
+
+                        if(perturbation[2] > maxPerturb[2])
+                        {
+                            perturbation[2] = maxPerturb[2];
+                        }
+
                         //Add perturbation to molecule position using new randomised normal
-                        position[0] += perturbDistance * overlapNorm[0];
-                        position[1] += perturbDistance * overlapNorm[1];
-                        position[2] += perturbDistance * overlapNorm[2];
+                        position[0] += perturbation[0];
+                        position[1] += perturbation[1];
+                        position[2] += perturbation[2];
 
                         //- If there are fixed boundary details then make sure the perturbed position doesn't fall outside of it
                         if(fixedBounds_)
@@ -1775,6 +1853,37 @@ polyMolecule* mdDsmcCoupling::insertMolecule
                                 {
                                     position[2] = fixedBoundMax_[2] - boundCorr_;
                                 }
+                            }
+
+                            //Check against local mesh extents
+                            if(position[0] <= meshMin_[0])
+                            {
+                                position[0] = meshMin_[0] + boundCorr_;
+                            }
+
+                            if(position[0] >= meshMax_[0])
+                            {
+                                position[0] = meshMax_[0] - boundCorr_;
+                            }
+
+                            if(position[1] <= meshMin_[1])
+                            {
+                                position[1] = meshMin_[1] + boundCorr_;
+                            }
+
+                            if(position[1] >= meshMax_[1])
+                            {
+                                position[1] = meshMax_[1] - boundCorr_;
+                            }
+
+                            if(position[2] <= meshMin_[2])
+                            {
+                                position[2] = meshMin_[2] + boundCorr_;
+                            }
+
+                            if(position[2] >= meshMax_[2])
+                            {
+                                position[2] = meshMax_[2] - boundCorr_;
                             }
                         }
 

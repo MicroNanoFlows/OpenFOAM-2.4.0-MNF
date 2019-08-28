@@ -125,6 +125,8 @@ private:
         DynamicList<coupledMolecule> molsToSend_;
         DynamicList<coupledMolecule> molsReceived_;
         scalar boundCorr_;
+        point meshMin_;
+        point meshMax_;
 
     // Private Member Functions
 
