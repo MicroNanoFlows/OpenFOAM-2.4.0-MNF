@@ -603,6 +603,7 @@ void polyControllers::initialConfig()
     {
         couplingControllers_[0]->rebuildCellOccupancy();
         couplingControllers_[0]->prepareInteractions();
+        couplingControllers_[0]->resetTracking(); //- Lots of adds/deletes in coupled method, ensure tracking number hasn't exceeded maximum
     }
 
     //- Forget initial configuration time frame
@@ -641,6 +642,7 @@ void polyControllers::controlAfterMove()
     {
         couplingControllers_[0]->rebuildCellOccupancy();
         couplingControllers_[0]->prepareInteractions();
+        couplingControllers_[0]->resetTracking(); //- Lots of adds/deletes in coupled method, ensure tracking number hasn't exceeded maximum
     }
 
 	//- Receive any coupling boundary molecules (blocking)
@@ -666,6 +668,7 @@ void polyControllers::controlAfterMove()
 	{
 	    couplingControllers_[0]->rebuildCellOccupancy();
 	    couplingControllers_[0]->prepareInteractions();
+	    couplingControllers_[0]->resetTracking(); //- Lots of adds/deletes in coupled method, ensure tracking number hasn't exceeded maximum
 	}
 
     //- Insert any coupling boundary molecules from stage 2
@@ -679,6 +682,7 @@ void polyControllers::controlAfterMove()
     {
         couplingControllers_[0]->rebuildCellOccupancy();
         couplingControllers_[0]->prepareInteractions();
+        couplingControllers_[0]->resetTracking(); //- Lots of adds/deletes in coupled method, ensure tracking number hasn't exceeded maximum
     }
 
 	//- Forget the time frame in the coupling interface

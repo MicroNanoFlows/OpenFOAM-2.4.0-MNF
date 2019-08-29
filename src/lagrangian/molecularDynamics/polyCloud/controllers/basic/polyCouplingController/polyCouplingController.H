@@ -208,6 +208,7 @@ public:
 
         void rebuildCellOccupancy();
         void prepareInteractions();
+        void resetTracking();
 };
 
 

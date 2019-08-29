@@ -196,6 +196,11 @@ void polyCouplingController::prepareInteractions()
     molCloud_.prepareInteractions();
 }
 
+void polyCouplingController::resetTracking()
+{
+    molCloud_.resetTrackingNumbers();
+}
+
 } // End namespace Foam
 
 // ************************************************************************* //

@@ -694,24 +694,86 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 		{
 		    bool newList = false;
 			
-			//If list size has changed then treat this as a new list
-			if(prevMolCount_ != rcvMolId[ifacepts].size())
+			//- List size has changed, treat as a new list
+			if(molId_[ifacepts].size() != rcvMolId[ifacepts].size())
 			{
-				if(molId_[ifacepts].size() > 0)
-				{
-					forAll(molHistory_[ifacepts], mol)
-					{
-					    molCloud_.removeMolFromCellOccupancy(molHistory_[ifacepts][mol]->origId(), molHistory_[ifacepts][mol]->cell());
-					    molCloud_.deleteParticle(*molHistory_[ifacepts][mol]);
-					}
+			    newList = true;
 
-					molId_[ifacepts].clear();
-					molHistory_[ifacepts].clear();
-				}
+			    if(molId_[ifacepts].size() == 0)
+                {
+                    //- Resize local storage to new received size
+                    molId_[ifacepts].setSize(rcvMolId[ifacepts].size(), -1);
+                    molHistory_[ifacepts].setSize(rcvMolId[ifacepts].size(), NULL);
+                }
+			}
+			else //- List size the same, ensure list hasn't changed internally
+			{
+			    forAll(rcvMolId[ifacepts], rcvMol)
+                {
+			        if(rcvMolId[ifacepts][rcvMol] != molId_[ifacepts][rcvMol]) //- If a molecule ID changes then treat as new list
+			        {
+			            newList = true;
+			            break; //- Break once first change detected
+			        }
+                }
+			}
 
-				molId_[ifacepts].setSize(rcvMolId[ifacepts].size(), -1);
-				molHistory_[ifacepts].setSize(rcvMolId[ifacepts].size(), NULL);
-				newList = true;
+			if(newList)
+			{
+			    std::cout << "This is a new list" << std::endl;
+
+			    if(molId_[ifacepts].size() > 0)
+                {
+                    List<bool> molIdFound(molId_[ifacepts].size(), false);
+                    List<bool> rcvMolIdFound(rcvMolId[ifacepts].size(), false);
+
+                    //- Determine which molecules from the last iteration exist in the received list and which are new
+                    forAll(rcvMolId[ifacepts], rcvMol)
+                    {
+                        forAll(molId_[ifacepts], currMol)
+                        {
+                            if(rcvMolId[ifacepts][rcvMol] == molId_[ifacepts][currMol])
+                            {
+                                molIdFound[currMol] = true;
+                                rcvMolIdFound[rcvMol] = true;
+                                break; //- Break inner loop as match found
+                            }
+                        }
+                    }
+
+                    //- Delete any molecules that no longer exist based on the received list
+                    forAll(molIdFound, mol)
+                    {
+                        if(!molIdFound[mol])
+                        {
+                            if(molHistory_[ifacepts][mol] != NULL)
+                            {
+                                molCloud_.removeMolFromCellOccupancy(molHistory_[ifacepts][mol]);
+                                molCloud_.deleteParticle(*molHistory_[ifacepts][mol]);
+                                molHistory_[ifacepts][mol] = NULL;
+                            }
+                        }
+                    }
+
+                    //- Resize local storage to new received size
+                    molId_[ifacepts].setSize(rcvMolId[ifacepts].size(), -1);
+                    molHistory_[ifacepts].setSize(rcvMolId[ifacepts].size(), NULL);
+
+                    //- Update the local molecule ID store to the received version
+                    forAll(molId_[ifacepts], mol)
+                    {
+                        molId_[ifacepts][mol] = rcvMolId[ifacepts][mol];
+                    }
+
+                    //- Update the molHistory store, setting any that need creating to NULL
+                    forAll(rcvMolIdFound, rcvMol)
+                    {
+                        if(!rcvMolIdFound[rcvMol])
+                        {
+                            molHistory_[ifacepts][rcvMol] = NULL;
+                        }
+                    }
+                }
 			}
 
             for (size_t pts = 0; pts < rcvPoints[ifacepts].size(); pts++)
@@ -758,42 +820,28 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
                     }
                 }
 
-                if(newList) //This is a completely new list so all molecules to be inserted
+                if(molHistory_[ifacepts][pts] == NULL) //- This molecule is new so insert it
                 {
-                    molId_[ifacepts][pts] = rcvMolId[ifacepts][pts];
                     molHistory_[ifacepts][pts] = insertMolecule(checkedPosition, molIds_[molId], true, velocity);
                     molCount++;
                 }
-                else //This is not a completely new list so just check for individual molecule changes
+                else //- This molecule already exists, so just update its values
                 {
-                    if(molId_[ifacepts][pts] != rcvMolId[ifacepts][pts]) //This molecule has changed in the list since the last time
-                    {
-                        molId_[ifacepts][pts] = rcvMolId[ifacepts][pts]; // Update ID history
+                    molHistory_[ifacepts][pts]->position()[0] = checkedPosition[0];
+                    molHistory_[ifacepts][pts]->position()[1] = checkedPosition[1];
+                    molHistory_[ifacepts][pts]->position()[2] = checkedPosition[2];
 
-                        molCloud_.removeMolFromCellOccupancy(molHistory_[ifacepts][pts]->origId(), molHistory_[ifacepts][pts]->cell());
-                        molCloud_.deleteParticle(*molHistory_[ifacepts][pts]); //Delete the molecule in this list position
+                    molHistory_[ifacepts][pts]->v()[0] = velocity[0];
+                    molHistory_[ifacepts][pts]->v()[1] = velocity[1];
+                    molHistory_[ifacepts][pts]->v()[2] = velocity[2];
 
-                        molHistory_[ifacepts][pts] = insertMolecule(checkedPosition, molIds_[molId], true, velocity); //Insert the new molecule
-
-                        molCount++;
-                    }
-                    else //This molecule is the same as received last time, so just update it's properties
-                    {
-                        molHistory_[ifacepts][pts]->position()[0] = checkedPosition[0];
-                        molHistory_[ifacepts][pts]->position()[1] = checkedPosition[1];
-                        molHistory_[ifacepts][pts]->position()[2] = checkedPosition[2];
-
-                        molHistory_[ifacepts][pts]->v()[0] = velocity[0];
-                        molHistory_[ifacepts][pts]->v()[1] = velocity[1];
-                        molHistory_[ifacepts][pts]->v()[2] = velocity[2];
-
-                        molCount++;
-                    }
+                    molCount++;
                 }
             }
 		}
 	}
 
+	//- This is the initialisation call so commit at iteration = 0 to allow other side to continue
 	if(init)
 	{
 		forAll(recvInterfaces_, iface)
@@ -1053,7 +1101,7 @@ void mdDsmcCoupling::findCoupledMolecules()
     forAll(molsToRemove, molecule)
     {
         //- Delete molecule from cellOccupancy (before deleting it from cloud)
-        molCloud_.removeMolFromCellOccupancy(molsToRemove[molecule]->origId(), molsToRemove[molecule]->cell());
+        molCloud_.removeMolFromCellOccupancy(molsToRemove[molecule]);
         molCloud_.deleteParticle(*molsToRemove[molecule]);
     }
 }
@@ -1472,14 +1520,14 @@ polyMolecule* mdDsmcCoupling::insertMolecule
                 label randOI = 25; // Trigger random normal generation every 25 iterations
                 label currOIIt = 0; // Iteration block counter before random norm triggered
                 vector maxPerturb = meshMax_ - meshMin_;
-                maxPerturb *= 0.25; // Limit for maximim perturbation distance calculation equal to quarter of total extents of local mesh
+                maxPerturb *= 0.25; // Limit for maximum perturbation distance calculation equal to quarter of total extents of local mesh
 
                 for (label i=0; i<overlapIterations_; i++)
                 {
                     // Delete the created molecule that is causing the overlap
                     if(newMol != NULL)
                     {
-                        molCloud_.removeMolFromCellOccupancy(newMol->origId(), newMol->cell());
+                        molCloud_.removeMolFromCellOccupancy(newMol);
                         molCloud_.deleteParticle(*newMol);
                         newMol = NULL;
                     }
@@ -1950,6 +1998,14 @@ polyMolecule* mdDsmcCoupling::insertMolecule
                         }
                         else //- Run out of iterations to find a new cell so abort insertion with warning
                         {
+                            if(newMol != NULL)
+                            {
+                                // Delete the created molecule as it will exceed energy limit according to force-field calculation
+                                molCloud_.removeMolFromCellOccupancy(newMol);
+                                molCloud_.deleteParticle(*newMol);
+                                newMol = NULL;
+                            }
+
                             std::cout << "mdDsmcCoupling::insertMolecule(): Molecule insertion attempted outside of mesh whilst finding new location, molecule not inserted" << std::endl;
                             std::cout << "Attempted pos: " << position[0] << "," << position[1] << "," << position[2] << std::endl;
                             return NULL;
@@ -1971,7 +2027,7 @@ polyMolecule* mdDsmcCoupling::insertMolecule
                 if(newMol != NULL)
                 {
                     // Delete the created molecule as it will exceed energy limit according to force-field calculation
-                    molCloud_.removeMolFromCellOccupancy(newMol->origId(), newMol->cell());
+                    molCloud_.removeMolFromCellOccupancy(newMol);
                     molCloud_.deleteParticle(*newMol);
                     newMol = NULL;
                 }
