@@ -574,13 +574,13 @@ void dsmcControllers::initialConfig()
     //- Wait here until other side has finished sending initialisation values (blocking)
     forAll(couplingControllers_, cC)
 	{
-    	couplingControllers_[cC]->barrier(static_cast<label>(0));
+    	couplingControllers_[cC]->barrier(static_cast<label>(1));
 	}
 
     //- Forget initial configuration time frame
     forAll(couplingControllers_, cC)
 	{
-		couplingControllers_[cC]->forget(static_cast<label>(0));
+		couplingControllers_[cC]->forget(static_cast<label>(1));
 	}
 }
 

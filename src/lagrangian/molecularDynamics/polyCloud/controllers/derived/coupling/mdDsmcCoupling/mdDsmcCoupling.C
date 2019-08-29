@@ -624,7 +624,11 @@ void mdDsmcCoupling::controlAfterForces()
 void mdDsmcCoupling::receiveCoupledRegion(bool init)
 {
 #ifdef USE_MUI
-	label molCount = 0;
+    if(init)
+	{
+	    currIteration_ = 1;
+	}
+    label molCount = 0;
 	List<std::vector<mui::point3d> > rcvPoints(recvInterfaces_.size());
 	List<std::vector<std::string> > rcvMolType(recvInterfaces_.size());
 	List<std::vector<label> > rcvMolId(recvInterfaces_.size());
@@ -693,17 +697,21 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 		if(rcvPoints[ifacepts].size() > 0)
 		{
 		    bool newList = false;
+		    bool newSize = false;
 			
 			//- List size has changed, treat as a new list
 			if(molId_[ifacepts].size() != rcvMolId[ifacepts].size())
 			{
 			    newList = true;
+			    newSize = true;
 
 			    if(molId_[ifacepts].size() == 0)
                 {
                     //- Resize local storage to new received size
                     molId_[ifacepts].setSize(rcvMolId[ifacepts].size(), -1);
                     molHistory_[ifacepts].setSize(rcvMolId[ifacepts].size(), NULL);
+
+                    newSize = false;
                 }
 			}
 			else //- List size the same, ensure list hasn't changed internally
@@ -720,58 +728,56 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 
 			if(newList)
 			{
-			    std::cout << "This is a new list" << std::endl;
+                List<bool> molIdFound(molId_[ifacepts].size(), false);
+                List<bool> rcvMolIdFound(rcvMolId[ifacepts].size(), false);
 
-			    if(molId_[ifacepts].size() > 0)
+                //- Determine which molecules from the last iteration exist in the received list and which are new
+                forAll(rcvMolId[ifacepts], rcvMol)
                 {
-                    List<bool> molIdFound(molId_[ifacepts].size(), false);
-                    List<bool> rcvMolIdFound(rcvMolId[ifacepts].size(), false);
-
-                    //- Determine which molecules from the last iteration exist in the received list and which are new
-                    forAll(rcvMolId[ifacepts], rcvMol)
+                    forAll(molId_[ifacepts], currMol)
                     {
-                        forAll(molId_[ifacepts], currMol)
+                        if(rcvMolId[ifacepts][rcvMol] == molId_[ifacepts][currMol])
                         {
-                            if(rcvMolId[ifacepts][rcvMol] == molId_[ifacepts][currMol])
-                            {
-                                molIdFound[currMol] = true;
-                                rcvMolIdFound[rcvMol] = true;
-                                break; //- Break inner loop as match found
-                            }
+                            molIdFound[currMol] = true;
+                            rcvMolIdFound[rcvMol] = true;
+                            break; //- Break inner loop as match found
                         }
                     }
+                }
 
-                    //- Delete any molecules that no longer exist based on the received list
-                    forAll(molIdFound, mol)
+                //- Delete any molecules that no longer exist based on the received list
+                forAll(molIdFound, mol)
+                {
+                    if(!molIdFound[mol])
                     {
-                        if(!molIdFound[mol])
+                        if(molHistory_[ifacepts][mol] != NULL)
                         {
-                            if(molHistory_[ifacepts][mol] != NULL)
-                            {
-                                molCloud_.removeMolFromCellOccupancy(molHistory_[ifacepts][mol]);
-                                molCloud_.deleteParticle(*molHistory_[ifacepts][mol]);
-                                molHistory_[ifacepts][mol] = NULL;
-                            }
+                            molCloud_.removeMolFromCellOccupancy(molHistory_[ifacepts][mol]);
+                            molCloud_.deleteParticle(*molHistory_[ifacepts][mol]);
+                            molHistory_[ifacepts][mol] = NULL;
                         }
                     }
+                }
 
+                if(newSize)
+                {
                     //- Resize local storage to new received size
                     molId_[ifacepts].setSize(rcvMolId[ifacepts].size(), -1);
                     molHistory_[ifacepts].setSize(rcvMolId[ifacepts].size(), NULL);
+                }
 
-                    //- Update the local molecule ID store to the received version
-                    forAll(molId_[ifacepts], mol)
-                    {
-                        molId_[ifacepts][mol] = rcvMolId[ifacepts][mol];
-                    }
+                //- Update the local molecule ID store to the received version
+                forAll(molId_[ifacepts], mol)
+                {
+                    molId_[ifacepts][mol] = rcvMolId[ifacepts][mol];
+                }
 
-                    //- Update the molHistory store, setting any that need creating to NULL
-                    forAll(rcvMolIdFound, rcvMol)
+                //- Update the molHistory store, setting any that need creating to NULL
+                forAll(rcvMolIdFound, rcvMol)
+                {
+                    if(!rcvMolIdFound[rcvMol])
                     {
-                        if(!rcvMolIdFound[rcvMol])
-                        {
-                            molHistory_[ifacepts][rcvMol] = NULL;
-                        }
+                        molHistory_[ifacepts][rcvMol] = NULL;
                     }
                 }
 			}
@@ -848,6 +854,8 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 		{
 		    recvInterfaces_[iface]->commit(currIteration_);
 		}
+
+		currIteration_ = 0;
 	}
 
 	if(molCount > 0)
