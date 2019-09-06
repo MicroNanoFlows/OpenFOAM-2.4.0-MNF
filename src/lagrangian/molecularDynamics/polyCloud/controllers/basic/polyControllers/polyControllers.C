@@ -596,14 +596,14 @@ void polyControllers::initialConfig()
     if(couplingControllers_.size() > 0)
     {
         couplingControllers_[0]->rebuildCellOccupancy();
-        couplingControllers_[0]->prepareInteractions();
         couplingControllers_[0]->resetTracking(); //- Lots of adds/deletes in coupled method, ensure tracking number hasn't exceeded maximum
+        couplingControllers_[0]->prepareInteractions();
     }
 
     //- Forget initial configuration time frame
     forAll(couplingControllers_, cC)
 	{
-    	couplingControllers_[cC]->forget(static_cast<label>(1));
+    	couplingControllers_[cC]->forget(static_cast<label>(1), true);
 	}
 }
 
@@ -628,62 +628,63 @@ void polyControllers::controlAfterMove()
     //- Collate, delete and send any molecules that passed through a coupling boundary
 	forAll(couplingControllers_, cC)
 	{
-	  couplingControllers_[cC]->controlAfterMove(1);
+	     couplingControllers_[cC]->controlAfterMove(1);
 	}
 
-	//- Rebuild cell occupancy (only need to do with one controller)
+    //- Rebuild cell occupancy (only need to do with one controller)
     if(couplingControllers_.size() > 0)
     {
         couplingControllers_[0]->rebuildCellOccupancy();
-        couplingControllers_[0]->prepareInteractions();
         couplingControllers_[0]->resetTracking(); //- Lots of adds/deletes in coupled method, ensure tracking number hasn't exceeded maximum
+        couplingControllers_[0]->prepareInteractions();
     }
-
-	//- Receive any coupling boundary molecules (blocking)
+/*
+	//- Receive and store any coupling boundary molecules (blocking)
 	forAll(couplingControllers_, cC)
 	{
-	  couplingControllers_[cC]->controlAfterMove(2);
+	    couplingControllers_[cC]->controlAfterMove(2);
 	}
 
 	//- Forget the time frame in the coupling interface so the same frame can be received for coupling region molecules
     forAll(couplingControllers_, cC)
     {
-      couplingControllers_[cC]->forget();
+      couplingControllers_[cC]->forget(true);
     }
 
 	//- Receive any coupling region molecules (blocking)
 	forAll(couplingControllers_, cC)
 	{
-	  couplingControllers_[cC]->controlAfterMove(3);
+	    couplingControllers_[cC]->controlAfterMove(3);
 	}
 
 	//- Rebuild cell occupancy (only need to do with one controller)
 	if(couplingControllers_.size() > 0)
 	{
 	    couplingControllers_[0]->rebuildCellOccupancy();
-	    couplingControllers_[0]->prepareInteractions();
 	    couplingControllers_[0]->resetTracking(); //- Lots of adds/deletes in coupled method, ensure tracking number hasn't exceeded maximum
+	    couplingControllers_[0]->prepareInteractions();
 	}
 
     //- Insert any coupling boundary molecules from stage 2
     forAll(couplingControllers_, cC)
     {
-      couplingControllers_[cC]->controlAfterMove(4);
+        couplingControllers_[cC]->controlAfterMove(4);
     }
 
     //- Rebuild cell occupancy (only need to do with one controller)
     if(couplingControllers_.size() > 0)
     {
         couplingControllers_[0]->rebuildCellOccupancy();
-        couplingControllers_[0]->prepareInteractions();
         couplingControllers_[0]->resetTracking(); //- Lots of adds/deletes in coupled method, ensure tracking number hasn't exceeded maximum
+        couplingControllers_[0]->prepareInteractions();
     }
 
 	//- Forget the time frame in the coupling interface
 	forAll(couplingControllers_, cC)
 	{
-	  couplingControllers_[cC]->forget();
+	    couplingControllers_[cC]->forget(true);
 	}
+*/
 }
 
 
@@ -716,12 +717,13 @@ void polyControllers::controlAfterForces()
     {
         stateControllers_[sC]->controlAfterForces();
     }
-
+/*
     //- Send forces acting on molecules in coupling region(s)
     forAll(couplingControllers_, cC)
     {
       couplingControllers_[cC]->controlAfterForces();
     }
+*/
 }
 
 void polyControllers::controlVelocitiesII()

@@ -61,8 +61,10 @@ mdDsmcCoupling::mdDsmcCoupling
     sendInterfaces_(),
     recvInterfaces_(),
 #endif
-    sending_(false),
-    receiving_(false),
+    sendingRegion_(false),
+    receivingRegion_(false),
+    sendingBound_(false),
+    receivingBound_(false),
     idList(molCloud_.cP().molIds()),
     rU_(molCloud_.redUnits()),
     fixedBounds_(false),
@@ -143,12 +145,14 @@ mdDsmcCoupling::mdDsmcCoupling
 
     if(sendInterfaces_.size() != 0)
     {
-        sending_ = true;
+        sendingRegion_ = true;
+        sendingBound_ = true;
     }
 
     if(recvInterfaces_.size() != 0)
     {
-        receiving_ = true;
+        receivingRegion_ = true;
+        receivingBound_ = true;
     }
 #else
     FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
@@ -166,6 +170,42 @@ mdDsmcCoupling::mdDsmcCoupling
 
     molIds_ = ids.molIds();
     molNames_ = ids.molIdNames();
+
+    const List<point>& meshPoints = mesh_.points();
+
+    //- Determine local mesh extents
+    forAll(meshPoints, pts)
+    {
+        if(meshPoints[pts][0] < meshMin_[0])
+        {
+            meshMin_[0] = meshPoints[pts][0];
+        }
+
+        if(meshPoints[pts][1] < meshMin_[1])
+        {
+            meshMin_[1] = meshPoints[pts][1];
+        }
+
+        if(meshPoints[pts][2] < meshMin_[2])
+        {
+            meshMin_[2] = meshPoints[pts][2];
+        }
+
+        if(meshPoints[pts][0] > meshMax_[0])
+        {
+            meshMax_[0] = meshPoints[pts][0];
+        }
+
+        if(meshPoints[pts][1] > meshMax_[1])
+        {
+            meshMax_[1] = meshPoints[pts][1];
+        }
+
+        if(meshPoints[pts][2] > meshMax_[2])
+        {
+            meshMax_[2] = meshPoints[pts][2];
+        }
+    }
 
     bool regionMinFound = false;
     bool regionMaxFound = false;
@@ -191,6 +231,36 @@ mdDsmcCoupling::mdDsmcCoupling
     else
     {
         fixedRegion_ = true;
+
+        vector meshHalfWidth(((meshMax_[0] - meshMin_[0]) * 0.5),
+                             ((meshMax_[1] - meshMin_[1]) * 0.5),
+                             ((meshMax_[2] - meshMin_[2]) * 0.5));
+        vector fixedRegionHalfWidth(((fixedRegionMax_[0] - fixedRegionMin_[0]) * 0.5),
+                                   ((fixedRegionMax_[1] - fixedRegionMin_[1]) * 0.5),
+                                   ((fixedRegionMax_[2] - fixedRegionMin_[2]) * 0.5));
+        point meshCentre(meshMin_[0] + meshHalfWidth[0],
+                         meshMin_[1] + meshHalfWidth[1],
+                         meshMin_[2] + meshHalfWidth[2]);
+        point fixedRegionCentre(fixedRegionMin_[0] + fixedRegionHalfWidth[0],
+                                fixedRegionMin_[1] + fixedRegionHalfWidth[1],
+                                fixedRegionMin_[2] + fixedRegionHalfWidth[2]);
+
+        bool overlap = true;
+
+        if ((std::fabs(meshCentre[0] - fixedRegionCentre[0]) > (meshHalfWidth[0] + fixedRegionHalfWidth[0])) ||
+           (std::fabs(meshCentre[1] - fixedRegionCentre[1]) > (meshHalfWidth[1] + fixedRegionHalfWidth[1])) ||
+           (std::fabs(meshCentre[2] - fixedRegionCentre[2]) > (meshHalfWidth[2] + fixedRegionHalfWidth[2])))
+        {
+            overlap = false;
+        }
+
+        //- There is an overlap between the fixed boundary and the local mesh so should have found at least 1 intersecting cell
+        if(!overlap)
+        {
+            //receivingRegion_ = false;
+            //sendingRegion_ = false;
+            //std::cout << "Disabling fixed region communication for this controller" << std::endl;
+        }
     }
 
     bool boundMinFound = false;
@@ -251,41 +321,6 @@ mdDsmcCoupling::mdDsmcCoupling
         fixedBounds_ = true;
 
         const cellList& cells = mesh_.cells();
-        const List<point>& meshPoints = mesh_.points();
-
-        //- Determine this rank's mesh extents
-        forAll(meshPoints, pts)
-        {
-            if(meshPoints[pts][0] < meshMin_[0])
-            {
-                meshMin_[0] = meshPoints[pts][0];
-            }
-
-            if(meshPoints[pts][1] < meshMin_[1])
-            {
-                meshMin_[1] = meshPoints[pts][1];
-            }
-
-            if(meshPoints[pts][2] < meshMin_[2])
-            {
-                meshMin_[2] = meshPoints[pts][2];
-            }
-
-            if(meshPoints[pts][0] > meshMax_[0])
-            {
-                meshMax_[0] = meshPoints[pts][0];
-            }
-
-            if(meshPoints[pts][1] > meshMax_[1])
-            {
-                meshMax_[1] = meshPoints[pts][1];
-            }
-
-            if(meshPoints[pts][2] > meshMax_[2])
-            {
-                meshMax_[2] = meshPoints[pts][2];
-            }
-        }
 
         vector localMeshExtents = meshMax_ - meshMin_;
 
@@ -511,21 +546,27 @@ mdDsmcCoupling::mdDsmcCoupling
                                    fixedBoundMin_[1] + fixedBoundHalfWidth[1],
                                    fixedBoundMin_[2] + fixedBoundHalfWidth[2]);
 
-            bool noOverlap = false;
+            bool overlap = true;
 
             if ((std::fabs(meshCentre[0] - fixedBoundCentre[0]) > (meshHalfWidth[0] + fixedBoundHalfWidth[0])) ||
                (std::fabs(meshCentre[1] - fixedBoundCentre[1]) > (meshHalfWidth[1] + fixedBoundHalfWidth[1])) ||
                (std::fabs(meshCentre[2] - fixedBoundCentre[2]) > (meshHalfWidth[2] + fixedBoundHalfWidth[2])))
             {
-                noOverlap = true;
+                overlap = false;
             }
 
             //- There is an overlap between the fixed boundary and the local mesh so should have found at least 1 intersecting cell
-            if(!noOverlap)
+            if(overlap)
             {
                 FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
                              << "Fixed boundary defined but no intersecting cells found"
                              << exit(FatalError);
+            }
+            else
+            {
+                //receivingBound_ = false;
+                //sendingBound_ = false;
+                //std::cout << "Disabling boundary communication for this controller" << std::endl;
             }
         }
     }
@@ -545,23 +586,24 @@ mdDsmcCoupling::mdDsmcCoupling
         output_ = Switch(propsDict_.lookup("output"));
     }
 
-    if(sending_ || receiving_)
-	{
-		refLength_ = threeDInterfaces.refLength; //- Store the reference length
-		refTime_ = threeDInterfaces.refTime; //- Store the reference time
+    refLength_ = threeDInterfaces.refLength; //- Store the reference length
+    refTime_ = threeDInterfaces.refTime; //- Store the reference time
 
-		oneOverRefLength_ = 1.0 / refLength_;
-		oneOverRefTime_ = 1.0 / refTime_;
-#ifdef USE_MUI
-		//Initialise exact time sampler for MUI
-		chrono_sampler = new mui::chrono_sampler_exact3d();
-#endif
-	}
-
+    oneOverRefLength_ = 1.0 / refLength_;
+    oneOverRefTime_ = 1.0 / refTime_;
     refVelocity_ = rU_.refVelocity();
     oneOverRefVelocity_ = 1.0 / refVelocity_;
+#ifdef USE_MUI
+    //Initialise exact time sampler for MUI
+    chrono_sampler = new mui::chrono_sampler_exact3d();
+    rcvPoints_.resize(recvInterfaces_.size());
+#endif
+    rcvMolType_.resize(recvInterfaces_.size());
+    rcvMolId_.resize(recvInterfaces_.size());
+    rcvVelX_.resize(recvInterfaces_.size());
+    rcvVelY_.resize(recvInterfaces_.size());
+    rcvVelZ_.resize(recvInterfaces_.size());
 }
-
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
@@ -570,116 +612,126 @@ mdDsmcCoupling::~mdDsmcCoupling()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void mdDsmcCoupling::initialConfiguration()
+bool mdDsmcCoupling::initialConfiguration()
 {
-	if(receiving_)
+    bool returnVal = false;
+
+	if(receivingRegion_)
     {
-		receiveCoupledRegion(true); // Receive ghost molecules in coupled regions at time = startTime and commit time=1 to release other side
+	    returnVal = receiveCoupledRegion(true); // Receive ghost molecules in coupled region(s) at time = startTime and commit time=1 to release other side
     }
+
+	return returnVal;
 }
 
-void mdDsmcCoupling::controlAfterMove(label stage)
+bool mdDsmcCoupling::controlAfterMove(label stage)
 {
-	if(stage == 1)
+	bool returnVal = false;
+
+    if(stage == 1)
 	{
         currIteration_++; //- Increment the current iteration
 
-        if(sending_)
+        if(sendingBound_)
         {
-            findCoupledMolecules(); //- Find, collate and delete any molecules that have passed a coupling boundary
+            returnVal = findCoupledMolecules(); //- Find, collate and delete any molecules that have passed a coupling boundary
             sendCoupledMolecules(); // Send any molecules deleted by coupling boundary (non-blocking)
         }
 	}
 	else if (stage == 2)
 	{
-	    if(receiving_)
+	    if(receivingBound_)
         {
             receiveCoupledParcels(); // Receive any molecules coupling boundary (blocking)
         }
 	}
 	else if (stage == 3)
 	{
-		if(receiving_)
+		if(receivingRegion_)
         {
-            receiveCoupledRegion(false); // Receive ghost molecules in coupled region (blocking)
+		    returnVal = receiveCoupledRegion(false); // Receive ghost molecules in coupled region (blocking)
         }
     }
 	else if (stage == 4)
 	{
-	    if(receiving_)
+	    if(receivingBound_)
 	    {
-	        insertCoupledMolecules(); // Insert any coupling boundary molecules from stage 2
+	        returnVal = insertCoupledMolecules(); // Insert any coupling boundary molecules from stage 2
 	    }
 	}
+
+    return returnVal;
 }
 
 void mdDsmcCoupling::controlAfterForces()
 {
-    if(sending_)
+    if(sendingRegion_)
     {
         sendCoupledRegionForces(); // Send the forces acting on molecules in the coupling region(s) (non-blocking)
     }
 }
 
-void mdDsmcCoupling::receiveCoupledRegion(bool init)
+bool mdDsmcCoupling::receiveCoupledRegion(bool init)
 {
+    bool molChanged = false;
 #ifdef USE_MUI
     if(init)
 	{
 	    currIteration_ = 1;
 	}
     label molCount = 0;
-	List<std::vector<mui::point3d> > rcvPoints(recvInterfaces_.size());
-	List<std::vector<std::string> > rcvMolType(recvInterfaces_.size());
-	List<std::vector<label> > rcvMolId(recvInterfaces_.size());
-    List<std::vector<scalar> > rcvVelX(recvInterfaces_.size());
-    List<std::vector<scalar> > rcvVelY(recvInterfaces_.size());
-    List<std::vector<scalar> > rcvVelZ(recvInterfaces_.size());
 
 	// Iterate through all receiving interfaces for this controller and extract a points list
 	forAll(recvInterfaces_, iface)
 	{
-        //- Extract a list of all molecule locations received from other solver through this interface
-        rcvPoints[iface] = recvInterfaces_[iface]->fetch_points<std::string>("type_region", currIteration_, *chrono_sampler);
+	    rcvPoints_[iface].clear();
+	    rcvMolType_[iface].clear();
+	    rcvMolId_[iface].clear();
+	    rcvVelX_[iface].clear();
+	    rcvVelY_[iface].clear();
+	    rcvVelZ_[iface].clear();
 
-        if(rcvPoints[iface].size() > 0)
+        //- Extract a list of all molecule locations received from other solver through this interface
+        rcvPoints_[iface] = recvInterfaces_[iface]->fetch_points<std::string>("type_region", currIteration_, *chrono_sampler);
+
+        if(rcvPoints_[iface].size() > 0)
         {
             //- Extract a list of all molecule change status values received from other solver through this interface
-            rcvMolType[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_region", currIteration_, *chrono_sampler);
+            rcvMolType_[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_region", currIteration_, *chrono_sampler);
 
             //- Extract a list of all molecule Id's received from other solver through this interface
-            rcvMolId[iface] = recvInterfaces_[iface]->fetch_values<label>("id_region", currIteration_, *chrono_sampler);
+            rcvMolId_[iface] = recvInterfaces_[iface]->fetch_values<label>("id_region", currIteration_, *chrono_sampler);
 
             //- Extract a list of all molecule velocities received from other solver through this interface
-            rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_x_region", currIteration_, *chrono_sampler);
-            rcvVelY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_y_region", currIteration_, *chrono_sampler);
-            rcvVelZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_z_region", currIteration_, *chrono_sampler);
+            rcvVelX_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_x_region", currIteration_, *chrono_sampler);
+            rcvVelY_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_y_region", currIteration_, *chrono_sampler);
+            rcvVelZ_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_z_region", currIteration_, *chrono_sampler);
         }
 	}
 
 	//- Go through received values and find any that are not of the type set to be received
-    forAll(rcvMolType, ifacepts)
+    forAll(rcvMolType_, ifacepts)
     {
-        if(rcvMolType[ifacepts].size() > 0)
+        if(rcvMolType_[ifacepts].size() > 0)
         {
             std::vector<std::string>::iterator rcvMolTypeIt;
-            std::vector<mui::point3d>::iterator rcvPointsIt = rcvPoints[ifacepts].begin();
-            std::vector<label>::iterator rcvMolIdIt = rcvMolId[ifacepts].begin();
-            std::vector<scalar>::iterator rcvVelXIt = rcvVelX[ifacepts].begin();
-            std::vector<scalar>::iterator rcvVelYIt = rcvVelY[ifacepts].begin();
-            std::vector<scalar>::iterator rcvVelZIt = rcvVelZ[ifacepts].begin();
+            std::vector<mui::point3d>::iterator rcvPointsIt = rcvPoints_[ifacepts].begin();
+            std::vector<label>::iterator rcvMolIdIt = rcvMolId_[ifacepts].begin();
+            std::vector<scalar>::iterator rcvVelXIt = rcvVelX_[ifacepts].begin();
+            std::vector<scalar>::iterator rcvVelYIt = rcvVelY_[ifacepts].begin();
+            std::vector<scalar>::iterator rcvVelZIt = rcvVelZ_[ifacepts].begin();
 
-            for (rcvMolTypeIt = rcvMolType[ifacepts].begin(); rcvMolTypeIt != rcvMolType[ifacepts].end(); rcvMolTypeIt++) {
+            for (rcvMolTypeIt = rcvMolType_[ifacepts].begin(); rcvMolTypeIt != rcvMolType_[ifacepts].end(); rcvMolTypeIt++) {
                 const label molId = findIndex(molNames_, *rcvMolTypeIt);
 
                 if(molId == -1) //- molId not found in local list as one to receive so store it as one to remove from lists
                 {
-                    rcvMolType[ifacepts].erase(rcvMolTypeIt--);
-                    rcvPoints[ifacepts].erase(rcvPointsIt--);
-                    rcvMolId[ifacepts].erase(rcvMolIdIt--);
-                    rcvVelX[ifacepts].erase(rcvVelXIt--);
-                    rcvVelY[ifacepts].erase(rcvVelYIt--);
-                    rcvVelZ[ifacepts].erase(rcvVelZIt--);
+                    rcvMolType_[ifacepts].erase(rcvMolTypeIt--);
+                    rcvPoints_[ifacepts].erase(rcvPointsIt--);
+                    rcvMolId_[ifacepts].erase(rcvMolIdIt--);
+                    rcvVelX_[ifacepts].erase(rcvVelXIt--);
+                    rcvVelY_[ifacepts].erase(rcvVelYIt--);
+                    rcvVelZ_[ifacepts].erase(rcvVelZIt--);
                 }
 
                 rcvPointsIt++;
@@ -692,33 +744,36 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
     }
 
 	//- Insert/update the ghost molecules
-	forAll(rcvPoints, ifacepts)
+	forAll(rcvPoints_, ifacepts)
 	{
-		if(rcvPoints[ifacepts].size() > 0)
+		if(rcvPoints_[ifacepts].size() > 0)
 		{
 		    bool newList = false;
 		    bool newSize = false;
 			
 			//- List size has changed, treat as a new list
-			if(molId_[ifacepts].size() != rcvMolId[ifacepts].size())
+			if(molId_[ifacepts].size() != rcvMolId_[ifacepts].size())
 			{
 			    newList = true;
-			    newSize = true;
 
-			    if(molId_[ifacepts].size() == 0)
+			    if(molId_[ifacepts].size() == 0) //- Local storage is zero size, so resize here instead of later
                 {
                     //- Resize local storage to new received size
-                    molId_[ifacepts].setSize(rcvMolId[ifacepts].size(), -1);
-                    molHistory_[ifacepts].setSize(rcvMolId[ifacepts].size(), NULL);
+                    molId_[ifacepts].setSize(rcvMolId_[ifacepts].size(), -1);
+                    molHistory_[ifacepts].setSize(rcvMolId_[ifacepts].size(), NULL);
 
                     newSize = false;
                 }
+			    else //- Local storage not zero size, so resize later
+			    {
+			        newSize = true;
+			    }
 			}
 			else //- List size the same, ensure list hasn't changed internally
 			{
-			    forAll(rcvMolId[ifacepts], rcvMol)
+			    forAll(rcvMolId_[ifacepts], rcvMol)
                 {
-			        if(rcvMolId[ifacepts][rcvMol] != molId_[ifacepts][rcvMol]) //- If a molecule ID changes then treat as new list
+			        if(rcvMolId_[ifacepts][rcvMol] != molId_[ifacepts][rcvMol]) //- If a molecule ID changes then treat as new list
 			        {
 			            newList = true;
 			            break; //- Break once first change detected
@@ -728,70 +783,89 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
 
 			if(newList)
 			{
-                List<bool> molIdFound(molId_[ifacepts].size(), false);
-                List<bool> rcvMolIdFound(rcvMolId[ifacepts].size(), false);
+			    DynamicList<label> molsToDelete;
+			    List<polyMolecule*> rcvMolHistory(rcvMolId_[ifacepts].size(), NULL);
 
-                //- Determine which molecules from the last iteration exist in the received list and which are new
-                forAll(rcvMolId[ifacepts], rcvMol)
+			    //- Determine which molecules from the last iteration no longer exist in the received list and so need to be deleted
+                forAll(molId_[ifacepts], currMol)
+                {
+                    bool molFound = false;
+
+                    forAll(rcvMolId_[ifacepts], rcvMol)
+                    {
+                        if(molId_[ifacepts][currMol] == rcvMolId_[ifacepts][rcvMol])
+                        {
+                            molFound = true;
+                            break; //- Break inner loop as match found
+                        }
+                    }
+
+                    if(!molFound)
+                    {
+                        molsToDelete.append(molId_[ifacepts][currMol]);
+                    }
+                }
+
+                // Delete any molecules that need to be
+                forAll(molId_[ifacepts], currMol)
+                {
+                    forAll(molsToDelete, delMol)
+                    {
+                        if(molsToDelete[delMol] == molId_[ifacepts][currMol])
+                        {
+                            if(molHistory_[ifacepts][currMol] != NULL)
+                            {
+                                molCloud_.deleteParticle(*molHistory_[ifacepts][currMol]);
+                                molHistory_[ifacepts][currMol] = NULL;
+                                molChanged = true;
+                            }
+                        }
+                    }
+                }
+
+                molsToDelete.clear();
+
+			    //- Determine which molecules in the received list did not exist in the last iteration and so are new
+                forAll(rcvMolId_[ifacepts], rcvMol)
                 {
                     forAll(molId_[ifacepts], currMol)
                     {
-                        if(rcvMolId[ifacepts][rcvMol] == molId_[ifacepts][currMol])
+                        if(rcvMolId_[ifacepts][rcvMol] == molId_[ifacepts][currMol])
                         {
-                            molIdFound[currMol] = true;
-                            rcvMolIdFound[rcvMol] = true;
+                            rcvMolHistory[rcvMol] = molHistory_[ifacepts][currMol];
                             break; //- Break inner loop as match found
                         }
                     }
                 }
 
-                //- Delete any molecules that no longer exist based on the received list
-                forAll(molIdFound, mol)
-                {
-                    if(!molIdFound[mol])
-                    {
-                        if(molHistory_[ifacepts][mol] != NULL)
-                        {
-                            molCloud_.removeMolFromCellOccupancy(molHistory_[ifacepts][mol]);
-                            molCloud_.deleteParticle(*molHistory_[ifacepts][mol]);
-                            molHistory_[ifacepts][mol] = NULL;
-                        }
-                    }
-                }
-
+                //- Resize local storage if new list size required it
                 if(newSize)
                 {
                     //- Resize local storage to new received size
-                    molId_[ifacepts].setSize(rcvMolId[ifacepts].size(), -1);
-                    molHistory_[ifacepts].setSize(rcvMolId[ifacepts].size(), NULL);
+                    molId_[ifacepts].setSize(rcvMolId_[ifacepts].size(), -1);
+                    molHistory_[ifacepts].setSize(rcvMolId_[ifacepts].size(), NULL);
                 }
 
                 //- Update the local molecule ID store to the received version
-                forAll(molId_[ifacepts], mol)
+                forAll(rcvMolId_[ifacepts], mol)
                 {
-                    molId_[ifacepts][mol] = rcvMolId[ifacepts][mol];
+                    molId_[ifacepts][mol] = rcvMolId_[ifacepts][mol];
+                    molHistory_[ifacepts][mol] = rcvMolHistory[mol];
                 }
 
-                //- Update the molHistory store, setting any that need creating to NULL
-                forAll(rcvMolIdFound, rcvMol)
-                {
-                    if(!rcvMolIdFound[rcvMol])
-                    {
-                        molHistory_[ifacepts][rcvMol] = NULL;
-                    }
-                }
+                rcvMolHistory.clear();
 			}
 
-            for (size_t pts = 0; pts < rcvPoints[ifacepts].size(); pts++)
+            for (size_t pts = 0; pts < rcvPoints_[ifacepts].size(); pts++)
             {
-                const label molId = findIndex(molNames_, rcvMolType[ifacepts][pts]);
+                const label molId = findIndex(molNames_, rcvMolType_[ifacepts][pts]);
 
                 vector velocity;
-                velocity[0] = rcvVelX[ifacepts][pts] * oneOverRefVelocity_;
-                velocity[1] = rcvVelY[ifacepts][pts] * oneOverRefVelocity_;
-                velocity[2] = rcvVelZ[ifacepts][pts] * oneOverRefVelocity_;
+                velocity[0] = rcvVelX_[ifacepts][pts] * oneOverRefVelocity_;
+                velocity[1] = rcvVelY_[ifacepts][pts] * oneOverRefVelocity_;
+                velocity[2] = rcvVelZ_[ifacepts][pts] * oneOverRefVelocity_;
 
-                point checkedPosition((rcvPoints[ifacepts][pts][0] * refLength_), (rcvPoints[ifacepts][pts][1] * refLength_), (rcvPoints[ifacepts][pts][2] * refLength_));
+                point checkedPosition((rcvPoints_[ifacepts][pts][0] * refLength_), (rcvPoints_[ifacepts][pts][1] * refLength_), (rcvPoints_[ifacepts][pts][2] * refLength_));
 
                 if(fixedRegion_)
                 {
@@ -829,7 +903,7 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
                 if(molHistory_[ifacepts][pts] == NULL) //- This molecule is new so insert it
                 {
                     molHistory_[ifacepts][pts] = insertMolecule(checkedPosition, molIds_[molId], true, velocity);
-                    molCount++;
+                    molChanged = true;
                 }
                 else //- This molecule already exists, so just update its values
                 {
@@ -840,22 +914,11 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
                     molHistory_[ifacepts][pts]->v()[0] = velocity[0];
                     molHistory_[ifacepts][pts]->v()[1] = velocity[1];
                     molHistory_[ifacepts][pts]->v()[2] = velocity[2];
-
-                    molCount++;
                 }
+
+                molCount++;
             }
 		}
-	}
-
-	//- This is the initialisation call so commit at iteration = 0 to allow other side to continue
-	if(init)
-	{
-		forAll(recvInterfaces_, iface)
-		{
-		    recvInterfaces_[iface]->commit(currIteration_);
-		}
-
-		currIteration_ = 0;
 	}
 
 	if(molCount > 0)
@@ -902,7 +965,19 @@ void mdDsmcCoupling::receiveCoupledRegion(bool init)
             prevMolCount_ = molCount;
         }
 	}
+
+	//- This is the initialisation call so commit at iteration = 1 to allow other side to continue
+    if(init)
+    {
+        forAll(recvInterfaces_, iface)
+        {
+            recvInterfaces_[iface]->commit(currIteration_);
+        }
+
+        currIteration_ = 0;
+    }
 #endif
+    return molChanged;
 }
 
 void mdDsmcCoupling::sendCoupledRegionForces()
@@ -913,54 +988,56 @@ void mdDsmcCoupling::sendCoupledRegionForces()
     // Iterate through all sending interfaces for this controller
     forAll(sendInterfaces_, iface)
     {
-        forAll(molHistory_[iface], mol) // Iterate through molecules received by this controller
+        if(molHistory_[iface].size() > 0)
         {
-            molecule = molHistory_[iface][mol];
-
-            //- Determine whether parcel is of a type set to send by this controller
-            const label typeIndex = findIndex(molNames_, molCloud_.cP().molIds()[molecule->id()]);
-
-            if(typeIndex != -1)
+            forAll(molHistory_[iface], mol) // Iterate through molecules received by this controller
             {
-                // Get the molecule centre
-                mui::point3d molCentre;
-                molCentre[0] = molecule->position()[0] * oneOverRefLength_;
-                molCentre[1] = molecule->position()[1] * oneOverRefLength_;
-                molCentre[2] = molecule->position()[2] * oneOverRefLength_;
+                molecule = molHistory_[iface][mol];
 
-                // Push molecule type
-                sendInterfaces_[iface]->push("type_region", molCentre, static_cast<std::string>(molNames_[typeIndex]));
+                //- Determine whether parcel is of a type set to send by this controller
+                const label typeIndex = findIndex(molNames_, molCloud_.cP().molIds()[molecule->id()]);
 
-                // Push molecule ID from receive history
-                sendInterfaces_[iface]->push("id_region", molCentre, static_cast<label>(molId_[iface][mol]));
-
-                vector siteForcesAccum(vector::zero);
-
-                forAll(molecule->siteForces(), s)
+                if(typeIndex != -1)
                 {
-                    siteForcesAccum[0] += molecule->siteForces()[s][0];
-                    siteForcesAccum[1] += molecule->siteForces()[s][1];
-                    siteForcesAccum[2] += molecule->siteForces()[s][2];
-                }
+                    // Get the molecule centre
+                    mui::point3d molCentre;
+                    molCentre[0] = molecule->position()[0] * oneOverRefLength_;
+                    molCentre[1] = molecule->position()[1] * oneOverRefLength_;
+                    molCentre[2] = molecule->position()[2] * oneOverRefLength_;
 
-                // Push the molecule site forces to the interface
-                sendInterfaces_[iface]->push("force_x_region", molCentre, siteForcesAccum[0] * rU_.refForce());
-                sendInterfaces_[iface]->push("force_y_region", molCentre, siteForcesAccum[1] * rU_.refForce());
-                sendInterfaces_[iface]->push("force_z_region", molCentre, siteForcesAccum[2] * rU_.refForce());
+                    // Push molecule type
+                    sendInterfaces_[iface]->push("type_region", molCentre, static_cast<std::string>(molNames_[typeIndex]));
+
+                    // Push molecule ID from receive history
+                    sendInterfaces_[iface]->push("id_region", molCentre, static_cast<label>(molId_[iface][mol]));
+
+                    vector siteForcesAccum(vector::zero);
+
+                    forAll(molecule->siteForces(), s)
+                    {
+                        siteForcesAccum[0] += molecule->siteForces()[s][0];
+                        siteForcesAccum[1] += molecule->siteForces()[s][1];
+                        siteForcesAccum[2] += molecule->siteForces()[s][2];
+                    }
+
+                    // Push the molecule site forces to the interface
+                    sendInterfaces_[iface]->push("force_x_region", molCentre, siteForcesAccum[0] * rU_.refForce());
+                    sendInterfaces_[iface]->push("force_y_region", molCentre, siteForcesAccum[1] * rU_.refForce());
+                    sendInterfaces_[iface]->push("force_z_region", molCentre, siteForcesAccum[2] * rU_.refForce());
+                }
             }
         }
-    }
 
-    forAll(sendInterfaces_, iface)
-    {
         // Commit (transmit) values to the MUI interface
         sendInterfaces_[iface]->commit(currIteration_);
     }
 #endif
 }
 
-void mdDsmcCoupling::findCoupledMolecules()
+bool mdDsmcCoupling::findCoupledMolecules()
 {
+    bool molsDeleted = false;
+
     DynamicList<polyMolecule*> molsToRemove;
 
     forAll(intersectingCells_, cell)
@@ -1108,20 +1185,23 @@ void mdDsmcCoupling::findCoupledMolecules()
     //- Iterate through all parcels to be removed
     forAll(molsToRemove, molecule)
     {
-        //- Delete molecule from cellOccupancy (before deleting it from cloud)
-        molCloud_.removeMolFromCellOccupancy(molsToRemove[molecule]);
         molCloud_.deleteParticle(*molsToRemove[molecule]);
+        molsDeleted = true;
     }
+
+    molsToRemove.clear();
+
+    return molsDeleted;
 }
 
 void mdDsmcCoupling::sendCoupledMolecules()
 {
 #ifdef USE_MUI
-    if(molsToSend_.size() != 0)
-	{
-		forAll(molsToSend_, mols)
-		{
-            forAll(sendInterfaces_, iface)
+    forAll(sendInterfaces_, iface)
+    {
+        if(molsToSend_.size() != 0)
+        {
+            forAll(molsToSend_, mols)
             {
                 // Get the molecule centre
                 mui::point3d molCentre;
@@ -1153,68 +1233,65 @@ void mdDsmcCoupling::sendCoupledMolecules()
                     std::cout << "Coupling boundary molecule pushed at: [" << molCentre[0] << "," << molCentre[1] << "," << molCentre[2] << "]" << std::endl;
                 }
             }
-		}
+        }
 
-		//- Clear the sent molecules
-		molsToSend_.clear();
-	}
-
-    forAll(sendInterfaces_, iface)
-    {
-    	// Commit values to the coupling interface
-	  	sendInterfaces_[iface]->commit(currIteration_);
+        // Commit values to the coupling interface
+        label peers = sendInterfaces_[iface]->commit(currIteration_);
+        std::cout << "Commit to " << peers << " peers" << std::endl;
     }
 #endif
+    //- Clear the sent molecules
+    molsToSend_.clear();
 }
 
 void mdDsmcCoupling::receiveCoupledParcels()
 {
 #ifdef USE_MUI
-	List<std::vector<mui::point3d> > rcvPoints(recvInterfaces_.size());
-	List<std::vector<std::string> > rcvMolType(recvInterfaces_.size());
-    List<std::vector<scalar> > rcvVelX(recvInterfaces_.size());
-    List<std::vector<scalar> > rcvVelY(recvInterfaces_.size());
-    List<std::vector<scalar> > rcvVelZ(recvInterfaces_.size());
-
-	// Iterate through all receiving interfaces for this controller and extract a points list for each molecule type handled
+    // Iterate through all receiving interfaces for this controller and extract a points list for each molecule type handled
 	forAll(recvInterfaces_, iface)
 	{
-        //- Extract a list of all molecule locations
-        rcvPoints[iface] = recvInterfaces_[iface]->fetch_points<std::string>("type_bound", currIteration_, *chrono_sampler);
+	    rcvPoints_[iface].clear();
+	    rcvMolType_[iface].clear();
+	    rcvVelX_[iface].clear();
+	    rcvVelY_[iface].clear();
+	    rcvVelZ_[iface].clear();
 
-        if(rcvPoints[iface].size() > 0)
+        //- Extract a list of all molecule locations
+        rcvPoints_[iface] = recvInterfaces_[iface]->fetch_points<std::string>("type_bound", currIteration_, *chrono_sampler);
+
+        if(rcvPoints_[iface].size() > 0)
         {
             //- Extract a list of all molecule types
-            rcvMolType[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_bound", currIteration_, *chrono_sampler);
+            rcvMolType_[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_bound", currIteration_, *chrono_sampler);
 
             //- Extract a list of all molecule velocities received from other solver through this interface
-            rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_x_bound", currIteration_, *chrono_sampler);
-            rcvVelY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_y_bound", currIteration_, *chrono_sampler);
-            rcvVelZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_z_bound", currIteration_, *chrono_sampler);
+            rcvVelX_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_x_bound", currIteration_, *chrono_sampler);
+            rcvVelY_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_y_bound", currIteration_, *chrono_sampler);
+            rcvVelZ_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_z_bound", currIteration_, *chrono_sampler);
         }
 	}
 
 	//- Go through received values and find any that are not of the type set to be received
-    forAll(rcvMolType, ifacepts)
+    forAll(rcvMolType_, ifacepts)
     {
-        if(rcvMolType[ifacepts].size() > 0)
+        if(rcvMolType_[ifacepts].size() > 0)
         {
             std::vector<std::string>::iterator rcvMolTypeIt;
-            std::vector<mui::point3d>::iterator rcvPointsIt = rcvPoints[ifacepts].begin();
-            std::vector<scalar>::iterator rcvVelXIt = rcvVelX[ifacepts].begin();
-            std::vector<scalar>::iterator rcvVelYIt = rcvVelY[ifacepts].begin();
-            std::vector<scalar>::iterator rcvVelZIt = rcvVelZ[ifacepts].begin();
+            std::vector<mui::point3d>::iterator rcvPointsIt = rcvPoints_[ifacepts].begin();
+            std::vector<scalar>::iterator rcvVelXIt = rcvVelX_[ifacepts].begin();
+            std::vector<scalar>::iterator rcvVelYIt = rcvVelY_[ifacepts].begin();
+            std::vector<scalar>::iterator rcvVelZIt = rcvVelZ_[ifacepts].begin();
 
-            for (rcvMolTypeIt = rcvMolType[ifacepts].begin(); rcvMolTypeIt != rcvMolType[ifacepts].end(); rcvMolTypeIt++) {
+            for (rcvMolTypeIt = rcvMolType_[ifacepts].begin(); rcvMolTypeIt != rcvMolType_[ifacepts].end(); rcvMolTypeIt++) {
                 const label molId = findIndex(molNames_, *rcvMolTypeIt);
 
                 if(molId == -1) //- molId not found in local list as one to receive so store it as one to remove from lists
                 {
-                    rcvMolType[ifacepts].erase(rcvMolTypeIt--);
-                    rcvPoints[ifacepts].erase(rcvPointsIt--);
-                    rcvVelX[ifacepts].erase(rcvVelXIt--);
-                    rcvVelY[ifacepts].erase(rcvVelYIt--);
-                    rcvVelZ[ifacepts].erase(rcvVelZIt--);
+                    rcvMolType_[ifacepts].erase(rcvMolTypeIt--);
+                    rcvPoints_[ifacepts].erase(rcvPointsIt--);
+                    rcvVelX_[ifacepts].erase(rcvVelXIt--);
+                    rcvVelY_[ifacepts].erase(rcvVelYIt--);
+                    rcvVelZ_[ifacepts].erase(rcvVelZIt--);
                 }
 
                 rcvPointsIt++;
@@ -1225,19 +1302,19 @@ void mdDsmcCoupling::receiveCoupledParcels()
         }
     }
 
-    // Iterate through all receiving interfaces for this controller
-	forAll(recvInterfaces_, ifacepts)
+    // Iterate through points received
+	forAll(rcvPoints_, ifacepts)
 	{
-        if(rcvPoints[ifacepts].size() > 0)
+        if(rcvPoints_[ifacepts].size() > 0)
         {
-            for (size_t pts = 0; pts < rcvPoints[ifacepts].size(); pts++)
+            for (size_t pts = 0; pts < rcvPoints_[ifacepts].size(); pts++)
             {
                 vector velocity;
-                velocity[0] = rcvVelX[ifacepts][pts] * oneOverRefVelocity_;
-                velocity[1] = rcvVelY[ifacepts][pts] * oneOverRefVelocity_;
-                velocity[2] = rcvVelZ[ifacepts][pts] * oneOverRefVelocity_;
+                velocity[0] = rcvVelX_[ifacepts][pts] * oneOverRefVelocity_;
+                velocity[1] = rcvVelY_[ifacepts][pts] * oneOverRefVelocity_;
+                velocity[2] = rcvVelZ_[ifacepts][pts] * oneOverRefVelocity_;
 
-                point checkedPosition(rcvPoints[ifacepts][pts][0] * refLength_, rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
+                point checkedPosition(rcvPoints_[ifacepts][pts][0] * refLength_, rcvPoints_[ifacepts][pts][1] * refLength_, rcvPoints_[ifacepts][pts][2] * refLength_);
 
                 if(fixedBounds_)
                 {
@@ -1310,7 +1387,7 @@ void mdDsmcCoupling::receiveCoupledParcels()
                 }
 
                 coupledMolecule newMol;
-                newMol.molType = rcvMolType[ifacepts][pts];
+                newMol.molType = rcvMolType_[ifacepts][pts];
                 newMol.position = checkedPosition;
                 newMol.velocity = velocity;
 
@@ -1354,10 +1431,10 @@ bool mdDsmcCoupling::insertCoupledMolecules()
                 molInserted = true;
             }
         }
-
-        molsReceived_.clear();
     }
 #endif
+    molsReceived_.clear();
+
     return molInserted;
 }
 
@@ -1428,25 +1505,25 @@ void mdDsmcCoupling::barrier(label iteration, label interface)
 	sendInterfaces_[interface]->barrier(iteration);
 }
 
-void mdDsmcCoupling::forget()
+void mdDsmcCoupling::forget(bool forget)
 {
 	forAll(recvInterfaces_, iface)
 	{
-		recvInterfaces_[iface]->forget(currIteration_, true);
+		recvInterfaces_[iface]->forget(currIteration_, forget);
 	}
 }
 
-void mdDsmcCoupling::forget(label iteration)
+void mdDsmcCoupling::forget(label iteration, bool forget)
 {
 	forAll(recvInterfaces_, iface)
 	{
-		recvInterfaces_[iface]->forget(iteration, true);
+		recvInterfaces_[iface]->forget(iteration, forget);
 	}
 }
 
-void mdDsmcCoupling::forget(label iteration, label interface)
+void mdDsmcCoupling::forget(label iteration, label interface, bool forget)
 {
-	recvInterfaces_[interface]->forget(iteration, true);
+	recvInterfaces_[interface]->forget(iteration, forget);
 }
 
 polyMolecule* mdDsmcCoupling::insertMolecule

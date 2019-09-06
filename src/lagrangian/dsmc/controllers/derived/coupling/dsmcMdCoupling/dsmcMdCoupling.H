@@ -41,7 +41,6 @@ SourceFiles
 #include "fvMesh.H"
 #include "volFields.H"
 #include "dsmcCloud.H"
-#include <sstream>
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -83,14 +82,16 @@ private:
 #ifdef USE_MUI
         DynamicList<mui::uniface<mui::config_3d>* > sendInterfaces_; //- 3D MUI interfaces to send through
 #endif
-        bool sending_;          //- Determine whether this controller will send
+        bool sendingRegion_;          //- Determine whether this controller will send for the fixed region
+        bool sendingBound_;           //- Determine whether this controller will send for the fixed boundary
         DynamicList<word> sendInterfaceNames_;
 
         //- Receiving properties
 #ifdef USE_MUI
         DynamicList<mui::uniface<mui::config_3d>* > recvInterfaces_; //- 3D MUI interfaces to receive from
 #endif
-        bool receiving_;        //- Determine whether this controller will receive
+        bool receivingRegion_;          //- Determine whether this controller will receive for the fixed region
+        bool receivingBound_;           //- Determine whether this controller will receive for the fixed boundary
         DynamicList<word> recvInterfaceNames_;
 
         DynamicList<List<label> > parcelsInCellHistory_;
@@ -159,7 +160,7 @@ public:
         void controlParcelsAfterCollisions(label stage);
 
         //- Collate and delete parcels that have crossed a coupling boundary
-        void findCoupledParcels();
+        bool findCoupledParcels();
 
         //- send parcels that fall into the MD coupled region to coupled mdFoamPlus
         void sendCoupledRegion(bool init);
@@ -193,13 +194,13 @@ public:
         void barrier(label iteration, label interface);
 
         //- Forget the time frame received at current coupling time for all interfaces
-        void forget();
+        void forget(bool forget);
 
         //- Forget the time frame received at specific iteration for all interfaces
-        void forget(label iteration);
+        void forget(label iteration, bool forget);
 
         //- Forget the time frame received at specific iteration for specific interfaces
-        void forget(label iteration, label interface);
+        void forget(label iteration, label interface, bool forget);
 };
 
 

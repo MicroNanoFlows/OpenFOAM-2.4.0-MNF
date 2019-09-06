@@ -59,8 +59,10 @@ dsmcMdCoupling::dsmcMdCoupling
     sendInterfaces_(),
     recvInterfaces_(),
 #endif
-    sending_(false),
-    receiving_(false),
+    sendingRegion_(false),
+    receivingRegion_(false),
+    sendingBound_(false),
+    receivingBound_(false),
     fixedBounds_(false),
     fixedRegion_(false),
     fixedRegionMin_(vector::zero),
@@ -70,7 +72,9 @@ dsmcMdCoupling::dsmcMdCoupling
     fixedBoundNorm_(vector::zero),
     fixedBoundZeroThick_(vector(-1, -1, -1)),
     currIteration_(0),
-    boundCorr_(0)
+    boundCorr_(0),
+    meshMin_(VGREAT, VGREAT, VGREAT),
+    meshMax_(-VSMALL, -VSMALL, -VSMALL)
 {
 #ifdef USE_MUI
     //- Determine sending interfaces if defined
@@ -96,8 +100,8 @@ dsmcMdCoupling::dsmcMdCoupling
         //- Check all interfaces were found
         forAll(sendInterfaces_, i)
         {
-        	Info << "dsmcMdCoupling::dsmcMdCoupling(): Found 3D MUI coupling interface ("
-                 << interfaces[i] << ") to send for domain " << threeDInterfaces.domainName << endl;
+        	std::cout << "dsmcMdCoupling::dsmcMdCoupling(): Found 3D MUI coupling interface ("
+                 << interfaces[i] << ") to send for domain " << threeDInterfaces.domainName << std::endl;
         }
 
         parcelsInCellHistory_.setSize(sendInterfaces_.size());
@@ -126,19 +130,21 @@ dsmcMdCoupling::dsmcMdCoupling
         //- Check all interfaces were found
         forAll(recvInterfaces_, i)
         {
-        	Info << "dsmcMdCoupling::dsmcMdCoupling(): Found 3D MUI coupling interface ("
-                 << interfaces[i] << ") to receive for domain " << threeDInterfaces.domainName << endl;
+        	std::cout << "dsmcMdCoupling::dsmcMdCoupling(): Found 3D MUI coupling interface ("
+                 << interfaces[i] << ") to receive for domain " << threeDInterfaces.domainName << std::endl;
         }
     }
 
     if((sendInterfaces_.size() != 0))
     {
-        sending_ = true;
+        sendingRegion_ = true;
+        sendingBound_ = true;
     }
 
     if((recvInterfaces_.size() != 0))
     {
-        receiving_ = true;
+        receivingRegion_ = true;
+        receivingBound_ = true;
     }
 #else
     FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
@@ -168,6 +174,42 @@ dsmcMdCoupling::dsmcMdCoupling
 		}
 	}
 
+    const List<point>& meshPoints = mesh_.points();
+
+    //- Determine local mesh extents
+    forAll(meshPoints, pts)
+    {
+        if(meshPoints[pts][0] < meshMin_[0])
+        {
+            meshMin_[0] = meshPoints[pts][0];
+        }
+
+        if(meshPoints[pts][1] < meshMin_[1])
+        {
+            meshMin_[1] = meshPoints[pts][1];
+        }
+
+        if(meshPoints[pts][2] < meshMin_[2])
+        {
+            meshMin_[2] = meshPoints[pts][2];
+        }
+
+        if(meshPoints[pts][0] > meshMax_[0])
+        {
+            meshMax_[0] = meshPoints[pts][0];
+        }
+
+        if(meshPoints[pts][1] > meshMax_[1])
+        {
+            meshMax_[1] = meshPoints[pts][1];
+        }
+
+        if(meshPoints[pts][2] > meshMax_[2])
+        {
+            meshMax_[2] = meshPoints[pts][2];
+        }
+    }
+
     bool regionMinFound = false;
     bool regionMaxFound = false;
 
@@ -192,6 +234,36 @@ dsmcMdCoupling::dsmcMdCoupling
     else
     {
         fixedRegion_ = true;
+
+        vector meshHalfWidth(((meshMax_[0] - meshMin_[0]) * 0.5),
+                             ((meshMax_[1] - meshMin_[1]) * 0.5),
+                             ((meshMax_[2] - meshMin_[2]) * 0.5));
+        vector fixedRegionHalfWidth(((fixedRegionMax_[0] - fixedRegionMin_[0]) * 0.5),
+                                   ((fixedRegionMax_[1] - fixedRegionMin_[1]) * 0.5),
+                                   ((fixedRegionMax_[2] - fixedRegionMin_[2]) * 0.5));
+        point meshCentre(meshMin_[0] + meshHalfWidth[0],
+                         meshMin_[1] + meshHalfWidth[1],
+                         meshMin_[2] + meshHalfWidth[2]);
+        point fixedRegionCentre(fixedRegionMin_[0] + fixedRegionHalfWidth[0],
+                                fixedRegionMin_[1] + fixedRegionHalfWidth[1],
+                                fixedRegionMin_[2] + fixedRegionHalfWidth[2]);
+
+        bool overlap = true;
+
+        if ((std::fabs(meshCentre[0] - fixedRegionCentre[0]) > (meshHalfWidth[0] + fixedRegionHalfWidth[0])) ||
+           (std::fabs(meshCentre[1] - fixedRegionCentre[1]) > (meshHalfWidth[1] + fixedRegionHalfWidth[1])) ||
+           (std::fabs(meshCentre[2] - fixedRegionCentre[2]) > (meshHalfWidth[2] + fixedRegionHalfWidth[2])))
+        {
+            overlap = false;
+        }
+
+        //- There is an overlap between the fixed boundary and the local mesh so should have found at least 1 intersecting cell
+        if(!overlap)
+        {
+            //receivingRegion_ = false;
+            //sendingRegion_ = false;
+            //std::cout << "Disabling fixed region communication for this controller" << std::endl;
+        }
     }
 
     bool boundMinFound = false;
@@ -252,7 +324,8 @@ dsmcMdCoupling::dsmcMdCoupling
         fixedBounds_ = true;
 
         const cellList& cells = mesh_.cells();
-        const List<point>& pts = mesh_.points();
+
+        vector localMeshExtents = meshMax_ - meshMin_;
 
         vector meshExtents = mesh_.bounds().max() - mesh_.bounds().min();
 
@@ -312,34 +385,34 @@ dsmcMdCoupling::dsmcMdCoupling
 
             forAll(pointList, cellPoint)
             {
-                if(pts[pointList[cellPoint]][0] < cellMin[0])
+                if(meshPoints[pointList[cellPoint]][0] < cellMin[0])
                 {
-                    cellMin[0] = pts[pointList[cellPoint]][0];
+                    cellMin[0] = meshPoints[pointList[cellPoint]][0];
                 }
 
-                if(pts[pointList[cellPoint]][0] > cellMax[0])
+                if(meshPoints[pointList[cellPoint]][0] > cellMax[0])
                 {
-                    cellMax[0] = pts[pointList[cellPoint]][0];
+                    cellMax[0] = meshPoints[pointList[cellPoint]][0];
                 }
 
-                if(pts[pointList[cellPoint]][1] < cellMin[1])
+                if(meshPoints[pointList[cellPoint]][1] < cellMin[1])
                 {
-                    cellMin[1] = pts[pointList[cellPoint]][1];
+                    cellMin[1] = meshPoints[pointList[cellPoint]][1];
                 }
 
-                if(pts[pointList[cellPoint]][1] > cellMax[1])
+                if(meshPoints[pointList[cellPoint]][1] > cellMax[1])
                 {
-                    cellMax[1] = pts[pointList[cellPoint]][1];
+                    cellMax[1] = meshPoints[pointList[cellPoint]][1];
                 }
 
-                if(pts[pointList[cellPoint]][2] < cellMin[2])
+                if(meshPoints[pointList[cellPoint]][2] < cellMin[2])
                 {
-                    cellMin[2] = pts[pointList[cellPoint]][2];
+                    cellMin[2] = meshPoints[pointList[cellPoint]][2];
                 }
 
-                if(pts[pointList[cellPoint]][2] > cellMax[2])
+                if(meshPoints[pointList[cellPoint]][2] > cellMax[2])
                 {
-                    cellMax[2] = pts[pointList[cellPoint]][2];
+                    cellMax[2] = meshPoints[pointList[cellPoint]][2];
                 }
             }
 
@@ -347,7 +420,7 @@ dsmcMdCoupling::dsmcMdCoupling
             {
                 if(fixedBoundNorm_[0] != 0)
                 {
-                    scalar boundaryExtend = meshExtents[0] * 0.01;
+                    scalar boundaryExtend = localMeshExtents[0] * 0.01;
 
                     bool test = false;
 
@@ -385,7 +458,7 @@ dsmcMdCoupling::dsmcMdCoupling
             {
                if(fixedBoundNorm_[1] != 0)
                {
-                   scalar boundaryExtend = meshExtents[1] * 0.01;
+                   scalar boundaryExtend = localMeshExtents[1] * 0.01;
                    bool test = false;
 
                    if((fixedBoundMin_[1]-boundaryExtend) >= cellMin[1] && (fixedBoundMin_[1]-boundaryExtend) <= cellMax[1])
@@ -422,7 +495,7 @@ dsmcMdCoupling::dsmcMdCoupling
             {
                if(fixedBoundNorm_[2] != 0)
                {
-                   scalar boundaryExtend = meshExtents[2] * 0.01;
+                   scalar boundaryExtend = localMeshExtents[2] * 0.01;
                    bool test = false;
 
                    if((fixedBoundMin_[2]-boundaryExtend) >= cellMin[2] && (fixedBoundMin_[2]-boundaryExtend) <= cellMax[2])
@@ -462,89 +535,53 @@ dsmcMdCoupling::dsmcMdCoupling
         }
         else
         {
-            //- Determine if fixed boundary falls within mesh bounds
-            point meshMin(VGREAT, VGREAT, VGREAT);
-            point meshMax(-VSMALL, -VSMALL, -VSMALL);
-
-            const pointField& meshPoints = mesh_.points();
-
-            forAll(meshPoints, pts)
-            {
-                if(meshPoints[pts][0] < meshMin[0])
-                {
-                    meshMin[0] = meshPoints[pts][0];
-                }
-
-                if(meshPoints[pts][1] < meshMin[1])
-                {
-                    meshMin[1] = meshPoints[pts][1];
-                }
-
-                if(meshPoints[pts][2] < meshMin[2])
-                {
-                    meshMin[2] = meshPoints[pts][2];
-                }
-
-                if(meshPoints[pts][0] > meshMax[0])
-                {
-                    meshMax[0] = meshPoints[pts][0];
-                }
-
-                if(meshPoints[pts][1] > meshMax[1])
-                {
-                    meshMax[1] = meshPoints[pts][1];
-                }
-
-                if(meshPoints[pts][2] > meshMax[2])
-                {
-                    meshMax[2] = meshPoints[pts][2];
-                }
-            }
-
-            vector meshHalfWidth(((meshMax[0] - meshMin[0]) * 0.5),
-                                 ((meshMax[1] - meshMin[1]) * 0.5),
-                                 ((meshMax[2] - meshMin[2]) * 0.5));
+            vector meshHalfWidth(((meshMax_[0] - meshMin_[0]) * 0.5),
+                                 ((meshMax_[1] - meshMin_[1]) * 0.5),
+                                 ((meshMax_[2] - meshMin_[2]) * 0.5));
             vector fixedBoundHalfWidth(((fixedBoundMax_[0] - fixedBoundMin_[0]) * 0.5),
                                        ((fixedBoundMax_[1] - fixedBoundMin_[1]) * 0.5),
                                        ((fixedBoundMax_[2] - fixedBoundMin_[2]) * 0.5));
-            point meshCentre(meshMin[0] + meshHalfWidth[0],
-                             meshMin[1] + meshHalfWidth[1],
-                             meshMin[2] + meshHalfWidth[2]);
+            point meshCentre(meshMin_[0] + meshHalfWidth[0],
+                             meshMin_[1] + meshHalfWidth[1],
+                             meshMin_[2] + meshHalfWidth[2]);
             point fixedBoundCentre(fixedBoundMin_[0] + fixedBoundHalfWidth[0],
                                    fixedBoundMin_[1] + fixedBoundHalfWidth[1],
                                    fixedBoundMin_[2] + fixedBoundHalfWidth[2]);
 
-            bool noOverlap = false;
+            bool overlap = true;
 
             if ((std::fabs(meshCentre[0] - fixedBoundCentre[0]) > (meshHalfWidth[0] + fixedBoundHalfWidth[0])) ||
                (std::fabs(meshCentre[1] - fixedBoundCentre[1]) > (meshHalfWidth[1] + fixedBoundHalfWidth[1])) ||
                (std::fabs(meshCentre[2] - fixedBoundCentre[2]) > (meshHalfWidth[2] + fixedBoundHalfWidth[2])))
             {
-                noOverlap = true;
+                overlap = false;
             }
 
             //- There is an overlap between the fixed boundary and the local mesh so should have found at least 1 intersecting cell
-            if(!noOverlap)
+            if(overlap)
             {
                 FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
                              << "Fixed boundary defined but no intersecting cells found"
                              << exit(FatalError);
             }
+            else
+            {
+                //receivingBound_ = false;
+                //sendingBound_ = false;
+                //std::cout << "Disabling boundary communications for this controller" << std::endl;
+            }
         }
     }
 
-    if(sending_ || receiving_)
-    {
-    	refLength_ = threeDInterfaces.refLength; //- Store the reference length
-		refTime_ = threeDInterfaces.refTime; //- Store the reference time
+    refLength_ = threeDInterfaces.refLength; //- Store the reference length
+    refTime_ = threeDInterfaces.refTime; //- Store the reference time
 
-		oneOverRefLength_ = 1.0 / refLength_;
-		oneOverRefTime_ = 1.0 / refTime_;
+    oneOverRefLength_ = 1.0 / refLength_;
+    oneOverRefTime_ = 1.0 / refTime_;
 #ifdef USE_MUI
 		//Initialise exact time sampler for MUI
 		chrono_sampler = new mui::chrono_sampler_exact3d();
 #endif
-    }
 }
 
 
@@ -557,7 +594,7 @@ dsmcMdCoupling::~dsmcMdCoupling()
 
 void dsmcMdCoupling::initialConfiguration()
 {
-    if(sending_)
+    if(sendingRegion_)
     {
         sendCoupledRegion(true); // Send ghost parcels in coupled regions at time = startTime
     }
@@ -569,14 +606,18 @@ void dsmcMdCoupling::controlParcelsBeforeCollisions(label stage)
     {
         currIteration_++; //- Increment current iteration
 
-        if(sending_)
+        if(sendingBound_)
         {
-            findCoupledParcels();
+            if(findCoupledParcels())
+            {
+                // Update cell occupancy if parcels were removed
+                cloud_.reBuildCellOccupancy();
+            }
         }
     }
     else if (stage == 2) //- Receive molecules that were sent through the coupling interface
     {
-        if(receiving_)
+        if(receivingBound_)
         {
             if(receiveCoupledMolecules()) // Receive any molecules from MD coupling boundary (blocking)
             {
@@ -587,7 +628,7 @@ void dsmcMdCoupling::controlParcelsBeforeCollisions(label stage)
     }
     else if (stage == 3) //- Send parcels that were deleted in stage 1
     {
-        if(sending_)
+        if(sendingBound_)
         {
             sendCoupledParcels(); // Send any parcels deleted by coupling boundary (non-blocking)
         }
@@ -598,22 +639,24 @@ void dsmcMdCoupling::controlParcelsAfterCollisions(int stage)
 {
     if(stage == 1)
     {
-		if(sending_)
+		if(sendingRegion_)
 		{
 			sendCoupledRegion(false); // Send parcel positions in coupled region(s) (non-blocking)
 		}
     }
     else if (stage == 2)
     {
-    	if(receiving_)
+    	if(receivingRegion_)
 		{
 			receiveCoupledRegionForces(); // Receive MD forces on ghost molecules in coupled region(s) (blocking)
 		}
     }
 }
 
-void dsmcMdCoupling::findCoupledParcels()
+bool dsmcMdCoupling::findCoupledParcels()
 {
+    bool parcelsRemoved = false;
+
     DynamicList<dsmcParcel*> parcsToRemove;
 
     forAll(intersectingCells_, cell)
@@ -695,6 +738,7 @@ void dsmcMdCoupling::findCoupledParcels()
 
                     //- Store that this parcel needs to be removed
                     parcsToRemove.append(parcelsInCell[parcel]);
+                    parcelsRemoved = true;
                 }
             }
         }
@@ -707,6 +751,8 @@ void dsmcMdCoupling::findCoupledParcels()
         cloud_.removeParcelFromCellOccupancy(parcsToRemove[parcel]->origId(), parcsToRemove[parcel]->cell());
         cloud_.deleteParticle(*parcsToRemove[parcel]);
     }
+
+    return parcelsRemoved;
 }
 
 void dsmcMdCoupling::sendCoupledRegion(bool init)
@@ -764,13 +810,10 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 		}
 
 		std::cout << "    Parcels sent to coupled region  = " << parcelsInCellHistory_[iface].size() << std::endl;
-	}
 
-	forAll(sendInterfaces_, iface)
-	{
 		// Commit (transmit) values to the MUI interface
-		sendInterfaces_[iface]->commit(currIteration_);
-    }
+        sendInterfaces_[iface]->commit(currIteration_);
+	}
 
 	if(init)
 	{
@@ -887,13 +930,13 @@ void dsmcMdCoupling::receiveCoupledRegionForces()
 void dsmcMdCoupling::sendCoupledParcels()
 {
 #ifdef USE_MUI
-	if(parcsToSend_.size() != 0)
-	{
-	    label pushed = 0;
+    forAll(sendInterfaces_, iface)
+    {
+        label pushed = 0;
 
-		forAll(parcsToSend_, parcs)
-		{
-            forAll(sendInterfaces_, iface)
+        if(parcsToSend_.size() > 0)
+        {
+            forAll(parcsToSend_, parcs)
             {
                 // Get the parcel centre
                 mui::point3d parcCentre;
@@ -911,20 +954,16 @@ void dsmcMdCoupling::sendCoupledParcels()
 
                 pushed++;
             }
-		}
+        }
 
-		//- Clear the sent parcels
-		parcsToSend_.clear();
+        // Commit (transmit) values to the MUI interface
+        sendInterfaces_[iface]->commit(currIteration_);
 
 		std::cout << "    Coupling parcels pushed  = " << pushed << std::endl;
 	}
-
-	forAll(sendInterfaces_, iface)
-	{
-		// Commit (transmit) values to the MUI interface
-		sendInterfaces_[iface]->commit(currIteration_);
-	}
 #endif
+	//- Clear the sent parcels
+    parcsToSend_.clear();
 }
 
 bool dsmcMdCoupling::receiveCoupledMolecules()
@@ -989,8 +1028,8 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
 
     label inserted = 0;
 
-	// Iterate through all receiving interfaces for this controller
-	forAll(recvInterfaces_, ifacepts)
+	// Iterate through all received points
+	forAll(rcvPoints, ifacepts)
 	{
         if(rcvPoints[ifacepts].size() > 0)
         {
@@ -1142,25 +1181,25 @@ void dsmcMdCoupling::barrier(label iteration, label interface)
 	sendInterfaces_[interface]->barrier(iteration);
 }
 
-void dsmcMdCoupling::forget()
+void dsmcMdCoupling::forget(bool forget)
 {
 	forAll(recvInterfaces_, iface)
 	{
-		recvInterfaces_[iface]->forget(currIteration_, true);
+		recvInterfaces_[iface]->forget(currIteration_, forget);
 	}
 }
 
-void dsmcMdCoupling::forget(label iteration)
+void dsmcMdCoupling::forget(label iteration, bool forget)
 {
 	forAll(recvInterfaces_, iface)
 	{
-		recvInterfaces_[iface]->forget(iteration, true);
+		recvInterfaces_[iface]->forget(iteration, forget);
 	}
 }
 
-void dsmcMdCoupling::forget(label iteration, label interface)
+void dsmcMdCoupling::forget(label iteration, label interface, bool forget)
 {
-	recvInterfaces_[interface]->forget(iteration, true);
+	recvInterfaces_[interface]->forget(iteration, forget);
 }
 
 void dsmcMdCoupling::insertParcel

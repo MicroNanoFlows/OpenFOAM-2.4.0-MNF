@@ -183,13 +183,13 @@ public:
         virtual void barrier(label iteration) = 0;
 
         //- Forget the time frame received at current coupling time for all interfaces
-        virtual void forget() = 0;
+        virtual void forget(bool forget) = 0;
 
         //- Forget the time frame received at specific time for all interfaces
-        virtual void forget(label iteration) = 0;
+        virtual void forget(label iteration, bool forget) = 0;
 
         //- Forget the time frame received at specific time for specific interfaces
-        virtual void forget(label iteration, label interface) = 0;
+        virtual void forget(label iteration, label interface, bool forget) = 0;
 
     // Access
 

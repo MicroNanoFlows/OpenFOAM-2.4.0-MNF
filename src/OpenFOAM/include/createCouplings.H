@@ -187,31 +187,37 @@
                                 if(sendStart[cI][0] < meshMin[0]) //Snap to mesh bound minimum - 0.5%
                                 {
                                     sendStart[cI][0] = meshMin[0] - extents[0]*0.005;
+                                    //sendStart[cI][0] = meshMin[0];
                                 }
 
                                 if(sendEnd[cI][0] > meshMax[0]) //Snap to mesh bound maximum + 0.5%
                                 {
                                     sendEnd[cI][0] = meshMax[0] + extents[0]*0.005;
+                                    //sendEnd[cI][0] = meshMax[0];
                                 }
 
                                 if(sendStart[cI][1] < meshMin[1]) //Snap to mesh bound minimum - 0.5%
                                 {
                                     sendStart[cI][1] = meshMin[1] - extents[1]*0.005;
+                                    //sendStart[cI][1] = meshMin[1];
                                 }
 
                                 if(sendEnd[cI][1] > meshMax[1]) //Snap to mesh bound maximum + 0.5%
                                 { 
                                     sendEnd[cI][1] = meshMax[1] + extents[1]*0.005;
+                                    //sendEnd[cI][1] = meshMax[1];
                                 }
 
                                 if(sendStart[cI][2] < meshMin[2]) //Snap to mesh bound minimum - 0.5% 
                                 {
                                     sendStart[cI][2] = meshMin[2] - extents[2]*0.005;
+                                    //sendStart[cI][2] = meshMin[2];
                                 }
 
                                 if(sendEnd[cI][2] > meshMax[2]) //Snap to mesh bound maximum + 0.5%
                                 {
                                     sendEnd[cI][2] = meshMax[2] + extents[2]*0.005;
+                                    //sendEnd[cI][2] = meshMax[2];
                                 }
                             }
                             else //Set send region to mesh bounds (this mesh is outside of the sending region so need to avoid overlap with other regions this rank shouldn't interact with)
@@ -239,6 +245,15 @@
                             sendEnd[cI][0] = meshMax[0] + extents[0]*0.005;
                             sendEnd[cI][1] = meshMax[1] + extents[1]*0.005;
                             sendEnd[cI][2] = meshMax[2] + extents[2]*0.005;
+                            /*
+                            // "domain_send_start" and "domain_send_end" not set in dictionary, so initialise domain values to mesh bounds
+                            sendStart[cI][0] = meshMin[0];
+                            sendStart[cI][1] = meshMin[1];
+                            sendStart[cI][2] = meshMin[2];
+                            sendEnd[cI][0] = meshMax[0];
+                            sendEnd[cI][1] = meshMax[1];
+                            sendEnd[cI][2] = meshMax[2];
+                            */
                         }
                     }
                     else // Smart send not enabled and/or interface not set to send so just initialise domain values to zero as they wont be used
@@ -296,31 +311,37 @@
                                 if(rcvStart[cI][0] < meshMin[0]) //Snap to mesh bound minimum - 0.5%
                                 {
                                     rcvStart[cI][0] = meshMin[0] - extents[0]*0.005;
+                                    //rcvStart[cI][0] = meshMin[0];
                                 }
 
                                 if(rcvEnd[cI][0] > meshMax[0]) //Snap to mesh bound maximum + 0.5%
                                 {
                                     rcvEnd[cI][0] = meshMax[0] + extents[0]*0.005;
+                                    //rcvEnd[cI][0] = meshMax[0];
                                 }
  
                                 if(rcvStart[cI][1] < meshMin[1]) //Snap to mesh bound minimum - 0.5%
                                 {
                                     rcvStart[cI][1] = meshMin[1] - extents[1]*0.005;
+                                    //rcvStart[cI][1] = meshMin[1];
                                 }
 
                                 if(rcvEnd[cI][1] > meshMax[1]) //Snap to mesh bound maximum + 0.5%
                                 {
                                     rcvEnd[cI][1] = meshMax[1] + extents[1]*0.005;
+                                    //rcvEnd[cI][1] = meshMax[1];
                                 }
 
                                 if(rcvStart[cI][2] < meshMin[2]) //Snap to mesh bound minimum - 0.5%
                                 {
                                     rcvStart[cI][2] = meshMin[2] - extents[2]*0.005;
+                                    //rcvStart[cI][2] = meshMin[2];
                                 }
  
                                 if(rcvEnd[cI][2] > meshMax[2]) //Snap to mesh bound maximum + 0.5%
                                 {
                                     rcvEnd[cI][2] = meshMax[2] + extents[2]*0.005;
+                                    //rcvEnd[cI][2] = meshMax[2];
                                 }
                             }
                             else  //Set receive region to mesh bounds (this mesh is outside of the sending region so need to avoid overlap with other regions this rank shouldn't interact with)
@@ -348,6 +369,15 @@
                             rcvEnd[cI][0] = meshMax[0] + extents[0]*0.005;
                             rcvEnd[cI][1] = meshMax[1] + extents[1]*0.005;
                             rcvEnd[cI][2] = meshMax[2] + extents[2]*0.005;
+                            /*
+                            // "domain_receive_start" and "domain_receive_end" not set in dictionary, so initialise domain values to mesh bounds
+                            rcvStart[cI][0] = meshMin[0];
+                            rcvStart[cI][1] = meshMin[1];
+                            rcvStart[cI][2] = meshMin[2];
+                            rcvEnd[cI][0] = meshMax[0];
+                            rcvEnd[cI][1] = meshMax[1];
+                            rcvEnd[cI][2] = meshMax[2];
+                            */
                         }
                     }
                     else // Smart send not enabled and/or interface not set to send so just initialise domain values to zero as they wont be used
@@ -463,7 +493,7 @@
                             if(twoDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                             {
                                 label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value());
-                                twoDInterfaces.interfaces->getInterface(i)->announce_send_span(0, totalIter, region_2d);
+                                twoDInterfaces.interfaces->getInterface(i)->announce_send_span(0, totalIter+1, region_2d);
                             }
                             else //- Using direct time based coupling
                             {
@@ -510,7 +540,7 @@
                             if(twoDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                             {
                                 label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value());
-                                twoDInterfaces.interfaces->getInterface(i)->announce_recv_span(0, totalIter, region_2d);
+                                twoDInterfaces.interfaces->getInterface(i)->announce_recv_span(static_cast<label>(0), totalIter+static_cast<label>(1), region_2d);
                             }
                             else //- Using direct time based coupling
                             {
@@ -521,9 +551,9 @@
                         //- Using iteration based coupling
                         if(twoDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                         {
-                            twoDInterfaces.interfaces->getInterface(i)->commit(0);
-                            twoDInterfaces.interfaces->getInterface(i)->barrier(0);
-                            twoDInterfaces.interfaces->getInterface(i)->forget(0, true);
+                            twoDInterfaces.interfaces->getInterface(i)->commit(static_cast<label>(0));
+                            twoDInterfaces.interfaces->getInterface(i)->barrier(static_cast<label>(0));
+                            twoDInterfaces.interfaces->getInterface(i)->forget(static_cast<label>(1), true);
                         }
                         else //- Using direct time based coupling
                         {
@@ -586,7 +616,7 @@
                             if(threeDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                             {
                                 label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value());
-                                threeDInterfaces.interfaces->getInterface(i)->announce_send_span(0, totalIter, region_3d);
+                                threeDInterfaces.interfaces->getInterface(i)->announce_send_span(static_cast<label>(0), totalIter+static_cast<label>(1), region_3d);
                             }
                             else //- Using direct time based coupling
                             {
@@ -618,7 +648,7 @@
                             if(threeDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                             {
                                 label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value());
-                                threeDInterfaces.interfaces->getInterface(i)->announce_recv_span(0, totalIter, region_3d);
+                                threeDInterfaces.interfaces->getInterface(i)->announce_recv_span(static_cast<label>(0), totalIter+static_cast<label>(1), region_3d);
                             }
                             else //- Using direct time based coupling
                             {
@@ -629,9 +659,9 @@
                         //- Using iteration based coupling
                         if(threeDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                         {
-                            threeDInterfaces.interfaces->getInterface(i)->commit(0);
-                            threeDInterfaces.interfaces->getInterface(i)->barrier(0);
-                            threeDInterfaces.interfaces->getInterface(i)->forget(0, true);
+                            threeDInterfaces.interfaces->getInterface(i)->commit(static_cast<label>(0));
+                            threeDInterfaces.interfaces->getInterface(i)->barrier(static_cast<label>(0));
+                            threeDInterfaces.interfaces->getInterface(i)->forget(static_cast<label>(1), true);
                         }
                         else //- Using direct time based coupling
                         {

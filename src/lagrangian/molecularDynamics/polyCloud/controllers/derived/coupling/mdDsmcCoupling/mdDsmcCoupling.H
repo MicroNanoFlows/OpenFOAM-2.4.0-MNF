@@ -41,7 +41,6 @@ SourceFiles
 #include "polyMesh.H"
 #include "volFields.H"
 #include "polyMoleculeCloud.H"
-#include <sstream>
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -86,14 +85,16 @@ private:
 #ifdef USE_MUI
         DynamicList<mui::uniface<mui::config_3d>* > sendInterfaces_; //- 3D MUI interfaces to send through
 #endif
-        bool sending_;          //- Determine whether this interface will send
+        bool sendingRegion_;          //- Determine whether this controller will send for the fixed region
+        bool sendingBound_;           //- Determine whether this controller will send for the fixed boundary
         DynamicList<Foam::word> sendInterfaceNames_;
 
         //- Receiving properties
 #ifdef USE_MUI
         DynamicList<mui::uniface<mui::config_3d>* > recvInterfaces_; //- 3D MUI interfaces to receive from
 #endif
-        bool receiving_;        //- Determine whether this interface will receive
+        bool receivingRegion_;          //- Determine whether this controller will receive for the fixed region
+        bool receivingBound_;           //- Determine whether this controller will receive for the fixed boundary
         DynamicList<Foam::word> recvInterfaceNames_;
 
         scalar refLength_;
@@ -127,6 +128,14 @@ private:
         scalar boundCorr_;
         point meshMin_;
         point meshMax_;
+#ifdef USE_MUI
+        List<std::vector<mui::point3d> > rcvPoints_;
+#endif
+        List<std::vector<std::string> > rcvMolType_;
+        List<std::vector<label> > rcvMolId_;
+        List<std::vector<scalar> > rcvVelX_;
+        List<std::vector<scalar> > rcvVelY_;
+        List<std::vector<scalar> > rcvVelZ_;
 
     // Private Member Functions
 
@@ -164,22 +173,22 @@ public:
     // Member Functions
 
         //- create an initial configuration
-        void initialConfiguration();
+        bool initialConfiguration();
 
         //- run at start of time step before molecules move
-        void controlAfterMove(label stage);
+        bool controlAfterMove(label stage);
 
         //- run after forces are calculated
         void controlAfterForces();
 
         //- receive molecules that fall into the coupled region
-        void receiveCoupledRegion(bool init);
+        bool receiveCoupledRegion(bool init);
 
         //- send forces acting on molecules in coupled region
         void sendCoupledRegionForces();
 
         //- Collate and delete molecules that have crossed a coupling boundary
-        void findCoupledMolecules();
+        bool findCoupledMolecules();
 
         //- send molecules that have crossed a coupling boundary
         void sendCoupledMolecules();
@@ -210,13 +219,13 @@ public:
         void barrier(label iteration, label interface);
 
         //- Forget the time frame received at current coupling iteration for all interfaces
-        void forget();
+        void forget(bool forget);
 
         //- Forget the time frame received at specific iteration for all interfaces
-        void forget(label iteration);
+        void forget(label iteration, bool forget);
 
         //- Forget the time frame received at specific iteration for specific interfaces
-        void forget(label iteration, label interface);
+        void forget(label iteration, label interface, bool forget);
 };
 
 

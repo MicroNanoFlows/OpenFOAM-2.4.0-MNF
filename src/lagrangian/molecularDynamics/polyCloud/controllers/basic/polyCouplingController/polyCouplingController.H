@@ -139,16 +139,16 @@ public:
 
 
         //- create an initial configuration
-        virtual void initialConfiguration() = 0;
+        virtual bool initialConfiguration() = 0;
 
         //- run at start of MD time step before molecules move
-        virtual void controlAfterMove(label stage) = 0;
+        virtual bool controlAfterMove(label stage) = 0;
 
         //- run after forces are calculated
         virtual void controlAfterForces() = 0;
 
         //- receive positions and velocities of molecules that fall into the coupled region
-        virtual void receiveCoupledRegion(bool init) = 0;
+        virtual bool receiveCoupledRegion(bool init) = 0;
 
         //- send forces acting on molecules in coupled region
         virtual void sendCoupledRegionForces() = 0;
@@ -181,13 +181,13 @@ public:
 		virtual void barrier(label iteration) = 0;
 
 		//- Forget the time frame received at current coupling time for all interfaces
-		virtual void forget() = 0;
+		virtual void forget(bool forget) = 0;
 
 		//- Forget the time frame received at specific time for all interfaces
-		virtual void forget(label iteration) = 0;
+		virtual void forget(label iteration, bool forget) = 0;
 
 		//- Forget the time frame received at specific time for specific interfaces
-		virtual void forget(label iteration, label interface) = 0;
+		virtual void forget(label iteration, label interface, bool forget) = 0;
 
     // Access
 
