@@ -612,6 +612,8 @@ mdDsmcCoupling::~mdDsmcCoupling()
 
 bool mdDsmcCoupling::initialConfiguration(label stage)
 {
+    bool returnVal = false;
+
     if(stage == 1)
     {
 #ifdef USE_MUI
@@ -646,10 +648,12 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
     }
 #endif
     }
-    else if (stage == 2)
+    else if (stage == 3)
     {
-        return receiveCoupledRegion(true); // Receive ghost molecules in coupled region(s) at time = startTime and commit time=1 to release other side
+        returnVal = receiveCoupledRegion(true); // Receive ghost molecules in coupled region(s) at time = startTime and commit time=1 to release other side
     }
+
+    return returnVal;
 }
 
 bool mdDsmcCoupling::controlAfterMove(label stage)
