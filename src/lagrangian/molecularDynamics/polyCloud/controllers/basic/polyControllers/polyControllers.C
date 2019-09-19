@@ -638,7 +638,7 @@ void polyControllers::controlAfterMove()
         couplingControllers_[0]->resetTracking(); //- Lots of adds/deletes in coupled method, ensure tracking number hasn't exceeded maximum
         couplingControllers_[0]->prepareInteractions();
     }
-/*
+
 	//- Receive and store any coupling boundary molecules (blocking)
 	forAll(couplingControllers_, cC)
 	{
@@ -684,7 +684,6 @@ void polyControllers::controlAfterMove()
 	{
 	    couplingControllers_[cC]->forget(true);
 	}
-*/
 }
 
 
@@ -717,13 +716,12 @@ void polyControllers::controlAfterForces()
     {
         stateControllers_[sC]->controlAfterForces();
     }
-/*
+
     //- Send forces acting on molecules in coupling region(s)
     forAll(couplingControllers_, cC)
     {
       couplingControllers_[cC]->controlAfterForces();
     }
-*/
 }
 
 void polyControllers::controlVelocitiesII()

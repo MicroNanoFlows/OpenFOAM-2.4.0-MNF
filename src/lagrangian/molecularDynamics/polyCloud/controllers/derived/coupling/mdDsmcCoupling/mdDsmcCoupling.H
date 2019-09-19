@@ -110,14 +110,14 @@ private:
 #ifdef USE_MUI    	
     	mui::chrono_sampler_exact3d* chrono_sampler;
 #endif
-    	bool fixedRegion_;
-        vector fixedRegionMin_;
-        vector fixedRegionMax_;
-        bool fixedBounds_;
-        vector fixedBoundMin_;
-        vector fixedBoundMax_;
-        vector fixedBoundNorm_;
-        vector fixedBoundZeroThick_;
+    	bool couplingRegion_;
+        vector couplingRegionMin_;
+        vector couplingRegionMax_;
+        bool couplingBounds_;
+        vector couplingBoundMin_;
+        vector couplingBoundMax_;
+        vector couplingBoundNorm_;
+        vector couplingBoundZeroThick_;
         scalar overlapEnergyLimit_;
         label overlapIterations_;
         label prevMolCount_;

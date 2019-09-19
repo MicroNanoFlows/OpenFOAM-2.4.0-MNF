@@ -599,13 +599,13 @@ void dsmcControllers::controlBeforeCollisions()
     {
         stateControllers_[sC]->controlParcelsBeforeCollisions();
     }
-/*
+
     //- Determine and collate parcels that have passed a coupling boundary
     forAll(couplingControllers_, cC)
     {
         couplingControllers_[cC]->controlParcelsBeforeCollisions(1);
     }
-*/
+
     //- Receive new molecules that have passed through a coupling boundary (blocking)
     forAll(couplingControllers_, cC)
     {
@@ -617,13 +617,12 @@ void dsmcControllers::controlBeforeCollisions()
     {
         couplingControllers_[cC]->forget(true);
     }
-/*
+
     //- Send parcels that have passed through a coupling boundary
     forAll(couplingControllers_, cC)
     {
         couplingControllers_[cC]->controlParcelsBeforeCollisions(3);
     }
-*/
 }
 
 void dsmcControllers::controlAfterCollisions()
@@ -632,7 +631,7 @@ void dsmcControllers::controlAfterCollisions()
     {
         stateControllers_[sC]->controlParcelsAfterCollisions();
     }
-/*
+
     //- Send the coupled region
     forAll(couplingControllers_, cC)
     {
@@ -649,7 +648,6 @@ void dsmcControllers::controlAfterCollisions()
     {
         couplingControllers_[cC]->forget(true);
     }
-*/
 }
 
 //- calculate properties -- call this at the end of the DSMC time-step.

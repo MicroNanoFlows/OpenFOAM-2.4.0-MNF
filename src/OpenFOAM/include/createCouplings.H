@@ -155,106 +155,13 @@
                     // Smart send enabled and interface set to send so define domain values according to dictionary input
                     if(smart_send[cI] && send[cI])
                     {
-                        bool sendDomDefined = false;
-
-                        if (interfaceDict.found("domainSendStart"))
-                        {
-                            sendStart[cI] = interfaceDict.lookup("domainSendStart");
-                            sendDomDefined = true;
-                        }
-                        else
-                        {
-                            sendDomDefined = false;
-                        }
-
-                        if(sendDomDefined)
-                        {
-                            if (interfaceDict.found("domainSendEnd"))
-                            {
-                                sendEnd[cI] = interfaceDict.lookup("domainSendEnd");
-                            }
-                            else
-                            {
-                                FatalIOErrorIn("", couplingDict)
-                                               << "Missing corresponding interface domainSendEnd entry " << exit(FatalIOError);
-                            }
-
-                            // Both start and end defined for send domain so truncate extents to fit mesh bounds if region not completely outside mesh
-                            if(sendStart[cI][0] < meshMax[0] && sendEnd[cI][0] > meshMin[0] &&
-                               sendStart[cI][1] < meshMax[1] && sendEnd[cI][1] > meshMin[1] &&
-                               sendStart[cI][2] < meshMax[2] && sendEnd[cI][2] > meshMin[2])
-                            {
-                                if(sendStart[cI][0] < meshMin[0]) //Snap to mesh bound minimum - 0.5%
-                                {
-                                    sendStart[cI][0] = meshMin[0] - extents[0]*0.005;
-                                    //sendStart[cI][0] = meshMin[0];
-                                }
-
-                                if(sendEnd[cI][0] > meshMax[0]) //Snap to mesh bound maximum + 0.5%
-                                {
-                                    sendEnd[cI][0] = meshMax[0] + extents[0]*0.005;
-                                    //sendEnd[cI][0] = meshMax[0];
-                                }
-
-                                if(sendStart[cI][1] < meshMin[1]) //Snap to mesh bound minimum - 0.5%
-                                {
-                                    sendStart[cI][1] = meshMin[1] - extents[1]*0.005;
-                                    //sendStart[cI][1] = meshMin[1];
-                                }
-
-                                if(sendEnd[cI][1] > meshMax[1]) //Snap to mesh bound maximum + 0.5%
-                                { 
-                                    sendEnd[cI][1] = meshMax[1] + extents[1]*0.005;
-                                    //sendEnd[cI][1] = meshMax[1];
-                                }
-
-                                if(sendStart[cI][2] < meshMin[2]) //Snap to mesh bound minimum - 0.5% 
-                                {
-                                    sendStart[cI][2] = meshMin[2] - extents[2]*0.005;
-                                    //sendStart[cI][2] = meshMin[2];
-                                }
-
-                                if(sendEnd[cI][2] > meshMax[2]) //Snap to mesh bound maximum + 0.5%
-                                {
-                                    sendEnd[cI][2] = meshMax[2] + extents[2]*0.005;
-                                    //sendEnd[cI][2] = meshMax[2];
-                                }
-                            }
-                            else //Set send region to mesh bounds (this mesh is outside of the sending region so need to avoid overlap with other regions this rank shouldn't interact with)
-                            {
-                                sendStart[cI][0] = meshMin[0];
-                                sendStart[cI][1] = meshMin[1];
-                                sendStart[cI][2] = meshMin[2];
-                                sendEnd[cI][0] = meshMax[0];
-                                sendEnd[cI][1] = meshMax[1];
-                                sendEnd[cI][2] = meshMax[2];
-                            }
-                        }
-                        else
-                        {
-                            if (interfaceDict.found("domainSendEnd"))
-                            {
-                                FatalIOErrorIn("", couplingDict)
-                                               << "Missing corresponding interface domainSendStart entry " << exit(FatalIOError);
-                            }
-
-                            // "domain_send_start" and "domain_send_end" not set in dictionary, so initialise domain values to mesh bounds +/- 0.5%
-                            sendStart[cI][0] = meshMin[0] - extents[0]*0.005;
-                            sendStart[cI][1] = meshMin[1] - extents[1]*0.005;
-                            sendStart[cI][2] = meshMin[2] - extents[2]*0.005;
-                            sendEnd[cI][0] = meshMax[0] + extents[0]*0.005;
-                            sendEnd[cI][1] = meshMax[1] + extents[1]*0.005;
-                            sendEnd[cI][2] = meshMax[2] + extents[2]*0.005;
-                            /*
-                            // "domain_send_start" and "domain_send_end" not set in dictionary, so initialise domain values to mesh bounds
-                            sendStart[cI][0] = meshMin[0];
-                            sendStart[cI][1] = meshMin[1];
-                            sendStart[cI][2] = meshMin[2];
-                            sendEnd[cI][0] = meshMax[0];
-                            sendEnd[cI][1] = meshMax[1];
-                            sendEnd[cI][2] = meshMax[2];
-                            */
-                        }
+                        // "domain_send_start" and "domain_send_end" not set in dictionary, so initialise domain values to mesh bounds +/- 0.1%
+                        sendStart[cI][0] = meshMin[0] + extents[0]*1e-3;
+                        sendStart[cI][1] = meshMin[1] + extents[1]*1e-3;
+                        sendStart[cI][2] = meshMin[2] + extents[2]*1e-3;
+                        sendEnd[cI][0] = meshMax[0] - extents[0]*1e-3;
+                        sendEnd[cI][1] = meshMax[1] - extents[1]*1e-3;
+                        sendEnd[cI][2] = meshMax[2] - extents[2]*1e-3;
                     }
                     else // Smart send not enabled and/or interface not set to send so just initialise domain values to zero as they wont be used
                     {
@@ -279,106 +186,13 @@
                     // Smart send enabled and interface set to receive so define domain values according to dictionary input
                     if(smart_send[cI] && receive[cI])
                     {
-                        bool rcvDomDefined = false;
-
-                        if (interfaceDict.found("domainReceiveStart"))
-                        {
-                            rcvStart[cI] = interfaceDict.lookup("domainReceiveStart");
-                            rcvDomDefined = true;
-                        }
-                        else
-                        {
-                            rcvDomDefined = false;
-                        }
-
-                        if(rcvDomDefined)
-                        {
-                            if (interfaceDict.found("domainReceiveEnd"))
-                            {
-                                rcvEnd[cI] = interfaceDict.lookup("domainReceiveEnd");
-                            }
-                            else
-                            {
-                                FatalIOErrorIn("", couplingDict)
-                                               << "Missing corresponding interface domainReceiveEnd entry " << exit(FatalIOError);
-                            }
-
-                            // Both start and end defined for receive domain so truncate extents to fit mesh bounds if region not completely outside mesh
-                            if(rcvStart[cI][0] < meshMax[0] && rcvEnd[cI][0] > meshMin[0] &&
-                               rcvStart[cI][1] < meshMax[1] && rcvEnd[cI][1] > meshMin[1] &&
-                               rcvStart[cI][2] < meshMax[2] && rcvEnd[cI][2] > meshMin[2])
-                            {
-                                if(rcvStart[cI][0] < meshMin[0]) //Snap to mesh bound minimum - 0.5%
-                                {
-                                    rcvStart[cI][0] = meshMin[0] - extents[0]*0.005;
-                                    //rcvStart[cI][0] = meshMin[0];
-                                }
-
-                                if(rcvEnd[cI][0] > meshMax[0]) //Snap to mesh bound maximum + 0.5%
-                                {
-                                    rcvEnd[cI][0] = meshMax[0] + extents[0]*0.005;
-                                    //rcvEnd[cI][0] = meshMax[0];
-                                }
- 
-                                if(rcvStart[cI][1] < meshMin[1]) //Snap to mesh bound minimum - 0.5%
-                                {
-                                    rcvStart[cI][1] = meshMin[1] - extents[1]*0.005;
-                                    //rcvStart[cI][1] = meshMin[1];
-                                }
-
-                                if(rcvEnd[cI][1] > meshMax[1]) //Snap to mesh bound maximum + 0.5%
-                                {
-                                    rcvEnd[cI][1] = meshMax[1] + extents[1]*0.005;
-                                    //rcvEnd[cI][1] = meshMax[1];
-                                }
-
-                                if(rcvStart[cI][2] < meshMin[2]) //Snap to mesh bound minimum - 0.5%
-                                {
-                                    rcvStart[cI][2] = meshMin[2] - extents[2]*0.005;
-                                    //rcvStart[cI][2] = meshMin[2];
-                                }
- 
-                                if(rcvEnd[cI][2] > meshMax[2]) //Snap to mesh bound maximum + 0.5%
-                                {
-                                    rcvEnd[cI][2] = meshMax[2] + extents[2]*0.005;
-                                    //rcvEnd[cI][2] = meshMax[2];
-                                }
-                            }
-                            else  //Set receive region to mesh bounds (this mesh is outside of the sending region so need to avoid overlap with other regions this rank shouldn't interact with)
-                            {
-                                rcvStart[cI][0] = meshMin[0];
-                                rcvStart[cI][1] = meshMin[1];
-                                rcvStart[cI][2] = meshMin[2];
-                                rcvEnd[cI][0] = meshMax[0];
-                                rcvEnd[cI][1] = meshMax[1];
-                                rcvEnd[cI][2] = meshMax[2];
-                            }
-                        } 
-                        else
-                        {
-                            if (interfaceDict.found("domainReceiveEnd"))
-                            {
-                                FatalIOErrorIn("", couplingDict)
-                                               << "Missing corresponding interface domainReceiveStart entry " << exit(FatalIOError);
-                            }
-
-                            // "domain_receive_start" and "domain_receive_end" not set in dictionary, so initialise domain values to mesh bounds +/- 0.5%
-                            rcvStart[cI][0] = meshMin[0] - extents[0]*0.005;
-                            rcvStart[cI][1] = meshMin[1] - extents[1]*0.005;
-                            rcvStart[cI][2] = meshMin[2] - extents[2]*0.005;
-                            rcvEnd[cI][0] = meshMax[0] + extents[0]*0.005;
-                            rcvEnd[cI][1] = meshMax[1] + extents[1]*0.005;
-                            rcvEnd[cI][2] = meshMax[2] + extents[2]*0.005;
-                            /*
-                            // "domain_receive_start" and "domain_receive_end" not set in dictionary, so initialise domain values to mesh bounds
-                            rcvStart[cI][0] = meshMin[0];
-                            rcvStart[cI][1] = meshMin[1];
-                            rcvStart[cI][2] = meshMin[2];
-                            rcvEnd[cI][0] = meshMax[0];
-                            rcvEnd[cI][1] = meshMax[1];
-                            rcvEnd[cI][2] = meshMax[2];
-                            */
-                        }
+                        // "domain_receive_start" and "domain_receive_end" not set in dictionary, so initialise domain values to mesh bounds +/- 0.1%
+                        rcvStart[cI][0] = meshMin[0] + extents[0]*1e-3;
+                        rcvStart[cI][1] = meshMin[1] + extents[1]*1e-3;
+                        rcvStart[cI][2] = meshMin[2] + extents[2]*1e-3;
+                        rcvEnd[cI][0] = meshMax[0] - extents[0]*1e-3;
+                        rcvEnd[cI][1] = meshMax[1] - extents[1]*1e-3;
+                        rcvEnd[cI][2] = meshMax[2] - extents[2]*1e-3;
                     }
                     else // Smart send not enabled and/or interface not set to send so just initialise domain values to zero as they wont be used
                     {

@@ -63,14 +63,14 @@ dsmcMdCoupling::dsmcMdCoupling
     receivingRegion_(false),
     sendingBound_(false),
     receivingBound_(false),
-    fixedBounds_(false),
-    fixedRegion_(false),
-    fixedRegionMin_(vector::zero),
-    fixedRegionMax_(vector::zero),
-    fixedBoundMin_(vector::zero),
-    fixedBoundMax_(vector::zero),
-    fixedBoundNorm_(vector::zero),
-    fixedBoundZeroThick_(vector(-1, -1, -1)),
+    couplingBounds_(false),
+    couplingRegion_(false),
+    couplingRegionMin_(vector::zero),
+    couplingRegionMax_(vector::zero),
+    couplingBoundMin_(vector::zero),
+    couplingBoundMax_(vector::zero),
+    couplingBoundNorm_(vector::zero),
+    couplingBoundZeroThick_(vector(-1, -1, -1)),
     currIteration_(0),
     boundCorr_(0),
     meshMin_(VGREAT, VGREAT, VGREAT),
@@ -213,56 +213,55 @@ dsmcMdCoupling::dsmcMdCoupling
     bool regionMinFound = false;
     bool regionMaxFound = false;
 
-    if (propsDict_.found("fixedRegionMin"))
+    if (propsDict_.found("couplingRegionMin"))
     {
-        fixedRegionMin_ = propsDict_.lookup("fixedRegionMin");
+        couplingRegionMin_ = propsDict_.lookup("couplingRegionMin");
         regionMinFound = true;
     }
 
-    if (propsDict_.found("fixedRegionMax"))
+    if (propsDict_.found("couplingRegionMax"))
     {
-        fixedRegionMax_ = propsDict_.lookup("fixedRegionMax");
+        couplingRegionMax_ = propsDict_.lookup("couplingRegionMax");
         regionMaxFound = true;
     }
 
     if((regionMinFound && !regionMaxFound) || (regionMaxFound && !regionMinFound))
     {
         FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
-                      << "Cannot find both fixedRegionMin and fixedRegionMax"
+                      << "Cannot find both couplingRegionMin and couplingRegionMax"
                       << exit(FatalError);
     }
     else
     {
-        fixedRegion_ = true;
+        couplingRegion_ = true;
 
         vector meshHalfWidth(((meshMax_[0] - meshMin_[0]) * 0.5),
                              ((meshMax_[1] - meshMin_[1]) * 0.5),
                              ((meshMax_[2] - meshMin_[2]) * 0.5));
-        vector fixedRegionHalfWidth(((fixedRegionMax_[0] - fixedRegionMin_[0]) * 0.5),
-                                   ((fixedRegionMax_[1] - fixedRegionMin_[1]) * 0.5),
-                                   ((fixedRegionMax_[2] - fixedRegionMin_[2]) * 0.5));
+        vector couplingRegionHalfWidth(((couplingRegionMax_[0] - couplingRegionMin_[0]) * 0.5),
+                                   ((couplingRegionMax_[1] - couplingRegionMin_[1]) * 0.5),
+                                   ((couplingRegionMax_[2] - couplingRegionMin_[2]) * 0.5));
         point meshCentre(meshMin_[0] + meshHalfWidth[0],
                          meshMin_[1] + meshHalfWidth[1],
                          meshMin_[2] + meshHalfWidth[2]);
-        point fixedRegionCentre(fixedRegionMin_[0] + fixedRegionHalfWidth[0],
-                                fixedRegionMin_[1] + fixedRegionHalfWidth[1],
-                                fixedRegionMin_[2] + fixedRegionHalfWidth[2]);
+        point couplingRegionCentre(couplingRegionMin_[0] + couplingRegionHalfWidth[0],
+                                   couplingRegionMin_[1] + couplingRegionHalfWidth[1],
+                                   couplingRegionMin_[2] + couplingRegionHalfWidth[2]);
 
         bool overlap = true;
 
-        if ((std::fabs(meshCentre[0] - fixedRegionCentre[0]) > (meshHalfWidth[0] + fixedRegionHalfWidth[0])) ||
-           (std::fabs(meshCentre[1] - fixedRegionCentre[1]) > (meshHalfWidth[1] + fixedRegionHalfWidth[1])) ||
-           (std::fabs(meshCentre[2] - fixedRegionCentre[2]) > (meshHalfWidth[2] + fixedRegionHalfWidth[2])))
+        if ((std::fabs(meshCentre[0] - couplingRegionCentre[0]) > (meshHalfWidth[0] + couplingRegionHalfWidth[0])) ||
+           (std::fabs(meshCentre[1] - couplingRegionCentre[1]) > (meshHalfWidth[1] + couplingRegionHalfWidth[1])) ||
+           (std::fabs(meshCentre[2] - couplingRegionCentre[2]) > (meshHalfWidth[2] + couplingRegionHalfWidth[2])))
         {
             overlap = false;
         }
 
-        //- There is an overlap between the fixed boundary and the local mesh so should have found at least 1 intersecting cell
+        //- There is an overlap between the coupling boundary and the local mesh so should have found at least 1 intersecting cell
         if(!overlap)
         {
-            //receivingRegion_ = false;
-            //sendingRegion_ = false;
-            //std::cout << "Disabling fixed region communication for this controller" << std::endl;
+            sendingRegion_ = false;
+            receivingRegion_ = false;
         }
     }
 
@@ -270,41 +269,41 @@ dsmcMdCoupling::dsmcMdCoupling
     bool boundMaxFound = false;
     bool boundNormFound = false;
 
-    if (propsDict_.found("fixedBoundMin"))
+    if (propsDict_.found("couplingBoundMin"))
     {
-        fixedBoundMin_ = propsDict_.lookup("fixedBoundMin");
+        couplingBoundMin_ = propsDict_.lookup("couplingBoundMin");
         boundMinFound = true;
     }
 
-    if (propsDict_.found("fixedBoundMax"))
+    if (propsDict_.found("couplingBoundMax"))
     {
-        fixedBoundMax_ = propsDict_.lookup("fixedBoundMax");
+        couplingBoundMax_ = propsDict_.lookup("couplingBoundMax");
         boundMaxFound = true;
     }
 
-    if (propsDict_.found("fixedBoundNorm"))
+    if (propsDict_.found("couplingBoundNorm"))
     {
-        fixedBoundNorm_ = propsDict_.lookup("fixedBoundNorm");
+        couplingBoundNorm_ = propsDict_.lookup("couplingBoundNorm");
 
-        if(fixedBoundMax_[0] - fixedBoundMin_[0] == 0.0)
+        if(couplingBoundMax_[0] - couplingBoundMin_[0] == 0.0)
         {
-            fixedBoundZeroThick_[0] = 1;
+            couplingBoundZeroThick_[0] = 1;
         }
 
-        if(fixedBoundMax_[1] - fixedBoundMin_[1] == 0.0)
+        if(couplingBoundMax_[1] - couplingBoundMin_[1] == 0.0)
         {
-            fixedBoundZeroThick_[1] = 1;
+            couplingBoundZeroThick_[1] = 1;
         }
 
-        if(fixedBoundMax_[2] - fixedBoundMin_[2] == 0.0)
+        if(couplingBoundMax_[2] - couplingBoundMin_[2] == 0.0)
         {
-            fixedBoundZeroThick_[2] = 1;
+            couplingBoundZeroThick_[2] = 1;
         }
 
-        if(fixedBoundZeroThick_[0] == -1 && fixedBoundZeroThick_[1] == -1 && fixedBoundZeroThick_[2] == -1)
+        if(couplingBoundZeroThick_[0] == -1 && couplingBoundZeroThick_[1] == -1 && couplingBoundZeroThick_[2] == -1)
         {
             FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
-                         << "A fixed boundary must have a zero thickness in at least one direction"
+                         << "A coupling boundary must have a zero thickness in at least one direction"
                          << exit(FatalError);
         }
 
@@ -316,12 +315,12 @@ dsmcMdCoupling::dsmcMdCoupling
        (boundNormFound && !boundMinFound && !boundMaxFound))
     {
         FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
-                     << "Cannot find fixedBoundMin, fixedBoundMax and fixedBoundNorm together"
+                     << "Cannot find couplingBoundMin, couplingBoundMax and couplingBoundNorm together"
                      << exit(FatalError);
     }
     else
     {
-        fixedBounds_ = true;
+        couplingBounds_ = true;
 
         const cellList& cells = mesh_.cells();
 
@@ -371,7 +370,7 @@ dsmcMdCoupling::dsmcMdCoupling
         point cellMin;
         point cellMax;
 
-        //- Determine which cells the fixed boundary intersects
+        //- Determine which cells the coupling boundary intersects
         forAll(cells, cell)
         {
             const labelList& pointList = mesh_.cellPoints(cell);
@@ -416,28 +415,28 @@ dsmcMdCoupling::dsmcMdCoupling
                 }
             }
 
-            if(fixedBoundZeroThick_[0] == 1) //- fixedBoundMin_ and fixedBoundMax_ are the same in the x
+            if(couplingBoundZeroThick_[0] == 1) //- couplingBoundMin_ and couplingBoundMax_ are the same in the x
             {
-                if(fixedBoundNorm_[0] != 0)
+                if(couplingBoundNorm_[0] != 0)
                 {
                     scalar boundaryExtend = localMeshExtents[0] * 0.01;
 
                     bool test = false;
 
-                    if((fixedBoundMin_[0]-boundaryExtend) >= cellMin[0] && (fixedBoundMin_[0]-boundaryExtend) <= cellMax[0])
+                    if((couplingBoundMin_[0] - boundaryExtend) >= cellMin[0] && (couplingBoundMin_[0] - boundaryExtend) <= cellMax[0])
                     {
                         test = true;
                     }
 
-                    if((fixedBoundMin_[0]+boundaryExtend) >= cellMin[0] && (fixedBoundMin_[0]+boundaryExtend) <= cellMax[0])
+                    if((couplingBoundMin_[0] + boundaryExtend) >= cellMin[0] && (couplingBoundMin_[0] + boundaryExtend) <= cellMax[0])
                     {
                         test = true;
                     }
 
                     if(test)
                     {
-                        if((cellMin[1] >= fixedBoundMin_[1] && cellMax[1] <= fixedBoundMax_[1]) &&
-                           (cellMin[2] >= fixedBoundMin_[2] && cellMax[2] <= fixedBoundMax_[2]))
+                        if((cellMin[1] >= couplingBoundMin_[1] && cellMax[1] <= couplingBoundMax_[1]) &&
+                           (cellMin[2] >= couplingBoundMin_[2] && cellMax[2] <= couplingBoundMax_[2]))
                         {
                             if(findIndex(intersectingCells_, cell) == -1)
                             {
@@ -449,32 +448,32 @@ dsmcMdCoupling::dsmcMdCoupling
                 else
                 {
                     FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
-                                 << "Fixed boundary zero thickness in x direction but normal value zero"
+                                 << "Coupling boundary zero thickness in x direction but normal value zero"
                                  << exit(FatalError);
                 }
             }
 
-            if(fixedBoundZeroThick_[1] == 1) //- fixedBoundMin_ and fixedBoundMax_ are the same in the y
+            if(couplingBoundZeroThick_[1] == 1) //- couplingBoundMin_ and couplingBoundMax_ are the same in the y
             {
-               if(fixedBoundNorm_[1] != 0)
+               if(couplingBoundNorm_[1] != 0)
                {
                    scalar boundaryExtend = localMeshExtents[1] * 0.01;
                    bool test = false;
 
-                   if((fixedBoundMin_[1]-boundaryExtend) >= cellMin[1] && (fixedBoundMin_[1]-boundaryExtend) <= cellMax[1])
+                   if((couplingBoundMin_[1] - boundaryExtend) >= cellMin[1] && (couplingBoundMin_[1] - boundaryExtend) <= cellMax[1])
                    {
                        test = true;
                    }
 
-                   if((fixedBoundMin_[1]+boundaryExtend) >= cellMin[1] && (fixedBoundMin_[1]+boundaryExtend) <= cellMax[1])
+                   if((couplingBoundMin_[1] + boundaryExtend) >= cellMin[1] && (couplingBoundMin_[1] + boundaryExtend) <= cellMax[1])
                    {
                        test = true;
                    }
 
                    if(test)
                    {
-                       if((cellMin[0] >= fixedBoundMin_[0] && cellMax[0] <= fixedBoundMax_[0]) &&
-                          (cellMin[2] >= fixedBoundMin_[2] && cellMax[2] <= fixedBoundMax_[2]))
+                       if((cellMin[0] >= couplingBoundMin_[0] && cellMax[0] <= couplingBoundMax_[0]) &&
+                          (cellMin[2] >= couplingBoundMin_[2] && cellMax[2] <= couplingBoundMax_[2]))
                        {
                            if(findIndex(intersectingCells_, cell) == -1)
                            {
@@ -486,32 +485,32 @@ dsmcMdCoupling::dsmcMdCoupling
                else
                {
                    FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
-                                << "Fixed boundary zero thickness in y direction but normal value zero"
+                                << "Coupling boundary zero thickness in y direction but normal value zero"
                                 << exit(FatalError);
                }
             }
 
-            if(fixedBoundZeroThick_[2] == 1) //- fixedBoundMin_ and fixedBoundMax_ are the same in the z
+            if(couplingBoundZeroThick_[2] == 1) //- couplingBoundMin_ and couplingBoundMax_ are the same in the z
             {
-               if(fixedBoundNorm_[2] != 0)
+               if(couplingBoundNorm_[2] != 0)
                {
                    scalar boundaryExtend = localMeshExtents[2] * 0.01;
                    bool test = false;
 
-                   if((fixedBoundMin_[2]-boundaryExtend) >= cellMin[2] && (fixedBoundMin_[2]-boundaryExtend) <= cellMax[2])
+                   if((couplingBoundMin_[2] - boundaryExtend) >= cellMin[2] && (couplingBoundMin_[2] - boundaryExtend) <= cellMax[2])
                    {
                        test = true;
                    }
 
-                   if((fixedBoundMin_[2]+boundaryExtend) >= cellMin[2] && (fixedBoundMin_[2]+boundaryExtend) <= cellMax[2])
+                   if((couplingBoundMin_[2] + boundaryExtend) >= cellMin[2] && (couplingBoundMin_[2] + boundaryExtend) <= cellMax[2])
                    {
                        test = true;
                    }
 
                    if(test)
                    {
-                       if((cellMin[0] >= fixedBoundMin_[0] && cellMax[0] <= fixedBoundMax_[0]) &&
-                          (cellMin[1] >= fixedBoundMin_[1] && cellMax[1] <= fixedBoundMax_[1]))
+                       if((cellMin[0] >= couplingBoundMin_[0] && cellMax[0] <= couplingBoundMax_[0]) &&
+                          (cellMin[1] >= couplingBoundMin_[1] && cellMax[1] <= couplingBoundMax_[1]))
                        {
                            if(findIndex(intersectingCells_, cell) == -1)
                            {
@@ -523,7 +522,7 @@ dsmcMdCoupling::dsmcMdCoupling
                else
                {
                    FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
-                                << "Fixed boundary zero thickness in z direction but normal value zero"
+                                << "Coupling boundary zero thickness in z direction but normal value zero"
                                 << exit(FatalError);
                }
             }
@@ -531,44 +530,43 @@ dsmcMdCoupling::dsmcMdCoupling
 
         if(intersectingCells_.size() > 0)
         {
-            std::cout << "Fixed boundary intersecting cell count: " << intersectingCells_.size() << std::endl;
+            std::cout << "Coupling boundary intersecting cell count: " << intersectingCells_.size() << std::endl;
         }
         else
         {
             vector meshHalfWidth(((meshMax_[0] - meshMin_[0]) * 0.5),
                                  ((meshMax_[1] - meshMin_[1]) * 0.5),
                                  ((meshMax_[2] - meshMin_[2]) * 0.5));
-            vector fixedBoundHalfWidth(((fixedBoundMax_[0] - fixedBoundMin_[0]) * 0.5),
-                                       ((fixedBoundMax_[1] - fixedBoundMin_[1]) * 0.5),
-                                       ((fixedBoundMax_[2] - fixedBoundMin_[2]) * 0.5));
+            vector couplingBoundHalfWidth(((couplingBoundMax_[0] - couplingBoundMin_[0]) * 0.5),
+                                       ((couplingBoundMax_[1] - couplingBoundMin_[1]) * 0.5),
+                                       ((couplingBoundMax_[2] - couplingBoundMin_[2]) * 0.5));
             point meshCentre(meshMin_[0] + meshHalfWidth[0],
                              meshMin_[1] + meshHalfWidth[1],
                              meshMin_[2] + meshHalfWidth[2]);
-            point fixedBoundCentre(fixedBoundMin_[0] + fixedBoundHalfWidth[0],
-                                   fixedBoundMin_[1] + fixedBoundHalfWidth[1],
-                                   fixedBoundMin_[2] + fixedBoundHalfWidth[2]);
+            point couplingBoundCentre(couplingBoundMin_[0] + couplingBoundHalfWidth[0],
+                                   couplingBoundMin_[1] + couplingBoundHalfWidth[1],
+                                   couplingBoundMin_[2] + couplingBoundHalfWidth[2]);
 
             bool overlap = true;
 
-            if ((std::fabs(meshCentre[0] - fixedBoundCentre[0]) > (meshHalfWidth[0] + fixedBoundHalfWidth[0])) ||
-               (std::fabs(meshCentre[1] - fixedBoundCentre[1]) > (meshHalfWidth[1] + fixedBoundHalfWidth[1])) ||
-               (std::fabs(meshCentre[2] - fixedBoundCentre[2]) > (meshHalfWidth[2] + fixedBoundHalfWidth[2])))
+            if ((std::fabs(meshCentre[0] - couplingBoundCentre[0]) > (meshHalfWidth[0] + couplingBoundHalfWidth[0])) ||
+               (std::fabs(meshCentre[1] - couplingBoundCentre[1]) > (meshHalfWidth[1] + couplingBoundHalfWidth[1])) ||
+               (std::fabs(meshCentre[2] - couplingBoundCentre[2]) > (meshHalfWidth[2] + couplingBoundHalfWidth[2])))
             {
                 overlap = false;
             }
 
-            //- There is an overlap between the fixed boundary and the local mesh so should have found at least 1 intersecting cell
+            //- There is an overlap between the coupling boundary and the local mesh so should have found at least 1 intersecting cell
             if(overlap)
             {
                 FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
-                             << "Fixed boundary defined but no intersecting cells found"
+                             << "Coupling boundary defined but no intersecting cells found"
                              << exit(FatalError);
             }
             else
             {
-                //receivingBound_ = false;
-                //sendingBound_ = false;
-                //std::cout << "Disabling boundary communications for this controller" << std::endl;
+                sendingBound_ = false;
+                receivingBound_ = false;
             }
         }
     }
@@ -594,10 +592,7 @@ dsmcMdCoupling::~dsmcMdCoupling()
 
 void dsmcMdCoupling::initialConfiguration()
 {
-    if(sendingRegion_)
-    {
-        sendCoupledRegion(true); // Send ghost parcels in coupled regions at time = startTime
-    }
+    sendCoupledRegion(true); // Send ghost parcels in coupled regions at time = startTime
 }
 
 void dsmcMdCoupling::controlParcelsBeforeCollisions(label stage)
@@ -628,10 +623,7 @@ void dsmcMdCoupling::controlParcelsBeforeCollisions(label stage)
     }
     else if (stage == 3) //- Send parcels that were deleted in stage 1
     {
-        if(sendingBound_)
-        {
-            sendCoupledParcels(); // Send any parcels deleted by coupling boundary (non-blocking)
-        }
+        sendCoupledParcels(); // Send any parcels deleted by coupling boundary (non-blocking)
     }
 }
 
@@ -639,11 +631,8 @@ void dsmcMdCoupling::controlParcelsAfterCollisions(int stage)
 {
     if(stage == 1)
     {
-		if(sendingRegion_)
-		{
-			sendCoupledRegion(false); // Send parcel positions in coupled region(s) (non-blocking)
-		}
-    }
+        sendCoupledRegion(false); // Send parcel positions in coupled region(s) (non-blocking)
+	}
     else if (stage == 2)
     {
     	if(receivingRegion_)
@@ -673,54 +662,54 @@ bool dsmcMdCoupling::findCoupledParcels()
             {
                 bool removeParcel = false;
 
-                if(fixedBoundZeroThick_[0] == 1)
+                if(couplingBoundZeroThick_[0] == 1)
                 {
-                    if(fixedBoundNorm_[0] > 0) //- Boundary is positive facing in the x
+                    if(couplingBoundNorm_[0] > 0) //- Boundary is positive facing in the x
                     {
-                        if(parcelsInCell[parcel]->position()[0] <= fixedBoundMin_[0])
+                        if(parcelsInCell[parcel]->position()[0] <= couplingBoundMin_[0])
                         {
                            removeParcel = true;
                         }
                     }
-                    else if (fixedBoundNorm_[0] < 0) //- Boundary is negative facing in the x
+                    else if (couplingBoundNorm_[0] < 0) //- Boundary is negative facing in the x
                     {
-                        if(parcelsInCell[parcel]->position()[0] >= fixedBoundMax_[0])
+                        if(parcelsInCell[parcel]->position()[0] >= couplingBoundMax_[0])
                         {
                             removeParcel = true;
                         }
                     }
                 }
 
-                if(fixedBoundZeroThick_[1] == 1)
+                if(couplingBoundZeroThick_[1] == 1)
                 {
-                    if(fixedBoundNorm_[1] > 0) //- Boundary is positive facing in the y
+                    if(couplingBoundNorm_[1] > 0) //- Boundary is positive facing in the y
                     {
-                        if(parcelsInCell[parcel]->position()[1] <= fixedBoundMin_[1])
+                        if(parcelsInCell[parcel]->position()[1] <= couplingBoundMin_[1])
                         {
                            removeParcel = true;
                         }
                     }
-                    else if (fixedBoundNorm_[1] < 0) //- Boundary is negative facing in the x
+                    else if (couplingBoundNorm_[1] < 0) //- Boundary is negative facing in the x
                     {
-                        if(parcelsInCell[parcel]->position()[1] >= fixedBoundMax_[1])
+                        if(parcelsInCell[parcel]->position()[1] >= couplingBoundMax_[1])
                         {
                             removeParcel = true;
                         }
                     }
                 }
 
-                if(fixedBoundZeroThick_[2] == 1)
+                if(couplingBoundZeroThick_[2] == 1)
                 {
-                    if(fixedBoundNorm_[2] > 0) //- Boundary is positive facing in the z
+                    if(couplingBoundNorm_[2] > 0) //- Boundary is positive facing in the z
                     {
-                        if(parcelsInCell[parcel]->position()[2] <= fixedBoundMin_[2])
+                        if(parcelsInCell[parcel]->position()[2] <= couplingBoundMin_[2])
                         {
                            removeParcel = true;
                         }
                     }
-                    else if (fixedBoundNorm_[2] < 0) //- Boundary is negative facing in the x
+                    else if (couplingBoundNorm_[2] < 0) //- Boundary is negative facing in the x
                     {
-                        if(parcelsInCell[parcel]->position()[2] >= fixedBoundMax_[2])
+                        if(parcelsInCell[parcel]->position()[2] >= couplingBoundMax_[2])
                         {
                             removeParcel = true;
                         }
@@ -768,51 +757,54 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 	// Iterate through all sending interfaces for this controller
 	forAll(sendInterfaces_, iface)
 	{
-	    parcelsInCellHistory_[iface].clear(); // Clear the send history list
+	    if(sendingRegion_)
+	    {
+            parcelsInCellHistory_[iface].clear(); // Clear the send history list
 
-	    forAll(regionIds(), id)
-		{
-			forAll(controlZone(regionIds()[id]), c)
-			{
-				const label& cell = controlZone(regionIds()[id])[c];
-				const List<dsmcParcel*>& parcelsInCell = cloud_.cellOccupancy()[cell];
+            forAll(regionIds(), id)
+            {
+                forAll(controlZone(regionIds()[id]), c)
+                {
+                    const label& cell = controlZone(regionIds()[id])[c];
+                    const List<dsmcParcel*>& parcelsInCell = cloud_.cellOccupancy()[cell];
 
-				forAll(parcelsInCell, p) // Iterate through parcels in cell
-				{
-					parcel = parcelsInCell[p];
+                    forAll(parcelsInCell, p) // Iterate through parcels in cell
+                    {
+                        parcel = parcelsInCell[p];
 
-					//- Determine whether parcel is of a type set to send
-					const label typeIndex = findIndex(typeNames_, cloud_.typeIdList()[parcel->typeId()]);
+                        //- Determine whether parcel is of a type set to send
+                        const label typeIndex = findIndex(typeNames_, cloud_.typeIdList()[parcel->typeId()]);
 
-					if(typeIndex != -1)
-					{
-					    // Get the parcel centre
-						mui::point3d parcCentre;
-						parcCentre[0] = parcel->position()[0] * oneOverRefLength_;
-						parcCentre[1] = parcel->position()[1] * oneOverRefLength_;
-						parcCentre[2] = parcel->position()[2] * oneOverRefLength_;
+                        if(typeIndex != -1)
+                        {
+                            // Get the parcel centre
+                            mui::point3d parcCentre;
+                            parcCentre[0] = parcel->position()[0] * oneOverRefLength_;
+                            parcCentre[1] = parcel->position()[1] * oneOverRefLength_;
+                            parcCentre[2] = parcel->position()[2] * oneOverRefLength_;
 
-                        // Push parcel type
-                        sendInterfaces_[iface]->push("type_region", parcCentre, static_cast<std::string>(typeNames_[typeIndex]));
+                            // Push parcel type
+                            sendInterfaces_[iface]->push("type_region", parcCentre, static_cast<std::string>(typeNames_[typeIndex]));
 
-						// Push parcel ID
-						sendInterfaces_[iface]->push("id_region", parcCentre, static_cast<label>(parcel->origId()));
+                            // Push parcel ID
+                            sendInterfaces_[iface]->push("id_region", parcCentre, static_cast<label>(parcel->origId()));
 
-						// Push the parcel velocity to the interface
-						sendInterfaces_[iface]->push("vel_x_region", parcCentre, parcel->U()[0]);
-						sendInterfaces_[iface]->push("vel_y_region", parcCentre, parcel->U()[1]);
-						sendInterfaces_[iface]->push("vel_z_region", parcCentre, parcel->U()[2]);
+                            // Push the parcel velocity to the interface
+                            sendInterfaces_[iface]->push("vel_x_region", parcCentre, parcel->U()[0]);
+                            sendInterfaces_[iface]->push("vel_y_region", parcCentre, parcel->U()[1]);
+                            sendInterfaces_[iface]->push("vel_z_region", parcCentre, parcel->U()[2]);
 
-						parcelsInCellHistory_[iface].append(parcel->origId()); //Store the parcel ID that was sent
-					}
-				}
-			}
-		}
+                            parcelsInCellHistory_[iface].append(parcel->origId()); //Store the parcel ID that was sent
+                        }
+                    }
+                }
+            }
 
-		std::cout << "    Parcels sent to coupled region  = " << parcelsInCellHistory_[iface].size() << std::endl;
-
+            std::cout << "    Parcels sent to coupled region  = " << parcelsInCellHistory_[iface].size() << std::endl;
+	    }
 		// Commit (transmit) values to the MUI interface
-        sendInterfaces_[iface]->commit(currIteration_);
+        label peers = sendInterfaces_[iface]->commit(currIteration_);
+        std::cout << "sendCoupledRegion() Commit to " << peers << " peers" << std::endl;
 	}
 
 	if(init)
@@ -932,34 +924,38 @@ void dsmcMdCoupling::sendCoupledParcels()
 #ifdef USE_MUI
     forAll(sendInterfaces_, iface)
     {
-        label pushed = 0;
-
-        if(parcsToSend_.size() > 0)
+        if(sendingBound_)
         {
-            forAll(parcsToSend_, parcs)
+            label pushed = 0;
+
+            if(parcsToSend_.size() > 0)
             {
-                // Get the parcel centre
-                mui::point3d parcCentre;
-                parcCentre[0] = parcsToSend_[parcs].position[0] * oneOverRefLength_;
-                parcCentre[1] = parcsToSend_[parcs].position[1] * oneOverRefLength_;
-                parcCentre[2] = parcsToSend_[parcs].position[2] * oneOverRefLength_;
+                forAll(parcsToSend_, parcs)
+                {
+                    // Get the parcel centre
+                    mui::point3d parcCentre;
+                    parcCentre[0] = parcsToSend_[parcs].position[0] * oneOverRefLength_;
+                    parcCentre[1] = parcsToSend_[parcs].position[1] * oneOverRefLength_;
+                    parcCentre[2] = parcsToSend_[parcs].position[2] * oneOverRefLength_;
 
-                // Push parcel type
-                sendInterfaces_[iface]->push("type_bound", parcCentre, static_cast<std::string>(parcsToSend_[parcs].parcType));
+                    // Push parcel type
+                    sendInterfaces_[iface]->push("type_bound", parcCentre, static_cast<std::string>(parcsToSend_[parcs].parcType));
 
-                // Push parcel velocity
-                sendInterfaces_[iface]->push("vel_x_bound", parcCentre, parcsToSend_[parcs].velocity[0]);
-                sendInterfaces_[iface]->push("vel_y_bound", parcCentre, parcsToSend_[parcs].velocity[1]);
-                sendInterfaces_[iface]->push("vel_z_bound", parcCentre, parcsToSend_[parcs].velocity[2]);
+                    // Push parcel velocity
+                    sendInterfaces_[iface]->push("vel_x_bound", parcCentre, parcsToSend_[parcs].velocity[0]);
+                    sendInterfaces_[iface]->push("vel_y_bound", parcCentre, parcsToSend_[parcs].velocity[1]);
+                    sendInterfaces_[iface]->push("vel_z_bound", parcCentre, parcsToSend_[parcs].velocity[2]);
 
-                pushed++;
+                    pushed++;
+                }
             }
+
+            std::cout << "    Coupling parcels pushed  = " << pushed << std::endl;
         }
 
         // Commit (transmit) values to the MUI interface
-        sendInterfaces_[iface]->commit(currIteration_);
-
-		std::cout << "    Coupling parcels pushed  = " << pushed << std::endl;
+        label peers = sendInterfaces_[iface]->commit(currIteration_);
+        std::cout << "sendCoupledParcels() Commit to " << peers << " peers" << std::endl;
 	}
 #endif
 	//- Clear the sent parcels
@@ -1042,56 +1038,56 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
 
                 point checkedPosition(rcvPoints[ifacepts][pts][0] * refLength_, rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
 
-                if(fixedBounds_)
+                if(couplingBounds_)
                 {
-                    if(fixedBoundZeroThick_[0] == 1) //- Boundary has zero thickness in the x
+                    if(couplingBoundZeroThick_[0] == 1) //- Boundary has zero thickness in the x
                     {
-                        checkedPosition[0] = fixedBoundMin_[0] + (fixedBoundNorm_[0] * boundCorr_);
+                        checkedPosition[0] = couplingBoundMin_[0] + (couplingBoundNorm_[0] * boundCorr_);
                     }
                     else
                     {
-                        if(checkedPosition[0] <= fixedBoundMin_[0])
+                        if(checkedPosition[0] <= couplingBoundMin_[0])
                         {
-                            checkedPosition[0] = fixedBoundMin_[0] + boundCorr_;
+                            checkedPosition[0] = couplingBoundMin_[0] + boundCorr_;
                         }
 
-                        if(checkedPosition[0] >= fixedBoundMax_[0])
+                        if(checkedPosition[0] >= couplingBoundMax_[0])
                         {
-                            checkedPosition[0] = fixedBoundMax_[0] - boundCorr_;
-                        }
-                    }
-
-                    if(fixedBoundZeroThick_[1] == 1) //- Boundary has zero thickness in the y
-                    {
-                        checkedPosition[1] = fixedBoundMin_[1] + (fixedBoundNorm_[1] * boundCorr_);
-                    }
-                    else
-                    {
-                        if(checkedPosition[1] <= fixedBoundMin_[1])
-                        {
-                            checkedPosition[1] = fixedBoundMin_[1] + boundCorr_;
-                        }
-
-                        if(checkedPosition[1] >= fixedBoundMax_[1])
-                        {
-                            checkedPosition[1] = fixedBoundMax_[1] - boundCorr_;
+                            checkedPosition[0] = couplingBoundMax_[0] - boundCorr_;
                         }
                     }
 
-                    if(fixedBoundZeroThick_[2] == 1) //- Boundary has zero thickness in the z
+                    if(couplingBoundZeroThick_[1] == 1) //- Boundary has zero thickness in the y
                     {
-                        checkedPosition[2] = fixedBoundMin_[2] + (fixedBoundNorm_[2] * boundCorr_);
+                        checkedPosition[1] = couplingBoundMin_[1] + (couplingBoundNorm_[1] * boundCorr_);
                     }
                     else
                     {
-                        if(checkedPosition[2] <= fixedBoundMin_[2])
+                        if(checkedPosition[1] <= couplingBoundMin_[1])
                         {
-                            checkedPosition[2] = fixedBoundMin_[2] + boundCorr_;
+                            checkedPosition[1] = couplingBoundMin_[1] + boundCorr_;
                         }
 
-                        if(checkedPosition[2] >= fixedBoundMax_[2])
+                        if(checkedPosition[1] >= couplingBoundMax_[1])
                         {
-                            checkedPosition[2] = fixedBoundMax_[2] - boundCorr_;
+                            checkedPosition[1] = couplingBoundMax_[1] - boundCorr_;
+                        }
+                    }
+
+                    if(couplingBoundZeroThick_[2] == 1) //- Boundary has zero thickness in the z
+                    {
+                        checkedPosition[2] = couplingBoundMin_[2] + (couplingBoundNorm_[2] * boundCorr_);
+                    }
+                    else
+                    {
+                        if(checkedPosition[2] <= couplingBoundMin_[2])
+                        {
+                            checkedPosition[2] = couplingBoundMin_[2] + boundCorr_;
+                        }
+
+                        if(checkedPosition[2] >= couplingBoundMax_[2])
+                        {
+                            checkedPosition[2] = couplingBoundMax_[2] - boundCorr_;
                         }
                     }
                 }
@@ -1119,35 +1115,6 @@ void dsmcMdCoupling::output
      const fileName& timePath
 )
 {
-    const Time& runTime = time_.time();
-
-    if(runTime.outputTime())
-    {
-        label singleStepNParcs = cloud_.size();
-        scalar singleStepTotalLinearKE = 0.0;
-
-        IDLList<dsmcParcel>::iterator parc(cloud_.begin());
-
-        for(; parc != cloud_.end(); ++parc)
-        {
-            scalar parcMass(cloud_.constProps(parc().typeId()).mass());
-
-            singleStepTotalLinearKE += 0.5*parcMass*magSqr(parc().U());
-        }
-
-        if (Pstream::parRun())
-        {
-            reduce(singleStepTotalLinearKE, sumOp<scalar>());
-            reduce(singleStepNParcs, sumOp<label>());
-        }
-
-        if(Pstream::master())
-        {
-            OFstream os1(timePath/"avg_lin_KE");
-            os1 << "Time " << time_.time().value() << endl;
-            os1 << singleStepTotalLinearKE/singleStepNParcs << endl;
-        }
-    }
 }
 
 void dsmcMdCoupling::updateProperties(const dictionary& newDict)
