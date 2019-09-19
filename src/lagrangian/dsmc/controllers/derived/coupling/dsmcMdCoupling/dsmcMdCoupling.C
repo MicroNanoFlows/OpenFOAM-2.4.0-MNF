@@ -577,8 +577,8 @@ dsmcMdCoupling::dsmcMdCoupling
     oneOverRefLength_ = 1.0 / refLength_;
     oneOverRefTime_ = 1.0 / refTime_;
 #ifdef USE_MUI
-		//Initialise exact time sampler for MUI
-		chrono_sampler = new mui::chrono_sampler_exact3d();
+    //Initialise exact time sampler for MUI
+    chrono_sampler = new mui::chrono_sampler_exact3d();
 #endif
 }
 
@@ -590,9 +590,46 @@ dsmcMdCoupling::~dsmcMdCoupling()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void dsmcMdCoupling::initialConfiguration()
+void dsmcMdCoupling::initialConfiguration(label stage)
 {
-    sendCoupledRegion(true); // Send ghost parcels in coupled regions at time = startTime
+    if(stage == 1)
+    {
+#ifdef USE_MUI
+    if(!sendingBound_ && !sendingRegion_)
+    {
+        forAll(sendInterfaces_, iface)
+        {
+            sendInterfaces_[iface]->announce_send_disable();
+        }
+    }
+
+    forAll(sendInterfaces_, iface)
+    {
+        sendInterfaces_[iface]->commit(static_cast<label>(1));
+    }
+#endif
+    }
+    else if (stage == 2)
+    {
+#ifdef USE_MUI
+    if(!receivingBound_ && !receivingRegion_)
+    {
+        forAll(recvInterfaces_, iface)
+        {
+            recvInterfaces_[iface]->announce_recv_disable();
+        }
+    }
+
+    forAll(recvInterfaces_, iface)
+    {
+        recvInterfaces_[iface]->commit(static_cast<label>(1));
+    }
+#endif
+    }
+    else if (stage == 3)
+    {
+        sendCoupledRegion(true); // Send ghost parcels in coupled regions at time = startTime
+    }
 }
 
 void dsmcMdCoupling::controlParcelsBeforeCollisions(label stage)
@@ -612,13 +649,10 @@ void dsmcMdCoupling::controlParcelsBeforeCollisions(label stage)
     }
     else if (stage == 2) //- Receive molecules that were sent through the coupling interface
     {
-        if(receivingBound_)
+        if(receiveCoupledMolecules()) // Receive any molecules from MD coupling boundary (blocking)
         {
-            if(receiveCoupledMolecules()) // Receive any molecules from MD coupling boundary (blocking)
-            {
-                // Update cell occupancy if parcels were received and inserted
-                cloud_.reBuildCellOccupancy();
-            }
+            // Update cell occupancy if parcels were received and inserted
+            cloud_.reBuildCellOccupancy();
         }
     }
     else if (stage == 3) //- Send parcels that were deleted in stage 1
@@ -635,11 +669,8 @@ void dsmcMdCoupling::controlParcelsAfterCollisions(int stage)
 	}
     else if (stage == 2)
     {
-    	if(receivingRegion_)
-		{
-			receiveCoupledRegionForces(); // Receive MD forces on ghost molecules in coupled region(s) (blocking)
-		}
-    }
+        receiveCoupledRegionForces(); // Receive MD forces on ghost molecules in coupled region(s) (blocking)
+	}
 }
 
 bool dsmcMdCoupling::findCoupledParcels()
@@ -801,10 +832,11 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
             }
 
             std::cout << "    Parcels sent to coupled region  = " << parcelsInCellHistory_[iface].size() << std::endl;
+
+            // Commit (transmit) values to the MUI interface
+            label peers = sendInterfaces_[iface]->commit(currIteration_);
+            std::cout << "Commit to " << peers << " in sendCoupledRegion" << std::endl;
 	    }
-		// Commit (transmit) values to the MUI interface
-        label peers = sendInterfaces_[iface]->commit(currIteration_);
-        std::cout << "sendCoupledRegion() Commit to " << peers << " peers" << std::endl;
 	}
 
 	if(init)
@@ -817,101 +849,104 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 void dsmcMdCoupling::receiveCoupledRegionForces()
 {
 #ifdef USE_MUI
-    List<std::vector<std::string> > rcvParcType(recvInterfaces_.size());
-    List<std::vector<label> > rcvParcId(recvInterfaces_.size());
-    List<std::vector<scalar> > rcvForceX(recvInterfaces_.size());
-    List<std::vector<scalar> > rcvForceY(recvInterfaces_.size());
-    List<std::vector<scalar> > rcvForceZ(recvInterfaces_.size());
-
-    // Iterate through all receiving interfaces for this controller and extract a points list
-    forAll(recvInterfaces_, iface)
+    if(receivingRegion_)
     {
-        //- Extract a list of all parcel types
-        rcvParcType[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_region", currIteration_, *chrono_sampler);
+        List<std::vector<std::string> > rcvParcType(recvInterfaces_.size());
+        List<std::vector<label> > rcvParcId(recvInterfaces_.size());
+        List<std::vector<scalar> > rcvForceX(recvInterfaces_.size());
+        List<std::vector<scalar> > rcvForceY(recvInterfaces_.size());
+        List<std::vector<scalar> > rcvForceZ(recvInterfaces_.size());
 
-        if(rcvParcType[iface].size() > 0)
+        // Iterate through all receiving interfaces for this controller and extract a points list
+        forAll(recvInterfaces_, iface)
         {
-            //- Extract a list of all molecule Id's received from other solver through this interface
-            rcvParcId[iface] = recvInterfaces_[iface]->fetch_values<label>("id_region", currIteration_, *chrono_sampler);
+            //- Extract a list of all parcel types
+            rcvParcType[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_region", currIteration_, *chrono_sampler);
 
-            //- Extract a list of all molecule forces received from other solver through this interface
-            rcvForceX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_x_region", currIteration_, *chrono_sampler);
-            rcvForceY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_y_region", currIteration_, *chrono_sampler);
-            rcvForceZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_z_region", currIteration_, *chrono_sampler);
-        }
-    }
+            if(rcvParcType[iface].size() > 0)
+            {
+                //- Extract a list of all molecule Id's received from other solver through this interface
+                rcvParcId[iface] = recvInterfaces_[iface]->fetch_values<label>("id_region", currIteration_, *chrono_sampler);
 
-    //- Go through received values and find any that are not of the type set to be received
-    forAll(rcvParcType, ifacepts)
-    {
-        if(rcvParcType[ifacepts].size() > 0)
-        {
-            std::vector<std::string>::iterator rcvParcTypeIt;
-            std::vector<label>::iterator rcvParcIdIt = rcvParcId[ifacepts].begin();
-            std::vector<scalar>::iterator rcvForceXIt = rcvForceX[ifacepts].begin();
-            std::vector<scalar>::iterator rcvForceYIt = rcvForceY[ifacepts].begin();
-            std::vector<scalar>::iterator rcvForceZIt = rcvForceZ[ifacepts].begin();
-
-            for (rcvParcTypeIt = rcvParcType[ifacepts].begin(); rcvParcTypeIt != rcvParcType[ifacepts].end(); rcvParcTypeIt++) {
-                const label parcId = findIndex(typeNames_, *rcvParcTypeIt);
-
-                if(parcId == -1) //- parcId not found in local list as one to receive so store it as one to remove from lists
-                {
-                    rcvParcType[ifacepts].erase(rcvParcTypeIt--);
-                    rcvParcId[ifacepts].erase(rcvParcIdIt--);
-                    rcvForceX[ifacepts].erase(rcvForceXIt--);
-                    rcvForceY[ifacepts].erase(rcvForceYIt--);
-                    rcvForceZ[ifacepts].erase(rcvForceZIt--);
-                }
-
-                rcvParcIdIt++;
-                rcvForceXIt++;
-                rcvForceYIt++;
-                rcvForceZIt++;
+                //- Extract a list of all molecule forces received from other solver through this interface
+                rcvForceX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_x_region", currIteration_, *chrono_sampler);
+                rcvForceY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_y_region", currIteration_, *chrono_sampler);
+                rcvForceZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_z_region", currIteration_, *chrono_sampler);
             }
         }
-    }
 
-    DynamicList<dsmcParcel*> parcelsInZone;
-    dsmcParcel* parcel = NULL;
-
-    //- Extract a list of all parcels in the control zone(s)
-    forAll(regionIds(), id)
-    {
-        forAll(controlZone(regionIds()[id]), c)
+        //- Go through received values and find any that are not of the type set to be received
+        forAll(rcvParcType, ifacepts)
         {
-            const label& cell = controlZone(regionIds()[id])[c];
-            const List<dsmcParcel*>& parcelsInCell = cloud_.cellOccupancy()[cell];
-
-            forAll(parcelsInCell, p) // Iterate through parcels in cell
+            if(rcvParcType[ifacepts].size() > 0)
             {
-                parcel = parcelsInCell[p];
+                std::vector<std::string>::iterator rcvParcTypeIt;
+                std::vector<label>::iterator rcvParcIdIt = rcvParcId[ifacepts].begin();
+                std::vector<scalar>::iterator rcvForceXIt = rcvForceX[ifacepts].begin();
+                std::vector<scalar>::iterator rcvForceYIt = rcvForceY[ifacepts].begin();
+                std::vector<scalar>::iterator rcvForceZIt = rcvForceZ[ifacepts].begin();
 
-                //- Determine whether parcel is of a type set to receive
-                const label typeIndex = findIndex(typeNames_, cloud_.typeIdList()[parcel->typeId()]);
+                for (rcvParcTypeIt = rcvParcType[ifacepts].begin(); rcvParcTypeIt != rcvParcType[ifacepts].end(); rcvParcTypeIt++) {
+                    const label parcId = findIndex(typeNames_, *rcvParcTypeIt);
 
-                if(typeIndex != -1)
-                {
-                    parcelsInZone.append(parcel);
+                    if(parcId == -1) //- parcId not found in local list as one to receive so store it as one to remove from lists
+                    {
+                        rcvParcType[ifacepts].erase(rcvParcTypeIt--);
+                        rcvParcId[ifacepts].erase(rcvParcIdIt--);
+                        rcvForceX[ifacepts].erase(rcvForceXIt--);
+                        rcvForceY[ifacepts].erase(rcvForceYIt--);
+                        rcvForceZ[ifacepts].erase(rcvForceZIt--);
+                    }
+
+                    rcvParcIdIt++;
+                    rcvForceXIt++;
+                    rcvForceYIt++;
+                    rcvForceZIt++;
                 }
             }
         }
-    }
 
-    // Iterate through all receiving interfaces for this controller and apply received forces if IDs match
-    forAll(recvInterfaces_, iface)
-    {
-        if(parcelsInZone.size() == rcvParcId[iface].size())
+        DynamicList<dsmcParcel*> parcelsInZone;
+        dsmcParcel* parcel = NULL;
+
+        //- Extract a list of all parcels in the control zone(s)
+        forAll(regionIds(), id)
         {
-            forAll(parcelsInZone, parcel)
+            forAll(controlZone(regionIds()[id]), c)
             {
-                if(rcvParcId[iface][parcel] == parcelsInZone[parcel]->origId())
-                {
-                    scalar parcMass(cloud_.constProps(parcelsInZone[parcel]->typeId()).mass());
+                const label& cell = controlZone(regionIds()[id])[c];
+                const List<dsmcParcel*>& parcelsInCell = cloud_.cellOccupancy()[cell];
 
-                    parcelsInZone[parcel]->U()[0] += 0.5 * (rcvForceX[iface][parcel] / parcMass) * mesh_.time().deltaTValue();
-                    parcelsInZone[parcel]->U()[1] += 0.5 * (rcvForceY[iface][parcel] / parcMass) * mesh_.time().deltaTValue();
-                    parcelsInZone[parcel]->U()[2] += 0.5 * (rcvForceZ[iface][parcel] / parcMass) * mesh_.time().deltaTValue();
+                forAll(parcelsInCell, p) // Iterate through parcels in cell
+                {
+                    parcel = parcelsInCell[p];
+
+                    //- Determine whether parcel is of a type set to receive
+                    const label typeIndex = findIndex(typeNames_, cloud_.typeIdList()[parcel->typeId()]);
+
+                    if(typeIndex != -1)
+                    {
+                        parcelsInZone.append(parcel);
+                    }
+                }
+            }
+        }
+
+        // Iterate through all forces received for this controller and apply if IDs match
+        forAll(rcvParcId, iface)
+        {
+            if(parcelsInZone.size() == rcvParcId[iface].size())
+            {
+                forAll(parcelsInZone, parcel)
+                {
+                    if(rcvParcId[iface][parcel] == parcelsInZone[parcel]->origId())
+                    {
+                        scalar parcMass(cloud_.constProps(parcelsInZone[parcel]->typeId()).mass());
+
+                        parcelsInZone[parcel]->U()[0] += 0.5 * (rcvForceX[iface][parcel] / parcMass) * mesh_.time().deltaTValue();
+                        parcelsInZone[parcel]->U()[1] += 0.5 * (rcvForceY[iface][parcel] / parcMass) * mesh_.time().deltaTValue();
+                        parcelsInZone[parcel]->U()[2] += 0.5 * (rcvForceZ[iface][parcel] / parcMass) * mesh_.time().deltaTValue();
+                    }
                 }
             }
         }
@@ -951,11 +986,10 @@ void dsmcMdCoupling::sendCoupledParcels()
             }
 
             std::cout << "    Coupling parcels pushed  = " << pushed << std::endl;
-        }
 
-        // Commit (transmit) values to the MUI interface
-        label peers = sendInterfaces_[iface]->commit(currIteration_);
-        std::cout << "sendCoupledParcels() Commit to " << peers << " peers" << std::endl;
+            // Commit (transmit) values to the MUI interface
+            sendInterfaces_[iface]->commit(currIteration_);
+        }
 	}
 #endif
 	//- Clear the sent parcels
@@ -966,145 +1000,148 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
 {
     bool parcelAdded = false;
 #ifdef USE_MUI
-	List<std::vector<mui::point3d> > rcvPoints(recvInterfaces_.size());
-	List<std::vector<std::string> > rcvParcType(recvInterfaces_.size());
-	List<std::vector<scalar> > rcvVelX(recvInterfaces_.size());
-    List<std::vector<scalar> > rcvVelY(recvInterfaces_.size());
-    List<std::vector<scalar> > rcvVelZ(recvInterfaces_.size());
-	std::stringstream rcvStr;
-
-	// Iterate through all receiving interfaces for this controller and extract a points list for each molecule type handled
-    forAll(recvInterfaces_, iface)
+    if(receivingBound_)
     {
-        //- Extract a list of all parcel locations
-        rcvPoints[iface] = recvInterfaces_[iface]->fetch_points<std::string>("type_bound", currIteration_, *chrono_sampler);
+        List<std::vector<mui::point3d> > rcvPoints(recvInterfaces_.size());
+        List<std::vector<std::string> > rcvParcType(recvInterfaces_.size());
+        List<std::vector<scalar> > rcvVelX(recvInterfaces_.size());
+        List<std::vector<scalar> > rcvVelY(recvInterfaces_.size());
+        List<std::vector<scalar> > rcvVelZ(recvInterfaces_.size());
+        std::stringstream rcvStr;
 
-        if(rcvPoints[iface].size() > 0)
+        // Iterate through all receiving interfaces for this controller and extract a points list for each molecule type handled
+        forAll(recvInterfaces_, iface)
         {
-            //- Extract a list of all parcel types
-            rcvParcType[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_bound", currIteration_, *chrono_sampler);
+            //- Extract a list of all parcel locations
+            rcvPoints[iface] = recvInterfaces_[iface]->fetch_points<std::string>("type_bound", currIteration_, *chrono_sampler);
 
-            //- Extract a list of all molecule velocities received from other solver through this interface
-            rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_x_bound", currIteration_, *chrono_sampler);
-            rcvVelY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_y_bound", currIteration_, *chrono_sampler);
-            rcvVelZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_z_bound", currIteration_, *chrono_sampler);
-        }
-    }
-
-    //- Go through received values and find any that are not of the type set to be received
-    forAll(rcvParcType, ifacepts)
-    {
-        if(rcvParcType[ifacepts].size() > 0)
-        {
-            std::vector<std::string>::iterator rcvParcTypeIt;
-            std::vector<mui::point3d>::iterator rcvPointsIt = rcvPoints[ifacepts].begin();
-            std::vector<scalar>::iterator rcvVelXIt = rcvVelX[ifacepts].begin();
-            std::vector<scalar>::iterator rcvVelYIt = rcvVelY[ifacepts].begin();
-            std::vector<scalar>::iterator rcvVelZIt = rcvVelZ[ifacepts].begin();
-
-            for (rcvParcTypeIt = rcvParcType[ifacepts].begin(); rcvParcTypeIt != rcvParcType[ifacepts].end(); rcvParcTypeIt++) {
-                const label parcId = findIndex(typeNames_, *rcvParcTypeIt);
-
-                if(parcId == -1) //- parcId not found in local list as one to receive so store it as one to remove from lists
-                {
-                    rcvParcType[ifacepts].erase(rcvParcTypeIt--);
-                    rcvPoints[ifacepts].erase(rcvPointsIt--);
-                    rcvVelX[ifacepts].erase(rcvVelXIt--);
-                    rcvVelY[ifacepts].erase(rcvVelYIt--);
-                    rcvVelZ[ifacepts].erase(rcvVelZIt--);
-                }
-
-                rcvPointsIt++;
-                rcvVelXIt++;
-                rcvVelYIt++;
-                rcvVelZIt++;
-            }
-        }
-    }
-
-    label inserted = 0;
-
-	// Iterate through all received points
-	forAll(rcvPoints, ifacepts)
-	{
-        if(rcvPoints[ifacepts].size() > 0)
-        {
-            for (size_t pts = 0; pts < rcvPoints[ifacepts].size(); pts++)
+            if(rcvPoints[iface].size() > 0)
             {
-                vector velocity;
-                velocity[0] = rcvVelX[ifacepts][pts];
-                velocity[1] = rcvVelY[ifacepts][pts];
-                velocity[2] = rcvVelZ[ifacepts][pts];
+                //- Extract a list of all parcel types
+                rcvParcType[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_bound", currIteration_, *chrono_sampler);
 
-                point checkedPosition(rcvPoints[ifacepts][pts][0] * refLength_, rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
-
-                if(couplingBounds_)
-                {
-                    if(couplingBoundZeroThick_[0] == 1) //- Boundary has zero thickness in the x
-                    {
-                        checkedPosition[0] = couplingBoundMin_[0] + (couplingBoundNorm_[0] * boundCorr_);
-                    }
-                    else
-                    {
-                        if(checkedPosition[0] <= couplingBoundMin_[0])
-                        {
-                            checkedPosition[0] = couplingBoundMin_[0] + boundCorr_;
-                        }
-
-                        if(checkedPosition[0] >= couplingBoundMax_[0])
-                        {
-                            checkedPosition[0] = couplingBoundMax_[0] - boundCorr_;
-                        }
-                    }
-
-                    if(couplingBoundZeroThick_[1] == 1) //- Boundary has zero thickness in the y
-                    {
-                        checkedPosition[1] = couplingBoundMin_[1] + (couplingBoundNorm_[1] * boundCorr_);
-                    }
-                    else
-                    {
-                        if(checkedPosition[1] <= couplingBoundMin_[1])
-                        {
-                            checkedPosition[1] = couplingBoundMin_[1] + boundCorr_;
-                        }
-
-                        if(checkedPosition[1] >= couplingBoundMax_[1])
-                        {
-                            checkedPosition[1] = couplingBoundMax_[1] - boundCorr_;
-                        }
-                    }
-
-                    if(couplingBoundZeroThick_[2] == 1) //- Boundary has zero thickness in the z
-                    {
-                        checkedPosition[2] = couplingBoundMin_[2] + (couplingBoundNorm_[2] * boundCorr_);
-                    }
-                    else
-                    {
-                        if(checkedPosition[2] <= couplingBoundMin_[2])
-                        {
-                            checkedPosition[2] = couplingBoundMin_[2] + boundCorr_;
-                        }
-
-                        if(checkedPosition[2] >= couplingBoundMax_[2])
-                        {
-                            checkedPosition[2] = couplingBoundMax_[2] - boundCorr_;
-                        }
-                    }
-                }
-
-                const label typeIndex = findIndex(typeNames_, rcvParcType[ifacepts][pts]);
-
-                insertParcel(checkedPosition, velocity, typeIndex);
-                parcelAdded = true;
-                inserted++;
+                //- Extract a list of all molecule velocities received from other solver through this interface
+                rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_x_bound", currIteration_, *chrono_sampler);
+                rcvVelY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_y_bound", currIteration_, *chrono_sampler);
+                rcvVelZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_z_bound", currIteration_, *chrono_sampler);
             }
         }
-	}
 
-	if(inserted != 0)
-	{
-	    std::cout << "    Coupling parcels inserted  = " << inserted << std::endl;
-	}
+        //- Go through received values and find any that are not of the type set to be received
+        forAll(rcvParcType, ifacepts)
+        {
+            if(rcvParcType[ifacepts].size() > 0)
+            {
+                std::vector<std::string>::iterator rcvParcTypeIt;
+                std::vector<mui::point3d>::iterator rcvPointsIt = rcvPoints[ifacepts].begin();
+                std::vector<scalar>::iterator rcvVelXIt = rcvVelX[ifacepts].begin();
+                std::vector<scalar>::iterator rcvVelYIt = rcvVelY[ifacepts].begin();
+                std::vector<scalar>::iterator rcvVelZIt = rcvVelZ[ifacepts].begin();
+
+                for (rcvParcTypeIt = rcvParcType[ifacepts].begin(); rcvParcTypeIt != rcvParcType[ifacepts].end(); rcvParcTypeIt++) {
+                    const label parcId = findIndex(typeNames_, *rcvParcTypeIt);
+
+                    if(parcId == -1) //- parcId not found in local list as one to receive so store it as one to remove from lists
+                    {
+                        rcvParcType[ifacepts].erase(rcvParcTypeIt--);
+                        rcvPoints[ifacepts].erase(rcvPointsIt--);
+                        rcvVelX[ifacepts].erase(rcvVelXIt--);
+                        rcvVelY[ifacepts].erase(rcvVelYIt--);
+                        rcvVelZ[ifacepts].erase(rcvVelZIt--);
+                    }
+
+                    rcvPointsIt++;
+                    rcvVelXIt++;
+                    rcvVelYIt++;
+                    rcvVelZIt++;
+                }
+            }
+        }
+
+        label inserted = 0;
+
+        // Iterate through all received points
+        forAll(rcvPoints, ifacepts)
+        {
+            if(rcvPoints[ifacepts].size() > 0)
+            {
+                for (size_t pts = 0; pts < rcvPoints[ifacepts].size(); pts++)
+                {
+                    vector velocity;
+                    velocity[0] = rcvVelX[ifacepts][pts];
+                    velocity[1] = rcvVelY[ifacepts][pts];
+                    velocity[2] = rcvVelZ[ifacepts][pts];
+
+                    point checkedPosition(rcvPoints[ifacepts][pts][0] * refLength_, rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
+
+                    if(couplingBounds_)
+                    {
+                        if(couplingBoundZeroThick_[0] == 1) //- Boundary has zero thickness in the x
+                        {
+                            checkedPosition[0] = couplingBoundMin_[0] + (couplingBoundNorm_[0] * boundCorr_);
+                        }
+                        else
+                        {
+                            if(checkedPosition[0] <= couplingBoundMin_[0])
+                            {
+                                checkedPosition[0] = couplingBoundMin_[0] + boundCorr_;
+                            }
+
+                            if(checkedPosition[0] >= couplingBoundMax_[0])
+                            {
+                                checkedPosition[0] = couplingBoundMax_[0] - boundCorr_;
+                            }
+                        }
+
+                        if(couplingBoundZeroThick_[1] == 1) //- Boundary has zero thickness in the y
+                        {
+                            checkedPosition[1] = couplingBoundMin_[1] + (couplingBoundNorm_[1] * boundCorr_);
+                        }
+                        else
+                        {
+                            if(checkedPosition[1] <= couplingBoundMin_[1])
+                            {
+                                checkedPosition[1] = couplingBoundMin_[1] + boundCorr_;
+                            }
+
+                            if(checkedPosition[1] >= couplingBoundMax_[1])
+                            {
+                                checkedPosition[1] = couplingBoundMax_[1] - boundCorr_;
+                            }
+                        }
+
+                        if(couplingBoundZeroThick_[2] == 1) //- Boundary has zero thickness in the z
+                        {
+                            checkedPosition[2] = couplingBoundMin_[2] + (couplingBoundNorm_[2] * boundCorr_);
+                        }
+                        else
+                        {
+                            if(checkedPosition[2] <= couplingBoundMin_[2])
+                            {
+                                checkedPosition[2] = couplingBoundMin_[2] + boundCorr_;
+                            }
+
+                            if(checkedPosition[2] >= couplingBoundMax_[2])
+                            {
+                                checkedPosition[2] = couplingBoundMax_[2] - boundCorr_;
+                            }
+                        }
+                    }
+
+                    const label typeIndex = findIndex(typeNames_, rcvParcType[ifacepts][pts]);
+
+                    insertParcel(checkedPosition, velocity, typeIndex);
+                    parcelAdded = true;
+                    inserted++;
+                }
+            }
+        }
+
+        if(inserted != 0)
+        {
+            std::cout << "    Coupling parcels inserted  = " << inserted << std::endl;
+        }
+    }
 #endif
 	return parcelAdded;
 }

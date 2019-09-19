@@ -144,7 +144,7 @@ public:
     // Member Functions
 
         //- create an initial configuration
-        virtual void initialConfiguration() = 0;
+        virtual void initialConfiguration(label stage) = 0;
 
         //- run after move and before collisions
         virtual void controlParcelsBeforeCollisions(label stage) = 0;

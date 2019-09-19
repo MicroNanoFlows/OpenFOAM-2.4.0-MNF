@@ -586,10 +586,46 @@ void polyControllers::initialConfig()
         fluxControllers_[fC]->initialConfiguration();
     }
 
-    //- Run initial configuration (blocking)
+    //- Run initial configuration stage 1
     forAll(couplingControllers_, cC)
     {
-        couplingControllers_[cC]->initialConfiguration();
+        couplingControllers_[cC]->initialConfiguration(1);
+    }
+
+    //- Wait here until other side has finished sending initialisation values (blocking)
+    forAll(couplingControllers_, cC)
+    {
+        couplingControllers_[cC]->barrier(static_cast<label>(1));
+    }
+
+    //- Forget initial configuration time frame
+    forAll(couplingControllers_, cC)
+    {
+        couplingControllers_[cC]->forget(static_cast<label>(1), true);
+    }
+
+    //- Run initial configuration stage 2
+    forAll(couplingControllers_, cC)
+    {
+        couplingControllers_[cC]->initialConfiguration(2);
+    }
+
+    //- Wait here until other side has finished sending initialisation values (blocking)
+    forAll(couplingControllers_, cC)
+    {
+        couplingControllers_[cC]->barrier(static_cast<label>(1));
+    }
+
+    //- Forget initial configuration time frame
+    forAll(couplingControllers_, cC)
+    {
+        couplingControllers_[cC]->forget(static_cast<label>(1), true);
+    }
+
+    //- Run initial configuration stage 3 (blocking)
+    forAll(couplingControllers_, cC)
+    {
+        couplingControllers_[cC]->initialConfiguration(3);
     }
 
     //- Rebuild cell occupancy (only need to do with one controller)

@@ -173,7 +173,7 @@ public:
     // Member Functions
 
         //- create an initial configuration
-        bool initialConfiguration();
+        bool initialConfiguration(label stage);
 
         //- run at start of time step before molecules move
         bool controlAfterMove(label stage);

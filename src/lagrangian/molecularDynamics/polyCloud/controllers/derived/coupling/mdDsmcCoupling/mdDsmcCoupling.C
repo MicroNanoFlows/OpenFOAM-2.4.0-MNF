@@ -610,11 +610,46 @@ mdDsmcCoupling::~mdDsmcCoupling()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-bool mdDsmcCoupling::initialConfiguration()
+bool mdDsmcCoupling::initialConfiguration(label stage)
 {
-    std::cout << "Start init" << std::endl;
-    return receiveCoupledRegion(true); // Receive ghost molecules in coupled region(s) at time = startTime and commit time=1 to release other side
-    std::cout << "End init" << std::endl;
+    if(stage == 1)
+    {
+#ifdef USE_MUI
+    if(!sendingBound_ && !sendingRegion_)
+    {
+        forAll(sendInterfaces_, iface)
+        {
+            sendInterfaces_[iface]->announce_send_disable();
+        }
+    }
+
+    forAll(sendInterfaces_, iface)
+    {
+        sendInterfaces_[iface]->commit(static_cast<label>(1));
+    }
+#endif
+    }
+    else if (stage == 2)
+    {
+#ifdef USE_MUI
+    if(!receivingBound_ && !receivingRegion_)
+    {
+        forAll(recvInterfaces_, iface)
+        {
+            recvInterfaces_[iface]->announce_recv_disable();
+        }
+    }
+
+    forAll(recvInterfaces_, iface)
+    {
+        recvInterfaces_[iface]->commit(static_cast<label>(1));
+    }
+#endif
+    }
+    else if (stage == 2)
+    {
+        return receiveCoupledRegion(true); // Receive ghost molecules in coupled region(s) at time = startTime and commit time=1 to release other side
+    }
 }
 
 bool mdDsmcCoupling::controlAfterMove(label stage)
@@ -634,17 +669,11 @@ bool mdDsmcCoupling::controlAfterMove(label stage)
 	}
 	else if (stage == 2)
 	{
-	    if(receivingBound_)
-        {
-            receiveCoupledParcels(); // Receive any molecules coupling boundary (blocking)
-        }
+	    receiveCoupledParcels(); // Receive any molecules coupling boundary (blocking)
 	}
 	else if (stage == 3)
 	{
-		if(receivingRegion_)
-        {
-		    returnVal = receiveCoupledRegion(false); // Receive ghost molecules in coupled region (blocking)
-        }
+	    returnVal = receiveCoupledRegion(false); // Receive ghost molecules in coupled region (blocking)
     }
 	else if (stage == 4)
 	{
@@ -673,7 +702,6 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
 
 	if(receivingRegion_)
     {
-	    std::cout << "Starting receiveCoupledRegion()" << std::endl;
 	    label molCount = 0;
 
         // Iterate through all receiving interfaces for this controller and extract a points list
@@ -960,16 +988,17 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
                 prevMolCount_ = molCount;
             }
         }
-        std::cout << "Ending receiveCoupledRegion()" << std::endl;
     }
 
 	//- This is the initialisation call so commit at iteration = 1 to allow other side to continue
     if(init)
     {
-        forAll(recvInterfaces_, iface)
+        if(receivingRegion_)
         {
-            label peers = recvInterfaces_[iface]->commit(currIteration_);
-            std::cout << "receiveCoupledRegion() Commit to " << peers << " peers" << std::endl;
+            forAll(recvInterfaces_, iface)
+            {
+                recvInterfaces_[iface]->commit(currIteration_);
+            }
         }
 
         currIteration_ = 0;
@@ -1027,11 +1056,10 @@ void mdDsmcCoupling::sendCoupledRegionForces()
                     }
                 }
             }
-        }
 
-        // Commit (transmit) values to the MUI interface
-        label peers = sendInterfaces_[iface]->commit(currIteration_);
-        std::cout << "sendCoupledRegionForces() Commit to " << peers << " peers" << std::endl;
+            // Commit (transmit) values to the MUI interface
+            sendInterfaces_[iface]->commit(currIteration_);
+        }
     }
 #endif
 }
@@ -1238,11 +1266,10 @@ void mdDsmcCoupling::sendCoupledMolecules()
                     }
                 }
             }
-        }
 
-        // Commit values to the coupling interface
-        label peers = sendInterfaces_[iface]->commit(currIteration_);
-        std::cout << "sendCoupledMolecules() Commit to " << peers << " peers" << std::endl;
+            // Commit (transmit) values to the coupling interface
+            sendInterfaces_[iface]->commit(currIteration_);
+        }
     }
 #endif
     //- Clear the sent molecules
@@ -1252,154 +1279,157 @@ void mdDsmcCoupling::sendCoupledMolecules()
 void mdDsmcCoupling::receiveCoupledParcels()
 {
 #ifdef USE_MUI
-    // Iterate through all receiving interfaces for this controller and extract a points list for each molecule type handled
-	forAll(recvInterfaces_, iface)
-	{
-	    rcvPoints_[iface].clear();
-	    rcvMolType_[iface].clear();
-	    rcvVelX_[iface].clear();
-	    rcvVelY_[iface].clear();
-	    rcvVelZ_[iface].clear();
-
-        //- Extract a list of all molecule locations
-        rcvPoints_[iface] = recvInterfaces_[iface]->fetch_points<std::string>("type_bound", currIteration_, *chrono_sampler);
-
-        if(rcvPoints_[iface].size() > 0)
-        {
-            //- Extract a list of all molecule types
-            rcvMolType_[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_bound", currIteration_, *chrono_sampler);
-
-            //- Extract a list of all molecule velocities received from other solver through this interface
-            rcvVelX_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_x_bound", currIteration_, *chrono_sampler);
-            rcvVelY_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_y_bound", currIteration_, *chrono_sampler);
-            rcvVelZ_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_z_bound", currIteration_, *chrono_sampler);
-        }
-	}
-
-	//- Go through received values and find any that are not of the type set to be received
-    forAll(rcvMolType_, ifacepts)
+    if(receivingBound_)
     {
-        if(rcvMolType_[ifacepts].size() > 0)
+        // Iterate through all receiving interfaces for this controller and extract a points list for each molecule type handled
+        forAll(recvInterfaces_, iface)
         {
-            std::vector<std::string>::iterator rcvMolTypeIt;
-            std::vector<mui::point3d>::iterator rcvPointsIt = rcvPoints_[ifacepts].begin();
-            std::vector<scalar>::iterator rcvVelXIt = rcvVelX_[ifacepts].begin();
-            std::vector<scalar>::iterator rcvVelYIt = rcvVelY_[ifacepts].begin();
-            std::vector<scalar>::iterator rcvVelZIt = rcvVelZ_[ifacepts].begin();
+            rcvPoints_[iface].clear();
+            rcvMolType_[iface].clear();
+            rcvVelX_[iface].clear();
+            rcvVelY_[iface].clear();
+            rcvVelZ_[iface].clear();
 
-            for (rcvMolTypeIt = rcvMolType_[ifacepts].begin(); rcvMolTypeIt != rcvMolType_[ifacepts].end(); rcvMolTypeIt++) {
-                const label molId = findIndex(molNames_, *rcvMolTypeIt);
+            //- Extract a list of all molecule locations
+            rcvPoints_[iface] = recvInterfaces_[iface]->fetch_points<std::string>("type_bound", currIteration_, *chrono_sampler);
 
-                if(molId == -1) //- molId not found in local list as one to receive so store it as one to remove from lists
-                {
-                    rcvMolType_[ifacepts].erase(rcvMolTypeIt--);
-                    rcvPoints_[ifacepts].erase(rcvPointsIt--);
-                    rcvVelX_[ifacepts].erase(rcvVelXIt--);
-                    rcvVelY_[ifacepts].erase(rcvVelYIt--);
-                    rcvVelZ_[ifacepts].erase(rcvVelZIt--);
-                }
+            if(rcvPoints_[iface].size() > 0)
+            {
+                //- Extract a list of all molecule types
+                rcvMolType_[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_bound", currIteration_, *chrono_sampler);
 
-                rcvPointsIt++;
-                rcvVelXIt++;
-                rcvVelYIt++;
-                rcvVelZIt++;
+                //- Extract a list of all molecule velocities received from other solver through this interface
+                rcvVelX_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_x_bound", currIteration_, *chrono_sampler);
+                rcvVelY_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_y_bound", currIteration_, *chrono_sampler);
+                rcvVelZ_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_z_bound", currIteration_, *chrono_sampler);
             }
         }
-    }
 
-    // Iterate through points received
-	forAll(rcvPoints_, ifacepts)
-	{
-        if(rcvPoints_[ifacepts].size() > 0)
+        //- Go through received values and find any that are not of the type set to be received
+        forAll(rcvMolType_, ifacepts)
         {
-            for (size_t pts = 0; pts < rcvPoints_[ifacepts].size(); pts++)
+            if(rcvMolType_[ifacepts].size() > 0)
             {
-                vector velocity;
-                velocity[0] = rcvVelX_[ifacepts][pts] * oneOverRefVelocity_;
-                velocity[1] = rcvVelY_[ifacepts][pts] * oneOverRefVelocity_;
-                velocity[2] = rcvVelZ_[ifacepts][pts] * oneOverRefVelocity_;
+                std::vector<std::string>::iterator rcvMolTypeIt;
+                std::vector<mui::point3d>::iterator rcvPointsIt = rcvPoints_[ifacepts].begin();
+                std::vector<scalar>::iterator rcvVelXIt = rcvVelX_[ifacepts].begin();
+                std::vector<scalar>::iterator rcvVelYIt = rcvVelY_[ifacepts].begin();
+                std::vector<scalar>::iterator rcvVelZIt = rcvVelZ_[ifacepts].begin();
 
-                point checkedPosition(rcvPoints_[ifacepts][pts][0] * refLength_, rcvPoints_[ifacepts][pts][1] * refLength_, rcvPoints_[ifacepts][pts][2] * refLength_);
+                for (rcvMolTypeIt = rcvMolType_[ifacepts].begin(); rcvMolTypeIt != rcvMolType_[ifacepts].end(); rcvMolTypeIt++) {
+                    const label molId = findIndex(molNames_, *rcvMolTypeIt);
 
-                if(couplingBounds_)
-                {
-                    if(couplingBoundZeroThick_[0] == 1) //- Boundary has zero thickness in the x
+                    if(molId == -1) //- molId not found in local list as one to receive so store it as one to remove from lists
                     {
-                        checkedPosition[0] = couplingBoundMin_[0] + (couplingBoundNorm_[0] * boundCorr_);
-                    }
-                    else
-                    {
-                        if(checkedPosition[0] <= couplingBoundMin_[0])
-                        {
-                            checkedPosition[0] = couplingBoundMin_[0] + boundCorr_;
-                        }
-
-                        if(checkedPosition[0] >= couplingBoundMax_[0])
-                        {
-                            checkedPosition[0] = couplingBoundMax_[0] - boundCorr_;
-                        }
+                        rcvMolType_[ifacepts].erase(rcvMolTypeIt--);
+                        rcvPoints_[ifacepts].erase(rcvPointsIt--);
+                        rcvVelX_[ifacepts].erase(rcvVelXIt--);
+                        rcvVelY_[ifacepts].erase(rcvVelYIt--);
+                        rcvVelZ_[ifacepts].erase(rcvVelZIt--);
                     }
 
-                    if(couplingBoundZeroThick_[1] == 1) //- Boundary has zero thickness in the y
-                    {
-                        checkedPosition[1] = couplingBoundMin_[1] + (couplingBoundNorm_[1] * boundCorr_);
-                    }
-                    else
-                    {
-                        if(checkedPosition[1] <= couplingBoundMin_[1])
-                        {
-                            checkedPosition[1] = couplingBoundMin_[1] + boundCorr_;
-                        }
-
-                        if(checkedPosition[1] >= couplingBoundMax_[1])
-                        {
-                            checkedPosition[1] = couplingBoundMax_[1] - boundCorr_;
-                        }
-                    }
-
-                    if(couplingBoundZeroThick_[2] == 1) //- Boundary has zero thickness in the z
-                    {
-                        checkedPosition[2] = couplingBoundMin_[2] + (couplingBoundNorm_[2] * boundCorr_);
-                    }
-                    else
-                    {
-                        if(checkedPosition[2] <= couplingBoundMin_[2])
-                        {
-                            checkedPosition[2] = couplingBoundMin_[2] + boundCorr_;
-                        }
-
-                        if(checkedPosition[2] >= couplingBoundMax_[2])
-                        {
-                            checkedPosition[2] = couplingBoundMax_[2] - boundCorr_;
-                        }
-                    }
+                    rcvPointsIt++;
+                    rcvVelXIt++;
+                    rcvVelYIt++;
+                    rcvVelZIt++;
                 }
+            }
+        }
 
-                if (Pstream::parRun())
+        // Iterate through points received
+        forAll(rcvPoints_, ifacepts)
+        {
+            if(rcvPoints_[ifacepts].size() > 0)
+            {
+                for (size_t pts = 0; pts < rcvPoints_[ifacepts].size(); pts++)
                 {
-                    if(Pstream::master())
+                    vector velocity;
+                    velocity[0] = rcvVelX_[ifacepts][pts] * oneOverRefVelocity_;
+                    velocity[1] = rcvVelY_[ifacepts][pts] * oneOverRefVelocity_;
+                    velocity[2] = rcvVelZ_[ifacepts][pts] * oneOverRefVelocity_;
+
+                    point checkedPosition(rcvPoints_[ifacepts][pts][0] * refLength_, rcvPoints_[ifacepts][pts][1] * refLength_, rcvPoints_[ifacepts][pts][2] * refLength_);
+
+                    if(couplingBounds_)
+                    {
+                        if(couplingBoundZeroThick_[0] == 1) //- Boundary has zero thickness in the x
+                        {
+                            checkedPosition[0] = couplingBoundMin_[0] + (couplingBoundNorm_[0] * boundCorr_);
+                        }
+                        else
+                        {
+                            if(checkedPosition[0] <= couplingBoundMin_[0])
+                            {
+                                checkedPosition[0] = couplingBoundMin_[0] + boundCorr_;
+                            }
+
+                            if(checkedPosition[0] >= couplingBoundMax_[0])
+                            {
+                                checkedPosition[0] = couplingBoundMax_[0] - boundCorr_;
+                            }
+                        }
+
+                        if(couplingBoundZeroThick_[1] == 1) //- Boundary has zero thickness in the y
+                        {
+                            checkedPosition[1] = couplingBoundMin_[1] + (couplingBoundNorm_[1] * boundCorr_);
+                        }
+                        else
+                        {
+                            if(checkedPosition[1] <= couplingBoundMin_[1])
+                            {
+                                checkedPosition[1] = couplingBoundMin_[1] + boundCorr_;
+                            }
+
+                            if(checkedPosition[1] >= couplingBoundMax_[1])
+                            {
+                                checkedPosition[1] = couplingBoundMax_[1] - boundCorr_;
+                            }
+                        }
+
+                        if(couplingBoundZeroThick_[2] == 1) //- Boundary has zero thickness in the z
+                        {
+                            checkedPosition[2] = couplingBoundMin_[2] + (couplingBoundNorm_[2] * boundCorr_);
+                        }
+                        else
+                        {
+                            if(checkedPosition[2] <= couplingBoundMin_[2])
+                            {
+                                checkedPosition[2] = couplingBoundMin_[2] + boundCorr_;
+                            }
+
+                            if(checkedPosition[2] >= couplingBoundMax_[2])
+                            {
+                                checkedPosition[2] = couplingBoundMax_[2] - boundCorr_;
+                            }
+                        }
+                    }
+
+                    if (Pstream::parRun())
+                    {
+                        if(Pstream::master())
+                        {
+                            std::cout << "Coupling boundary parcel received at: [" << checkedPosition[0] << "," << checkedPosition[1] << "," << checkedPosition[2] << "]" << std::endl;
+                        }
+                        else
+                        {
+                            std::cout << "[" << time_.time().value() << "s] Coupling boundary parcel received at: [" << checkedPosition[0] << "," << checkedPosition[1] << "," << checkedPosition[2] << "]" << std::endl;
+                        }
+                    }
+                    else
                     {
                         std::cout << "Coupling boundary parcel received at: [" << checkedPosition[0] << "," << checkedPosition[1] << "," << checkedPosition[2] << "]" << std::endl;
                     }
-                    else
-                    {
-                        std::cout << "[" << time_.time().value() << "s] Coupling boundary parcel received at: [" << checkedPosition[0] << "," << checkedPosition[1] << "," << checkedPosition[2] << "]" << std::endl;
-                    }
-                }
-                else
-                {
-                    std::cout << "Coupling boundary parcel received at: [" << checkedPosition[0] << "," << checkedPosition[1] << "," << checkedPosition[2] << "]" << std::endl;
-                }
 
-                coupledMolecule newMol;
-                newMol.molType = rcvMolType_[ifacepts][pts];
-                newMol.position = checkedPosition;
-                newMol.velocity = velocity;
+                    coupledMolecule newMol;
+                    newMol.molType = rcvMolType_[ifacepts][pts];
+                    newMol.position = checkedPosition;
+                    newMol.velocity = velocity;
 
-                molsReceived_.append(newMol);
+                    molsReceived_.append(newMol);
+                }
             }
         }
-	}
+    }
 #endif
 }
 
