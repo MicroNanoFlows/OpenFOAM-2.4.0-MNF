@@ -225,6 +225,8 @@ dsmcMdCoupling::dsmcMdCoupling
         regionMaxFound = true;
     }
 
+    const cellList& cells = mesh_.cells();
+
     if((regionMinFound && !regionMaxFound) || (regionMaxFound && !regionMinFound))
     {
         FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
@@ -257,11 +259,88 @@ dsmcMdCoupling::dsmcMdCoupling
             overlap = false;
         }
 
-        //- There is an overlap between the coupling boundary and the local mesh so should have found at least 1 intersecting cell
+        //- There is an overlap between the coupling region and the local mesh so should have found at least 1 intersecting cell
         if(!overlap)
         {
             sendingRegion_ = false;
             receivingRegion_ = false;
+        }
+        else //- Found an overlap between the region and local mesh so find which cells the region is in
+        {
+            point cellMin;
+            point cellMax;
+
+            //- Determine which cells the coupling region intersects
+            forAll(cells, cell)
+            {
+                const labelList& pointList = mesh_.cellPoints(cell);
+
+                cellMin[0] = VGREAT;
+                cellMin[1] = VGREAT;
+                cellMin[2] = VGREAT;
+                cellMax[0] = -VSMALL;
+                cellMax[1] = -VSMALL;
+                cellMax[2] = -VSMALL;
+
+                forAll(pointList, cellPoint)
+                {
+                    if(meshPoints[pointList[cellPoint]][0] < cellMin[0])
+                    {
+                        cellMin[0] = meshPoints[pointList[cellPoint]][0];
+                    }
+
+                    if(meshPoints[pointList[cellPoint]][0] > cellMax[0])
+                    {
+                        cellMax[0] = meshPoints[pointList[cellPoint]][0];
+                    }
+
+                    if(meshPoints[pointList[cellPoint]][1] < cellMin[1])
+                    {
+                        cellMin[1] = meshPoints[pointList[cellPoint]][1];
+                    }
+
+                    if(meshPoints[pointList[cellPoint]][1] > cellMax[1])
+                    {
+                        cellMax[1] = meshPoints[pointList[cellPoint]][1];
+                    }
+
+                    if(meshPoints[pointList[cellPoint]][2] < cellMin[2])
+                    {
+                        cellMin[2] = meshPoints[pointList[cellPoint]][2];
+                    }
+
+                    if(meshPoints[pointList[cellPoint]][2] > cellMax[2])
+                    {
+                        cellMax[2] = meshPoints[pointList[cellPoint]][2];
+                    }
+                }
+
+                vector cellHalfWidth(((cellMax[0] - cellMin[0]) * 0.5),
+                                     ((cellMax[1] - cellMin[1]) * 0.5),
+                                     ((cellMax[2] - cellMin[2]) * 0.5));
+                point cellCentre(cellMin[0] + cellHalfWidth[0],
+                                 cellMin[1] + cellHalfWidth[1],
+                                 cellMin[2] + cellHalfWidth[2]);
+
+                bool overlap = true;
+
+                if ((std::fabs(cellCentre[0] - couplingRegionCentre[0]) > (cellHalfWidth[0] + couplingRegionHalfWidth[0])) ||
+                   (std::fabs(cellCentre[1] - couplingRegionCentre[1]) > (cellHalfWidth[1] + couplingRegionHalfWidth[1])) ||
+                   (std::fabs(cellCentre[2] - couplingRegionCentre[2]) > (cellHalfWidth[2] + couplingRegionHalfWidth[2])))
+                {
+                    overlap = false;
+                }
+
+                if(overlap)
+                {
+                    regionCells_.append(cell);
+                }
+            }
+
+            if(regionCells_.size() > 0)
+            {
+                std::cout << "Region intersecting cell count: " << regionCells_.size() << std::endl;
+            }
         }
     }
 
@@ -322,8 +401,6 @@ dsmcMdCoupling::dsmcMdCoupling
     {
         couplingBounds_ = true;
 
-        const cellList& cells = mesh_.cells();
-
         vector localMeshExtents = meshMax_ - meshMin_;
 
         vector meshExtents = mesh_.bounds().max() - mesh_.bounds().min();
@@ -369,6 +446,7 @@ dsmcMdCoupling::dsmcMdCoupling
 
         point cellMin;
         point cellMax;
+        bool intersectCell = false;
 
         //- Determine which cells the coupling boundary intersects
         forAll(cells, cell)
@@ -438,10 +516,7 @@ dsmcMdCoupling::dsmcMdCoupling
                         if((cellMin[1] >= couplingBoundMin_[1] && cellMax[1] <= couplingBoundMax_[1]) &&
                            (cellMin[2] >= couplingBoundMin_[2] && cellMax[2] <= couplingBoundMax_[2]))
                         {
-                            if(findIndex(intersectingCells_, cell) == -1)
-                            {
-                                intersectingCells_.append(cell);
-                            }
+                            intersectCell = true;
                         }
                     }
                 }
@@ -475,10 +550,7 @@ dsmcMdCoupling::dsmcMdCoupling
                        if((cellMin[0] >= couplingBoundMin_[0] && cellMax[0] <= couplingBoundMax_[0]) &&
                           (cellMin[2] >= couplingBoundMin_[2] && cellMax[2] <= couplingBoundMax_[2]))
                        {
-                           if(findIndex(intersectingCells_, cell) == -1)
-                           {
-                               intersectingCells_.append(cell);
-                           }
+                           intersectCell = true;
                        }
                    }
                }
@@ -512,10 +584,7 @@ dsmcMdCoupling::dsmcMdCoupling
                        if((cellMin[0] >= couplingBoundMin_[0] && cellMax[0] <= couplingBoundMax_[0]) &&
                           (cellMin[1] >= couplingBoundMin_[1] && cellMax[1] <= couplingBoundMax_[1]))
                        {
-                           if(findIndex(intersectingCells_, cell) == -1)
-                           {
-                               intersectingCells_.append(cell);
-                           }
+                           intersectCell = true;
                        }
                    }
                }
@@ -528,11 +597,7 @@ dsmcMdCoupling::dsmcMdCoupling
             }
         }
 
-        if(intersectingCells_.size() > 0)
-        {
-            std::cout << "Coupling boundary intersecting cell count: " << intersectingCells_.size() << std::endl;
-        }
-        else
+        if(!intersectCell)
         {
             vector meshHalfWidth(((meshMax_[0] - meshMin_[0]) * 0.5),
                                  ((meshMax_[1] - meshMin_[1]) * 0.5),
@@ -595,38 +660,58 @@ void dsmcMdCoupling::initialConfiguration(label stage)
     if(stage == 1)
     {
 #ifdef USE_MUI
-    if(!sendingBound_ && !sendingRegion_)
+    if((!sendingBound_ && !sendingRegion_) && (!receivingBound_ && !receivingRegion_))
     {
+        std::cout << "MUI interface(s) disabled for this rank" << std::endl;
+
+        forAll(sendInterfaces_, iface)
+        {
+            sendInterfaces_[iface]->announce_send_disable();
+        }
+
+        forAll(recvInterfaces_, iface)
+        {
+            recvInterfaces_[iface]->announce_recv_disable();
+        }
+    }
+    else if((!sendingBound_ && !sendingRegion_))
+    {
+        std::cout << "MUI interface(s) sending disabled for this rank" << std::endl;
+
         forAll(sendInterfaces_, iface)
         {
             sendInterfaces_[iface]->announce_send_disable();
         }
     }
+    else if((!receivingBound_ && !receivingRegion_))
+    {
+        std::cout << "MUI interface(s) receiving disabled for this rank" << std::endl;
 
-    forAll(sendInterfaces_, iface)
-    {
-        sendInterfaces_[iface]->commit(static_cast<label>(1));
-    }
-#endif
-    }
-    else if (stage == 2)
-    {
-#ifdef USE_MUI
-    if(!receivingBound_ && !receivingRegion_)
-    {
         forAll(recvInterfaces_, iface)
         {
             recvInterfaces_[iface]->announce_recv_disable();
         }
     }
 
+    DynamicList<word> interfaceCommits;
+
+    forAll(sendInterfaces_, iface)
+    {
+        sendInterfaces_[iface]->commit(static_cast<label>(1));
+        interfaceCommits.append(sendInterfaceNames_[iface]);
+    }
+
     forAll(recvInterfaces_, iface)
     {
-        recvInterfaces_[iface]->commit(static_cast<label>(1));
+        label index = findIndex(interfaceCommits, recvInterfaceNames_[iface]);
+        if(index == -1)
+        {
+            recvInterfaces_[iface]->commit(static_cast<label>(1));
+        }
     }
 #endif
     }
-    else if (stage == 3)
+    else if (stage == 2)
     {
         sendCoupledRegion(true); // Send ghost parcels in coupled regions at time = startTime
     }
@@ -638,24 +723,13 @@ void dsmcMdCoupling::controlParcelsBeforeCollisions(label stage)
     {
         currIteration_++; //- Increment current iteration
 
-        if(sendingBound_)
-        {
-            if(findCoupledParcels())
-            {
-                // Update cell occupancy if parcels were removed
-                cloud_.reBuildCellOccupancy();
-            }
-        }
-    }
-    else if (stage == 2) //- Receive molecules that were sent through the coupling interface
-    {
         if(receiveCoupledMolecules()) // Receive any molecules from MD coupling boundary (blocking)
         {
             // Update cell occupancy if parcels were received and inserted
             cloud_.reBuildCellOccupancy();
         }
     }
-    else if (stage == 3) //- Send parcels that were deleted in stage 1
+    else if (stage == 2) //- Send parcels that were deleted by coupling boundary during evolve() in dsmcCloud
     {
         sendCoupledParcels(); // Send any parcels deleted by coupling boundary (non-blocking)
     }
@@ -671,108 +745,6 @@ void dsmcMdCoupling::controlParcelsAfterCollisions(int stage)
     {
         receiveCoupledRegionForces(); // Receive MD forces on ghost molecules in coupled region(s) (blocking)
 	}
-}
-
-bool dsmcMdCoupling::findCoupledParcels()
-{
-    bool parcelsRemoved = false;
-
-    DynamicList<dsmcParcel*> parcsToRemove;
-
-    forAll(intersectingCells_, cell)
-    {
-        const List<dsmcParcel*>& parcelsInCell = cloud_.cellOccupancy()[intersectingCells_[cell]];
-
-        forAll(parcelsInCell, parcel)
-        {
-            const word& parcType = cloud_.typeIdList()[parcelsInCell[parcel]->typeId()];
-            label typeIndex = findIndex(typeNames_, parcType);
-
-            //- Only delete and store particles that are of the coupled type
-            if(typeIndex != -1)
-            {
-                bool removeParcel = false;
-
-                if(couplingBoundZeroThick_[0] == 1)
-                {
-                    if(couplingBoundNorm_[0] > 0) //- Boundary is positive facing in the x
-                    {
-                        if(parcelsInCell[parcel]->position()[0] <= couplingBoundMin_[0])
-                        {
-                           removeParcel = true;
-                        }
-                    }
-                    else if (couplingBoundNorm_[0] < 0) //- Boundary is negative facing in the x
-                    {
-                        if(parcelsInCell[parcel]->position()[0] >= couplingBoundMax_[0])
-                        {
-                            removeParcel = true;
-                        }
-                    }
-                }
-
-                if(couplingBoundZeroThick_[1] == 1)
-                {
-                    if(couplingBoundNorm_[1] > 0) //- Boundary is positive facing in the y
-                    {
-                        if(parcelsInCell[parcel]->position()[1] <= couplingBoundMin_[1])
-                        {
-                           removeParcel = true;
-                        }
-                    }
-                    else if (couplingBoundNorm_[1] < 0) //- Boundary is negative facing in the x
-                    {
-                        if(parcelsInCell[parcel]->position()[1] >= couplingBoundMax_[1])
-                        {
-                            removeParcel = true;
-                        }
-                    }
-                }
-
-                if(couplingBoundZeroThick_[2] == 1)
-                {
-                    if(couplingBoundNorm_[2] > 0) //- Boundary is positive facing in the z
-                    {
-                        if(parcelsInCell[parcel]->position()[2] <= couplingBoundMin_[2])
-                        {
-                           removeParcel = true;
-                        }
-                    }
-                    else if (couplingBoundNorm_[2] < 0) //- Boundary is negative facing in the x
-                    {
-                        if(parcelsInCell[parcel]->position()[2] >= couplingBoundMax_[2])
-                        {
-                            removeParcel = true;
-                        }
-                    }
-                }
-
-                if(removeParcel)
-                {
-                    //- Store the required details of the parcel
-                    coupledParcel newParcToSend;
-                    newParcToSend.parcType = cloud_.typeIdList()[parcelsInCell[parcel]->typeId()];
-                    newParcToSend.position = parcelsInCell[parcel]->position();
-                    newParcToSend.velocity = parcelsInCell[parcel]->U();
-                    parcsToSend_.append(newParcToSend);
-
-                    //- Store that this parcel needs to be removed
-                    parcsToRemove.append(parcelsInCell[parcel]);
-                    parcelsRemoved = true;
-                }
-            }
-        }
-    }
-
-    //- Iterate through all parcels to be removed
-    forAll(parcsToRemove, parcel)
-    {
-        //- Delete parcel from cellOccupancy (before deleting it from cloud)
-        cloud_.removeParcelFromCellOccupancy(parcsToRemove[parcel]->origId(), parcsToRemove[parcel]->cell());
-        cloud_.deleteParticle(*parcsToRemove[parcel]);
-    }
-
-    return parcelsRemoved;
 }
 
 void dsmcMdCoupling::sendCoupledRegion(bool init)
@@ -792,17 +764,33 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 	    {
             parcelsInCellHistory_[iface].clear(); // Clear the send history list
 
-            forAll(regionIds(), id)
+            forAll(regionCells_, cell)
             {
-                forAll(controlZone(regionIds()[id]), c)
+                const List<dsmcParcel*>& parcelsInCell = cloud_.cellOccupancy()[regionCells_[cell]];
+
+                forAll(parcelsInCell, p)
                 {
-                    const label& cell = controlZone(regionIds()[id])[c];
-                    const List<dsmcParcel*>& parcelsInCell = cloud_.cellOccupancy()[cell];
+                    parcel = parcelsInCell[p];
+                    bool insideRegion = false;
 
-                    forAll(parcelsInCell, p) // Iterate through parcels in cell
+                    if(couplingRegion_)
                     {
-                        parcel = parcelsInCell[p];
+                        vector position = parcel->position();
 
+                        if((position[0] > couplingRegionMin_[0] && position[0] < couplingRegionMax_[0]) &&
+                           (position[1] > couplingRegionMin_[1] && position[1] < couplingRegionMax_[1]) &&
+                           (position[2] > couplingRegionMin_[2] && position[2] < couplingRegionMax_[2]))
+                        {
+                            insideRegion = true;
+                        }
+                    }
+                    else
+                    {
+                        insideRegion = true;
+                    }
+
+                    if(insideRegion)
+                    {
                         //- Determine whether parcel is of a type set to send
                         const label typeIndex = findIndex(typeNames_, cloud_.typeIdList()[parcel->typeId()]);
 
@@ -834,8 +822,7 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
             std::cout << "    Parcels sent to coupled region  = " << parcelsInCellHistory_[iface].size() << std::endl;
 
             // Commit (transmit) values to the MUI interface
-            label peers = sendInterfaces_[iface]->commit(currIteration_);
-            std::cout << "Commit to " << peers << " in sendCoupledRegion" << std::endl;
+            sendInterfaces_[iface]->commit(currIteration_);
 	    }
 	}
 
@@ -906,46 +893,63 @@ void dsmcMdCoupling::receiveCoupledRegionForces()
             }
         }
 
-        DynamicList<dsmcParcel*> parcelsInZone;
+        DynamicList<dsmcParcel*> parcelsInRegion;
         dsmcParcel* parcel = NULL;
 
         //- Extract a list of all parcels in the control zone(s)
-        forAll(regionIds(), id)
+        forAll(regionCells_, cell)
         {
-            forAll(controlZone(regionIds()[id]), c)
+            const List<dsmcParcel*>& parcelsInCell = cloud_.cellOccupancy()[regionCells_[cell]];
+
+            forAll(parcelsInCell, p)
             {
-                const label& cell = controlZone(regionIds()[id])[c];
-                const List<dsmcParcel*>& parcelsInCell = cloud_.cellOccupancy()[cell];
+                parcel = parcelsInCell[p];
+                bool insideRegion = false;
 
-                forAll(parcelsInCell, p) // Iterate through parcels in cell
+                if(couplingRegion_)
                 {
-                    parcel = parcelsInCell[p];
+                    vector position = parcel->position();
 
+                    if((position[0] > couplingRegionMin_[0] && position[0] < couplingRegionMax_[0]) &&
+                       (position[1] > couplingRegionMin_[1] && position[1] < couplingRegionMax_[1]) &&
+                       (position[2] > couplingRegionMin_[2] && position[2] < couplingRegionMax_[2]))
+                    {
+                        insideRegion = true;
+                    }
+                }
+                else
+                {
+                    insideRegion = true;
+                }
+
+                if(insideRegion)
+                {
                     //- Determine whether parcel is of a type set to receive
                     const label typeIndex = findIndex(typeNames_, cloud_.typeIdList()[parcel->typeId()]);
 
                     if(typeIndex != -1)
                     {
-                        parcelsInZone.append(parcel);
+                        parcelsInRegion.append(parcel);
                     }
                 }
             }
         }
 
+
         // Iterate through all forces received for this controller and apply if IDs match
         forAll(rcvParcId, iface)
         {
-            if(parcelsInZone.size() == rcvParcId[iface].size())
+            if(parcelsInRegion.size() == rcvParcId[iface].size())
             {
-                forAll(parcelsInZone, parcel)
+                forAll(parcelsInRegion, parcel)
                 {
-                    if(rcvParcId[iface][parcel] == parcelsInZone[parcel]->origId())
+                    if(rcvParcId[iface][parcel] == parcelsInRegion[parcel]->origId())
                     {
-                        scalar parcMass(cloud_.constProps(parcelsInZone[parcel]->typeId()).mass());
+                        scalar parcMass(cloud_.constProps(parcelsInRegion[parcel]->typeId()).mass());
 
-                        parcelsInZone[parcel]->U()[0] += 0.5 * (rcvForceX[iface][parcel] / parcMass) * mesh_.time().deltaTValue();
-                        parcelsInZone[parcel]->U()[1] += 0.5 * (rcvForceY[iface][parcel] / parcMass) * mesh_.time().deltaTValue();
-                        parcelsInZone[parcel]->U()[2] += 0.5 * (rcvForceZ[iface][parcel] / parcMass) * mesh_.time().deltaTValue();
+                        parcelsInRegion[parcel]->U()[0] += 0.5 * (rcvForceX[iface][parcel] / parcMass) * mesh_.time().deltaTValue();
+                        parcelsInRegion[parcel]->U()[1] += 0.5 * (rcvForceY[iface][parcel] / parcMass) * mesh_.time().deltaTValue();
+                        parcelsInRegion[parcel]->U()[2] += 0.5 * (rcvForceZ[iface][parcel] / parcMass) * mesh_.time().deltaTValue();
                     }
                 }
             }
@@ -962,30 +966,34 @@ void dsmcMdCoupling::sendCoupledParcels()
         if(sendingBound_)
         {
             label pushed = 0;
+            const DynamicList<dsmcParcel*>& parcsToSend = cloud_.coupledParcels();
 
-            if(parcsToSend_.size() > 0)
+            if(parcsToSend.size() > 0)
             {
-                forAll(parcsToSend_, parcs)
+                forAll(parcsToSend, parcs)
                 {
                     // Get the parcel centre
                     mui::point3d parcCentre;
-                    parcCentre[0] = parcsToSend_[parcs].position[0] * oneOverRefLength_;
-                    parcCentre[1] = parcsToSend_[parcs].position[1] * oneOverRefLength_;
-                    parcCentre[2] = parcsToSend_[parcs].position[2] * oneOverRefLength_;
+                    parcCentre[0] = parcsToSend[parcs]->position()[0] * oneOverRefLength_;
+                    parcCentre[1] = parcsToSend[parcs]->position()[1] * oneOverRefLength_;
+                    parcCentre[2] = parcsToSend[parcs]->position()[2] * oneOverRefLength_;
 
                     // Push parcel type
-                    sendInterfaces_[iface]->push("type_bound", parcCentre, static_cast<std::string>(parcsToSend_[parcs].parcType));
+                    sendInterfaces_[iface]->push("type_bound", parcCentre, static_cast<std::string>(cloud_.typeIdList()[parcsToSend[parcs]->typeId()]));
 
                     // Push parcel velocity
-                    sendInterfaces_[iface]->push("vel_x_bound", parcCentre, parcsToSend_[parcs].velocity[0]);
-                    sendInterfaces_[iface]->push("vel_y_bound", parcCentre, parcsToSend_[parcs].velocity[1]);
-                    sendInterfaces_[iface]->push("vel_z_bound", parcCentre, parcsToSend_[parcs].velocity[2]);
+                    sendInterfaces_[iface]->push("vel_x_bound", parcCentre, parcsToSend[parcs]->U()[0]);
+                    sendInterfaces_[iface]->push("vel_y_bound", parcCentre, parcsToSend[parcs]->U()[1]);
+                    sendInterfaces_[iface]->push("vel_z_bound", parcCentre, parcsToSend[parcs]->U()[2]);
 
                     pushed++;
                 }
             }
 
-            std::cout << "    Coupling parcels pushed  = " << pushed << std::endl;
+            if(pushed > 0)
+            {
+                std::cout << "    Coupling parcels pushed         = " << pushed << std::endl;
+            }
 
             // Commit (transmit) values to the MUI interface
             sendInterfaces_[iface]->commit(currIteration_);
@@ -993,7 +1001,7 @@ void dsmcMdCoupling::sendCoupledParcels()
 	}
 #endif
 	//- Clear the sent parcels
-    parcsToSend_.clear();
+    cloud_.clearCoupledParcels();
 }
 
 bool dsmcMdCoupling::receiveCoupledMolecules()
@@ -1139,7 +1147,7 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
 
         if(inserted != 0)
         {
-            std::cout << "    Coupling parcels inserted  = " << inserted << std::endl;
+            std::cout << "    Coupling parcels inserted       = " << inserted << std::endl;
         }
     }
 #endif

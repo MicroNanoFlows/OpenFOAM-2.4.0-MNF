@@ -529,20 +529,7 @@ dsmcControllers::dsmcControllers
                     mkDir(couplingControllerPath);
                 }
 
-                const List<word>& couplingRegions = couplingControllers_[cC]->regionNames();
-
-                forAll(couplingRegions, regions)
-                {
-                    // directory: case/controllers/dsmc/couplingControllers/<couplingControllerModel>/<faceZoneName>
-                    fileName zonePath(couplingControllerPath/couplingRegions[regions]);
-
-                    if (!isDir(zonePath))
-                    {
-                        mkDir(zonePath);
-                    }
-
-                    cCFixedPathNames_[cC] = zonePath;
-                }
+                cCFixedPathNames_[cC] = couplingControllerPath;
             }
         }
     }
@@ -600,24 +587,6 @@ void dsmcControllers::initialConfig()
     {
         couplingControllers_[cC]->forget(static_cast<label>(1), true);
     }
-
-    //- Run initial configuration stage 3
-    forAll(couplingControllers_, cC)
-    {
-        couplingControllers_[cC]->initialConfiguration(3);
-    }
-
-    //- Wait here until other side has finished sending initialisation values (blocking)
-    forAll(couplingControllers_, cC)
-    {
-        couplingControllers_[cC]->barrier(static_cast<label>(1));
-    }
-
-    //- Forget initial configuration time frame
-    forAll(couplingControllers_, cC)
-    {
-        couplingControllers_[cC]->forget(static_cast<label>(1), true);
-    }
 }
 
 //- different control stages
@@ -636,16 +605,10 @@ void dsmcControllers::controlBeforeCollisions()
         stateControllers_[sC]->controlParcelsBeforeCollisions();
     }
 
-    //- Determine and collate parcels that have passed a coupling boundary
-    forAll(couplingControllers_, cC)
-    {
-        couplingControllers_[cC]->controlParcelsBeforeCollisions(1);
-    }
-
     //- Receive new molecules that have passed through a coupling boundary (blocking)
     forAll(couplingControllers_, cC)
     {
-        couplingControllers_[cC]->controlParcelsBeforeCollisions(2);
+        couplingControllers_[cC]->controlParcelsBeforeCollisions(1);
     }
 
     //- Forget received data
@@ -657,7 +620,7 @@ void dsmcControllers::controlBeforeCollisions()
     //- Send parcels that have passed through a coupling boundary
     forAll(couplingControllers_, cC)
     {
-        couplingControllers_[cC]->controlParcelsBeforeCollisions(3);
+        couplingControllers_[cC]->controlParcelsBeforeCollisions(2);
     }
 }
 
@@ -933,20 +896,7 @@ void dsmcControllers::outputResults()
                                 mkDir(cCTimePath);
                             }
 
-                            const List<word>& couplingRegions = couplingControllers_[cC]->regionNames();
-
-                            forAll(couplingRegions, regions)
-                            {
-                                // directory: case/<timeDir>/uniform/controllers/dsmc/<couplingControllerModel>  <faceZoneName>
-                                fileName zoneTimePath(cCTimePath/couplingRegions[regions]);
-
-                                if (!isDir(zoneTimePath))
-                                {
-                                     mkDir(zoneTimePath);
-                                }
-
-                                timePathNames[cC].append(zoneTimePath);
-                            }
+                            timePathNames[cC].append(cCTimePath);
                         }
                     }
                 }

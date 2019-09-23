@@ -199,6 +199,9 @@ private:
         //used to calculate mean collision separation
         cellMeasurements cellMeas_;
         
+        //- Copy of parcels deleted by coupling boundary
+        DynamicList<dsmcParcel*> coupledParcels_;
+
     // Private Member Functions
 
 
@@ -313,6 +316,10 @@ public:
 
 
     // Member Functions
+
+     void insertCoupledParcel(dsmcParcel* parcel);
+
+     void clearCoupledParcels();
 
         // Access
 
@@ -591,6 +598,8 @@ public:
 
             //- Clear the Cloud
             inline void clear();
+
+            inline const DynamicList<Foam::dsmcParcel*>& coupledParcels() const;
 };
 
 

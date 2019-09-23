@@ -95,6 +95,7 @@ private:
         DynamicList<word> recvInterfaceNames_;
 
         DynamicList<List<label> > parcelsInCellHistory_;
+        DynamicList<label> regionCells_;
         scalar refLength_;
         scalar oneOverRefLength_;
         scalar refTime_;
@@ -113,8 +114,6 @@ private:
         vector couplingBoundNorm_;
         vector couplingBoundZeroThick_;
         label currIteration_;
-        DynamicList<label> intersectingCells_;
-        DynamicList<coupledParcel> parcsToSend_;
         scalar boundCorr_;
 
     // Private Member Functions
@@ -158,9 +157,6 @@ public:
 
         //- Run after collisions
         void controlParcelsAfterCollisions(label stage);
-
-        //- Collate and delete parcels that have crossed a coupling boundary
-        bool findCoupledParcels();
 
         //- send parcels that fall into the MD coupled region to coupled mdFoamPlus
         void sendCoupledRegion(bool init);

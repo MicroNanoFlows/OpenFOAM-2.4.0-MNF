@@ -76,10 +76,6 @@ protected:
 
         timeData time_;
 
-        //- name of control zone
-        List<word> regionNames_;
-        List<label> regionIds_;
-
         // on/off
         bool control_;
 
@@ -192,15 +188,6 @@ public:
         virtual void forget(label iteration, label interface, bool forget) = 0;
 
     // Access
-
-        //- return the control zone cells
-        const labelList& controlZone(label regionID) const;
-
-        //- return the control zone names
-        const List<word>& regionNames() const;
-
-        //- return the control zone IDs
-        const List<label>& regionIds() const;
 
         const bool& controlInterForces() const;
         bool& controlInterForces();

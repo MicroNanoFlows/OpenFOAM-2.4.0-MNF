@@ -98,7 +98,8 @@ boundaries/derived/patchBoundaries/dsmcFixedHeatFluxFieldPatch/dsmcFixedHeatFlux
 boundaries/derived/patchBoundaries/dsmcFixedHeatFluxWallPatch/dsmcFixedHeatFluxWallPatch.C
 boundaries/derived/patchBoundaries/dsmcMixedDiffuseSpecularSphericalPatch/dsmcMixedDiffuseSpecularSphericalPatch.C
 boundaries/derived/patchBoundaries/dsmcStickingDiffuseWallPatch/dsmcStickingDiffuseWallPatch.C
-
+boundaries/derived/patchBoundaries/dsmcBlankPatch/dsmcBlankPatch.C
+boundaries/derived/patchBoundaries/dsmcCouplingPatch/dsmcCouplingPatch.C
 
 /* GENERAL BOUNDARY MODELS */
 boundaries/derived/generalBoundaries/dsmcFreeStreamInflowPatch/dsmcFreeStreamInflowPatch.C

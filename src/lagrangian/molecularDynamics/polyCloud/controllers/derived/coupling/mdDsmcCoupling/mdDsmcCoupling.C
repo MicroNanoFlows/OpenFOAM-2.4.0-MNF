@@ -617,38 +617,58 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
     if(stage == 1)
     {
 #ifdef USE_MUI
-    if(!sendingBound_ && !sendingRegion_)
+    if((!sendingBound_ && !sendingRegion_) && (!receivingBound_ && !receivingRegion_))
     {
+        std::cout << "MUI interface(s) disabled for this rank" << std::endl;
+
+        forAll(sendInterfaces_, iface)
+        {
+            sendInterfaces_[iface]->announce_send_disable();
+        }
+
+        forAll(recvInterfaces_, iface)
+        {
+            recvInterfaces_[iface]->announce_recv_disable();
+        }
+    }
+    else if((!sendingBound_ && !sendingRegion_))
+    {
+        std::cout << "MUI interface(s) sending disabled for this rank" << std::endl;
+
         forAll(sendInterfaces_, iface)
         {
             sendInterfaces_[iface]->announce_send_disable();
         }
     }
+    else if((!receivingBound_ && !receivingRegion_))
+    {
+        std::cout << "MUI interface(s) receiving disabled for this rank" << std::endl;
 
-    forAll(sendInterfaces_, iface)
-    {
-        sendInterfaces_[iface]->commit(static_cast<label>(1));
-    }
-#endif
-    }
-    else if (stage == 2)
-    {
-#ifdef USE_MUI
-    if(!receivingBound_ && !receivingRegion_)
-    {
         forAll(recvInterfaces_, iface)
         {
             recvInterfaces_[iface]->announce_recv_disable();
         }
     }
 
+    DynamicList<word> interfaceCommits;
+
+    forAll(sendInterfaces_, iface)
+    {
+        sendInterfaces_[iface]->commit(static_cast<label>(1));
+        interfaceCommits.append(sendInterfaceNames_[iface]);
+    }
+
     forAll(recvInterfaces_, iface)
     {
-        recvInterfaces_[iface]->commit(static_cast<label>(1));
+        label index = findIndex(interfaceCommits, recvInterfaceNames_[iface]);
+        if(index == -1)
+        {
+            recvInterfaces_[iface]->commit(static_cast<label>(1));
+        }
     }
 #endif
     }
-    else if (stage == 3)
+    else if (stage == 2)
     {
         returnVal = receiveCoupledRegion(true); // Receive ghost molecules in coupled region(s) at time = startTime and commit time=1 to release other side
     }

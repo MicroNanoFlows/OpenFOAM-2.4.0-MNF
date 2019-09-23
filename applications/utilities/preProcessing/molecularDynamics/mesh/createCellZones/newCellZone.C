@@ -176,7 +176,7 @@ void newCellZone::setZone()
             }            
         }
     }
-    
+
     cells.shrink();
 
     cells_.setSize(cells.size());
@@ -239,7 +239,7 @@ void newCellZone::setZone()
 
     }
 
-    Info << "Dimensions of square: " 
+    Info << "Dimensions of square: "
          << mag(maxX - minX) << " x " 
          << mag(maxY - minY) << " x " 
          << mag(maxZ - minZ)
