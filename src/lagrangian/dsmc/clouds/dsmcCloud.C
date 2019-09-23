@@ -1694,14 +1694,23 @@ void Foam::dsmcCloud::removeParcelFromCellOccupancy
     cellOccupancy_[cell].transfer(molsInCell);
 }
 
-void Foam::dsmcCloud::insertCoupledParcel(dsmcParcel* parcel)
+void Foam::dsmcCloud::insertCoupledParcel(dsmcParcel* parcel, wordList& sendingInterfaces)
 {
+    coupledParc newCplParc;
+    newCplParc.parcel = static_cast<dsmcParcel*>(parcel->clone().ptr());
+    newCplParc.sendingInterfaces = sendingInterfaces;
+
     //Create a copy of the parcel before it is deleted
-    coupledParcels_.append(static_cast<dsmcParcel*>(parcel->clone().ptr()));
+    coupledParcels_.append(newCplParc);
 }
 
 void Foam::dsmcCloud::clearCoupledParcels()
 {
+    forAll(coupledParcels_, parcels)
+    {
+        delete coupledParcels_[parcels].parcel;
+    }
+
     coupledParcels_.clear();
 }
 

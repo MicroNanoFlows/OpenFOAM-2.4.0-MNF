@@ -82,7 +82,7 @@ void dsmcCouplingPatch::controlParticle(dsmcParcel& p, dsmcParcel::trackingData&
     {
         //Add to list of coupled parcels before it is deleted
         dsmcParcel *parcelPtr = &p;
-        cloud_.insertCoupledParcel(parcelPtr);
+        cloud_.insertCoupledParcel(parcelPtr, sendingInterfaces_);
 
         td.keepParticle = false;
     }
@@ -166,6 +166,23 @@ void dsmcCouplingPatch::setProperties()
 
             typeIds_[i] = typeId;
         }
+    }
+
+    if (propsDict_.found("sendingInterfaces"))
+    {
+        const List<word> interfaces (propsDict_.lookup("sendingInterfaces"));
+
+        forAll(interfaces, iface)
+        {
+            sendingInterfaces_.append(interfaces[iface]);
+        }
+    }
+    else
+    {
+        FatalErrorIn("dsmcCouplingPatch::dsmcCouplingPatch()")
+                    << "Cannot find sendingInterfaces entry in: "
+                    << mesh_.time().system()/"boundariesDict"
+                    << exit(FatalError);
     }
 }
 

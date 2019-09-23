@@ -73,6 +73,8 @@ private:
 
         labelList typeIds_;
 
+        wordList sendingInterfaces_;
+
         void setProperties();
 
 public:

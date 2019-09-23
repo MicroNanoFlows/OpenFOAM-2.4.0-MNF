@@ -733,6 +733,10 @@ void dsmcMdCoupling::controlParcelsBeforeCollisions(label stage)
     {
         sendCoupledParcels(); // Send any parcels deleted by coupling boundary (non-blocking)
     }
+    else if (stage == 3) //- Clear the sent parcels in the cloud
+    {
+        cloud_.clearCoupledParcels();
+    }
 }
 
 void dsmcMdCoupling::controlParcelsAfterCollisions(int stage)
@@ -961,32 +965,43 @@ void dsmcMdCoupling::receiveCoupledRegionForces()
 void dsmcMdCoupling::sendCoupledParcels()
 {
 #ifdef USE_MUI
+    dsmcParcel* parc = NULL;
+
     forAll(sendInterfaces_, iface)
     {
         if(sendingBound_)
         {
             label pushed = 0;
-            const DynamicList<dsmcParcel*>& parcsToSend = cloud_.coupledParcels();
+            const DynamicList<dsmcCloud::coupledParc>& parcsToSend = cloud_.coupledParcels();
 
             if(parcsToSend.size() > 0)
             {
                 forAll(parcsToSend, parcs)
                 {
-                    // Get the parcel centre
-                    mui::point3d parcCentre;
-                    parcCentre[0] = parcsToSend[parcs]->position()[0] * oneOverRefLength_;
-                    parcCentre[1] = parcsToSend[parcs]->position()[1] * oneOverRefLength_;
-                    parcCentre[2] = parcsToSend[parcs]->position()[2] * oneOverRefLength_;
+                    parc = parcsToSend[parcs].parcel;
 
-                    // Push parcel type
-                    sendInterfaces_[iface]->push("type_bound", parcCentre, static_cast<std::string>(cloud_.typeIdList()[parcsToSend[parcs]->typeId()]));
+                    forAll(parcsToSend[parcs].sendingInterfaces, parcIface)
+                    {
+                        //- Only send the parcel if the sending interface defined in the boundary matches current interface
+                        if(sendInterfaceNames_[iface] == parcsToSend[parcs].sendingInterfaces[parcIface])
+                        {
+                            // Get the parcel centre
+                            mui::point3d parcCentre;
+                            parcCentre[0] = parc->position()[0] * oneOverRefLength_;
+                            parcCentre[1] = parc->position()[1] * oneOverRefLength_;
+                            parcCentre[2] = parc->position()[2] * oneOverRefLength_;
 
-                    // Push parcel velocity
-                    sendInterfaces_[iface]->push("vel_x_bound", parcCentre, parcsToSend[parcs]->U()[0]);
-                    sendInterfaces_[iface]->push("vel_y_bound", parcCentre, parcsToSend[parcs]->U()[1]);
-                    sendInterfaces_[iface]->push("vel_z_bound", parcCentre, parcsToSend[parcs]->U()[2]);
+                            // Push parcel type
+                            sendInterfaces_[iface]->push("type_bound", parcCentre, static_cast<std::string>(cloud_.typeIdList()[parc->typeId()]));
 
-                    pushed++;
+                            // Push parcel velocity
+                            sendInterfaces_[iface]->push("vel_x_bound", parcCentre, parc->U()[0]);
+                            sendInterfaces_[iface]->push("vel_y_bound", parcCentre, parc->U()[1]);
+                            sendInterfaces_[iface]->push("vel_z_bound", parcCentre, parc->U()[2]);
+
+                            pushed++;
+                        }
+                    }
                 }
             }
 
@@ -1000,8 +1015,6 @@ void dsmcMdCoupling::sendCoupledParcels()
         }
 	}
 #endif
-	//- Clear the sent parcels
-    cloud_.clearCoupledParcels();
 }
 
 bool dsmcMdCoupling::receiveCoupledMolecules()

@@ -622,6 +622,12 @@ void dsmcControllers::controlBeforeCollisions()
     {
         couplingControllers_[cC]->controlParcelsBeforeCollisions(2);
     }
+
+    //- Clear parcels to send list stored in cloud (only need to do with one controller)
+    if(couplingControllers_.size() > 0)
+    {
+        couplingControllers_[0]->controlParcelsBeforeCollisions(3);
+    }
 }
 
 void dsmcControllers::controlAfterCollisions()

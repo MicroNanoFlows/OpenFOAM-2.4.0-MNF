@@ -75,6 +75,12 @@ class dsmcCloud
 :
     public Cloud<dsmcParcel>
 {
+public:
+        struct coupledParc
+        {
+            dsmcParcel* parcel;
+            wordList sendingInterfaces;
+        };
 private:
 
     // Private data
@@ -200,7 +206,7 @@ private:
         cellMeasurements cellMeas_;
         
         //- Copy of parcels deleted by coupling boundary
-        DynamicList<dsmcParcel*> coupledParcels_;
+        DynamicList<coupledParc> coupledParcels_;
 
     // Private Member Functions
 
@@ -317,7 +323,7 @@ public:
 
     // Member Functions
 
-     void insertCoupledParcel(dsmcParcel* parcel);
+     void insertCoupledParcel(dsmcParcel* parcel, wordList& sendingInterfaces);
 
      void clearCoupledParcels();
 
@@ -599,7 +605,7 @@ public:
             //- Clear the Cloud
             inline void clear();
 
-            inline const DynamicList<Foam::dsmcParcel*>& coupledParcels() const;
+            inline const DynamicList<coupledParc>& coupledParcels() const;
 };
 
 
