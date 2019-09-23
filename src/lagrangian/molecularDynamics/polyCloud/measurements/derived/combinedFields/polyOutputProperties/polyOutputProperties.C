@@ -103,7 +103,8 @@ void polyOutputProperties::calculateField()
     scalar singleStepTotalPE = 0.0;
     scalar singleStepTotalrDotf = 0.0;
 
-    label singleStepNMols = molCloud_.size();
+    label singleStepNMols = 0;
+    label singleStepNMolsGhost = 0;
     label singleStepDOFs = 0;
 
     {
@@ -119,44 +120,41 @@ void polyOutputProperties::calculateField()
             label molId = mol().id();
             scalar molMass(molCloud_.cP().mass(molId));
             singleStepTotalMass += molMass;
-        }
-    
-        for
-        (
-            mol = molCloud_.begin();
-            mol != molCloud_.end();
-            ++mol
-        )
-        {
-            label molId = mol().id();
-    
-            scalar molMass(molCloud_.cP().mass(molId));
 
-            const vector& molV(mol().v());
-
-            vector molPiGlobal = vector::zero;
-            vector molOmega = vector::zero;
-            const diagTensor& molMoI(molCloud_.cP().momentOfInertia(molId));
-
-            if(!molCloud_.cP().pointMolecule(molId))
+            if(!mol().ghost())
             {
-                molOmega = inv(molMoI) & mol().pi();
-                molPiGlobal = mol().Q() & mol().pi();
+                singleStepNMols++;
+
+                const vector& molV(mol().v());
+
+                vector molPiGlobal = vector::zero;
+                vector molOmega = vector::zero;
+                const diagTensor& molMoI(molCloud_.cP().momentOfInertia(molId));
+
+                if(!molCloud_.cP().pointMolecule(molId))
+                {
+                    molOmega = inv(molMoI) & mol().pi();
+                    molPiGlobal = mol().Q() & mol().pi();
+                }
+
+                singleStepTotalLinearMomentum += molV * molMass;
+                singleStepTotalAngularMomentum += molPiGlobal;
+
+                if(mag(molV) > singleStepMaxVelocityMag)
+                {
+                    singleStepMaxVelocityMag = mag(molV);
+                }
+
+                singleStepTotalLinearKE += 0.5*molMass*magSqr(molV);
+                singleStepTotalAngularKE += 0.5*(molOmega & molMoI & molOmega);
+                singleStepTotalPE += mol().potentialEnergy();
+                singleStepTotalrDotf += tr(mol().rf());
+                singleStepDOFs += molCloud_.cP().degreesOfFreedom(molId);
             }
-
-            singleStepTotalLinearMomentum += molV * molMass;
-            singleStepTotalAngularMomentum += molPiGlobal;
-
-            if(mag(molV) > singleStepMaxVelocityMag)
+            else
             {
-                singleStepMaxVelocityMag = mag(molV);
+                singleStepNMolsGhost++;
             }
-    
-            singleStepTotalLinearKE += 0.5*molMass*magSqr(molV);
-            singleStepTotalAngularKE += 0.5*(molOmega & molMoI & molOmega);
-            singleStepTotalPE += mol().potentialEnergy();
-            singleStepTotalrDotf += tr(mol().rf());
-            singleStepDOFs += molCloud_.cP().degreesOfFreedom(molId);
         }
     }
 
@@ -171,40 +169,78 @@ void polyOutputProperties::calculateField()
         reduce(singleStepTotalPE, sumOp<scalar>());
         reduce(singleStepTotalrDotf, sumOp<scalar>());
         reduce(singleStepNMols, sumOp<label>());
+        reduce(singleStepNMolsGhost, sumOp<label>());
         reduce(singleStepDOFs, sumOp<label>());
     }
 
     if (singleStepNMols)
     {
-        Info<< "Number of molecules in system = "
-            << singleStepNMols << nl
-            << "Overall number density = "
-            << singleStepNMols/meshVolume_ << nl
-            << "Overall mass density = "
-            << singleStepTotalMass/meshVolume_ << nl
-            << "Average linear momentum per molecule = "
-            << singleStepTotalLinearMomentum/singleStepNMols << ' '
-            << mag(singleStepTotalLinearMomentum)/singleStepNMols << nl
-            << "Average angular momentum per molecule = "
-            << singleStepTotalAngularMomentum << ' '
-            << mag(singleStepTotalAngularMomentum)/singleStepNMols << nl
-            << "Maximum |velocity| = "
-            << singleStepMaxVelocityMag << nl
-            << "Average linear KE per molecule = "
-            << singleStepTotalLinearKE/singleStepNMols << nl
-            << "Average angular KE per molecule = "
-            << singleStepTotalAngularKE/singleStepNMols << nl
-            << "Average PE per molecule = "
-            << singleStepTotalPE/singleStepNMols << nl
-            << "Average TE per molecule = "
-            <<
-            (
-                singleStepTotalLinearKE
-            + singleStepTotalAngularKE
-            + singleStepTotalPE
-            )
-            /singleStepNMols
-            << endl;
+        if(singleStepNMolsGhost == 0)
+        {
+            Info<< "Number of molecules in system = "
+                << singleStepNMols << nl
+                << "Overall number density = "
+                << singleStepNMols/meshVolume_ << nl
+                << "Overall mass density = "
+                << singleStepTotalMass/meshVolume_ << nl
+                << "Average linear momentum per molecule = "
+                << singleStepTotalLinearMomentum/singleStepNMols << ' '
+                << mag(singleStepTotalLinearMomentum)/singleStepNMols << nl
+                << "Average angular momentum per molecule = "
+                << singleStepTotalAngularMomentum << ' '
+                << mag(singleStepTotalAngularMomentum)/singleStepNMols << nl
+                << "Maximum |velocity| = "
+                << singleStepMaxVelocityMag << nl
+                << "Average linear KE per molecule = "
+                << singleStepTotalLinearKE/singleStepNMols << nl
+                << "Average angular KE per molecule = "
+                << singleStepTotalAngularKE/singleStepNMols << nl
+                << "Average PE per molecule = "
+                << singleStepTotalPE/singleStepNMols << nl
+                << "Average TE per molecule = "
+                <<
+                (
+                    singleStepTotalLinearKE
+                + singleStepTotalAngularKE
+                + singleStepTotalPE
+                )
+                /singleStepNMols
+                << endl;
+        }
+        else
+        {
+            Info<< "Number of molecules in system = "
+                << singleStepNMols << nl
+                << "Number of ghost molecules in system = "
+                << singleStepNMolsGhost << nl
+                << "Overall number density (inc. ghosts) = "
+                << (singleStepNMols + singleStepNMolsGhost)/meshVolume_ << nl
+                << "Overall mass density (inc. ghosts) = "
+                << singleStepTotalMass/meshVolume_ << nl
+                << "Average linear momentum per molecule = "
+                << singleStepTotalLinearMomentum/singleStepNMols << ' '
+                << mag(singleStepTotalLinearMomentum)/singleStepNMols << nl
+                << "Average angular momentum per molecule = "
+                << singleStepTotalAngularMomentum << ' '
+                << mag(singleStepTotalAngularMomentum)/singleStepNMols << nl
+                << "Maximum |velocity| = "
+                << singleStepMaxVelocityMag << nl
+                << "Average linear KE per molecule = "
+                << singleStepTotalLinearKE/singleStepNMols << nl
+                << "Average angular KE per molecule = "
+                << singleStepTotalAngularKE/singleStepNMols << nl
+                << "Average PE per molecule = "
+                << singleStepTotalPE/singleStepNMols << nl
+                << "Average TE per molecule = "
+                <<
+                (
+                    singleStepTotalLinearKE
+                + singleStepTotalAngularKE
+                + singleStepTotalPE
+                )
+                /singleStepNMols
+                << endl;
+        }
     }
     else
     {
