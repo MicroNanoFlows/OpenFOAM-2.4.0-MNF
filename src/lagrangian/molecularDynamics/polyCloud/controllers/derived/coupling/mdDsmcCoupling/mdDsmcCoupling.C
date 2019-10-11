@@ -1034,12 +1034,12 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
 void mdDsmcCoupling::sendCoupledRegionForces()
 {
 #ifdef USE_MUI
-    polyMolecule* molecule = NULL;
-
-    // Iterate through all sending interfaces for this controller
-    forAll(sendInterfaces_, iface)
+    if(sendingRegion_)
     {
-        if(sendingRegion_)
+        polyMolecule* molecule = NULL;
+
+        // Iterate through all sending interfaces for this controller
+        forAll(sendInterfaces_, iface)
         {
             if(molHistory_[iface].size() > 0)
             {
@@ -1251,9 +1251,9 @@ bool mdDsmcCoupling::findCoupledMolecules()
 void mdDsmcCoupling::sendCoupledMolecules()
 {
 #ifdef USE_MUI
-    forAll(sendInterfaces_, iface)
+    if(sendingBound_)
     {
-        if(sendingBound_)
+        forAll(sendInterfaces_, iface)
         {
             if(molsToSend_.size() != 0)
             {

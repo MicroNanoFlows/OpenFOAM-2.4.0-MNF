@@ -762,10 +762,10 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
     dsmcParcel* parcel = NULL;
 
 	// Iterate through all sending interfaces for this controller
-	forAll(sendInterfaces_, iface)
-	{
-	    if(sendingRegion_)
-	    {
+    if(sendingRegion_)
+    {
+        forAll(sendInterfaces_, iface)
+        {
             parcelsInCellHistory_[iface].clear(); // Clear the send history list
 
             forAll(regionCells_, cell)
@@ -965,11 +965,11 @@ void dsmcMdCoupling::receiveCoupledRegionForces()
 void dsmcMdCoupling::sendCoupledParcels()
 {
 #ifdef USE_MUI
-    dsmcParcel* parc = NULL;
-
-    forAll(sendInterfaces_, iface)
+    if(sendingBound_)
     {
-        if(sendingBound_)
+        dsmcParcel* parc = NULL;
+
+        forAll(sendInterfaces_, iface)
         {
             label pushed = 0;
             const DynamicList<dsmcCloud::coupledParc>& parcsToSend = cloud_.coupledParcels();
@@ -978,29 +978,26 @@ void dsmcMdCoupling::sendCoupledParcels()
             {
                 forAll(parcsToSend, parcs)
                 {
-                    parc = parcsToSend[parcs].parcel;
-
-                    forAll(parcsToSend[parcs].sendingInterfaces, parcIface)
+                    //- Only send the parcel if the sending interface defined in the boundary matches current interface
+                    if(findIndex(parcsToSend[parcs].sendingInterfaces, sendInterfaceNames_[iface]) != -1)
                     {
-                        //- Only send the parcel if the sending interface defined in the boundary matches current interface
-                        if(sendInterfaceNames_[iface] == parcsToSend[parcs].sendingInterfaces[parcIface])
-                        {
-                            // Get the parcel centre
-                            mui::point3d parcCentre;
-                            parcCentre[0] = parc->position()[0] * oneOverRefLength_;
-                            parcCentre[1] = parc->position()[1] * oneOverRefLength_;
-                            parcCentre[2] = parc->position()[2] * oneOverRefLength_;
+                        parc = parcsToSend[parcs].parcel;
 
-                            // Push parcel type
-                            sendInterfaces_[iface]->push("type_bound", parcCentre, static_cast<std::string>(cloud_.typeIdList()[parc->typeId()]));
+                        // Get the parcel centre
+                        mui::point3d parcCentre;
+                        parcCentre[0] = parc->position()[0] * oneOverRefLength_;
+                        parcCentre[1] = parc->position()[1] * oneOverRefLength_;
+                        parcCentre[2] = parc->position()[2] * oneOverRefLength_;
 
-                            // Push parcel velocity
-                            sendInterfaces_[iface]->push("vel_x_bound", parcCentre, parc->U()[0]);
-                            sendInterfaces_[iface]->push("vel_y_bound", parcCentre, parc->U()[1]);
-                            sendInterfaces_[iface]->push("vel_z_bound", parcCentre, parc->U()[2]);
+                        // Push parcel type
+                        sendInterfaces_[iface]->push("type_bound", parcCentre, static_cast<std::string>(cloud_.typeIdList()[parc->typeId()]));
 
-                            pushed++;
-                        }
+                        // Push parcel velocity
+                        sendInterfaces_[iface]->push("vel_x_bound", parcCentre, parc->U()[0]);
+                        sendInterfaces_[iface]->push("vel_y_bound", parcCentre, parc->U()[1]);
+                        sendInterfaces_[iface]->push("vel_z_bound", parcCentre, parc->U()[2]);
+
+                        pushed++;
                     }
                 }
             }
@@ -1172,8 +1169,7 @@ void dsmcMdCoupling::output
      const fileName& fixedPathName,
      const fileName& timePath
 )
-{
-}
+{}
 
 void dsmcMdCoupling::updateProperties(const dictionary& newDict)
 {
