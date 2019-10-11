@@ -136,22 +136,10 @@ void Foam::LarsenBorgnakkeVariableHardSphere::collide
     vector& UQ = pQ.U();
     scalar& ERotP = pP.ERot();
     scalar& ERotQ = pQ.ERot();
-//     scalarList EVibP(pP.vibLevel().size(),0.0);
-//     scalarList EVibQ(pQ.vibLevel().size(),0.0);
     label& ELevelP = pP.ELevel();
     label& ELevelQ = pQ.ELevel();
     labelList& vibLevelP = pP.vibLevel();
     labelList& vibLevelQ = pQ.vibLevel();
-    
-//     forAll(EVibP, i)
-//     {
-//         EVibP[i] = pP.vibLevel()[i]*cloud_.constProps(typeIdP).thetaV()[i]*physicoChemical::k.value();
-//     }
-//     
-//     forAll(EVibQ, i)
-//     {
-//         EVibQ[i] = pQ.vibLevel()[i]*cloud_.constProps(typeIdQ).thetaV()[i]*physicoChemical::k.value();
-//     }
     
     scalar collisionSeparation = sqrt(
             sqr(pP.position().x() - pQ.position().x()) +
@@ -172,8 +160,6 @@ void Foam::LarsenBorgnakkeVariableHardSphere::collide
     scalarList preCollisionEVibP(vibLevelP.size(),0.0);
     scalarList preCollisionEVibQ(vibLevelQ.size(),0.0);
    
-    
-        
     scalar preCollisionEEleP = cloud_.constProps(typeIdP).electronicEnergyList()[ELevelP];
     scalar preCollisionEEleQ = cloud_.constProps(typeIdQ).electronicEnergyList()[ELevelQ];
 
@@ -244,13 +230,6 @@ void Foam::LarsenBorgnakkeVariableHardSphere::collide
     
     scalar inverseRotationalCollisionNumber = 1.0/rotationalRelaxationCollisionNumber_;
     scalar inverseElectronicCollisionNumber = 1.0/electronicRelaxationCollisionNumber_;
-    
-//     scalar alphaPQ = 2.0/(omegaPQ-0.5);
-//     
-//     scalar zeta_T = 4.0 - (4.0/alphaPQ);
-//     
-//     Info << "alphaPQ = " << alphaPQ << endl;
-//     Info << "zeta_T = " << zeta_T << endl;
             
 //     Larsen Borgnakke rotational energy redistribution part.  Using the serial
 //     application of the LB method, as per the INELRS subroutine in Bird's
@@ -312,19 +291,8 @@ void Foam::LarsenBorgnakkeVariableHardSphere::collide
     
     if (rotationalDofP > VSMALL)
     {
-//         scalar particleProbabilityP = 
-//             ((zeta_T + 2.0*rotationalDofP)/(2.0*rotationalDofP))
-//             *(
-//                 1.0 - sqrt(
-//                             1.0 - (rotationalDofP/zeta_T)
-//                             *((zeta_T+rotationalDofP)/(zeta_T+2.0*rotationalDofP))
-//                             *(4.0/rotationalRelaxationCollisionNumber_)
-//                           )
-//              );
-            
-//         Info << "particleProbabilityP = " << particleProbabilityP << endl;
         
-        if (inverseRotationalCollisionNumber /*particleProbabilityP*/ > rndGen.scalar01())
+        if (inverseRotationalCollisionNumber > rndGen.scalar01())
         {
             scalar EcP = translationalEnergy + preCollisionERotP;
             
@@ -392,19 +360,8 @@ void Foam::LarsenBorgnakkeVariableHardSphere::collide
         
     if (rotationalDofQ > VSMALL)
     {
-//         scalar particleProbabilityQ = 
-//             ((zeta_T + 2.0*rotationalDofQ)/(2.0*rotationalDofQ))
-//             *(
-//                 1.0 - sqrt(
-//                             1.0 - (rotationalDofQ/zeta_T)
-//                             *((zeta_T+rotationalDofQ)/(zeta_T+2.0*rotationalDofQ))
-//                             *(4.0/rotationalRelaxationCollisionNumber_)
-//                           )
-//              );
-            
-//         Info << "particleProbabilityQ = " << particleProbabilityQ << endl;
         
-        if (inverseRotationalCollisionNumber /*particleProbabilityQ*/ > rndGen.scalar01())
+        if (inverseRotationalCollisionNumber > rndGen.scalar01())
         {
             scalar EcQ = translationalEnergy + preCollisionERotQ;
             
@@ -435,6 +392,13 @@ void Foam::LarsenBorgnakkeVariableHardSphere::collide
             sinTheta*cos(phi),
             sinTheta*sin(phi)
         );
+/*        
+        Info << "Ucm = " << Ucm << endl;
+        Info << "postCollisionRelU = " << postCollisionRelU << endl;
+        Info << "mQ = " << mQ << endl;
+        Info << "mP = " << mP << endl;
+        Info << "UP = " << UP << endl;
+        Info << "UQ = " << UQ << endl;*/
 
     UP = Ucm + postCollisionRelU*mQ/(mP + mQ);
 

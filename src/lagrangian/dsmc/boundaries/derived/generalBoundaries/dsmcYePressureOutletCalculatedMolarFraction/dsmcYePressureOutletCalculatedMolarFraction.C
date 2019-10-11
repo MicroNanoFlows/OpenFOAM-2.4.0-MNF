@@ -434,9 +434,25 @@ void dsmcYePressureOutletCalculatedMolarFraction::controlParcelsAfterCollisions(
         forAll(parcelsInCell, pIC)
         {
             dsmcParcel* p = parcelsInCell[pIC];
+            
+            if(cloud_.axisymmetric())
+            {
+                const point& fC = p->position();
+                scalar radius = fC.y();
+                
+                scalar RWF = 1.0;
+
+                RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
+                
+                momentum[c] += cloud_.nParticle()*RWF*cloud_.constProps(p->typeId()).mass()*p->U();
+                mass[c] += cloud_.nParticle()*RWF*cloud_.constProps(p->typeId()).mass(); 
+            }
+            else
+            {
+                momentum[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass()*p->U();
+                mass[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass(); 
+            }
                         
-            momentum[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass()*p->U();
-            mass[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass();
             nParcels[c] += 1.0;
             rotationalEnergy[c] += p->ERot();
             rotationalDof[c] += cloud_.constProps(p->typeId()).rotationalDegreesOfFreedom();

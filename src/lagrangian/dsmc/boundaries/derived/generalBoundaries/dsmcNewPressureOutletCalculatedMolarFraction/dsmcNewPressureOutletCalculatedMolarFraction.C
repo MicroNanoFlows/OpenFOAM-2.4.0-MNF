@@ -433,9 +433,25 @@ void dsmcNewPressureOutletCalculatedMolarFraction::controlParcelsAfterCollisions
         forAll(parcelsInCell, pIC)
         {
             dsmcParcel* p = parcelsInCell[pIC];
-                        
-            momentum[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass()*p->U();
-            mass[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass();
+            
+            if(cloud_.axisymmetric())
+            {
+                const point& fC = p->position();
+                scalar radius = fC.y();
+                
+                scalar RWF = 1.0;
+
+                RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
+                
+                momentum[c] += cloud_.nParticle()*RWF*cloud_.constProps(p->typeId()).mass()*p->U();
+                mass[c] += cloud_.nParticle()*RWF*cloud_.constProps(p->typeId()).mass();
+            }
+            else
+            {
+                momentum[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass()*p->U();
+                mass[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass();
+            }
+
             nParcels[c] += 1.0;
             rotationalEnergy[c] += p->ERot();
             rotationalDof[c] += cloud_.constProps(p->typeId()).rotationalDegreesOfFreedom();
@@ -568,12 +584,16 @@ void dsmcNewPressureOutletCalculatedMolarFraction::controlParcelsAfterCollisions
             
             outletVelocity_[c] = totalMomentum_[c]/totalMass_[c];
             
+            if(nTimeSteps_ > 100)
+            {
+            
             //velocity correction for each boundary cellI
 //             if(faceNormalVelocity < VSMALL)
 //             {
                 velocityCorrection[c] = (pressure[c] - outletPressure_) /
                                             (massDensity[c]*speedOfSound[c]);
                 outletVelocity_[c] += velocityCorrection[c]*n;
+            }
 //             }
 //             else
 //             {

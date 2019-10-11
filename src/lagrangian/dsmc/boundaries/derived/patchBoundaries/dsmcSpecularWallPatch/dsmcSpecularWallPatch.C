@@ -81,11 +81,17 @@ void dsmcSpecularWallPatch::controlParticle(dsmcParcel& p, dsmcParcel::trackingD
     measurePropertiesBeforeControl(p);
 
     vector& U = p.U();
+    
+//     Info << "U before = " << U << endl;
 
-    vector nw = p.normal();
+    vector nw = p.faceNormal();
     nw /= mag(nw);
+    
+//     Info << "nw = " << nw << endl;
 
     scalar U_dot_nw = U & nw;
+    
+//     Info << "U_dot_nw = " << U_dot_nw << endl;
 
     if (U_dot_nw > 0.0)
     {
@@ -93,6 +99,8 @@ void dsmcSpecularWallPatch::controlParticle(dsmcParcel& p, dsmcParcel::trackingD
     }
     
     measurePropertiesAfterControl(p, 0.0);
+    
+//     Info << "U after = " << U << endl;
 }
 
 void dsmcSpecularWallPatch::output

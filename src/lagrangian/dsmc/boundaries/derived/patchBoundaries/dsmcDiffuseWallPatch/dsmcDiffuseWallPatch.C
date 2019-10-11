@@ -86,8 +86,6 @@ void dsmcDiffuseWallPatch::controlParticle(dsmcParcel& p, dsmcParcel::trackingDa
     measurePropertiesBeforeControl(p);
     
 //     scalar currentTime = cloud_.mesh().time().value();
-    
-//     Info << "currentTime = " << currentTime << endl;
 
     vector& U = p.U();
 
@@ -99,7 +97,7 @@ void dsmcDiffuseWallPatch::controlParticle(dsmcParcel& p, dsmcParcel::trackingDa
 
     label typeId = p.typeId();
 
-    vector nw = p.normal();
+    vector nw = p.faceNormal();
     nw /= mag(nw);
 
     // Normal velocity magnitude
@@ -142,7 +140,6 @@ void dsmcDiffuseWallPatch::controlParticle(dsmcParcel& p, dsmcParcel::trackingDa
     
     scalar vibrationalDof = cloud_.constProps(typeId).vibrationalDegreesOfFreedom();
 
-
     U =
         sqrt(physicoChemical::k.value()*T/mass)
        *(
@@ -150,13 +147,10 @@ void dsmcDiffuseWallPatch::controlParticle(dsmcParcel& p, dsmcParcel::trackingDa
           + rndGen.GaussNormal()*tw2
           - sqrt(-2.0*log(max(1 - rndGen.scalar01(), VSMALL)))*nw
         );
-
        
     ERot = cloud_.equipartitionRotationalEnergy(T, rotationalDof);
-
     
     vibLevel = cloud_.equipartitionVibrationalEnergyLevel(T, vibrationalDof, typeId);
-   
     
     ELevel = cloud_.equipartitionElectronicLevel
                     (
@@ -167,7 +161,6 @@ void dsmcDiffuseWallPatch::controlParticle(dsmcParcel& p, dsmcParcel::trackingDa
                     );   
     
     U += velocity_;
-   
     
     measurePropertiesAfterControl(p, 0.0);
 }
@@ -189,7 +182,6 @@ void dsmcDiffuseWallPatch::updateProperties(const dictionary& newDict)
     propsDict_ = newDict.subDict(typeName + "Properties");
 
     setProperties();
-
 }
 
 void dsmcDiffuseWallPatch::setProperties()

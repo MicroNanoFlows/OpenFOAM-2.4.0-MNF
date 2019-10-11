@@ -77,6 +77,8 @@ private:
         labelList typeIds_;
         
 //         label nBins_;
+        label sampleInterval_;
+        label sampleCounter_;
 
         scalar averagingCounter_;        
         

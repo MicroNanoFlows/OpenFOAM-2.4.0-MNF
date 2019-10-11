@@ -142,6 +142,8 @@ void noTimeCounter::collide()
 
             scalar sigmaTcRMax = cloud_.sigmaTcRMax()[cellI];
             
+//             Info << "sigmaTcRMax = " << sigmaTcRMax << endl;
+            
             scalar selectedPairs = 0.0;
                
             if(cloud_.axisymmetric())
@@ -163,12 +165,12 @@ void noTimeCounter::collide()
                 
                 RWF /= nMols;
                 
-//                 const point& cC = mesh.cellCentres()[cellI];
+                //const point& cC = mesh.cellCentres()[cellI];
                 
-//                 scalar radius = cC.y();
+                //scalar radius = cC.y();
                 
-//                 RWF = 1.0 + cloud_.maxRWF()
-//                                         *(radius/cloud_.radialExtent());
+                //RWF = 1.0 + cloud_.maxRWF()
+                //                        *(radius/cloud_.radialExtent());
                 
                 selectedPairs =
                 cloud_.collisionSelectionRemainder()[cellI]

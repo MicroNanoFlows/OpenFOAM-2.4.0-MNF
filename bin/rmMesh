@@ -1,0 +1,9 @@
+#!/bin/bash
+
+#usage:
+#a. place in the bin
+#b. cd into a case directory that requires removal of time directors
+#c. > rmTimeDirs 
+#d. note any temporary files inside nested directories will also be removed
+
+rm -rf constant/polyMesh/boundary constant/polyMesh/cellZones constant/polyMesh/faces constant/polyMesh/neighbour constant/polyMesh/owner constant/polyMesh/points constant/polyMesh/cellLevel constant/polyMesh/level0Edge constant/polyMesh/pointLevel constant/polyMesh/refinementHistory constant/polyMesh/surfaceIndex

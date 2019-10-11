@@ -138,7 +138,6 @@ inline Foam::scalar Foam::particle::tetLambda
     return lambdaNumerator/lambdaDenominator;
 }
 
-
 inline Foam::scalar Foam::particle::movingTetLambda
 (
     const vector& from,
@@ -703,6 +702,11 @@ inline Foam::label Foam::particle::face() const
 inline Foam::label& Foam::particle::face()
 {
     return faceI_;
+}
+
+inline Foam::vector Foam::particle::faceNormal() const
+{
+    return mesh_.faceAreas()[faceI_];
 }
 
 

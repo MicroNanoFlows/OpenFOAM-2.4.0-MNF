@@ -61,9 +61,10 @@ dsmcBinsMethod::dsmcBinsMethod
     regionId_(-1),
     fieldName_(propsDict_.lookup("fieldName")),
     typeIds_(),
-
+    sampleInterval_(1),
+    sampleCounter_(0),
     averagingCounter_(0.0),
-    
+
     volumeOfCellsInBin_(),
     mols_(),
     dsmcMols_(),
@@ -261,6 +262,12 @@ dsmcBinsMethod::dsmcBinsMethod
         vDof_[b].setSize(typeIds_.size(), 0.0);
         mfp_[b].setSize(typeIds_.size(), 0.0);
     } 
+    
+    if (propsDict_.found("sampleInterval"))
+    {
+        sampleInterval_ = 
+                        readLabel(propsDict_.lookup("sampleInterval"));
+    }
 
     if (propsDict_.found("averagingAcrossManyRuns"))
     {
@@ -507,146 +514,145 @@ void dsmcBinsMethod::createField()
 
 void dsmcBinsMethod::calculateField()
 {
+    sampleCounter_++;
     
-    averagingCounter_ += 1.0;
-      
-    const List< DynamicList<dsmcParcel*> >& cellOccupancy
-            = cloud_.cellOccupancy();
-            
-    const labelList& cells = mesh_.cellZones()[regionId_];
-
-    forAll(cells, c)
+    if(sampleInterval_ <= sampleCounter_)
     {
-      
-        const label& cellI = cells[c];
+        averagingCounter_ += 1.0;
         
-        if(averagingCounter_ < SMALL+1.0)
-        {
-            const vector& cC = mesh_.cellCentres()[cellI];
-            
-            label bin = binModel_->isPointWithinBin(cC, cellI);
-            
-            if(bin != -1)
-            {
-                const scalar& cellVolume = mesh_.cellVolumes()[cellI];
+        const List< DynamicList<dsmcParcel*> >& cellOccupancy
+                = cloud_.cellOccupancy();
                 
-                volumeOfCellsInBin_[bin] += cellVolume;
-            }
-        }
-        
-        const List<dsmcParcel*>& molsInCell = cellOccupancy[cellI];
+        const labelList& cells = mesh_.cellZones()[regionId_];
 
-        forAll(molsInCell, mIC)
+        forAll(cells, c)
         {
-            dsmcParcel* p = molsInCell[mIC];
-            
-            label iD = findIndex(typeIds_, p->typeId());
+            const label& cellI = cells[c];
 
-            const vector& rI = p->position();
-
-            label n = binModel_->isPointWithinBin(rI, cellI);
-
-            if(n != -1)
+            if(averagingCounter_ < SMALL+1.0)
             {
-                if(iD != -1)
+                const vector& cC = mesh_.cellCentres()[cellI];
+
+                label bin = binModel_->isPointWithinBin(cC, cellI);
+
+                if(bin != -1)
                 {
-                    const dsmcParcel::constantProperties& constProp 
-                                    = cloud_.constProps(p->typeId());
-                                    
-                    scalar nParticle = cloud_.nParticle();
-                    
-                    if(cloud_.axisymmetric())
-                    {
-                        const point& cC = cloud_.mesh().cellCentres()[cellI];
-                        scalar radius = cC.y();
-                        
-                        scalar RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
-                        
-                        nParticle *= RWF;
-                    }
-                                    
-                    const scalar& rotationalDof = 
-                        cloud_.constProps(p->typeId()).rotationalDegreesOfFreedom();
-                        
-                    const scalar& mass = constProp.mass()*nParticle;
-                    const scalarList& electronicEnergies = cloud_.constProps(typeIds_[iD]).electronicEnergyList();
+                    const scalar& cellVolume = mesh_.cellVolumes()[cellI];
+                    volumeOfCellsInBin_[bin] += cellVolume;
+                }
+            }
 
-                    mols_[n] += nParticle;
-                    dsmcMols_[n] += 1.0;
-                    mass_[n] += mass;
-                    mcc_[n] += mass*mag(p->U())*mag(p->U());                   
-                    UCollected_[n] += p->U();
-                    mom_[n] += mass*p->U();
-                    rotationalEMean_[n] += p->ERot();
-                    rotationalDofMean_[n] += rotationalDof;
-                    
-                    muu_[n] += mass*sqr(p->U().x());
-                    muv_[n] += mass*( (p->U().x()) * (p->U().y()) );
-                    muw_[n] += mass*( (p->U().x()) * (p->U().z()) );
-                    mvv_[n] += mass*sqr(p->U().y());
-                    mvw_[n] += mass*( (p->U().y()) * (p->U().z()) );
-                    mww_[n] += mass*sqr(p->U().z());
-                    mccu_[n] += mass*mag(p->U())*mag(p->U())*(p->U().x());
-                    mccv_[n] += mass*mag(p->U())*mag(p->U())*(p->U().y());
-                    mccw_[n] += mass*mag(p->U())*mag(p->U())*(p->U().z());
-                    
-//                     scalar EVib = p->vibLevel()*physicoChemical::k.value()*cloud_.constProps(p->typeId()).thetaV();
+            const List<dsmcParcel*>& molsInCell = cellOccupancy[cellI];
 
-                    scalarList EVib(cloud_.constProps(typeIds_[iD]).vibrationalDegreesOfFreedom());
-                
-                    forAll(EVib, i)
-                    {
-                        EVib[i] = 0.0;
-                    }
-                    
-                    forAll(EVib, i)
-                    {
-                        EVib[i] = p->vibLevel()[i]*physicoChemical::k.value()*cloud_.constProps(p->typeId()).thetaV()[i];
-                    }
-                    
-                    scalar vibE = 0;
-                    
-                    forAll(EVib, i)
-                    {
-                        vibE += EVib[i];
-                    }
-                    
-                    eu_[n] += nParticle*( p->ERot() + vibE )*(p->U().x());
-                    ev_[n] += nParticle*( p->ERot() + vibE )*(p->U().y());
-                    ew_[n] += nParticle*( p->ERot() + vibE )*(p->U().z());
-                    e_[n] += nParticle*( p->ERot() + vibE );
+            forAll(molsInCell, mIC)
+            {
+                dsmcParcel* p = molsInCell[mIC];
+                label iD = findIndex(typeIds_, p->typeId());
 
-                    vibrationalETotal_[n][iD] += EVib;
-                    electronicETotal_[n][iD] += electronicEnergies[p->ELevel()];
-                    speciesMols_[n][iD] += 1.0;
-                    mccSpecies_[n][iD] += mass*mag(p->U())*mag(p->U());
-                    
-                    if(rotationalDof > VSMALL)
+                const vector& rI = p->position();
+
+                label n = binModel_->isPointWithinBin(rI, cellI);
+
+                if(n != -1)
+                {
+                    if(iD != -1)
                     {
-                        molsInt_[n] += 1.0;
-                    }
+                        const dsmcParcel::constantProperties& constProp 
+                                        = cloud_.constProps(p->typeId());
+
+                        scalar nParticle = cloud_.nParticle();
+                        
+                        if(cloud_.axisymmetric())
+                        {
+                            const point& cC = cloud_.mesh().cellCentres()[cellI];
+                            scalar radius = cC.y();
+
+                            scalar RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
+                            
+                            nParticle *= RWF;
+                        }
+                                        
+                        const scalar& rotationalDof = 
+                            cloud_.constProps(p->typeId()).rotationalDegreesOfFreedom();
+                            
+                        const scalar& mass = constProp.mass()*nParticle;
+                        const scalarList& electronicEnergies = cloud_.constProps(typeIds_[iD]).electronicEnergyList();
+
+                        mols_[n] += nParticle;
+                        dsmcMols_[n] += 1.0;
+                        mass_[n] += mass;
+                        mcc_[n] += mass*mag(p->U())*mag(p->U());                   
+                        UCollected_[n] += p->U();
+                        mom_[n] += mass*p->U();
+                        rotationalEMean_[n] += p->ERot();
+                        rotationalDofMean_[n] += rotationalDof;
+                        
+                        muu_[n] += mass*sqr(p->U().x());
+                        muv_[n] += mass*( (p->U().x()) * (p->U().y()) );
+                        muw_[n] += mass*( (p->U().x()) * (p->U().z()) );
+                        mvv_[n] += mass*sqr(p->U().y());
+                        mvw_[n] += mass*( (p->U().y()) * (p->U().z()) );
+                        mww_[n] += mass*sqr(p->U().z());
+                        mccu_[n] += mass*mag(p->U())*mag(p->U())*(p->U().x());
+                        mccv_[n] += mass*mag(p->U())*mag(p->U())*(p->U().y());
+                        mccw_[n] += mass*mag(p->U())*mag(p->U())*(p->U().z());
+                        
+
+                        scalarList EVib(cloud_.constProps(typeIds_[iD]).vibrationalDegreesOfFreedom());
                     
-                    if(cloud_.constProps(p->typeId()).numberOfElectronicLevels() > 1)
-                    {
-                        molsElec_[n] += 1.0;
-                    }
-                    
-                    if(p->ELevel() == 0)
-                    {
-                        nParticlesGroundElectronicState_[n][iD] += 1.0;
-                    }
-                    
-                    if(p->ELevel() == 1)
-                    {
-                        nParticlesFirstElectronicState_[n][iD] += 1.0;
+                        forAll(EVib, i)
+                        {
+                            EVib[i] = 0.0;
+                        }
+                        
+                        forAll(EVib, i)
+                        {
+                            EVib[i] = p->vibLevel()[i]*physicoChemical::k.value()*cloud_.constProps(p->typeId()).thetaV()[i];
+                        }
+                        
+                        scalar vibE = 0;
+                        
+                        forAll(EVib, i)
+                        {
+                            vibE += EVib[i];
+                        }
+                        
+                        eu_[n] += nParticle*( p->ERot() + vibE )*(p->U().x());
+                        ev_[n] += nParticle*( p->ERot() + vibE )*(p->U().y());
+                        ew_[n] += nParticle*( p->ERot() + vibE )*(p->U().z());
+                        e_[n] += nParticle*( p->ERot() + vibE );
+
+                        vibrationalETotal_[n][iD] += EVib;
+                        electronicETotal_[n][iD] += electronicEnergies[p->ELevel()];
+                        speciesMols_[n][iD] += 1.0;
+                        mccSpecies_[n][iD] += mass*mag(p->U())*mag(p->U());
+                        
+                        if(rotationalDof > VSMALL)
+                        {
+                            molsInt_[n] += 1.0;
+                        }
+                        
+                        if(cloud_.constProps(p->typeId()).numberOfElectronicLevels() > 1)
+                        {
+                            molsElec_[n] += 1.0;
+                        }
+                        
+                        if(p->ELevel() == 0)
+                        {
+                            nParticlesGroundElectronicState_[n][iD] += 1.0;
+                        }
+                        
+                        if(p->ELevel() == 1)
+                        {
+                            nParticlesFirstElectronicState_[n][iD] += 1.0;
+                        }
                     }
                 }
             }
         }
+        sampleCounter_ = 0;
     }
-    
-    
- 
+
     if(time_.averagingTime())
     {
         scalarField volumeOfCellsInBin = volumeOfCellsInBin_;
