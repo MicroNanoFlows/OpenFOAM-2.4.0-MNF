@@ -23,28 +23,27 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    dsmcReflectiveParticleMembranePatch
+    dsmcSinePulseFill
 
 Description
 
-    RPM technique Li et al.
-
 
 SourceFiles
-    dsmcReflectiveParticleMembranePatch.C
+    dsmcSinePulseFillI.H
+    dsmcSinePulseFill.C
+    dsmcSinePulseFillIO.C
 
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef dsmcReflectiveParticleMembranePatch_H
-#define dsmcReflectiveParticleMembranePatch_H
+#ifndef dsmcSinePulseFill_H
+#define dsmcSinePulseFill_H
 
-#include "dsmcCyclicBoundary.H"
+#include "dsmcAllConfigurations.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
 #include "dsmcCloud.H"
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -52,85 +51,51 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class dsmcReflectiveParticleMembranePatch Declaration
+                           Class dsmcSinePulseFill Declaration
 \*---------------------------------------------------------------------------*/
 
-class dsmcReflectiveParticleMembranePatch
+class dsmcSinePulseFill
 :
-	public dsmcCyclicBoundary
+	public dsmcConfiguration
 {
 
 private:
 
     // Private data
-        dictionary propsDict_;
 
-        scalar p_;
-        vector velocity_;
-        scalar temperature_;
-
-        label nReflections_;
-        label nRejections_;
-
+        //- subDictionary containing the properties
+//         dictionary propsDict_;
 
 
     // Private Member Functions
 
-        void readProperties();
+    scalar amplitude_;
+    scalar startPoint_;
+    scalar waveLength_;
 
 
 public:
 
     //- Runtime type information
-    TypeName("dsmcReflectiveParticleMembranePatch");
+    TypeName("dsmcSinePulseFill");
 
     // Constructors
 
         //- Construct from components
-        dsmcReflectiveParticleMembranePatch
+        dsmcSinePulseFill
 		(
-            Time& t,
-            const polyMesh& mesh,
             dsmcCloud& cloud,
             const dictionary& dict
 		);
 
     // Destructor
 
- 		~dsmcReflectiveParticleMembranePatch();
+ 		~dsmcSinePulseFill();
 
 
     // Member Functions
 
-
-        void calculateProperties();
-
-        //- create an initial configuration
-        void initialConfiguration();
-
-        //- control the molecules
-        void controlMol
-        (
-            dsmcParcel& mol,
-            dsmcParcel::trackingData& td
-        );
-
-        //- output data
-        void output
-        (
-            const fileName& fixedPathName,
-            const fileName& timePath
-        );
-
-        //- update properties from a modified dictionary
-        void updateProperties(const dictionary&);
-
-
-        // Access
-
-
-
-
+        void setInitialConfiguration();
 
 };
 

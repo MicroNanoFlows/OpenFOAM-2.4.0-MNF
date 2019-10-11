@@ -1,0 +1,16 @@
+#!/bin/bash
+
+cp $1 $2
+
+echo "$1" > tempFile1.$$
+origName=`cut -f 1 -d "." tempFile1.$$`
+rm tempFile1.$$
+
+echo "$2" > tempFile1.$$
+newName=`cut -f 1 -d "." tempFile1.$$`
+rm tempFile1.$$
+
+#replaces ALL instances in a line
+sed -e "s/$origName/$newName/g" $2 > tempFile1.$$  
+
+mv tempFile1.$$ $2

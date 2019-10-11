@@ -23,28 +23,27 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    dsmcReflectiveParticleMembranePatch
+    dsmcGaussianPulseFill
 
 Description
 
-    RPM technique Li et al.
-
 
 SourceFiles
-    dsmcReflectiveParticleMembranePatch.C
+    dsmcGaussianPulseFillI.H
+    dsmcGaussianPulseFill.C
+    dsmcGaussianPulseFillIO.C
 
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef dsmcReflectiveParticleMembranePatch_H
-#define dsmcReflectiveParticleMembranePatch_H
+#ifndef dsmcGaussianPulseFill_H
+#define dsmcGaussianPulseFill_H
 
-#include "dsmcCyclicBoundary.H"
+#include "dsmcAllConfigurations.H"
 #include "vector.H"
 #include "polyMesh.H"
 #include "volFields.H"
 #include "dsmcCloud.H"
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -52,85 +51,51 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class dsmcReflectiveParticleMembranePatch Declaration
+                           Class dsmcGaussianPulseFill Declaration
 \*---------------------------------------------------------------------------*/
 
-class dsmcReflectiveParticleMembranePatch
+class dsmcGaussianPulseFill
 :
-	public dsmcCyclicBoundary
+	public dsmcConfiguration
 {
 
 private:
 
     // Private data
-        dictionary propsDict_;
 
-        scalar p_;
-        vector velocity_;
-        scalar temperature_;
-
-        label nReflections_;
-        label nRejections_;
-
+        //- subDictionary containing the properties
+//         dictionary propsDict_;
 
 
     // Private Member Functions
 
-        void readProperties();
+    scalar gaussianAmplitude_;
+    scalar sigma_;
+    scalar startPoint_;
 
 
 public:
 
     //- Runtime type information
-    TypeName("dsmcReflectiveParticleMembranePatch");
+    TypeName("dsmcGaussianPulseFill");
 
     // Constructors
 
         //- Construct from components
-        dsmcReflectiveParticleMembranePatch
+        dsmcGaussianPulseFill
 		(
-            Time& t,
-            const polyMesh& mesh,
             dsmcCloud& cloud,
             const dictionary& dict
 		);
 
     // Destructor
 
- 		~dsmcReflectiveParticleMembranePatch();
+ 		~dsmcGaussianPulseFill();
 
 
     // Member Functions
 
-
-        void calculateProperties();
-
-        //- create an initial configuration
-        void initialConfiguration();
-
-        //- control the molecules
-        void controlMol
-        (
-            dsmcParcel& mol,
-            dsmcParcel::trackingData& td
-        );
-
-        //- output data
-        void output
-        (
-            const fileName& fixedPathName,
-            const fileName& timePath
-        );
-
-        //- update properties from a modified dictionary
-        void updateProperties(const dictionary&);
-
-
-        // Access
-
-
-
-
+        void setInitialConfiguration();
 
 };
 

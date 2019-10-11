@@ -304,7 +304,7 @@ void dsmcPatchBoundary::measurePropertiesAfterControl(dsmcParcel& p, scalar heat
         {
             forAll(p.vibLevel(), i)
             {
-                preIE_ += p.vibLevel()[i]*constProps.thetaV()[i]
+                postIE += p.vibLevel()[i]*constProps.thetaV()[i]
                                 *physicoChemical::k.value();
             }
         }

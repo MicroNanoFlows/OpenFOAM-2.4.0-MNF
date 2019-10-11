@@ -70,6 +70,18 @@ dsmcWangPressureInlet::dsmcWangPressureInlet
     nTotalParcels_(faces_.size(), scalar(0.0)),
     nTimeSteps_(scalar(0.0)),
     mcc_(faces_.size(), scalar(0.0)),
+    velSqrMeanX_(faces_.size(), scalar(0.0)),
+    velSqrMeanY_(faces_.size(), scalar(0.0)),
+    velSqrMeanZ_(faces_.size(), scalar(0.0)),
+    velMeanSqrX_(faces_.size(), scalar(0.0)),
+    velMeanSqrY_(faces_.size(), scalar(0.0)),
+    velMeanSqrZ_(faces_.size(), scalar(0.0)),
+    totalVelSqrMeanX_(faces_.size(), scalar(0.0)),
+    totalVelSqrMeanY_(faces_.size(), scalar(0.0)),
+    totalVelSqrMeanZ_(faces_.size(), scalar(0.0)),
+    totalVelMeanSqrX_(faces_.size(), scalar(0.0)),
+    totalVelMeanSqrY_(faces_.size(), scalar(0.0)),
+    totalVelMeanSqrZ_(faces_.size(), scalar(0.0)),
     UMean_(faces_.size(), vector::zero),
     UCollected_(faces_.size(), vector::zero)
 {
@@ -443,6 +455,12 @@ void dsmcWangPressureInlet::controlParcelsAfterCollisions()
     scalarField pressure(faces_.size(), scalar(0.0));
     scalarField speedOfSound(faces_.size(), scalar(0.0));
     scalarField velocityCorrection(faces_.size(), scalar(0.0));
+    scalarField velSqrMeanX(faces_.size(), scalar(0.0));
+    scalarField velSqrMeanY(faces_.size(), scalar(0.0));
+    scalarField velSqrMeanZ(faces_.size(), scalar(0.0));
+    scalarField velMeanSqrX(faces_.size(), scalar(0.0));
+    scalarField velMeanSqrY(faces_.size(), scalar(0.0));
+    scalarField velMeanSqrZ(faces_.size(), scalar(0.0));
 
     const List<DynamicList<dsmcParcel*> >& cellOccupancy = cloud_.cellOccupancy();
         
@@ -457,11 +475,33 @@ void dsmcWangPressureInlet::controlParcelsAfterCollisions()
                 
             if(iD != -1)
             {
-                momentum[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass()*p->U();
-                mass[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass();
-                mcc[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass()*mag(p->U())*mag(p->U());
+                if(cloud_.axisymmetric())
+                {
+                    const point& fC = p->position();
+                    scalar radius = fC.y();
+                    
+                    scalar RWF = 1.0;
+
+                    RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
+                    
+                    momentum[c] += cloud_.nParticle()*RWF*cloud_.constProps(p->typeId()).mass()*p->U();
+                    mass[c] += cloud_.nParticle()*RWF*cloud_.constProps(p->typeId()).mass();
+                    mcc[c] += cloud_.nParticle()*RWF*cloud_.constProps(p->typeId()).mass()*mag(p->U())*mag(p->U());
+                }
+                else
+                {
+                    momentum[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass()*p->U();
+                    mass[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass();
+                    mcc[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass()*mag(p->U())*mag(p->U());
+                }
                 nParcels[c] += 1.0;
                 UCollected[c] += p->U();
+                velSqrMeanX[c] += sqr(p->U().x());
+                velSqrMeanY[c] += sqr(p->U().y());
+                velSqrMeanZ[c] += sqr(p->U().z());
+                velMeanSqrX[c] += p->U().x();
+                velMeanSqrY[c] += p->U().y();
+                velMeanSqrZ[c] += p->U().z();
             }
         }
    
@@ -481,22 +521,48 @@ void dsmcWangPressureInlet::controlParcelsAfterCollisions()
         
         if(nTotalParcels_[c] > 1)
         {           
+            velSqrMeanX_[c] += velSqrMeanX[c];
+            velSqrMeanY_[c] += velSqrMeanY[c];
+            velSqrMeanZ_[c] += velSqrMeanZ[c];
+            velMeanSqrX_[c] += velMeanSqrX[c];
+            velMeanSqrY_[c] += velMeanSqrY[c];
+            velMeanSqrZ_[c] += velMeanSqrZ[c];
+            
+            totalVelSqrMeanX_[c] = velSqrMeanX_[c]/nTotalParcels_[c];
+            totalVelSqrMeanY_[c] = velSqrMeanY_[c]/nTotalParcels_[c];
+            totalVelSqrMeanZ_[c] = velSqrMeanZ_[c]/nTotalParcels_[c];
+            totalVelMeanSqrX_[c] = sqr(velMeanSqrX_[c]/nTotalParcels_[c]);
+            totalVelMeanSqrY_[c] = sqr(velMeanSqrY_[c]/nTotalParcels_[c]);
+            totalVelMeanSqrZ_[c] = sqr(velMeanSqrZ_[c]/nTotalParcels_[c]);
+            
             UMean_[c] = UCollected_[c]/nTotalParcels_[c];
 
-            translationalTemperature[c] = (1.0/(3.0*physicoChemical::k.value()))
-                                        *(
-                                            ((mcc_[c]/(nTotalParcels_[c]*cloud_.nParticle())))
-                                            - (
-                                                (mass[c]/(nTotalParcels_[c]*cloud_.nParticle())
-                                                )*mag(UMean_[c])*mag(UMean_[c]))
-                                        );
+//             translationalTemperature[c] = (1.0/(3.0*physicoChemical::k.value()))
+//                                         *(
+//                                             ((mcc_[c]/(nTotalParcels_[c]*cloud_.nParticle())))
+//                                             - (
+//                                                 (mass[c]/(nTotalParcels_[c]*cloud_.nParticle())
+//                                                 )*mag(UMean_[c])*mag(UMean_[c]))
+//                                         );
+            
+            translationalTemperature[c] = 
+                    (0.5*molecularMass)*(2.0/(3.0*physicoChemical::k.value()))
+                        *(    
+                            totalVelSqrMeanX_[c]+
+                            totalVelSqrMeanY_[c]+
+                            totalVelSqrMeanZ_[c]-                               
+                             totalVelMeanSqrX_[c]
+                            -totalVelMeanSqrY_[c]
+                            -totalVelMeanSqrZ_[c]
+                            );
                                         
             if(translationalTemperature[c] < VSMALL)
             {
                 translationalTemperature[c] = 300.00;
             }
             
-            pressure[c] = numberDensity[c]*physicoChemical::k.value()*translationalTemperature[c];
+            pressure[c] = numberDensity[c]*physicoChemical::k.value()
+                                                *translationalTemperature[c];
 
             
             speedOfSound[c] = sqrt(gamma*gasConstant*translationalTemperature[c]);
@@ -514,7 +580,8 @@ void dsmcWangPressureInlet::controlParcelsAfterCollisions()
             //velocity correction for each boundary cellI
 //             if(faceNormalVelocity < VSMALL)
 //             {
-                velocityCorrection[c] = (pressure[c] - inletPressure_) / (massDensity[c]*speedOfSound[c]);
+                velocityCorrection[c] = (pressure[c] - inletPressure_) / 
+                                            (massDensity[c]*speedOfSound[c]);
                 inletVelocity_[c] += velocityCorrection[c]*n;
 //             }
 //             else

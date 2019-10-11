@@ -50,6 +50,7 @@ bool Foam::dsmcParcel::move
             newParcel() = 0;
         }
         
+        
         scalar tEnd = (1.0 - stepFraction())*trackTime;
         const scalar dtMax = tEnd;
                     
@@ -58,8 +59,7 @@ bool Foam::dsmcParcel::move
         // altered or used, as it is altered by patch interactions an
         // needs to retain its 3D value for collision purposes.
         vector Utracking = U_;
-        label count = 0;
-
+            
         while (td.keepParticle && !td.switchProcessor && tEnd > ROOTVSMALL)
         {           
             Utracking = U_;
@@ -80,9 +80,10 @@ bool Foam::dsmcParcel::move
 
             // Set the Lagrangian time-step
             scalar dt = min(dtMax, tEnd);
-
+            
+            //dt *= rayTrace(position() + dt*Utracking, td);
             dt *= trackToFace(position() + dt*Utracking, td);
-
+            
             tEnd -= dt;
 
             stepFraction() = 1.0 - tEnd/trackTime;
@@ -116,7 +117,6 @@ bool Foam::dsmcParcel::move
                     }
                 }
             }
-            count++;
         }
     }
 
@@ -134,6 +134,17 @@ bool Foam::dsmcParcel::hitPatch
 {
     return false;
 }
+
+bool Foam::dsmcParcel::hitPatch
+(
+    const polyPatch&,
+    trackingData& td,
+    const label
+)
+{
+    return false;
+}
+
 
 void Foam::dsmcParcel::hitProcessorPatch
 (
@@ -154,7 +165,8 @@ void Foam::dsmcParcel::hitWallPatch
     //-find which patch has been hit
     label patchIndex = wpp.index();
 
-    const label& patchModelId = td.cloud().boundaries().patchToModelIds()[patchIndex];
+    const label& patchModelId = td.cloud().boundaries().
+    patchToModelIds()[patchIndex];
 
     if(patchModelId != -1)
     {
@@ -162,6 +174,24 @@ void Foam::dsmcParcel::hitWallPatch
         td.cloud().boundaries().
         patchBoundaryModels()[patchModelId]->controlParticle(*this, td);
     }
+}
+
+void Foam::dsmcParcel::hitWallPatch
+(
+    const wallPolyPatch& wpp,
+    trackingData& td
+)
+{
+//     Info << "PERFORMING WALL CODE" << endl;
+    //-find which patch has been hit
+    label patchIndex = wpp.index();
+
+    const label& patchModelId = td.cloud().boundaries().
+    patchToModelIds()[patchIndex];
+
+    // apply a boundary model when a particle collides with this poly patch
+    td.cloud().boundaries().
+    patchBoundaryModels()[patchModelId]->controlParticle(*this, td);
 }
 
 void Foam::dsmcParcel::hitPatch
@@ -173,7 +203,8 @@ void Foam::dsmcParcel::hitPatch
     //-find which patch has been hit
     label patchIndex = pp.index();
 
-    const label& patchModelId = td.cloud().boundaries().patchToModelIds()[patchIndex];
+    const label& patchModelId = td.cloud().boundaries().
+    patchToModelIds()[patchIndex];
 
     if(patchModelId != -1)
     {

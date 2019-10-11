@@ -441,6 +441,13 @@ public:
                 const scalar trackFraction,
                 const tetIndices& tetIs
             );
+            
+            bool hitPatch
+            (
+                const polyPatch&,
+                trackingData& td,
+                const label patchI
+            );
 
             //- Overridable function to handle the particle hitting a processorPatch
             void hitProcessorPatch
@@ -455,6 +462,13 @@ public:
                 const wallPolyPatch&,
                 trackingData& td,
                 const tetIndices&
+            );
+            
+            //- Overridable function to handle the particle hitting a wallPatch
+            void hitWallPatch
+            (
+                const wallPolyPatch&,
+                trackingData& td
             );
             
             //- Overridable function to handle the particle hitting a polyPatch

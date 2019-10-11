@@ -433,9 +433,25 @@ void dsmcNewPressureOutletCalculatedMolarFraction::controlParcelsAfterCollisions
         forAll(parcelsInCell, pIC)
         {
             dsmcParcel* p = parcelsInCell[pIC];
-                        
-            momentum[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass()*p->U();
-            mass[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass();
+            
+            if(cloud_.axisymmetric())
+            {
+                const point& fC = p->position();
+                scalar radius = fC.y();
+                
+                scalar RWF = 1.0;
+
+                RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
+                
+                momentum[c] += cloud_.nParticle()*RWF*cloud_.constProps(p->typeId()).mass()*p->U();
+                mass[c] += cloud_.nParticle()*RWF*cloud_.constProps(p->typeId()).mass();
+            }
+            else
+            {
+                momentum[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass()*p->U();
+                mass[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass();
+            }
+
             nParcels[c] += 1.0;
             rotationalEnergy[c] += p->ERot();
             rotationalDof[c] += cloud_.constProps(p->typeId()).rotationalDegreesOfFreedom();
@@ -546,15 +562,16 @@ void dsmcNewPressureOutletCalculatedMolarFraction::controlParcelsAfterCollisions
             
             scalar faceNormalVelocity = (n & outletVelocity_[c]);
 
-            if(faceNormalVelocity < VSMALL)
+            if(nTimeSteps_ > 100)
             {
-                massDensityCorrection[c] = (outletPressure_ - pressure[c]) / (speedOfSound[c]*speedOfSound[c]);
-                outletMassDensity_[c] = massDensity[c] + massDensityCorrection[c];
+                massDensityCorrection[c] = (outletPressure_ - pressure[c]) / 
+                                        (speedOfSound[c]*speedOfSound[c]);
+                outletMassDensity_[c] = massDensity[c] + 
+                                                massDensityCorrection[c];
             }
             else
             {
-                massDensityCorrection[c] = (pressure[c] - outletPressure_) / (speedOfSound[c]*speedOfSound[c]);
-                outletMassDensity_[c] = massDensity[c] - massDensityCorrection[c];
+                outletMassDensity_[c] = massDensity[c];
             }
             
             outletNumberDensity_[c] = outletMassDensity_[c] / molecularMass[c]; // Liou and Fang, 2000, equation 26 STEP 1
@@ -567,17 +584,22 @@ void dsmcNewPressureOutletCalculatedMolarFraction::controlParcelsAfterCollisions
             
             outletVelocity_[c] = totalMomentum_[c]/totalMass_[c];
             
-            //velocity correction for each boundary cellI
-            if(faceNormalVelocity < VSMALL)
+            if(nTimeSteps_ > 100)
             {
-                velocityCorrection[c] = (pressure[c] - outletPressure_) / (massDensity[c]*speedOfSound[c]);
+            
+            //velocity correction for each boundary cellI
+//             if(faceNormalVelocity < VSMALL)
+//             {
+                velocityCorrection[c] = (pressure[c] - outletPressure_) /
+                                            (massDensity[c]*speedOfSound[c]);
                 outletVelocity_[c] += velocityCorrection[c]*n;
             }
-            else
-            {
-                velocityCorrection[c] = (outletPressure_ - pressure[c]) / (massDensity[c]*speedOfSound[c]);
-                outletVelocity_[c] -= velocityCorrection[c]*n;
-            }
+//             }
+//             else
+//             {
+//                 velocityCorrection[c] = (outletPressure_ - pressure[c]) / (massDensity[c]*speedOfSound[c]);
+//                 outletVelocity_[c] -= velocityCorrection[c]*n;
+//             }
             
 //             if(faceNormalVelocity < VSMALL)
 //             {

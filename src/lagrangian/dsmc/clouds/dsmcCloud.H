@@ -119,6 +119,11 @@ private:
         //- simulations
         scalar maxRWF_;
         
+        //- Bool to identify is this simulation will include chemical reactions
+        //- More efficient to have it turned off it not, because it results in
+        // fewer calls of buildCellOccupancy()
+        bool chemReact_;
+        
         //- Bool to identify is this simulation will include charged particles
         //- More efficient to have it turned off it not, because it results in
         // fewer calls of buildCellOccupancy()

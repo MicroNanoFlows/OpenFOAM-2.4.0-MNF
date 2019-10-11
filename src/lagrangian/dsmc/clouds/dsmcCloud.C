@@ -68,7 +68,7 @@ void Foam::dsmcCloud::buildCellOccupancy()
         cellOccupancy_[cO].clear();
     }
 
-   forAllIter(dsmcCloud, *this, iter)
+    forAllIter(dsmcCloud, *this, iter)
     {
         if(iter().stuckToWall() != 1)
         {
@@ -173,10 +173,24 @@ void Foam::dsmcCloud::addElectrons()
                 //electron temperature will be zero if there have been no
                 //electrons in the cell during the simulation
                 
-                label cellI = p->cell();
+//                 label cellI = p->cell();
+//                 vector position = p->position();
+//                 label tetFaceI = p->tetFace();
+//                 label tetPtI = p->tetPt();
+                
                 vector position = p->position();
-                label tetFaceI = p->tetFace();
-                label tetPtI = p->tetPt();
+                
+                label cellI = -1;
+                label tetFaceI = -1;
+                label tetPtI = -1;
+
+                mesh_.findCellFacePt
+                (
+                    position,
+                    cellI,
+                    tetFaceI,
+                    tetPtI
+                );
                 
                 if(electronTemperature_[cellI] < VSMALL)
                 {
@@ -481,7 +495,7 @@ void Foam::dsmcCloud::addNewParcel
     const labelList vibLevel
 )
 {
-	dsmcParcel* pPtr = new dsmcParcel
+    dsmcParcel* pPtr = new dsmcParcel
     (
         mesh_,
         position,
@@ -598,7 +612,7 @@ Foam::scalar Foam::dsmcCloud::PSIm
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// for running dsmcFoam+
+// for running dsmcFoamPlus
 Foam::dsmcCloud::dsmcCloud
 (
     Time& t,
@@ -637,6 +651,7 @@ Foam::dsmcCloud::dsmcCloud
     axisymmetric_(Switch(particleProperties_.lookup("axisymmetricSimulation"))),
     radialExtent_(0.0),
     maxRWF_(1.0),
+    chemReact_(Switch(particleProperties_.lookup("chemicalReactions"))),
     charged_(Switch(particleProperties_.lookup("chargedParticles"))),
     adsorption_(Switch(particleProperties_.lookup("adsorption"))),
     nTerminalOutputs_(readLabel(controlDict_.lookup("nTerminalOutputs"))),
@@ -664,6 +679,7 @@ Foam::dsmcCloud::dsmcCloud
     collisionSelectionRemainder_(mesh_.nCells(), 0),
     constProps_(),
     rndGen_(label(clock::getTime()) + 7183*Pstream::myProcNo()),
+    //rndGen_(label(971501) + 1526*Pstream::myProcNo()),
     controllers_(t, mesh, *this),
     dynamicLoadBalancing_(t, mesh, *this),
     fields_(t, mesh, *this),
@@ -698,8 +714,17 @@ Foam::dsmcCloud::dsmcCloud
         maxRWF_ -= 1.0;
     }
 
+//     forAll(mesh_.cells(), c)
+//     {
+//         const labelList& cellFaces = mesh_.cells()[c];
+//         
+//         Info << "cellFaces = " << cellFaces << endl;
+//     }
 
-    reactions_.initialConfiguration();
+    if(chemReact_)
+    {
+        reactions_.initialConfiguration();
+    }
 
     buildCellOccupancy();
 
@@ -882,6 +907,7 @@ Foam::dsmcCloud::dsmcCloud
     axisymmetric_(Switch(particleProperties_.lookup("axisymmetricSimulation"))),
     radialExtent_(0.0),
     maxRWF_(1.0),
+    chemReact_(Switch(particleProperties_.lookup("chemicalReactions"))),
     charged_(Switch(particleProperties_.lookup("chargedParticles"))),
     adsorption_(Switch(particleProperties_.lookup("adsorption"))),
     nTerminalOutputs_(readLabel(controlDict_.lookup("nTerminalOutputs"))),
@@ -967,6 +993,7 @@ Foam::dsmcCloud::dsmcCloud
          << " added parcels: " << finalParcels - initialParcels
          << ", total no. of parcels: " << finalParcels 
          << endl;
+
 }
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -994,24 +1021,24 @@ void Foam::dsmcCloud::evolve()
 
     controllers_.controlBeforeMove();//****
     boundaries_.controlBeforeMove();//****
-
+    
     if(charged_)
     {
         //Remove electrons
         removeElectrons();
     }
-
+    
     if(adsorption_)
     {
         releaseParticlesFromWall();
     }
-
-    // Move the particles ballistically with their current velocities,
+    
+    // Move the particles ballistically with their current velocities
     Cloud<dsmcParcel>::move(td, mesh_.time().deltaTValue());
-
+    
     // Update cell occupancy
     buildCellOccupancy();
-
+    
     if(axisymmetric_)
     {
         axisymmetricWeighting();
@@ -1031,12 +1058,21 @@ void Foam::dsmcCloud::evolve()
 
     // Calculate new velocities via stochastic collisions
     collisions();
+    
+    if(chemReact_)
+    {
+        // Update cell occupancy (reactions may have changed it)
+        buildCellOccupancy();
+    }
 
-    // Update cell occupancy (reactions may have changed it)
-    buildCellOccupancy();
-    controllers_.controlAfterCollisions();//**** // Coupling region send and region forces received
+    controllers_.controlAfterCollisions();//****
     boundaries_.controlAfterCollisions();//****
-    reactions_.outputData();
+
+    if(chemReact_)
+    {
+        reactions_.outputData();
+    }
+
     fields_.calculateFields();//****
     fields_.writeFields();//****
 
@@ -1048,7 +1084,7 @@ void Foam::dsmcCloud::evolve()
 
     trackingInfo_.clean(); //****
     boundaryMeas_.clean(); //****
-    cellMeas_.clean();
+    cellMeas_.clean();     
 }
 
 Foam::label Foam::dsmcCloud::nTerminalOutputs()
@@ -1170,7 +1206,16 @@ Foam::scalar Foam::dsmcCloud::equipartitionRotationalEnergy
     else if (rotationalDof < 2.0 + SMALL && rotationalDof > 2.0 - SMALL)
     {
         // Special case for rDof = 2, i.e. diatomics;
-        ERot = -log(rndGen_.scalar01())*physicoChemical::k.value()*temperature;
+        
+        scalar rand = -1;
+        
+        do
+        {
+            rand = rndGen_.scalar01();
+
+        } while (rand < VSMALL);
+
+        ERot = -log(rand)*physicoChemical::k.value()*temperature;
     }
     else
     {
@@ -1211,7 +1256,15 @@ Foam::labelList Foam::dsmcCloud::equipartitionVibrationalEnergyLevel
     {  
         forAll(vibLevel, i)
         {
-            label j = -log(rndGen_.scalar01())*temperature/
+            scalar rand = -1;
+            
+            do
+            {
+                rand = rndGen_.scalar01();
+
+            } while (rand < VSMALL);
+            
+            label j = -log(rand)*temperature/
                                     constProps(typeId).thetaV()[i];
             vibLevel[i] = j;
         }

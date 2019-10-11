@@ -21,6 +21,7 @@ FoamFile
 
 
 nEquivalentParticles            2.6708e15;
+chemicalReactions				false;
 chargedParticles                false;
 adsorption                      false;
 

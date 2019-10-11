@@ -1,0 +1,21 @@
+#!/bin/bash
+
+#usage:
+#a. place in the bin
+#b. cd into a case directory that requires removal of time directors
+#c. > rmTimeDirs 
+#d. note any temporary files inside nested directories will also be removed
+
+rm -rf {[1-9]*}
+
+    echo "Cleaning $PWD case"
+    nZeros=0
+    zeros=""
+    while [ $nZeros -lt 8 ] ; do
+        timeDir="0.${zeros}[1-9]*"
+        rm -rf ${timeDir} > /dev/null 2>&1
+        rm -rf ./-${timeDir} > /dev/null 2>&1
+        zeros=`printf %0${nZeros}d 0`
+        nZeros=$(($nZeros + 1))
+    done
+    rm -rf ./{[1-9]*,-[1-9]*,*.xml,ParaView*,paraFoam*} > /dev/null 2>&1

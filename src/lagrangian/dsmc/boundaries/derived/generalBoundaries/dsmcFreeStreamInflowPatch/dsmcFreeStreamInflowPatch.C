@@ -169,7 +169,7 @@ void dsmcFreeStreamInflowPatch::controlParcelsBeforeMove()
     const scalar faceVibrationalTemperature = vibrationalTemperature_;
     const scalar faceElectronicTemperature = electronicTemperature_;
 
-    // insert pacels
+    // insert parcels
     forAll(faces_, f)
     {
         const label faceI = faces_[f];
@@ -266,6 +266,8 @@ void dsmcFreeStreamInflowPatch::controlParcelsBeforeMove()
                 const tetIndices& faceTetIs = faceTets[selectedTriI];
 
                 point p = faceTetIs.faceTri(mesh_).randomPoint(rndGen);
+                
+                //p += 1.0e-4*(mesh_.cellCentres()[cellI] - p);
 
                 // Velocity generation
                 scalar mostProbableSpeed

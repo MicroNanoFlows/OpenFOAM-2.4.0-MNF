@@ -381,7 +381,8 @@ void dsmcMassFlowRateInlet::controlParcelsBeforeMove()
 
 void dsmcMassFlowRateInlet::controlParcelsBeforeCollisions()
 {
-    // insert pacels after move, but before collisions - REMINDER: NEW PARCELS MUST BE ADDED TO CELL OCCUPANCY MANUALLY
+    // insert pacels after move, but before collisions - 
+    //REMINDER: NEW PARCELS MUST BE ADDED TO CELL OCCUPANCY MANUALLY
     
    
 }
@@ -406,9 +407,24 @@ void dsmcMassFlowRateInlet::controlParcelsAfterCollisions()
         forAll(parcelsInCell, pIC)
         {
             dsmcParcel* p = parcelsInCell[pIC];
-                        
-            momentum_[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass()*p->U();
-            mass_[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass();
+            
+            if(cloud_.axisymmetric())
+            {
+                const point& fC = p->position();
+                scalar radius = fC.y();
+                
+                scalar RWF = 1.0;
+
+                RWF = 1.0 + cloud_.maxRWF()*(radius/cloud_.radialExtent());
+                
+                momentum_[c] += cloud_.nParticle()*RWF*cloud_.constProps(p->typeId()).mass()*p->U();
+                mass_[c] += cloud_.nParticle()*RWF*cloud_.constProps(p->typeId()).mass(); 
+            }
+            else
+            {
+                momentum_[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass()*p->U();
+                mass_[c] += cloud_.nParticle()*cloud_.constProps(p->typeId()).mass(); 
+            }
         }
 
 //         newInletVelocity[c] = momentum[c]/mass[c];
@@ -438,7 +454,8 @@ void dsmcMassFlowRateInlet::controlParcelsAfterCollisions()
     
     if(faces_.size() > VSMALL)
     {
-        Pout << "dsmcMassFlowRateInlet inlet velocity = " << inletVelocity_[(faces_.size()/2)] << endl;
+        Pout << "dsmcMassFlowRateInlet inlet velocity = " <<
+        inletVelocity_[(faces_.size()/2)] << endl;
     }
     
     scalarField massFractions(typeIds_.size(), 0.0);
