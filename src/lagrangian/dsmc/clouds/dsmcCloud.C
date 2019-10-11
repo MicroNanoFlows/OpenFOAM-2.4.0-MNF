@@ -696,7 +696,8 @@ Foam::dsmcCloud::dsmcCloud
     collisionPartnerSelectionModel_(),
     reactions_(t, mesh, *this),
     boundaryMeas_(mesh, *this, true),
-    cellMeas_(mesh, *this, true)
+    cellMeas_(mesh, *this, true),
+    coupled_(false)
 {
     if (readFields)
     {
@@ -747,7 +748,7 @@ Foam::dsmcCloud::dsmcCloud
     controllers_.initialConfig();
 }
 
-// for running dsmcFoam+ with MUI coupling
+// for running dsmcFoamPlus with MUI coupling
 Foam::dsmcCloud::dsmcCloud
 (
     Time& t,
@@ -788,6 +789,7 @@ Foam::dsmcCloud::dsmcCloud
     axisymmetric_(Switch(particleProperties_.lookup("axisymmetricSimulation"))),
     radialExtent_(0.0),
     maxRWF_(1.0),
+    chemReact_(Switch(particleProperties_.lookup("chemicalReactions"))),
     nTerminalOutputs_(readLabel(controlDict_.lookup("nTerminalOutputs"))),
     cellOccupancy_(mesh_.nCells()),
     rhoNMeanElectron_(mesh_.nCells(),0.0),
@@ -829,7 +831,8 @@ Foam::dsmcCloud::dsmcCloud
     collisionPartnerSelectionModel_(),
     reactions_(t, mesh, *this),
     boundaryMeas_(mesh, *this, true),
-    cellMeas_(mesh, *this, true)
+    cellMeas_(mesh, *this, true),
+    coupled_(true)
 {
     if (readFields)
     {
@@ -844,7 +847,10 @@ Foam::dsmcCloud::dsmcCloud
         maxRWF_ = readScalar(particleProperties_.lookup("maxRadialWeightingFactor"));
     }
 
-    reactions_.initialConfiguration();
+    if(chemReact_)
+    {
+        reactions_.initialConfiguration();
+    }
 
     buildCellOccupancy();
 
@@ -946,7 +952,8 @@ Foam::dsmcCloud::dsmcCloud
     collisionPartnerSelectionModel_(),
     reactions_(t, mesh),
     boundaryMeas_(mesh, *this),
-    cellMeas_(mesh, *this)
+    cellMeas_(mesh, *this),
+    coupled_(false)
 {
     if(!clearFields)
     {
@@ -1059,9 +1066,9 @@ void Foam::dsmcCloud::evolve()
     // Calculate new velocities via stochastic collisions
     collisions();
     
-    if(chemReact_)
+    if(chemReact_ || coupled_)
     {
-        // Update cell occupancy (reactions may have changed it)
+        // Update cell occupancy (reactions or coupling boundary interactions may have changed it)
         buildCellOccupancy();
     }
 

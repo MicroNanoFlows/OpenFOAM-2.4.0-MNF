@@ -213,6 +213,9 @@ private:
         //- Copy of parcels deleted by coupling boundary
         DynamicList<coupledParc> coupledParcels_;
 
+        //- Bool to identify is this simulation is coupled
+        bool coupled_;
+
     // Private Member Functions
 
 
