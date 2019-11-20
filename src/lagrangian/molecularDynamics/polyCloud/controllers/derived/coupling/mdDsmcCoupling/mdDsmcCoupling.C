@@ -330,19 +330,19 @@ mdDsmcCoupling::mdDsmcCoupling
         vector boundCorr = meshExtents * 1e-8;
 
         //- Ensure boundary correction value not larger than 1e-8
-        if(boundCorr[0] > 1e-8)
+        if(boundCorr[0] > 1e-6)
         {
-            boundCorr[0] = 1e-8;
+            boundCorr[0] = 1e-6;
         }
 
-        if(boundCorr[1] > 1e-8)
+        if(boundCorr[1] > 1e-6)
         {
-            boundCorr[1] = 1e-8;
+            boundCorr[1] = 1e-6;
         }
 
-        if(boundCorr[2] > 1e-8)
+        if(boundCorr[2] > 1e-6)
         {
-            boundCorr[2] = 1e-8;
+            boundCorr[2] = 1e-6;
         }
 
         // Pick largest correction value as global in each direction
