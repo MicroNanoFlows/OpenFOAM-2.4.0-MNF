@@ -329,7 +329,7 @@ mdDsmcCoupling::mdDsmcCoupling
         // Boundary correction value calculated against whole mesh extents for consistency at different parallelisation levels
         vector boundCorr = meshExtents * 1e-8;
 
-        //- Ensure boundary correction value not larger than 1e-8
+        //- Ensure boundary correction value not larger than 1e-10
         if(boundCorr[0] > 1e-10)
         {
             boundCorr[0] = 1e-10;
