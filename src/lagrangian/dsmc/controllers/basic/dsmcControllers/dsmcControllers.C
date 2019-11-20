@@ -611,7 +611,7 @@ void dsmcControllers::controlBeforeCollisions()
         couplingControllers_[cC]->controlParcelsBeforeCollisions(1);
     }
 
-    //- Forget received data
+    //- Forget received data and reset log time to -inf
     forAll(couplingControllers_, cC)
     {
         couplingControllers_[cC]->forget(true);
@@ -649,9 +649,10 @@ void dsmcControllers::controlAfterCollisions()
         couplingControllers_[cC]->controlParcelsAfterCollisions(2);
     }
 
+    //- Forget received data and don't reset log time
     forAll(couplingControllers_, cC)
     {
-        couplingControllers_[cC]->forget(true);
+        couplingControllers_[cC]->forget(false);
     }
 }
 

@@ -306,8 +306,8 @@
                             //- Using iteration based coupling
                             if(twoDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                             {
-                                label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value());
-                                twoDInterfaces.interfaces->getInterface(i)->announce_send_span(0, totalIter+1, region_2d);
+                                label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value())+1;
+                                twoDInterfaces.interfaces->getInterface(i)->announce_send_span(static_cast<label>(0), totalIter, region_2d);
                             }
                             else //- Using direct time based coupling
                             {
@@ -353,8 +353,8 @@
                             //- Using iteration based coupling
                             if(twoDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                             {
-                                label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value());
-                                twoDInterfaces.interfaces->getInterface(i)->announce_recv_span(static_cast<label>(0), totalIter+static_cast<label>(1), region_2d);
+                                label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value())+1;
+                                twoDInterfaces.interfaces->getInterface(i)->announce_recv_span(static_cast<label>(0), totalIter, region_2d);
                             }
                             else //- Using direct time based coupling
                             {
@@ -365,15 +365,15 @@
                         //- Using iteration based coupling
                         if(twoDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                         {
-                            twoDInterfaces.interfaces->getInterface(i)->commit(static_cast<label>(0));
-                            twoDInterfaces.interfaces->getInterface(i)->barrier(static_cast<label>(0));
-                            twoDInterfaces.interfaces->getInterface(i)->forget(static_cast<label>(1), true);
+                            label time = -1;
+                            twoDInterfaces.interfaces->getInterface(i)->commit(time);
+                            twoDInterfaces.interfaces->getInterface(i)->forget(true);
                         }
                         else //- Using direct time based coupling
                         {
-                            twoDInterfaces.interfaces->getInterface(i)->commit(runTime.startTime().value() / twoDInterfaces.refTime);
-                            twoDInterfaces.interfaces->getInterface(i)->barrier(runTime.startTime().value() / twoDInterfaces.refTime);
-                            twoDInterfaces.interfaces->getInterface(i)->forget(runTime.startTime().value() / twoDInterfaces.refTime, true);
+                            scalar time = -1;
+                            twoDInterfaces.interfaces->getInterface(i)->commit(time);
+                            twoDInterfaces.interfaces->getInterface(i)->forget(true);
                         }
                     }
                     else if (extentsDir == 0) //Mesh is 3D
@@ -429,8 +429,8 @@
                             //- Using iteration based coupling
                             if(threeDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                             {
-                                label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value());
-                                threeDInterfaces.interfaces->getInterface(i)->announce_send_span(static_cast<label>(0), totalIter+static_cast<label>(1), region_3d);
+                                label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value())+1;
+                                threeDInterfaces.interfaces->getInterface(i)->announce_send_span(static_cast<label>(0), totalIter, region_3d);
                             }
                             else //- Using direct time based coupling
                             {
@@ -461,8 +461,8 @@
                             //- Using iteration based coupling
                             if(threeDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                             {
-                                label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value());
-                                threeDInterfaces.interfaces->getInterface(i)->announce_recv_span(static_cast<label>(0), totalIter+static_cast<label>(1), region_3d);
+                                label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value())+1;
+                                threeDInterfaces.interfaces->getInterface(i)->announce_recv_span(static_cast<label>(0), totalIter, region_3d);
                             }
                             else //- Using direct time based coupling
                             {
@@ -473,15 +473,15 @@
                         //- Using iteration based coupling
                         if(threeDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                         {
-                            threeDInterfaces.interfaces->getInterface(i)->commit(static_cast<label>(0));
-                            threeDInterfaces.interfaces->getInterface(i)->barrier(static_cast<label>(0));
-                            threeDInterfaces.interfaces->getInterface(i)->forget(static_cast<label>(1), true);
+                            label time = -1;
+                            threeDInterfaces.interfaces->getInterface(i)->commit(time);
+                            threeDInterfaces.interfaces->getInterface(i)->forget(true);
                         }
                         else //- Using direct time based coupling
                         {
-                            threeDInterfaces.interfaces->getInterface(i)->commit(runTime.startTime().value() / threeDInterfaces.refTime);
-                            threeDInterfaces.interfaces->getInterface(i)->barrier(runTime.startTime().value() / threeDInterfaces.refTime);
-                            threeDInterfaces.interfaces->getInterface(i)->forget(runTime.startTime().value() / threeDInterfaces.refTime, true);
+                            scalar time = -1;
+                            threeDInterfaces.interfaces->getInterface(i)->commit(time);
+                            threeDInterfaces.interfaces->getInterface(i)->forget(true);
                         }
                     }
                     else

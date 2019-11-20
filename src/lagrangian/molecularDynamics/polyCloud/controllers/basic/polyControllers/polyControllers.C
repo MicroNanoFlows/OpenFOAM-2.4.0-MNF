@@ -585,10 +585,10 @@ void polyControllers::initialConfig()
         couplingControllers_[cC]->barrier(static_cast<label>(1));
     }
 
-    //- Forget initial configuration time frame
+    //- Forget initial configuration time frame and reset log to -inf
     forAll(couplingControllers_, cC)
     {
-        couplingControllers_[cC]->forget(static_cast<label>(1), true);
+        couplingControllers_[cC]->forget(true);
     }
 
     //- Run initial configuration stage 2 (blocking)
@@ -605,10 +605,10 @@ void polyControllers::initialConfig()
         couplingControllers_[0]->prepareInteractions();
     }
 
-    //- Forget initial configuration time frame
+    //- Forget initial configuration time frame and reset log to -inf
     forAll(couplingControllers_, cC)
     {
-        couplingControllers_[cC]->forget(static_cast<label>(1), true);
+        couplingControllers_[cC]->forget(true);
     }
 }
 
@@ -650,7 +650,7 @@ void polyControllers::controlAfterMove()
         couplingControllers_[cC]->controlAfterMove(2);
     }
 
-    //- Forget the time frame in the coupling interface so the same frame can be received for coupling region molecules
+    //- Forget received configuration time frame and reset log to -inf
     forAll(couplingControllers_, cC)
     {
       couplingControllers_[cC]->forget(true);
@@ -684,10 +684,10 @@ void polyControllers::controlAfterMove()
         couplingControllers_[0]->prepareInteractions();
     }
 
-    //- Forget the time frame in the coupling interface
+    //- Forget received configuration time frame
     forAll(couplingControllers_, cC)
     {
-        couplingControllers_[cC]->forget(true);
+        couplingControllers_[cC]->forget(false);
     }
 }
 
