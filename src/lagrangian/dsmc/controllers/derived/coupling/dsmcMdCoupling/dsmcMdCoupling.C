@@ -405,7 +405,7 @@ dsmcMdCoupling::dsmcMdCoupling
 
         vector meshExtents = mesh_.bounds().max() - mesh_.bounds().min();
 
-        vector boundCorr = meshExtents * 1e-4;
+        vector boundCorr = meshExtents * 1e-8;
 
         //- Ensure boundary correction value not larger than 1e-8
         if(boundCorr[0] > 1e-8)
@@ -497,7 +497,7 @@ dsmcMdCoupling::dsmcMdCoupling
             {
                 if(couplingBoundNorm_[0] != 0)
                 {
-                    scalar boundaryExtend = localMeshExtents[0] * 0.01;
+                    scalar boundaryExtend = localMeshExtents[0] * 1e-4;
 
                     bool test = false;
 
@@ -532,7 +532,7 @@ dsmcMdCoupling::dsmcMdCoupling
             {
                if(couplingBoundNorm_[1] != 0)
                {
-                   scalar boundaryExtend = localMeshExtents[1] * 0.01;
+                   scalar boundaryExtend = localMeshExtents[1] * 1e-4;
                    bool test = false;
 
                    if((couplingBoundMin_[1] - boundaryExtend) >= cellMin[1] && (couplingBoundMin_[1] - boundaryExtend) <= cellMax[1])
@@ -566,7 +566,7 @@ dsmcMdCoupling::dsmcMdCoupling
             {
                if(couplingBoundNorm_[2] != 0)
                {
-                   scalar boundaryExtend = localMeshExtents[2] * 0.01;
+                   scalar boundaryExtend = localMeshExtents[2] * 1e-4;
                    bool test = false;
 
                    if((couplingBoundMin_[2] - boundaryExtend) >= cellMin[2] && (couplingBoundMin_[2] - boundaryExtend) <= cellMax[2])
