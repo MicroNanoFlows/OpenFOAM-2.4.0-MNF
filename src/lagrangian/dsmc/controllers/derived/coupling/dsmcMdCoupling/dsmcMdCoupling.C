@@ -1305,10 +1305,12 @@ void dsmcMdCoupling::insertParcel
             vibLevel 
         );
     }
+    /*
     else
     {
         std::cout << "dsmcMdCoupling::insertParcel(): Parcel insertion attempted outside of mesh, parcel not inserted" << std::endl;
     }
+    */
 }
 
 } // End namespace Foam

@@ -1047,36 +1047,39 @@ void mdDsmcCoupling::sendCoupledRegionForces()
                 {
                     molecule = molHistory_[iface][mol];
 
-                    //- Determine whether parcel is of a type set to send by this controller
-                    const label typeIndex = findIndex(molNames_, molCloud_.cP().molIds()[molecule->id()]);
-
-                    if(typeIndex != -1)
+                    if(molecule != NULL)
                     {
-                        // Get the molecule centre
-                        mui::point3d molCentre;
-                        molCentre[0] = molecule->position()[0] * oneOverRefLength_;
-                        molCentre[1] = molecule->position()[1] * oneOverRefLength_;
-                        molCentre[2] = molecule->position()[2] * oneOverRefLength_;
+                        //- Determine whether parcel is of a type set to send by this controller
+                        const label typeIndex = findIndex(molNames_, molCloud_.cP().molIds()[molecule->id()]);
 
-                        // Push molecule type
-                        sendInterfaces_[iface]->push("type_region", molCentre, static_cast<std::string>(molNames_[typeIndex]));
-
-                        // Push molecule ID from receive history
-                        sendInterfaces_[iface]->push("id_region", molCentre, static_cast<label>(molId_[iface][mol]));
-
-                        vector siteForcesAccum(vector::zero);
-
-                        forAll(molecule->siteForces(), s)
+                        if(typeIndex != -1)
                         {
-                            siteForcesAccum[0] += molecule->siteForces()[s][0];
-                            siteForcesAccum[1] += molecule->siteForces()[s][1];
-                            siteForcesAccum[2] += molecule->siteForces()[s][2];
-                        }
+                            // Get the molecule centre
+                            mui::point3d molCentre;
+                            molCentre[0] = molecule->position()[0] * oneOverRefLength_;
+                            molCentre[1] = molecule->position()[1] * oneOverRefLength_;
+                            molCentre[2] = molecule->position()[2] * oneOverRefLength_;
 
-                        // Push the molecule site forces to the interface
-                        sendInterfaces_[iface]->push("force_x_region", molCentre, siteForcesAccum[0] * rU_.refForce());
-                        sendInterfaces_[iface]->push("force_y_region", molCentre, siteForcesAccum[1] * rU_.refForce());
-                        sendInterfaces_[iface]->push("force_z_region", molCentre, siteForcesAccum[2] * rU_.refForce());
+                            // Push molecule type
+                            sendInterfaces_[iface]->push("type_region", molCentre, static_cast<std::string>(molNames_[typeIndex]));
+
+                            // Push molecule ID from receive history
+                            sendInterfaces_[iface]->push("id_region", molCentre, static_cast<label>(molId_[iface][mol]));
+
+                            vector siteForcesAccum(vector::zero);
+
+                            forAll(molecule->siteForces(), s)
+                            {
+                                siteForcesAccum[0] += molecule->siteForces()[s][0];
+                                siteForcesAccum[1] += molecule->siteForces()[s][1];
+                                siteForcesAccum[2] += molecule->siteForces()[s][2];
+                            }
+
+                            // Push the molecule site forces to the interface
+                            sendInterfaces_[iface]->push("force_x_region", molCentre, siteForcesAccum[0] * rU_.refForce());
+                            sendInterfaces_[iface]->push("force_y_region", molCentre, siteForcesAccum[1] * rU_.refForce());
+                            sendInterfaces_[iface]->push("force_z_region", molCentre, siteForcesAccum[2] * rU_.refForce());
+                        }
                     }
                 }
             }
@@ -2161,8 +2164,8 @@ polyMolecule* mdDsmcCoupling::insertMolecule
     }
     else
     {
-        std::cout << "mdDsmcCoupling::insertMolecule(): Molecule insertion attempted outside of mesh, molecule not inserted" << std::endl;
-        std::cout << "Attempted pos: " << position[0] << "," << position[1] << "," << position[2] << std::endl;
+        //std::cout << "mdDsmcCoupling::insertMolecule(): Molecule insertion attempted outside of mesh, molecule not inserted" << std::endl;
+        //std::cout << "Attempted pos: " << position[0] << "," << position[1] << "," << position[2] << std::endl;
         return NULL;
     }
 }
