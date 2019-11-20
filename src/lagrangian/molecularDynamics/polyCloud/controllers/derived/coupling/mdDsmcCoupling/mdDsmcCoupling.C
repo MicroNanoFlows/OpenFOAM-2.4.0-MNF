@@ -327,7 +327,7 @@ mdDsmcCoupling::mdDsmcCoupling
         vector meshExtents = mesh_.bounds().max() - mesh_.bounds().min();
 
         // Boundary correction value calculated against whole mesh extents for consistency at different parallelisation levels
-        vector boundCorr = meshExtents * 1e-4;
+        vector boundCorr = meshExtents * 1e-8;
 
         //- Ensure boundary correction value not larger than 1e-8
         if(boundCorr[0] > 1e-8)
@@ -418,7 +418,7 @@ mdDsmcCoupling::mdDsmcCoupling
             {
                 if(couplingBoundNorm_[0] != 0)
                 {
-                    scalar boundaryExtend = localMeshExtents[0] * 0.01;
+                    scalar boundaryExtend = localMeshExtents[0] * 1e-4;
                     bool test = false;
 
                     if((couplingBoundMin_[0] - boundaryExtend) >= cellMin[0] && (couplingBoundMin_[0] - boundaryExtend) <= cellMax[0])
@@ -455,7 +455,7 @@ mdDsmcCoupling::mdDsmcCoupling
             {
                if(couplingBoundNorm_[1] != 0)
                {
-                   scalar boundaryExtend = localMeshExtents[1] * 0.01;
+                   scalar boundaryExtend = localMeshExtents[1] * 1e-4;
                    bool test = false;
 
                    if((couplingBoundMin_[1] - boundaryExtend) >= cellMin[1] && (couplingBoundMin_[1] - boundaryExtend) <= cellMax[1])
@@ -492,7 +492,7 @@ mdDsmcCoupling::mdDsmcCoupling
             {
                if(couplingBoundNorm_[2] != 0)
                {
-                   scalar boundaryExtend = localMeshExtents[2] * 0.01;
+                   scalar boundaryExtend = localMeshExtents[2] * 1e-4;
                    bool test = false;
 
                    if((couplingBoundMin_[2] - boundaryExtend) >= cellMin[2] && (couplingBoundMin_[2] - boundaryExtend) <= cellMax[2])
