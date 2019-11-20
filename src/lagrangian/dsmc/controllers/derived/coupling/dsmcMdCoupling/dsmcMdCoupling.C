@@ -1085,72 +1085,78 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
             {
                 for (size_t pts = 0; pts < rcvPoints[ifacepts].size(); pts++)
                 {
-                    vector velocity;
-                    velocity[0] = rcvVelX[ifacepts][pts];
-                    velocity[1] = rcvVelY[ifacepts][pts];
-                    velocity[2] = rcvVelZ[ifacepts][pts];
-
                     point checkedPosition(rcvPoints[ifacepts][pts][0] * refLength_, rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
 
-                    if(couplingBounds_)
+                    label cell = mesh_.findCell(checkedPosition);
+
+                    // Attempt insertion/update only if received molecule falls within local mesh extents
+                    if(cell != -1)
                     {
-                        if(couplingBoundZeroThick_[0] == 1) //- Boundary has zero thickness in the x
+                        vector velocity;
+                        velocity[0] = rcvVelX[ifacepts][pts];
+                        velocity[1] = rcvVelY[ifacepts][pts];
+                        velocity[2] = rcvVelZ[ifacepts][pts];
+
+                        if(couplingBounds_)
                         {
-                            checkedPosition[0] = couplingBoundMin_[0] + (couplingBoundNorm_[0] * boundCorr_);
-                        }
-                        else
-                        {
-                            if(checkedPosition[0] <= couplingBoundMin_[0])
+                            if(couplingBoundZeroThick_[0] == 1) //- Boundary has zero thickness in the x
                             {
-                                checkedPosition[0] = couplingBoundMin_[0] + boundCorr_;
+                                checkedPosition[0] = couplingBoundMin_[0] + (couplingBoundNorm_[0] * boundCorr_);
+                            }
+                            else
+                            {
+                                if(checkedPosition[0] <= couplingBoundMin_[0])
+                                {
+                                    checkedPosition[0] = couplingBoundMin_[0] + boundCorr_;
+                                }
+
+                                if(checkedPosition[0] >= couplingBoundMax_[0])
+                                {
+                                    checkedPosition[0] = couplingBoundMax_[0] - boundCorr_;
+                                }
                             }
 
-                            if(checkedPosition[0] >= couplingBoundMax_[0])
+                            if(couplingBoundZeroThick_[1] == 1) //- Boundary has zero thickness in the y
                             {
-                                checkedPosition[0] = couplingBoundMax_[0] - boundCorr_;
+                                checkedPosition[1] = couplingBoundMin_[1] + (couplingBoundNorm_[1] * boundCorr_);
+                            }
+                            else
+                            {
+                                if(checkedPosition[1] <= couplingBoundMin_[1])
+                                {
+                                    checkedPosition[1] = couplingBoundMin_[1] + boundCorr_;
+                                }
+
+                                if(checkedPosition[1] >= couplingBoundMax_[1])
+                                {
+                                    checkedPosition[1] = couplingBoundMax_[1] - boundCorr_;
+                                }
+                            }
+
+                            if(couplingBoundZeroThick_[2] == 1) //- Boundary has zero thickness in the z
+                            {
+                                checkedPosition[2] = couplingBoundMin_[2] + (couplingBoundNorm_[2] * boundCorr_);
+                            }
+                            else
+                            {
+                                if(checkedPosition[2] <= couplingBoundMin_[2])
+                                {
+                                    checkedPosition[2] = couplingBoundMin_[2] + boundCorr_;
+                                }
+
+                                if(checkedPosition[2] >= couplingBoundMax_[2])
+                                {
+                                    checkedPosition[2] = couplingBoundMax_[2] - boundCorr_;
+                                }
                             }
                         }
 
-                        if(couplingBoundZeroThick_[1] == 1) //- Boundary has zero thickness in the y
-                        {
-                            checkedPosition[1] = couplingBoundMin_[1] + (couplingBoundNorm_[1] * boundCorr_);
-                        }
-                        else
-                        {
-                            if(checkedPosition[1] <= couplingBoundMin_[1])
-                            {
-                                checkedPosition[1] = couplingBoundMin_[1] + boundCorr_;
-                            }
+                        const label typeIndex = findIndex(typeNames_, rcvParcType[ifacepts][pts]);
 
-                            if(checkedPosition[1] >= couplingBoundMax_[1])
-                            {
-                                checkedPosition[1] = couplingBoundMax_[1] - boundCorr_;
-                            }
-                        }
-
-                        if(couplingBoundZeroThick_[2] == 1) //- Boundary has zero thickness in the z
-                        {
-                            checkedPosition[2] = couplingBoundMin_[2] + (couplingBoundNorm_[2] * boundCorr_);
-                        }
-                        else
-                        {
-                            if(checkedPosition[2] <= couplingBoundMin_[2])
-                            {
-                                checkedPosition[2] = couplingBoundMin_[2] + boundCorr_;
-                            }
-
-                            if(checkedPosition[2] >= couplingBoundMax_[2])
-                            {
-                                checkedPosition[2] = couplingBoundMax_[2] - boundCorr_;
-                            }
-                        }
+                        insertParcel(checkedPosition, velocity, typeIndex);
+                        parcelAdded = true;
+                        inserted++;
                     }
-
-                    const label typeIndex = findIndex(typeNames_, rcvParcType[ifacepts][pts]);
-
-                    insertParcel(checkedPosition, velocity, typeIndex);
-                    parcelAdded = true;
-                    inserted++;
                 }
             }
         }

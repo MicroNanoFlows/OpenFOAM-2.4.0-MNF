@@ -327,22 +327,22 @@ mdDsmcCoupling::mdDsmcCoupling
         vector meshExtents = mesh_.bounds().max() - mesh_.bounds().min();
 
         // Boundary correction value calculated against whole mesh extents for consistency at different parallelisation levels
-        vector boundCorr = meshExtents * 1e-4;
+        vector boundCorr = meshExtents * 1e-8;
 
         //- Ensure boundary correction value not larger than 1e-8
-        if(boundCorr[0] > 1e-6)
+        if(boundCorr[0] > 1e-8)
         {
-            boundCorr[0] = 1e-6;
+            boundCorr[0] = 1e-8;
         }
 
-        if(boundCorr[1] > 1e-6)
+        if(boundCorr[1] > 1e-8)
         {
-            boundCorr[1] = 1e-6;
+            boundCorr[1] = 1e-8;
         }
 
-        if(boundCorr[2] > 1e-6)
+        if(boundCorr[2] > 1e-8)
         {
-            boundCorr[2] = 1e-6;
+            boundCorr[2] = 1e-8;
         }
 
         // Pick largest correction value as global in each direction
@@ -905,65 +905,71 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
 
                 for (size_t pts = 0; pts < rcvPoints_[ifacepts].size(); pts++)
                 {
-                    const label molId = findIndex(molNames_, rcvMolType_[ifacepts][pts]);
-
-                    vector velocity;
-                    velocity[0] = rcvVelX_[ifacepts][pts] * oneOverRefVelocity_;
-                    velocity[1] = rcvVelY_[ifacepts][pts] * oneOverRefVelocity_;
-                    velocity[2] = rcvVelZ_[ifacepts][pts] * oneOverRefVelocity_;
-
                     point checkedPosition((rcvPoints_[ifacepts][pts][0] * refLength_), (rcvPoints_[ifacepts][pts][1] * refLength_), (rcvPoints_[ifacepts][pts][2] * refLength_));
 
-                    if(couplingRegion_)
+                    label cell = mesh_.findCell(checkedPosition);
+
+                    // Attempt insertion/update only if received molecule falls within local mesh extents
+                    if(cell != -1)
                     {
-                        if(checkedPosition[0] <= couplingRegionMin_[0])
+                        const label molId = findIndex(molNames_, rcvMolType_[ifacepts][pts]);
+
+                        vector velocity;
+                        velocity[0] = rcvVelX_[ifacepts][pts] * oneOverRefVelocity_;
+                        velocity[1] = rcvVelY_[ifacepts][pts] * oneOverRefVelocity_;
+                        velocity[2] = rcvVelZ_[ifacepts][pts] * oneOverRefVelocity_;
+
+                        if(couplingRegion_)
                         {
-                            checkedPosition[0] = couplingRegionMin_[0] + boundCorr_;
+                            if(checkedPosition[0] <= couplingRegionMin_[0])
+                            {
+                                checkedPosition[0] = couplingRegionMin_[0] + boundCorr_;
+                            }
+
+                            if(checkedPosition[0] >= couplingRegionMax_[0])
+                            {
+                                checkedPosition[0] = couplingRegionMax_[0] - boundCorr_;
+                            }
+
+                            if(checkedPosition[1] <= couplingRegionMin_[1])
+                            {
+                                checkedPosition[1] = couplingRegionMin_[1] + boundCorr_;
+                            }
+
+                            if(checkedPosition[1] >= couplingRegionMax_[1])
+                            {
+                                checkedPosition[1] = couplingRegionMax_[1] - boundCorr_;
+                            }
+
+                            if(checkedPosition[2] <= couplingRegionMin_[2])
+                            {
+                                checkedPosition[2] = couplingRegionMin_[2] + boundCorr_;
+                            }
+
+                            if(checkedPosition[2] >= couplingRegionMax_[2])
+                            {
+                                checkedPosition[2] = couplingRegionMax_[2] - boundCorr_;
+                            }
                         }
 
-                        if(checkedPosition[0] >= couplingRegionMax_[0])
+                        if(molHistory_[ifacepts][pts] == NULL) //- This molecule is new so insert it
                         {
-                            checkedPosition[0] = couplingRegionMax_[0] - boundCorr_;
+                            molHistory_[ifacepts][pts] = insertMolecule(checkedPosition, molIds_[molId], true, velocity);
+                            molChanged = true;
+                        }
+                        else //- This molecule already exists, so just update its values
+                        {
+                            molHistory_[ifacepts][pts]->position()[0] = checkedPosition[0];
+                            molHistory_[ifacepts][pts]->position()[1] = checkedPosition[1];
+                            molHistory_[ifacepts][pts]->position()[2] = checkedPosition[2];
+
+                            molHistory_[ifacepts][pts]->v()[0] = velocity[0];
+                            molHistory_[ifacepts][pts]->v()[1] = velocity[1];
+                            molHistory_[ifacepts][pts]->v()[2] = velocity[2];
                         }
 
-                        if(checkedPosition[1] <= couplingRegionMin_[1])
-                        {
-                            checkedPosition[1] = couplingRegionMin_[1] + boundCorr_;
-                        }
-
-                        if(checkedPosition[1] >= couplingRegionMax_[1])
-                        {
-                            checkedPosition[1] = couplingRegionMax_[1] - boundCorr_;
-                        }
-
-                        if(checkedPosition[2] <= couplingRegionMin_[2])
-                        {
-                            checkedPosition[2] = couplingRegionMin_[2] + boundCorr_;
-                        }
-
-                        if(checkedPosition[2] >= couplingRegionMax_[2])
-                        {
-                            checkedPosition[2] = couplingRegionMax_[2] - boundCorr_;
-                        }
+                        molCount++;
                     }
-
-                    if(molHistory_[ifacepts][pts] == NULL) //- This molecule is new so insert it
-                    {
-                        molHistory_[ifacepts][pts] = insertMolecule(checkedPosition, molIds_[molId], true, velocity);
-                        molChanged = true;
-                    }
-                    else //- This molecule already exists, so just update its values
-                    {
-                        molHistory_[ifacepts][pts]->position()[0] = checkedPosition[0];
-                        molHistory_[ifacepts][pts]->position()[1] = checkedPosition[1];
-                        molHistory_[ifacepts][pts]->position()[2] = checkedPosition[2];
-
-                        molHistory_[ifacepts][pts]->v()[0] = velocity[0];
-                        molHistory_[ifacepts][pts]->v()[1] = velocity[1];
-                        molHistory_[ifacepts][pts]->v()[2] = velocity[2];
-                    }
-
-                    molCount++;
                 }
             }
         }
@@ -1370,89 +1376,95 @@ void mdDsmcCoupling::receiveCoupledParcels()
             {
                 for (size_t pts = 0; pts < rcvPoints_[ifacepts].size(); pts++)
                 {
-                    vector velocity;
-                    velocity[0] = rcvVelX_[ifacepts][pts] * oneOverRefVelocity_;
-                    velocity[1] = rcvVelY_[ifacepts][pts] * oneOverRefVelocity_;
-                    velocity[2] = rcvVelZ_[ifacepts][pts] * oneOverRefVelocity_;
-
                     point checkedPosition(rcvPoints_[ifacepts][pts][0] * refLength_, rcvPoints_[ifacepts][pts][1] * refLength_, rcvPoints_[ifacepts][pts][2] * refLength_);
 
-                    if(couplingBounds_)
+                    label cell = mesh_.findCell(checkedPosition);
+
+                    // Attempt insertion/update only if received molecule falls within local mesh extents
+                    if(cell != -1)
                     {
-                        if(couplingBoundZeroThick_[0] == 1) //- Boundary has zero thickness in the x
+                        vector velocity;
+                        velocity[0] = rcvVelX_[ifacepts][pts] * oneOverRefVelocity_;
+                        velocity[1] = rcvVelY_[ifacepts][pts] * oneOverRefVelocity_;
+                        velocity[2] = rcvVelZ_[ifacepts][pts] * oneOverRefVelocity_;
+
+                        if(couplingBounds_)
                         {
-                            checkedPosition[0] = couplingBoundMin_[0] + (couplingBoundNorm_[0] * boundCorr_);
+                            if(couplingBoundZeroThick_[0] == 1) //- Boundary has zero thickness in the x
+                            {
+                                checkedPosition[0] = couplingBoundMin_[0] + (couplingBoundNorm_[0] * boundCorr_);
+                            }
+                            else
+                            {
+                                if(checkedPosition[0] <= couplingBoundMin_[0])
+                                {
+                                    checkedPosition[0] = couplingBoundMin_[0] + boundCorr_;
+                                }
+
+                                if(checkedPosition[0] >= couplingBoundMax_[0])
+                                {
+                                    checkedPosition[0] = couplingBoundMax_[0] - boundCorr_;
+                                }
+                            }
+
+                            if(couplingBoundZeroThick_[1] == 1) //- Boundary has zero thickness in the y
+                            {
+                                checkedPosition[1] = couplingBoundMin_[1] + (couplingBoundNorm_[1] * boundCorr_);
+                            }
+                            else
+                            {
+                                if(checkedPosition[1] <= couplingBoundMin_[1])
+                                {
+                                    checkedPosition[1] = couplingBoundMin_[1] + boundCorr_;
+                                }
+
+                                if(checkedPosition[1] >= couplingBoundMax_[1])
+                                {
+                                    checkedPosition[1] = couplingBoundMax_[1] - boundCorr_;
+                                }
+                            }
+
+                            if(couplingBoundZeroThick_[2] == 1) //- Boundary has zero thickness in the z
+                            {
+                                checkedPosition[2] = couplingBoundMin_[2] + (couplingBoundNorm_[2] * boundCorr_);
+                            }
+                            else
+                            {
+                                if(checkedPosition[2] <= couplingBoundMin_[2])
+                                {
+                                    checkedPosition[2] = couplingBoundMin_[2] + boundCorr_;
+                                }
+
+                                if(checkedPosition[2] >= couplingBoundMax_[2])
+                                {
+                                    checkedPosition[2] = couplingBoundMax_[2] - boundCorr_;
+                                }
+                            }
+                        }
+
+                        if (Pstream::parRun())
+                        {
+                            if(Pstream::master())
+                            {
+                                std::cout << "Coupling boundary parcel received at: [" << checkedPosition[0] << "," << checkedPosition[1] << "," << checkedPosition[2] << "]" << std::endl;
+                            }
+                            else
+                            {
+                                std::cout << "[" << time_.time().value() << "s] Coupling boundary parcel received at: [" << checkedPosition[0] << "," << checkedPosition[1] << "," << checkedPosition[2] << "]" << std::endl;
+                            }
                         }
                         else
-                        {
-                            if(checkedPosition[0] <= couplingBoundMin_[0])
-                            {
-                                checkedPosition[0] = couplingBoundMin_[0] + boundCorr_;
-                            }
-
-                            if(checkedPosition[0] >= couplingBoundMax_[0])
-                            {
-                                checkedPosition[0] = couplingBoundMax_[0] - boundCorr_;
-                            }
-                        }
-
-                        if(couplingBoundZeroThick_[1] == 1) //- Boundary has zero thickness in the y
-                        {
-                            checkedPosition[1] = couplingBoundMin_[1] + (couplingBoundNorm_[1] * boundCorr_);
-                        }
-                        else
-                        {
-                            if(checkedPosition[1] <= couplingBoundMin_[1])
-                            {
-                                checkedPosition[1] = couplingBoundMin_[1] + boundCorr_;
-                            }
-
-                            if(checkedPosition[1] >= couplingBoundMax_[1])
-                            {
-                                checkedPosition[1] = couplingBoundMax_[1] - boundCorr_;
-                            }
-                        }
-
-                        if(couplingBoundZeroThick_[2] == 1) //- Boundary has zero thickness in the z
-                        {
-                            checkedPosition[2] = couplingBoundMin_[2] + (couplingBoundNorm_[2] * boundCorr_);
-                        }
-                        else
-                        {
-                            if(checkedPosition[2] <= couplingBoundMin_[2])
-                            {
-                                checkedPosition[2] = couplingBoundMin_[2] + boundCorr_;
-                            }
-
-                            if(checkedPosition[2] >= couplingBoundMax_[2])
-                            {
-                                checkedPosition[2] = couplingBoundMax_[2] - boundCorr_;
-                            }
-                        }
-                    }
-
-                    if (Pstream::parRun())
-                    {
-                        if(Pstream::master())
                         {
                             std::cout << "Coupling boundary parcel received at: [" << checkedPosition[0] << "," << checkedPosition[1] << "," << checkedPosition[2] << "]" << std::endl;
                         }
-                        else
-                        {
-                            std::cout << "[" << time_.time().value() << "s] Coupling boundary parcel received at: [" << checkedPosition[0] << "," << checkedPosition[1] << "," << checkedPosition[2] << "]" << std::endl;
-                        }
-                    }
-                    else
-                    {
-                        std::cout << "Coupling boundary parcel received at: [" << checkedPosition[0] << "," << checkedPosition[1] << "," << checkedPosition[2] << "]" << std::endl;
-                    }
 
-                    coupledMolecule newMol;
-                    newMol.molType = rcvMolType_[ifacepts][pts];
-                    newMol.position = checkedPosition;
-                    newMol.velocity = velocity;
+                        coupledMolecule newMol;
+                        newMol.molType = rcvMolType_[ifacepts][pts];
+                        newMol.position = checkedPosition;
+                        newMol.velocity = velocity;
 
-                    molsReceived_.append(newMol);
+                        molsReceived_.append(newMol);
+                    }
                 }
             }
         }
