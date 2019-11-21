@@ -330,19 +330,19 @@ mdDsmcCoupling::mdDsmcCoupling
         vector boundCorr = meshExtents * 1e-8;
 
         //- Ensure boundary correction value not larger than 1e-8
-        if(boundCorr[0] > 1e-10)
+        if(boundCorr[0] > 1e-8)
         {
-            boundCorr[0] = 1e-10;
+            boundCorr[0] = 1e-8;
         }
 
-        if(boundCorr[1] > 1e-10)
+        if(boundCorr[1] > 1e-8)
         {
-            boundCorr[1] = 1e-10;
+            boundCorr[1] = 1e-8;
         }
 
-        if(boundCorr[2] > 1e-10)
+        if(boundCorr[2] > 1e-8)
         {
-            boundCorr[2] = 1e-10;
+            boundCorr[2] = 1e-8;
         }
 
         // Pick largest correction value as global in each direction
@@ -418,7 +418,7 @@ mdDsmcCoupling::mdDsmcCoupling
             {
                 if(couplingBoundNorm_[0] != 0)
                 {
-                    scalar boundaryExtend = localMeshExtents[0] * 1e-6;
+                    scalar boundaryExtend = localMeshExtents[0] * 1e-4;
                     bool test = false;
 
                     if((couplingBoundMin_[0] - boundaryExtend) >= cellMin[0] && (couplingBoundMin_[0] - boundaryExtend) <= cellMax[0])
@@ -455,7 +455,7 @@ mdDsmcCoupling::mdDsmcCoupling
             {
                if(couplingBoundNorm_[1] != 0)
                {
-                   scalar boundaryExtend = localMeshExtents[1] * 1e-6;
+                   scalar boundaryExtend = localMeshExtents[1] * 1e-4;
                    bool test = false;
 
                    if((couplingBoundMin_[1] - boundaryExtend) >= cellMin[1] && (couplingBoundMin_[1] - boundaryExtend) <= cellMax[1])
@@ -492,7 +492,7 @@ mdDsmcCoupling::mdDsmcCoupling
             {
                if(couplingBoundNorm_[2] != 0)
                {
-                   scalar boundaryExtend = localMeshExtents[2] * 1e-6;
+                   scalar boundaryExtend = localMeshExtents[2] * 1e-4;
                    bool test = false;
 
                    if((couplingBoundMin_[2] - boundaryExtend) >= cellMin[2] && (couplingBoundMin_[2] - boundaryExtend) <= cellMax[2])

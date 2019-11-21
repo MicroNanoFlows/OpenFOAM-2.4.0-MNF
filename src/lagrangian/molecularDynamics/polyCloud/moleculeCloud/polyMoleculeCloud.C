@@ -199,21 +199,35 @@ void Foam::polyMoleculeCloud::checkForOverlaps()
                             {
                                 if(evaluatePotentialLimit(molI, molJ, potLim))
                                 {
-                                    label idJ = molJ->id();
-
-                                    label removeIdI = findIndex(p_.removalOrder(), idI);
-                                    label removeIdJ = findIndex(p_.removalOrder(), idJ);
-
-                                    if(removeIdI < removeIdJ)
+                                    if(molI->ghost() && !molJ->ghost()) //Molecule I is a ghost so remove J
+                                    {
+                                        molsToDelete.append(molJ);
+                                        molsToDeleteTNs.append(tNJ);
+                                    }
+                                    else if(molJ->ghost() && !molI->ghost()) //Molecule J is a ghost so remove I
                                     {
                                         molsToDelete.append(molI);
                                         molsToDeleteTNs.append(tNI);
                                         molIDeleted = true;
                                     }
-                                    else
+                                    else if(!molI->ghost() && !molJ->ghost()) //Neither molecules are a ghost
                                     {
-                                        molsToDelete.append(molJ);
-                                        molsToDeleteTNs.append(tNJ);
+                                        label idJ = molJ->id();
+
+                                        label removeIdI = findIndex(p_.removalOrder(), idI);
+                                        label removeIdJ = findIndex(p_.removalOrder(), idJ);
+
+                                        if(removeIdI < removeIdJ)
+                                        {
+                                            molsToDelete.append(molI);
+                                            molsToDeleteTNs.append(tNI);
+                                            molIDeleted = true;
+                                        }
+                                        else
+                                        {
+                                            molsToDelete.append(molJ);
+                                            molsToDeleteTNs.append(tNJ);
+                                        }
                                     }
                                 }
                             }
@@ -233,21 +247,35 @@ void Foam::polyMoleculeCloud::checkForOverlaps()
                             {
                                 if(evaluatePotentialLimit(molI, molJ, potLim))
                                 {
-                                    label idJ = molJ->id();
-
-                                    label removeIdI = findIndex(p_.removalOrder(), idI);
-                                    label removeIdJ = findIndex(p_.removalOrder(), idJ);
-
-                                    if(removeIdI < removeIdJ)
+                                    if(molI->ghost() && !molJ->ghost()) //Molecule I is a ghost so remove J
+                                    {
+                                        molsToDelete.append(molJ);
+                                        molsToDeleteTNs.append(tNJ);
+                                    }
+                                    else if(molJ->ghost() && !molI->ghost()) //Molecule J is a ghost so remove I
                                     {
                                         molsToDelete.append(molI);
                                         molsToDeleteTNs.append(tNI);
                                         molIDeleted = true;
                                     }
-                                    else
+                                    else if(!molI->ghost() && !molJ->ghost()) //Neither molecules are a ghost
                                     {
-                                        molsToDelete.append(molJ);
-                                        molsToDeleteTNs.append(tNJ);
+                                        label idJ = molJ->id();
+
+                                        label removeIdI = findIndex(p_.removalOrder(), idI);
+                                        label removeIdJ = findIndex(p_.removalOrder(), idJ);
+
+                                        if(removeIdI < removeIdJ)
+                                        {
+                                            molsToDelete.append(molI);
+                                            molsToDeleteTNs.append(tNI);
+                                            molIDeleted = true;
+                                        }
+                                        else
+                                        {
+                                            molsToDelete.append(molJ);
+                                            molsToDeleteTNs.append(tNJ);
+                                        }
                                     }
                                 }
                             }
@@ -288,23 +316,36 @@ void Foam::polyMoleculeCloud::checkForOverlaps()
                                 {
                                     if(evaluatePotentialLimit(molI, molJ, potLim))
                                     {
-                                        label idJ = molJ->id();
-                                        label idI = molI->id();
-
-                                        label removeIdI = findIndex(p_.removalOrder(), idI);
-                                        label removeIdJ = findIndex(p_.removalOrder(), idJ);
-
-                                        if(removeIdI < removeIdJ)
+                                        if(molI->ghost() && !molJ->ghost()) //Molecule I is a ghost so remove J
+                                        {
+                                            molsToDelete.append(molJ);
+                                            molsToDeleteTNs.append(tNJ);
+                                        }
+                                        else if(molJ->ghost() && !molI->ghost()) //Molecule J is a ghost so remove I
                                         {
                                             molsToDelete.append(molI);
                                             molsToDeleteTNs.append(tNI);
                                         }
-                                        else if(removeIdI == removeIdJ)
+                                        else if(!molI->ghost() && !molJ->ghost()) //Neither molecules are a ghost
                                         {
-                                            if (molI->trackingNumber() > molJ->trackingNumber())
+                                            label idJ = molJ->id();
+                                            label idI = molI->id();
+
+                                            label removeIdI = findIndex(p_.removalOrder(), idI);
+                                            label removeIdJ = findIndex(p_.removalOrder(), idJ);
+
+                                            if(removeIdI < removeIdJ)
                                             {
                                                 molsToDelete.append(molI);
                                                 molsToDeleteTNs.append(tNI);
+                                            }
+                                            else if(removeIdI == removeIdJ)
+                                            {
+                                                if (molI->trackingNumber() > molJ->trackingNumber())
+                                                {
+                                                    molsToDelete.append(molI);
+                                                    molsToDeleteTNs.append(tNI);
+                                                }
                                             }
                                         }
                                     }
@@ -775,6 +816,11 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     fields_.createFields();
     boundaries_.setInitialConfig();
     controllers_.initialConfig();
+
+    //check and remove high energy overlaps after coupling initialisation
+    checkForOverlaps();
+
+    buildCellOccupancy();
 
     clearLagrangianFields();
     calculateForce();
