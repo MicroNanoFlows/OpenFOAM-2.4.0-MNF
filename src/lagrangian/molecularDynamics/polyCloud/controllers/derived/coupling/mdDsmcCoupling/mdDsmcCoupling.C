@@ -654,7 +654,7 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
 
     forAll(sendInterfaces_, iface)
     {
-        sendInterfaces_[iface]->commit(static_cast<label>(1));
+        sendInterfaces_[iface]->commit(static_cast<label>(-1));
         interfaceCommits.append(sendInterfaceNames_[iface]);
     }
 
@@ -663,7 +663,7 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
         label index = findIndex(interfaceCommits, recvInterfaceNames_[iface]);
         if(index == -1)
         {
-            recvInterfaces_[iface]->commit(static_cast<label>(1));
+            recvInterfaces_[iface]->commit(static_cast<label>(-1));
         }
     }
 #endif
@@ -719,11 +719,6 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
 {
     bool molChanged = false;
 #ifdef USE_MUI
-    if(init)
-	{
-	    currIteration_ = 1;
-	}
-
 	if(receivingRegion_)
     {
 	    label molCount = 0;
@@ -1030,8 +1025,6 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
                 recvInterfaces_[iface]->commit(currIteration_);
             }
         }
-
-        currIteration_ = 0;
     }
 #endif
     return molChanged;

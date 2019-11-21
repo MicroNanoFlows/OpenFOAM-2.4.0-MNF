@@ -579,18 +579,6 @@ void polyControllers::initialConfig()
         couplingControllers_[cC]->initialConfiguration(1);
     }
 
-    //- Wait here until other side has finished sending initialisation values (blocking)
-    forAll(couplingControllers_, cC)
-    {
-        couplingControllers_[cC]->barrier(static_cast<label>(1));
-    }
-
-    //- Forget initial configuration time frame and reset log to -inf
-    forAll(couplingControllers_, cC)
-    {
-        couplingControllers_[cC]->forget(true);
-    }
-
     //- Run initial configuration stage 2 (blocking)
     forAll(couplingControllers_, cC)
     {
