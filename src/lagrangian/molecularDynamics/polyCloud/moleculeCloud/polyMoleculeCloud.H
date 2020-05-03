@@ -113,6 +113,8 @@ private:
         
         clockTimer clock_;
 
+        //- Specifies whether the MD cloud velocity has been scaled by a coupling controller
+        bool cloudVelocityScaled_;
 
     // Private Member Functions
 
@@ -286,6 +288,7 @@ public:
         label getTrackingNumber();
         void resetTrackingNumbers();
         void writeReferredCloud();
+        void setVelocityScaled();
         
         // Access
 
@@ -312,6 +315,7 @@ public:
             inline trackingNumber& moleculeTracking();
             inline cellInteractions<polyMolecule>& il();
             inline clockTimer& clock();
+            inline bool cloudVelocityScaled();
             
     // Member Operators
 

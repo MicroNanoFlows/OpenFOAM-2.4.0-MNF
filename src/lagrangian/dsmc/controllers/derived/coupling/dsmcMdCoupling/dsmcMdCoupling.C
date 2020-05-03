@@ -74,7 +74,8 @@ dsmcMdCoupling::dsmcMdCoupling
     currIteration_(0),
     boundCorr_(0),
     meshMin_(VGREAT, VGREAT, VGREAT),
-    meshMax_(-VSMALL, -VSMALL, -VSMALL)
+    meshMax_(-VSMALL, -VSMALL, -VSMALL),
+    initTemperature_(-VSMALL)
 {
 #ifdef USE_MUI
     //- Determine sending interfaces if defined
@@ -713,6 +714,21 @@ void dsmcMdCoupling::initialConfiguration(label stage)
     }
     else if (stage == 2)
     {
+        //Calculate initial temperature of whole cloud
+        initTemperature_ = calcTemperature();
+
+        if (Pstream::parRun())
+        {
+            if(Pstream::master())
+            {
+                std::cout << "Initial temperature: " << initTemperature_ << std::endl;
+            }
+        }
+        else
+        {
+            std::cout << "Initial temperature: " << initTemperature_ << std::endl;
+        }
+
         sendCoupledRegion(true); // Send ghost parcels in coupled regions at time = startTime
     }
 }
@@ -819,6 +835,11 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
             }
 
             std::cout << "    Parcels sent to coupled region  = " << parcelsInCellHistory_[iface].size() << std::endl;
+
+            if(init)
+            {
+                sendInterfaces_[iface]->push("init_temp", initTemperature_);
+            }
 
             // Commit (transmit) values to the MUI interface
             sendInterfaces_[iface]->commit(currIteration_);
@@ -1301,12 +1322,51 @@ void dsmcMdCoupling::insertParcel
             vibLevel 
         );
     }
-    /*
-    else
+}
+
+scalar dsmcMdCoupling::calcTemperature()
+{
+    // - calculate streaming velocity
+    scalar mass = 0;
+    vector mom = vector::zero;
+    scalar mcc = 0;
+    scalar nParticles = 0;
+
+    IDLList<dsmcParcel>::iterator parc(cloud_.begin());
+
+    for(parc = cloud_.begin(); parc != cloud_.end(); ++parc)
     {
-        std::cout << "dsmcMdCoupling::insertParcel(): Parcel insertion attempted outside of mesh, parcel not inserted" << std::endl;
+        if(findIndex(typeNames_, cloud_.typeIdList()[parc().typeId()]) != -1)
+        {
+            const scalar parcMass = cloud_.constProps(parc().typeId()).mass()*cloud_.nParticle();
+
+            mass += parcMass;
+            mom += parcMass*parc().U();
+            mcc += parcMass*mag(parc().U())*mag(parc().U());
+            nParticles += cloud_.nParticle();
+        }
     }
-    */
+
+    if (Pstream::parRun())
+    {
+        reduce(mom, sumOp<vector>());
+        reduce(mass, sumOp<scalar>());
+        reduce(mcc, sumOp<scalar>());
+        reduce(nParticles, sumOp<scalar>());
+    }
+
+    vector velocity(vector::zero);
+
+    if(mass > 0)
+    {
+        velocity = mom/mass;
+    }
+
+    const scalar& kB = physicoChemical::k.value();
+
+    scalar tempMeasI = (1.0/(3.0*kB)) * ((mcc/nParticles) - ((mass/nParticles)*mag(velocity)*mag(velocity)));
+
+    return tempMeasI;
 }
 
 } // End namespace Foam

@@ -761,4 +761,9 @@ inline Foam::clockTimer& Foam::polyMoleculeCloud::clock()
     return clock_;
 }
 
+inline bool Foam::polyMoleculeCloud::cloudVelocityScaled()
+{
+    return cloudVelocityScaled_;
+}
+
 // ************************************************************************* //

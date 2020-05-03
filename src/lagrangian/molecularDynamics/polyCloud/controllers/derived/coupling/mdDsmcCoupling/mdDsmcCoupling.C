@@ -81,7 +81,9 @@ mdDsmcCoupling::mdDsmcCoupling
     currIteration_(0),
     boundCorr_(0),
     meshMin_(VGREAT, VGREAT, VGREAT),
-    meshMax_(-VSMALL, -VSMALL, -VSMALL)
+    meshMax_(-VSMALL, -VSMALL, -VSMALL),
+    initTemperature_(-VSMALL),
+    initTemperatureDSMC_(-VSMALL)
 {
 #ifdef USE_MUI
     //- Determine sending interfaces if defined
@@ -670,7 +672,25 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
     }
     else if (stage == 2)
     {
-        returnVal = receiveCoupledRegion(true); // Receive ghost molecules in coupled region(s) at time = startTime and commit time=1 to release other side
+        if(!molCloud_.cloudVelocityScaled())
+        {
+            //Calculate initial temperature of whole cloud
+            initTemperature_ = calcTemperature();
+            std::cout << "Initial temperature: " << initTemperature_ << std::endl;
+
+            returnVal = receiveCoupledRegion(true); // Receive ghost molecules in coupled region(s) at time = startTime and commit time=1 to release other side
+
+            //Distribute received temperature from DSMC side to all MPI ranks
+            if (Pstream::parRun())
+            {
+                reduce(initTemperatureDSMC_, maxOp<scalar>());
+            }
+
+            std::cout << "Initial DSMC temperature = " << initTemperatureDSMC_ << std::endl;
+
+            //Scale molecule velocity field to match initial temperature of DSMC field
+            scaleVelocity();
+        }
     }
 
     return returnVal;
@@ -1022,6 +1042,9 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
         {
             forAll(recvInterfaces_, iface)
             {
+                //Fetch initial DSMC system temperature
+                initTemperatureDSMC_ = recvInterfaces_[iface]->fetch<scalar>("init_temp");
+                //Commit at t=1 to allow other side to continue
                 recvInterfaces_[iface]->commit(currIteration_);
             }
         }
@@ -1069,9 +1092,7 @@ void mdDsmcCoupling::sendCoupledRegionForces()
 
                             forAll(molecule->siteForces(), s)
                             {
-                                siteForcesAccum[0] += molecule->siteForces()[s][0];
-                                siteForcesAccum[1] += molecule->siteForces()[s][1];
-                                siteForcesAccum[2] += molecule->siteForces()[s][2];
+                                siteForcesAccum += molecule->siteForces()[s];
                             }
 
                             // Push the molecule site forces to the interface
@@ -2169,8 +2190,6 @@ polyMolecule* mdDsmcCoupling::insertMolecule
     }
     else
     {
-        //std::cout << "mdDsmcCoupling::insertMolecule(): Molecule insertion attempted outside of mesh, molecule not inserted" << std::endl;
-        //std::cout << "Attempted pos: " << position[0] << "," << position[1] << "," << position[2] << std::endl;
         return NULL;
     }
 }
@@ -2244,6 +2263,105 @@ polyMolecule* mdDsmcCoupling::checkForOverlaps(polyMolecule* newMol, const scala
     }
 
 	return NULL;
+}
+
+scalar mdDsmcCoupling::calcTemperature()
+{
+    // - calculate streaming velocity
+    scalar mass = 0;
+    vector mom = vector::zero;
+    scalar kE = 0;
+    scalar dof = 0;
+    scalar angularKeSum = 0;
+
+    IDLList<polyMolecule>::iterator mol(molCloud_.begin());
+
+    for(mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
+    {
+        if(!mol().ghost() && findIndex(molIds_, mol().id()) != -1)
+        {
+            const scalar& massI = molCloud_.cP().mass(mol().id());
+
+            mass += massI;
+            mom += massI*mol().v();
+        }
+    }
+
+    if (Pstream::parRun())
+    {
+        reduce(mom, sumOp<vector>());
+        reduce(mass, sumOp<scalar>());
+    }
+
+    vector velocity(vector::zero);
+
+    if(mass > 0)
+    {
+        velocity = mom/mass;
+    }
+
+    for(mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
+    {
+        if(!mol().ghost() && findIndex(molIds_, mol().id()) != -1)
+        {
+            const scalar& massI = molCloud_.cP().mass(mol().id());
+
+            kE += 0.5*massI*magSqr(mol().v() - velocity);
+            dof += molCloud_.cP().degreesOfFreedom(mol().id());
+
+            const diagTensor& molMoI(molCloud_.cP().momentOfInertia(mol().id()));
+
+            // angular speed
+            const vector& molOmega(inv(molMoI) & mol().pi());
+            angularKeSum += 0.5*(molOmega & molMoI & molOmega);
+        }
+    }
+
+    if (Pstream::parRun())
+    {
+        reduce(kE, sumOp<scalar>());
+        reduce(dof, sumOp<scalar>());
+        reduce(angularKeSum, sumOp<scalar>());
+    }
+
+    scalar tempMeasI = 0;
+
+    if(dof > 0.0)
+    {
+        const scalar& kB = molCloud_.redUnits().kB();
+
+        tempMeasI = (2.0*(kE+angularKeSum))/(kB*dof);
+
+        return tempMeasI*rU_.refTemp();
+    }
+    else
+    {
+       return tempMeasI;
+    }
+}
+
+void mdDsmcCoupling::scaleVelocity()
+{
+    scalar scaleValue = 0;
+
+    if (initTemperature_ > 0)
+    {
+        scaleValue = sqrt(initTemperatureDSMC_ / initTemperature_);
+    }
+
+    std::cout << "Scaling velocity using DSMC temperature (" << scaleValue << ")" << std::endl;
+
+    IDLList<polyMolecule>::iterator mol(molCloud_.begin());
+
+    for(mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
+    {
+        if(!mol().ghost())
+        {
+            mol().v() *= scaleValue;
+        }
+    }
+
+    molCloud_.setVelocityScaled();
 }
 
 } // End namespace Foam

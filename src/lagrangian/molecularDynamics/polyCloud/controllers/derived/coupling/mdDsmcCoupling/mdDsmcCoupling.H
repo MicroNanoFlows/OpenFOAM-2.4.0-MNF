@@ -136,17 +136,22 @@ private:
         List<std::vector<scalar> > rcvVelX_;
         List<std::vector<scalar> > rcvVelY_;
         List<std::vector<scalar> > rcvVelZ_;
+        scalar initTemperature_;
+        scalar initTemperatureDSMC_;
 
     // Private Member Functions
 
-        polyMolecule* insertMolecule
+    polyMolecule* insertMolecule
 	(
 	    point& position,
 	    const label& id,
 	    const bool ghost,
 	    vector& velocity
 	);
-        polyMolecule* checkForOverlaps(polyMolecule* newMol, const scalar& potEnergyLimit);
+
+    polyMolecule* checkForOverlaps(polyMolecule* newMol, const scalar& potEnergyLimit);
+    scalar calcTemperature();
+    void scaleVelocity();
 
 public:
 

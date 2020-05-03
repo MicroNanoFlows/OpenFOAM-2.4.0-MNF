@@ -115,6 +115,7 @@ private:
         vector couplingBoundZeroThick_;
         label currIteration_;
         scalar boundCorr_;
+        scalar initTemperature_;
 
     // Private Member Functions
 
@@ -124,6 +125,8 @@ private:
             const vector& U,
             const label& typeId
         );
+
+        scalar calcTemperature();
 
 public:
 

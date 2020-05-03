@@ -725,7 +725,8 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     cyclics_(t, mesh_, -1), 
     iL_(mesh, rU, cyclics_, p_.rCutMax(), "poly"),
     ipl_(mesh.nCells()),
-	clock_(t, "evolve", true)
+	clock_(t, "evolve", true),
+	cloudVelocityScaled_(false)
   {
     polyMolecule::readFields(*this);
 
@@ -792,7 +793,8 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     cyclics_(t, mesh_, -1),
     iL_(mesh, rU, cyclics_, p_.rCutMax(), "poly"),
     ipl_(mesh.nCells()),
-    clock_(t, "evolve", true)
+    clock_(t, "evolve", true),
+    cloudVelocityScaled_(false)
 {
     polyMolecule::readFields(*this);
 
@@ -860,7 +862,8 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     cyclics_(t, mesh_, -1),
     iL_(mesh, rU, cyclics_, p_.rCutMax(), "poly"),
     ipl_(mesh.nCells()),
-	clock_(t, "evolve", true)
+	clock_(t, "evolve", true),
+	cloudVelocityScaled_(false)
 {
     polyMolecule::readFields(*this);
 
@@ -1564,6 +1567,11 @@ void Foam::polyMoleculeCloud::removeMolFromCellOccupancy
 
     cellOccupancy_[cell].clear();
     cellOccupancy_[cell].transfer(molsInCell);
+}
+
+void Foam::polyMoleculeCloud::setVelocityScaled()
+{
+    cloudVelocityScaled_ = true;
 }
 
 // ************************************************************************* //
