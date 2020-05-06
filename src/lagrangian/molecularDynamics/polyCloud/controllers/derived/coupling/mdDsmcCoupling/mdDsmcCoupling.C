@@ -2204,9 +2204,10 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
             else if (iterCount > 0)
             {
                 newInsert.addedIterations = iterCount;
-                newInsert.mol = newMol;
             }
         }
+
+        newInsert.mol = newMol;
 
         //Molecule insertion succeeded
         return newInsert;
