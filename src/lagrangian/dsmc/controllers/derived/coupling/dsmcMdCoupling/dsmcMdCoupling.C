@@ -407,8 +407,8 @@ dsmcMdCoupling::dsmcMdCoupling
         vector meshExtents = mesh_.bounds().max() - mesh_.bounds().min();
 
         vector boundCorr = meshExtents * 1e-8;
-
-        //- Ensure boundary correction value not larger than 1e-9
+		
+	//- Ensure boundary correction value not larger than 1e-9
         if(boundCorr[0] > 1e-9)
         {
             boundCorr[0] = 1e-9;
@@ -423,7 +423,7 @@ dsmcMdCoupling::dsmcMdCoupling
         {
             boundCorr[2] = 1e-9;
         }
-
+	
         // Pick largest correction value as global
         if(boundCorr[0] > boundCorr[1] && boundCorr[0] > boundCorr[2])
         {
