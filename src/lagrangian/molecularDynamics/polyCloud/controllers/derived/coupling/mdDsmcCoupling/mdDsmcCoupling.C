@@ -1028,11 +1028,8 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
                         if(molHistory_[ifacepts][pts] == NULL) //- This molecule is new so insert it
                         {
                             newMol = insertMolecule(checkedPosition, molIds_[molId], true, velocity);
-                            if(newMol.mol != NULL)
-                            {
-                                molHistory_[ifacepts][pts] = newMol.mol;
-                                molChanged = true;
-                            }
+                            molHistory_[ifacepts][pts] = newMol.mol;
+                            molChanged = true;
                         }
                         else //- This molecule already exists, so just update its values
                         {
