@@ -83,7 +83,8 @@ mdDsmcCoupling::mdDsmcCoupling
     meshMin_(VGREAT, VGREAT, VGREAT),
     meshMax_(-VSMALL, -VSMALL, -VSMALL),
     initTemperature_(-VSMALL),
-    initTemperatureDSMC_(-VSMALL)
+    initTemperatureDSMC_(-VSMALL),
+    nparcsRcv_(0)
 {
 #ifdef USE_MUI
     //- Determine sending interfaces if defined
@@ -328,25 +329,9 @@ mdDsmcCoupling::mdDsmcCoupling
         //- Find the whole mesh extents
         vector meshExtents = mesh_.bounds().max() - mesh_.bounds().min();
 
-        // Boundary correction value calculated against whole mesh extents for consistency at different parallelisation levels
-        vector boundCorr = meshExtents * 1e-8;
-	
-        //- Ensure boundary correction value not larger than 1e-8
-        if(boundCorr[0] > 1e-8)
-        {
-            boundCorr[0] = 1e-8;
-        }
+        // Boundary correction value (0.001% extents) calculated against whole mesh extents for consistency at different parallelisation levels
+        vector boundCorr = meshExtents * (1e-3 / 100.0);
 
-        if(boundCorr[1] > 1e-8)
-        {
-            boundCorr[1] = 1e-8;
-        }
-
-        if(boundCorr[2] > 1e-8)
-        {
-            boundCorr[2] = 1e-8;
-        }
-	
         // Pick largest correction value as global in each direction
         if(boundCorr[0] > boundCorr[1] && boundCorr[0] > boundCorr[2])
         {
@@ -367,6 +352,8 @@ mdDsmcCoupling::mdDsmcCoupling
         {
             boundCorr_ = boundCorr[0];
         }
+
+        std::cout << "Boundary correction value: " << boundCorr_ << std::endl;
 
         point cellMin;
         point cellMax;
@@ -709,11 +696,30 @@ bool mdDsmcCoupling::controlAfterMove(label stage)
             returnVal = findCoupledMolecules(); //- Find, collate and delete any molecules that have passed a coupling boundary
         }
 
-        sendCoupledMolecules(); // Send any molecules deleted by coupling boundary (non-blocking)
+        label nmolsSent = sendCoupledMolecules(); // Send any molecules deleted by coupling boundary (non-blocking)
+
+        if(nmolsSent > 0)
+        {
+            if (Pstream::parRun())
+            {
+                if(Pstream::master())
+                {
+                    std::cout << "Coupling boundary molecules pushed: " << nmolsSent << std::endl;
+                }
+                else
+                {
+                    std::cout << "[" << time_.time().value() << "s] Coupling boundary molecules pushed: " << nmolsSent << std::endl;
+                }
+            }
+            else
+            {
+                std::cout << "Coupling boundary molecules pushed: " << nmolsSent << std::endl;
+            }
+        }
 	}
 	else if (stage == 2)
 	{
-	    receiveCoupledParcels(); // Receive any molecules coupling boundary (blocking)
+	    nparcsRcv_ = receiveCoupledParcels(); // Receive any molecules coupling boundary (blocking)
 	}
 	else if (stage == 3)
 	{
@@ -723,7 +729,58 @@ bool mdDsmcCoupling::controlAfterMove(label stage)
 	{
 	    if(receivingBound_)
 	    {
-	        returnVal = insertCoupledMolecules(); // Insert any coupling boundary molecules from stage 2
+	        cplMoleculeInsert nmolsInserted = insertCoupledMolecules(); // Insert any coupling boundary molecules from stage 2
+
+	        if(nmolsInserted.nmolsInserted > 0)
+	        {
+	            returnVal = true;
+
+	            if (Pstream::parRun())
+                {
+                    if(Pstream::master())
+                    {
+                        std::cout << "Coupling boundary parcels inserted: " << nmolsInserted.nmolsInserted << std::endl;
+
+                        if(nmolsInserted.nIts > 0)
+                        {
+                            std::cout << "High energy overlaps detected during insertion, total iterations to resolve: " << nmolsInserted.nIts << std::endl;
+                        }
+
+                        if(nparcsRcv_ != nmolsInserted.nmolsInserted)
+                        {
+                            std::cout << "Warning: Number of boundary parcels inserted (" << nmolsInserted.nmolsInserted << ") not equal to number received (" << nparcsRcv_ << ")" << std::endl;
+                        }
+                    }
+                    else
+                    {
+                        std::cout << "[" << time_.time().value() << "s] Coupling boundary parcels inserted: " << nmolsInserted.nmolsInserted << std::endl;
+
+                        if(nmolsInserted.nIts > 0)
+                        {
+                            std::cout << "[" << time_.time().value() << "s] High energy overlaps detected during insertion, total iterations to resolve: " << nmolsInserted.nIts << std::endl;
+                        }
+
+                        if(nparcsRcv_ != nmolsInserted.nmolsInserted)
+                        {
+                            std::cout << "[" << time_.time().value() << "s] Warning: Number of boundary parcels inserted (" << nmolsInserted.nmolsInserted << ") not equal to number received (" << nparcsRcv_ << ")" << std::endl;
+                        }
+                    }
+                }
+                else
+                {
+                    std::cout << "Coupling boundary parcels inserted: " << nmolsInserted.nmolsInserted << std::endl;
+
+                    if(nmolsInserted.nIts > 0)
+                    {
+                        std::cout << "High energy overlaps detected during insertion, total iterations to resolve: " << nmolsInserted.nIts << std::endl;
+                    }
+
+                    if(nparcsRcv_ != nmolsInserted.nmolsInserted)
+                    {
+                        std::cout << "Warning: Number of boundary parcels inserted (" << nmolsInserted.nmolsInserted << ") not equal to number received (" << nparcsRcv_ << ")" << std::endl;
+                    }
+                }
+	        }
 	    }
 	}
 
@@ -742,6 +799,7 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
 	if(receivingRegion_)
     {
 	    label molCount = 0;
+	    moleculeInsert newMol;
 
         // Iterate through all receiving interfaces for this controller and extract a points list
         forAll(recvInterfaces_, iface)
@@ -969,8 +1027,12 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
 
                         if(molHistory_[ifacepts][pts] == NULL) //- This molecule is new so insert it
                         {
-                            molHistory_[ifacepts][pts] = insertMolecule(checkedPosition, molIds_[molId], true, velocity);
-                            molChanged = true;
+                            newMol = insertMolecule(checkedPosition, molIds_[molId], true, velocity);
+                            if(newMol.mol != NULL)
+                            {
+                                molHistory_[ifacepts][pts] = newMol.mol;
+                                molChanged = true;
+                            }
                         }
                         else //- This molecule already exists, so just update its values
                         {
@@ -1271,8 +1333,9 @@ bool mdDsmcCoupling::findCoupledMolecules()
     return molsDeleted;
 }
 
-void mdDsmcCoupling::sendCoupledMolecules()
+label mdDsmcCoupling::sendCoupledMolecules()
 {
+    label nmolsSent = 0;
 #ifdef USE_MUI
     if(sendingBound_)
     {
@@ -1296,21 +1359,7 @@ void mdDsmcCoupling::sendCoupledMolecules()
                     sendInterfaces_[iface]->push("vel_y_bound", molCentre, molsToSend_[mols].velocity[1] * rU_.refVelocity());
                     sendInterfaces_[iface]->push("vel_z_bound", molCentre, molsToSend_[mols].velocity[2] * rU_.refVelocity());
 
-                    if (Pstream::parRun())
-                    {
-                        if(Pstream::master())
-                        {
-                            std::cout << "Coupling boundary molecule pushed at: [" << molCentre[0] << "," << molCentre[1] << "," << molCentre[2] << "]" << std::endl;
-                        }
-                        else
-                        {
-                            std::cout << "[" << time_.time().value() << "s] Coupling boundary molecule pushed at: [" << molCentre[0] << "," << molCentre[1] << "," << molCentre[2] << "]" << std::endl;
-                        }
-                    }
-                    else
-                    {
-                        std::cout << "Coupling boundary molecule pushed at: [" << molCentre[0] << "," << molCentre[1] << "," << molCentre[2] << "]" << std::endl;
-                    }
+                    nmolsSent++;
                 }
             }
 
@@ -1321,10 +1370,13 @@ void mdDsmcCoupling::sendCoupledMolecules()
 #endif
     //- Clear the sent molecules
     molsToSend_.clear();
+
+    return nmolsSent;
 }
 
-void mdDsmcCoupling::receiveCoupledParcels()
+label mdDsmcCoupling::receiveCoupledParcels()
 {
+    label nparcsRcv = 0;
 #ifdef USE_MUI
     if(receivingBound_)
     {
@@ -1456,74 +1508,49 @@ void mdDsmcCoupling::receiveCoupledParcels()
                             }
                         }
 
-                        if (Pstream::parRun())
-                        {
-                            if(Pstream::master())
-                            {
-                                std::cout << "Coupling boundary parcel received at: [" << checkedPosition[0] << "," << checkedPosition[1] << "," << checkedPosition[2] << "]" << std::endl;
-                            }
-                            else
-                            {
-                                std::cout << "[" << time_.time().value() << "s] Coupling boundary parcel received at: [" << checkedPosition[0] << "," << checkedPosition[1] << "," << checkedPosition[2] << "]" << std::endl;
-                            }
-                        }
-                        else
-                        {
-                            std::cout << "Coupling boundary parcel received at: [" << checkedPosition[0] << "," << checkedPosition[1] << "," << checkedPosition[2] << "]" << std::endl;
-                        }
-
                         coupledMolecule newMol;
                         newMol.molType = rcvMolType_[ifacepts][pts];
                         newMol.position = checkedPosition;
                         newMol.velocity = velocity;
-
                         molsReceived_.append(newMol);
+
+                        nparcsRcv++;
                     }
                 }
             }
         }
     }
 #endif
+    return nparcsRcv;
 }
 
-bool mdDsmcCoupling::insertCoupledMolecules()
+mdDsmcCoupling::cplMoleculeInsert mdDsmcCoupling::insertCoupledMolecules()
 {
-    bool molInserted = false;
+    cplMoleculeInsert newMolInsert;
 #ifdef USE_MUI
     if(molsReceived_.size() > 0)
     {
+        moleculeInsert newMol;
+
         forAll(molsReceived_, mol)
         {
             const label molId = findIndex(molNames_, molsReceived_[mol].molType);
 
             point molPosition = molsReceived_[mol].position;
 
-            if(insertMolecule(molPosition, molIds_[molId], false, molsReceived_[mol].velocity) != NULL)
-            {
-                if (Pstream::parRun())
-                {
-                    if(Pstream::master())
-                    {
-                        std::cout << "Coupling boundary parcel inserted at: [" << molPosition[0] << "," << molPosition[1] << "," << molPosition[2] << "]" << std::endl;
-                    }
-                    else
-                    {
-                        std::cout << "[" << time_.time().value() << "s] Coupling boundary parcel inserted at: [" << molPosition[0] << "," << molPosition[1] << "," << molPosition[2] << "]" << std::endl;
-                    }
-                }
-                else
-                {
-                    std::cout << "Coupling boundary parcel inserted at: [" << molPosition[0] << "," << molPosition[1] << "," << molPosition[2] << "]" << std::endl;
-                }
+            newMol = insertMolecule(molPosition, molIds_[molId], false, molsReceived_[mol].velocity);
 
-                molInserted = true;
+            if(newMol.mol != NULL)
+            {
+                newMolInsert.nmolsInserted++;
+                newMolInsert.nIts += newMol.addedIterations;
             }
         }
     }
 #endif
     molsReceived_.clear();
 
-    return molInserted;
+    return newMolInsert;
 }
 
 void mdDsmcCoupling::output
@@ -1585,7 +1612,7 @@ void mdDsmcCoupling::forget(label iteration, label interface, bool forget)
 	recvInterfaces_[interface]->forget(iteration, forget);
 }
 
-polyMolecule* mdDsmcCoupling::insertMolecule
+mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
 (
     point& position,
     const label& id,
@@ -1594,6 +1621,7 @@ polyMolecule* mdDsmcCoupling::insertMolecule
 )
 {
     label cell = mesh_.findCell(position);
+    moleculeInsert newInsert;
     
     if(cell != -1)
     {
@@ -1642,7 +1670,7 @@ polyMolecule* mdDsmcCoupling::insertMolecule
 
         molCloud_.insertMolInCellOccupancy(newMol);
 
-        if(!ghost) // No need to perform overlap check for ghost molecules
+        if(!ghost) // No need to perform overlap check when ghost molecules inserted
         {
             polyMolecule* overlapMol = NULL;
             overlapMol = checkForOverlaps(newMol, overlapEnergyLimit_);
@@ -1650,8 +1678,6 @@ polyMolecule* mdDsmcCoupling::insertMolecule
 
             if(overlapMol != NULL) // Check for any overlaps that will exceed pre-determined energy limit for interactions
             {
-                std::cout << "mdDsmcCoupling::insertMolecule(): Molecule insertion would create overlap, finding new insertion position" << std::endl;
-
                 vector startPos = position;
                 vector overLap(vector::zero);
                 scalar overLapMag = 0;
@@ -1663,8 +1689,8 @@ polyMolecule* mdDsmcCoupling::insertMolecule
                 label randomNorm = -1; // Set at -1 so norm calculated using geometry initially
                 label randOI = 25; // Trigger random normal generation every 25 iterations
                 label currOIIt = 0; // Iteration block counter before random norm triggered
-                vector maxPerturb = meshMax_ - meshMin_;
-                maxPerturb *= 0.25; // Limit for maximum perturbation distance calculation equal to quarter of total extents of local mesh
+                // Limit for maximum perturbation distance calculation equal to quarter of total extents of local mesh
+                vector maxPerturb = (meshMax_ - meshMin_) * 0.25;
 
                 for (label i=0; i<overlapIterations_; i++)
                 {
@@ -1921,8 +1947,6 @@ polyMolecule* mdDsmcCoupling::insertMolecule
 
                     if(randomNorm == 0) //- Calculate normal using random values
                     {
-                        std::cout << "Generating random normal" << std::endl;
-
                         //- Undo the initial perturbation so new randomised normal can be used instead
                         position = origPos;
 
@@ -2152,7 +2176,7 @@ polyMolecule* mdDsmcCoupling::insertMolecule
 
                             std::cout << "mdDsmcCoupling::insertMolecule(): Molecule insertion attempted outside of mesh whilst finding new location, molecule not inserted" << std::endl;
                             std::cout << "Attempted pos: " << position[0] << "," << position[1] << "," << position[2] << std::endl;
-                            return NULL;
+                            return newInsert;
                         }
                     }
 
@@ -2176,21 +2200,23 @@ polyMolecule* mdDsmcCoupling::insertMolecule
                     newMol = NULL;
                 }
 
-                std::cout << "mdDsmcCoupling::insertMolecule(): Failed to find new location for molecule. molecule not inserted" << std::endl;
+                std::cout << "mdDsmcCoupling::insertMolecule(): Failed to find new location for molecule, not inserted" << std::endl;
 
-                return NULL;
+                return newInsert;
             }
             else if (iterCount > 0)
             {
-                std::cout << "mdDsmcCoupling::insertMolecule(): New molecule insertion point found in " << iterCount << " iterations" << std::endl;
+                newInsert.addedIterations = iterCount;
+                newInsert.mol = newMol;
             }
         }
 
-        return newMol;
+        //Molecule insertion succeeded
+        return newInsert;
     }
-    else
+    else //Failed to find the cell in the mesh to insert (shouldn't happen)
     {
-        return NULL;
+        return newInsert;
     }
 }
 

@@ -150,10 +150,10 @@ public:
         virtual void sendCoupledRegionForces() = 0;
 
         //- send molecules to dsmcFoamPlus that have crossed a coupling boundary
-        virtual void sendCoupledMolecules() = 0;
+        virtual label sendCoupledMolecules() = 0;
 
         //- receive parcels from dsmcFoamPlus that have crossed a coupling boundary
-        virtual void receiveCoupledParcels() = 0;
+        virtual label receiveCoupledParcels() = 0;
 
         //- output data
         virtual void output
