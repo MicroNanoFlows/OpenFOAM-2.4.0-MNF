@@ -83,7 +83,8 @@ mdDsmcCoupling::mdDsmcCoupling
     meshMin_(VGREAT, VGREAT, VGREAT),
     meshMax_(-VSMALL, -VSMALL, -VSMALL),
     initTemperature_(-VSMALL),
-    initTemperatureDSMC_(-VSMALL)
+    initTemperatureDSMC_(-VSMALL),
+    nparcsRcv_(0)
 {
 #ifdef USE_MUI
     //- Determine sending interfaces if defined
@@ -328,24 +329,8 @@ mdDsmcCoupling::mdDsmcCoupling
         //- Find the whole mesh extents
         vector meshExtents = mesh_.bounds().max() - mesh_.bounds().min();
 
-        // Boundary correction value calculated against whole mesh extents for consistency at different parallelisation levels
-        vector boundCorr = meshExtents * 1e-8;
-
-        //- Ensure boundary correction value not larger than 1e-8
-        if(boundCorr[0] > 1e-8)
-        {
-            boundCorr[0] = 1e-8;
-        }
-
-        if(boundCorr[1] > 1e-8)
-        {
-            boundCorr[1] = 1e-8;
-        }
-
-        if(boundCorr[2] > 1e-8)
-        {
-            boundCorr[2] = 1e-8;
-        }
+        // Boundary correction value (0.001% extents) calculated against whole mesh extents for consistency at different parallelisation levels
+        vector boundCorr = meshExtents * (1e-3 / 100.0);
 
         // Pick largest correction value as global in each direction
         if(boundCorr[0] > boundCorr[1] && boundCorr[0] > boundCorr[2])
@@ -367,6 +352,8 @@ mdDsmcCoupling::mdDsmcCoupling
         {
             boundCorr_ = boundCorr[0];
         }
+
+        std::cout << "Boundary correction value: " << boundCorr_ << std::endl;
 
         point cellMin;
         point cellMax;
