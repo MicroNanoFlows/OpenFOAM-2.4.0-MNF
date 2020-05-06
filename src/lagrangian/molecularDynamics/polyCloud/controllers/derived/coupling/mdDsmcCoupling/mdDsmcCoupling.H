@@ -61,6 +61,37 @@ class mdDsmcCoupling
         word molType;
         point position;
         vector velocity;
+
+        coupledMolecule() :
+            molType(),
+            position(vector::zero),
+            velocity(vector::zero)
+        {
+        }
+    };
+
+    struct moleculeInsert
+    {
+        label addedIterations;
+        polyMolecule* mol;
+
+        moleculeInsert() :
+            addedIterations(0),
+            mol(NULL)
+        {
+        }
+    };
+
+    struct cplMoleculeInsert
+    {
+        label nmolsInserted;
+        label nIts;
+
+        cplMoleculeInsert() :
+            nmolsInserted(0),
+            nIts(0)
+        {
+        }
     };
 
 private:
@@ -138,10 +169,11 @@ private:
         List<std::vector<scalar> > rcvVelZ_;
         scalar initTemperature_;
         scalar initTemperatureDSMC_;
+        label nparcsRcv_;
 
     // Private Member Functions
 
-    polyMolecule* insertMolecule
+    moleculeInsert insertMolecule
 	(
 	    point& position,
 	    const label& id,
@@ -196,13 +228,13 @@ public:
         bool findCoupledMolecules();
 
         //- send molecules that have crossed a coupling boundary
-        void sendCoupledMolecules();
+        label sendCoupledMolecules();
 
         //- receive molecules that have crossed a coupling boundary
-        void receiveCoupledParcels();
+        label receiveCoupledParcels();
 
         //- Insert parcels that have been received through a coupling boundary
-        bool insertCoupledMolecules();
+        cplMoleculeInsert insertCoupledMolecules();
 
         //- output data (optional)
         void output
