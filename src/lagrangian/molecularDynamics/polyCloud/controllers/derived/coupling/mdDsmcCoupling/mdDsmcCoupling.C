@@ -668,7 +668,7 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
             std::cout << "Initial temperature: " << initTemperature_ << std::endl;
 
             //Calculate initial KE of whole cloud
-            initTemperature_ = calcAvgLinearKe();
+            initKe_ = calcAvgLinearKe();
             std::cout << "Initial average linear KE: " << initKe_ << std::endl;
 
             returnVal = receiveCoupledRegion(true); // Receive ghost molecules in coupled region(s) at time = startTime and commit time=1 to release other side
