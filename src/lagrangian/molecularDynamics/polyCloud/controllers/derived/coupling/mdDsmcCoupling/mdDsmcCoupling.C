@@ -83,7 +83,9 @@ mdDsmcCoupling::mdDsmcCoupling
     meshMin_(VGREAT, VGREAT, VGREAT),
     meshMax_(-VSMALL, -VSMALL, -VSMALL),
     initTemperature_(-VSMALL),
+    initKe_(-VSMALL),
     initTemperatureDSMC_(-VSMALL),
+    initKeDSMC_(-VSMALL),
     nparcsRcv_(0)
 {
 #ifdef USE_MUI
@@ -665,18 +667,31 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
             initTemperature_ = calcTemperature();
             std::cout << "Initial temperature: " << initTemperature_ << std::endl;
 
+            //Calculate initial KE of whole cloud
+            initTemperature_ = calcAvgLinearKe();
+            std::cout << "Initial average KE: " << initKe_ << std::endl;
+
             returnVal = receiveCoupledRegion(true); // Receive ghost molecules in coupled region(s) at time = startTime and commit time=1 to release other side
 
             //Distribute received temperature from DSMC side to all MPI ranks
             if (Pstream::parRun())
             {
                 reduce(initTemperatureDSMC_, maxOp<scalar>());
+                reduce(initKeDSMC_, maxOp<scalar>());
             }
 
             std::cout << "Initial DSMC temperature = " << initTemperatureDSMC_ << std::endl;
+            std::cout << "Initial DSMC linear KE = " << initKeDSMC_ << std::endl;
+
+            scalar scaleValue = 0;
+
+            if (initTemperature_ > 0)
+            {
+                scaleValue = sqrt(initTemperatureDSMC_ / initTemperature_);
+            }
 
             //Scale molecule velocity field to match initial temperature of DSMC field
-            scaleVelocity();
+            scaleVelocity(scaleValue);
         }
     }
 
@@ -1103,6 +1118,8 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
             {
                 //Fetch initial DSMC system temperature
                 initTemperatureDSMC_ = recvInterfaces_[iface]->fetch<scalar>("init_temp");
+                //Fetch initial DSMC system linear KE
+                initKeDSMC_ = recvInterfaces_[iface]->fetch<scalar>("init_ke");
                 //Commit at t=1 to allow other side to continue
                 recvInterfaces_[iface]->commit(currIteration_);
             }
@@ -2364,16 +2381,34 @@ scalar mdDsmcCoupling::calcTemperature()
     }
 }
 
-void mdDsmcCoupling::scaleVelocity()
+scalar mdDsmcCoupling::calcAvgLinearKe()
 {
-    scalar scaleValue = 0;
+    scalar avgKe = 0;
 
-    if (initTemperature_ > 0)
+    IDLList<polyMolecule>::iterator mol(molCloud_.begin());
+    label molCount = 0;
+
+    for(mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
     {
-        scaleValue = sqrt(initTemperatureDSMC_ / initTemperature_);
+        if(!mol().ghost() && findIndex(molIds_, mol().id()) != -1)
+        {
+            const scalar& massI = molCloud_.cP().mass(mol().id()) * rU_.refMass();
+            avgKe += (0.5 * massI)*(magSqr(mol().v() * rU_.refVelocity()));
+            molCount++;
+        }
     }
 
-    std::cout << "Scaling velocity using DSMC temperature (" << scaleValue << ")" << std::endl;
+    if(avgKe > 0)
+    {
+        avgKe /= molCount;
+    }
+
+    return avgKe;
+}
+
+void mdDsmcCoupling::scaleVelocity(scalar scaleValue)
+{
+    std::cout << "Scaling velocity using (" << scaleValue << ")" << std::endl;
 
     IDLList<polyMolecule>::iterator mol(molCloud_.begin());
 

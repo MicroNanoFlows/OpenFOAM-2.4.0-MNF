@@ -75,7 +75,8 @@ dsmcMdCoupling::dsmcMdCoupling
     boundCorr_(0),
     meshMin_(VGREAT, VGREAT, VGREAT),
     meshMax_(-VSMALL, -VSMALL, -VSMALL),
-    initTemperature_(-VSMALL)
+    initTemperature_(-VSMALL),
+    initKe_(-VSMALL)
 {
 #ifdef USE_MUI
     //- Determine sending interfaces if defined
@@ -704,16 +705,21 @@ void dsmcMdCoupling::initialConfiguration(label stage)
         //Calculate initial temperature of whole cloud
         initTemperature_ = calcTemperature();
 
+        //Calculate initial average linear KE of whole cloud
+        initKe_ = calcAvgLinearKe();
+
         if (Pstream::parRun())
         {
             if(Pstream::master())
             {
                 std::cout << "Initial temperature: " << initTemperature_ << std::endl;
+                std::cout << "Initial average linear KE: " << initKe_ << std::endl;
             }
         }
         else
         {
             std::cout << "Initial temperature: " << initTemperature_ << std::endl;
+            std::cout << "Initial average linear KE: " << initKe_ << std::endl;
         }
 
         sendCoupledRegion(true); // Send ghost parcels in coupled regions at time = startTime
@@ -826,6 +832,7 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
             if(init)
             {
                 sendInterfaces_[iface]->push("init_temp", initTemperature_);
+                sendInterfaces_[iface]->push("init_ke", initKe_);
             }
 
             // Commit (transmit) values to the MUI interface
@@ -1354,6 +1361,31 @@ scalar dsmcMdCoupling::calcTemperature()
     scalar tempMeasI = (1.0/(3.0*kB)) * ((mcc/nParticles) - ((mass/nParticles)*mag(velocity)*mag(velocity)));
 
     return tempMeasI;
+}
+
+scalar dsmcMdCoupling::calcAvgLinearKe()
+{
+    scalar avgKe = 0;
+
+    IDLList<dsmcParcel>::iterator parc(cloud_.begin());
+    label parcCount = 0;
+
+    for(parc = cloud_.begin(); parc != cloud_.end(); ++parc)
+    {
+        if(findIndex(typeNames_, cloud_.typeIdList()[parc().typeId()]) != -1)
+        {
+            const scalar parcMass = cloud_.constProps(parc().typeId()).mass()*cloud_.nParticle();
+            avgKe += (0.5 * parcMass)*(magSqr(parc().U()));
+            parcCount++;
+        }
+    }
+
+    if(avgKe > 0)
+    {
+        avgKe /= parcCount;
+    }
+
+    return avgKe;
 }
 
 } // End namespace Foam

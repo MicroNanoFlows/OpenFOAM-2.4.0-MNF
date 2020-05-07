@@ -116,6 +116,7 @@ private:
         label currIteration_;
         scalar boundCorr_;
         scalar initTemperature_;
+        scalar initKe_;
 
     // Private Member Functions
 
@@ -127,6 +128,7 @@ private:
         );
 
         scalar calcTemperature();
+        scalar calcAvgLinearKe();
 
 public:
 

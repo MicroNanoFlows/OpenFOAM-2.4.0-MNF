@@ -168,7 +168,9 @@ private:
         List<std::vector<scalar> > rcvVelY_;
         List<std::vector<scalar> > rcvVelZ_;
         scalar initTemperature_;
+        scalar initKe_;
         scalar initTemperatureDSMC_;
+        scalar initKeDSMC_;
         label nparcsRcv_;
 
     // Private Member Functions
@@ -183,7 +185,8 @@ private:
 
     polyMolecule* checkForOverlaps(polyMolecule* newMol, const scalar& potEnergyLimit);
     scalar calcTemperature();
-    void scaleVelocity();
+    scalar calcAvgLinearKe();
+    void scaleVelocity(scalar scaleValue);
 
 public:
 
