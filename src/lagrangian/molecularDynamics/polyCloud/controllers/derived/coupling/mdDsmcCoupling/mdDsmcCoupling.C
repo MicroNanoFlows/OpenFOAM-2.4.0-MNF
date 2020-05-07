@@ -669,7 +669,7 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
 
             //Calculate initial KE of whole cloud
             initTemperature_ = calcAvgLinearKe();
-            std::cout << "Initial average KE: " << initKe_ << std::endl;
+            std::cout << "Initial average linear KE: " << initKe_ << std::endl;
 
             returnVal = receiveCoupledRegion(true); // Receive ghost molecules in coupled region(s) at time = startTime and commit time=1 to release other side
 
@@ -681,17 +681,21 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
             }
 
             std::cout << "Initial DSMC temperature = " << initTemperatureDSMC_ << std::endl;
-            std::cout << "Initial DSMC linear KE = " << initKeDSMC_ << std::endl;
+            std::cout << "Initial DSMC average linear KE = " << initKeDSMC_ << std::endl;
 
             scalar scaleValue = 0;
 
-            if (initTemperature_ > 0)
+            if (initKe_ > 0)
             {
-                scaleValue = sqrt(initTemperatureDSMC_ / initTemperature_);
+                scaleValue = sqrt(initKeDSMC_ / initKe_);
             }
 
-            //Scale molecule velocity field to match initial temperature of DSMC field
+            //Scale molecule velocity field
             scaleVelocity(scaleValue);
+
+            //Calculate new temperature of whole cloud
+            scalar newInitTemperature = calcTemperature();
+            std::cout << "Scaled temperature: " << newInitTemperature << std::endl;
         }
     }
 
