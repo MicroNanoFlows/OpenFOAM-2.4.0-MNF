@@ -1668,7 +1668,7 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
 
         tensor Q = I;
 
-        polyMolecule* newMol = molCloud_.createMolecule
+        polyMolecule* newMol = molCloud_.createOnlyMolecule
         (
             position,
             cell,
@@ -1686,10 +1686,7 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
             molCloud_.getTrackingNumber()
         );
 
-        molCloud_.updateNeighbouringRadii(newMol);
-        molCloud_.insertMolInCellOccupancy(newMol);
-
-        if(!ghost) // No need to perform overlap check when ghost molecules inserted
+        if(!ghost) //If molecule not a ghost then perform overlap testing
         {
             polyMolecule* overlapMol = NULL;
             overlapMol = checkForOverlaps(newMol, overlapEnergyLimit_);
@@ -1716,8 +1713,7 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
                     // Delete the created molecule that is causing the overlap
                     if(newMol != NULL)
                     {
-                        molCloud_.removeMolFromCellOccupancy(newMol);
-                        molCloud_.deleteParticle(*newMol);
+                        delete(newMol);
                         newMol = NULL;
                     }
 
@@ -2144,7 +2140,7 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
                         );
 
                         // Create in the newly perturbed location
-                        newMol = molCloud_.createMolecule
+                        newMol = molCloud_.createOnlyMolecule
                         (
                             position,
                             cell,
@@ -2161,9 +2157,6 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
                             1.0,
                             molCloud_.getTrackingNumber()
                         );
-
-                        molCloud_.updateNeighbouringRadii(newMol);
-                        molCloud_.insertMolInCellOccupancy(newMol);
 
                         overlapMol = checkForOverlaps(newMol, overlapEnergyLimit_);
 
@@ -2210,32 +2203,49 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
                 }
             }
 
-            if(overlapMol != NULL) //The iterative process to perturb the molecule away from overlap failed after nIter tries
+            if(overlapMol != NULL) //The iterative process to perturb the molecule away from overlap failed after nIter tries, inform and return null
             {
+                std::cout << "mdDsmcCoupling::insertMolecule(): Failed to find new location for molecule, not inserted" << std::endl;
+
+                // Delete offending molecule before returning
                 if(newMol != NULL)
                 {
-                    // Delete the created molecule as it will exceed energy limit according to force-field calculation
-                    molCloud_.removeMolFromCellOccupancy(newMol);
-                    molCloud_.deleteParticle(*newMol);
-                    newMol = NULL;
+                    delete(newMol);
                 }
-
-                std::cout << "mdDsmcCoupling::insertMolecule(): Failed to find new location for molecule, not inserted" << std::endl;
 
                 return newInsert;
             }
-            else if (iterCount > 0)
+            else if (iterCount > 0) //Overlapping molecule(s) found but corrected in a number of iterations
             {
                 newInsert.addedIterations = iterCount;
+                newInsert.mol = newMol;
+                molCloud_.insertMolecule(newMol);
+
+                molCloud_.updateNeighbouringRadii(newMol);
+                molCloud_.insertMolInCellOccupancy(newMol);
+            }
+            else //No overlapping molecule found and no iterations needed
+            {
+                newInsert.mol = newMol;
+                molCloud_.insertMolecule(newMol);
+
+                molCloud_.updateNeighbouringRadii(newMol);
+                molCloud_.insertMolInCellOccupancy(newMol);
             }
         }
+        else //Ghost molecule insertion so no overlap testing needed, just insert into cloud
+        {
+            newInsert.mol = newMol;
+            molCloud_.insertMolecule(newMol);
 
-        newInsert.mol = newMol;
+            molCloud_.updateNeighbouringRadii(newMol);
+            molCloud_.insertMolInCellOccupancy(newMol);
+        }
 
-        //Molecule insertion succeeded
+        //Molecule insertion succeeded, return pointer to new molecule
         return newInsert;
     }
-    else //Failed to find the cell in the mesh to insert (shouldn't happen)
+    else //Failed to find the cell in the mesh to insert (shouldn't happen), return null
     {
         return newInsert;
     }
