@@ -220,6 +220,25 @@ public:
             const label trackingNumber
         );
         
+        polyMolecule* createOnlyMolecule
+        (
+            const vector& position,
+            const label cell,
+            const label tetFace,
+            const label tetPt,
+            const tensor& Q,
+            const vector& v,
+            const vector& a,
+            const vector& pi,
+            const vector& tau,
+            const vector& specialPosition,
+            const label special,
+            const label id,
+            const scalar& fraction,
+            const label trackingNumber
+        );
+
+        void insertMolecule(Foam::polyMolecule* newMol);
         void updateTrackingNumbersAfterRead();
         
         //- Evolve the molecules (move, calculate forces, etc)

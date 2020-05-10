@@ -1026,6 +1026,52 @@ Foam::polyMolecule*  Foam::polyMoleculeCloud::createMolecule
 	return newMol;
 }
 
+Foam::polyMolecule*  Foam::polyMoleculeCloud::createOnlyMolecule
+(
+    const vector& position,
+    const label cell,
+    const label tetFace,
+    const label tetPt,
+    const tensor& Q,
+    const vector& v,
+    const vector& a,
+    const vector& pi,
+    const vector& tau,
+    const vector& specialPosition,
+    const label special,
+    const label id,
+    const scalar& fraction,
+    const label trackingNumber
+)
+{
+    polyMolecule* newMol =  new polyMolecule
+    (
+        mesh_,
+        position,
+        cell,
+        tetFace,
+        tetPt,
+        Q,
+        v,
+        a,
+        pi,
+        tau,
+        specialPosition,
+//             constProps(id),
+        cP_,
+        special,
+        id,
+        fraction,
+        trackingNumber
+    );
+
+    return newMol;
+}
+
+void Foam::polyMoleculeCloud::insertMolecule(Foam::polyMolecule* newMol)
+{
+    addParticle(newMol);
+}
 
 // Evolve functions 
 
