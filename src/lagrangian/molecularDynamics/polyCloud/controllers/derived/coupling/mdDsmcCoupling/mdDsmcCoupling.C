@@ -1686,6 +1686,7 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
             molCloud_.getTrackingNumber()
         );
 
+        molCloud_.updateNeighbouringRadii(newMol);
         molCloud_.insertMolInCellOccupancy(newMol);
 
         if(!ghost) // No need to perform overlap check when ghost molecules inserted
@@ -2161,6 +2162,7 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
                             molCloud_.getTrackingNumber()
                         );
 
+                        molCloud_.updateNeighbouringRadii(newMol);
                         molCloud_.insertMolInCellOccupancy(newMol);
 
                         overlapMol = checkForOverlaps(newMol, overlapEnergyLimit_);
@@ -2259,6 +2261,10 @@ polyMolecule* mdDsmcCoupling::checkForOverlaps(polyMolecule* newMol, const scala
 
                      if(newMol->origId() != molJ->origId())
                      {
+                         if(molJ->ghost())
+                         {
+                             std::cout << "Testing overlap against ghost Real-Real 1" << std::endl;
+                         }
                          if(molCloud_.evaluatePotentialLimit(newMol, molJ, potEnergyLimit))
                          {
                              return molJ;
@@ -2276,6 +2282,10 @@ polyMolecule* mdDsmcCoupling::checkForOverlaps(polyMolecule* newMol, const scala
             {
                 if(newMol->origId() != molJ->origId())
                 {
+                    if(molJ->ghost())
+                    {
+                        std::cout << "Testing overlap against ghost Real-Real 2" << std::endl;
+                    }
                     if(molCloud_.evaluatePotentialLimit(newMol, molJ, potEnergyLimit))
                     {
                         return molJ;
@@ -2298,6 +2308,10 @@ polyMolecule* mdDsmcCoupling::checkForOverlaps(polyMolecule* newMol, const scala
             {
                 if(newMol->origId() != molJ->origId())
                 {
+                    if(molJ->ghost())
+                    {
+                         std::cout << "Testing overlap against ghost Real-Referred" << std::endl;
+                    }
                     if(molCloud_.evaluatePotentialLimit(newMol, molJ, potEnergyLimit))
                     {
                         return molJ;
