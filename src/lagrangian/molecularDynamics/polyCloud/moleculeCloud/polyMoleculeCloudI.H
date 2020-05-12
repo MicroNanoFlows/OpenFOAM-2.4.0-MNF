@@ -297,9 +297,11 @@ inline bool Foam::polyMoleculeCloud::evaluatePotentialLimit
                                 return true;
                             }
 
+                            if(molI->ghost()) std::cout << "molI is ghost" << std::endl;
+                            if(molJ->ghost()) std::cout << "molJ is ghost" << std::endl;
                             std::cout << "rsIsJMag: " << rsIsJMag << std::endl;
                             std::cout << "k value: " << k << std::endl;
-                            std::cout << "Overlap pot energy: " << mag(p_.pairPots().energy(k, rsIsJMag)) << std::endl;
+                            std::cout << "Overlap pot energy: " << mag(p_.pairPots().energy(k, rsIsJMag)) << std::endl << std::endl;
 
                             if
                             (
