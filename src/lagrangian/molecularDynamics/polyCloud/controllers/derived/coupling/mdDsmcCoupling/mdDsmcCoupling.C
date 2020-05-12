@@ -707,13 +707,13 @@ bool mdDsmcCoupling::controlAfterMove(label stage)
 {
 	bool returnVal = false;
 
-    if(stage == 1)
+    if(stage == 1) // Find, delete and send molecules that have passed a coupling boundary
 	{
-        currIteration_++; //- Increment the current iteration
+        currIteration_++; // Increment the current iteration
 
         if(sendingBound_)
         {
-            returnVal = findCoupledMolecules(); //- Find, collate and delete any molecules that have passed a coupling boundary
+            returnVal = findCoupledMolecules(); // Find, collate and delete any molecules that have passed a coupling boundary
         }
 
         label nmolsSent = sendCoupledMolecules(); // Send any molecules deleted by coupling boundary (non-blocking)
@@ -737,19 +737,19 @@ bool mdDsmcCoupling::controlAfterMove(label stage)
             }
         }
 	}
-	else if (stage == 2)
+	else if (stage == 2) // Receive any molecules coupling boundary (blocking)
 	{
-	    nparcsRcv_ = receiveCoupledParcels(); // Receive any molecules coupling boundary (blocking)
+	    nparcsRcv_ = receiveCoupledParcels();
 	}
-	else if (stage == 3)
+	else if (stage == 3) // Receive ghost molecules in coupled region (blocking)
 	{
-	    returnVal = receiveCoupledRegion(false); // Receive ghost molecules in coupled region (blocking)
+	    returnVal = receiveCoupledRegion(false);
     }
-	else if (stage == 4)
+	else if (stage == 4) // Insert any coupling boundary molecules from stage 2
 	{
 	    if(receivingBound_)
 	    {
-	        cplMoleculeInsert nmolsInserted = insertCoupledMolecules(); // Insert any coupling boundary molecules from stage 2
+	        cplMoleculeInsert nmolsInserted = insertCoupledMolecules();
 
 	        if(nmolsInserted.nmolsInserted > 0)
 	        {
@@ -818,6 +818,8 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
 #ifdef USE_MUI
 	if(receivingRegion_)
     {
+	    const constantMoleculeProperties& cP = molCloud_.cP();
+	    const scalar trackTime = mesh_.time().deltaT().value();
 	    label molCount = 0;
 	    moleculeInsert newMol;
 
@@ -1056,11 +1058,16 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
                             molHistory_[ifacepts][pts]->position()[0] = checkedPosition[0];
                             molHistory_[ifacepts][pts]->position()[1] = checkedPosition[1];
                             molHistory_[ifacepts][pts]->position()[2] = checkedPosition[2];
+                            molHistory_[ifacepts][pts]->specialPosition()[0] = checkedPosition[0];
+                            molHistory_[ifacepts][pts]->specialPosition()[1] = checkedPosition[1];
+                            molHistory_[ifacepts][pts]->specialPosition()[2] = checkedPosition[2];
 
                             molHistory_[ifacepts][pts]->v()[0] = velocity[0];
                             molHistory_[ifacepts][pts]->v()[1] = velocity[1];
                             molHistory_[ifacepts][pts]->v()[2] = velocity[2];
                         }
+
+                        molHistory_[ifacepts][pts]->updateAfterMove(cP, trackTime);
 
                         molCount++;
                     }
@@ -1549,6 +1556,8 @@ mdDsmcCoupling::cplMoleculeInsert mdDsmcCoupling::insertCoupledMolecules()
 #ifdef USE_MUI
     if(molsReceived_.size() > 0)
     {
+        const constantMoleculeProperties& cP = molCloud_.cP();
+        const scalar trackTime = mesh_.time().deltaT().value();
         moleculeInsert newMol;
 
         forAll(molsReceived_, mol)
@@ -1563,6 +1572,8 @@ mdDsmcCoupling::cplMoleculeInsert mdDsmcCoupling::insertCoupledMolecules()
             {
                 newMolInsert.nmolsInserted++;
                 newMolInsert.nIts += newMol.addedIterations;
+
+                newMol.mol->updateAfterMove(cP, trackTime);
             }
         }
     }
@@ -1687,7 +1698,15 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
             molCloud_.getTrackingNumber()
         );
 
-        if(!ghost) //If molecule not a ghost then perform overlap testing
+        if (ghost) //Ghost molecule insertion so no overlap testing needed, just insert into cloud
+        {
+            newInsert.mol = newMol;
+            molCloud_.insertMolecule(newMol);
+
+            molCloud_.updateNeighbouringRadii(newMol);
+            molCloud_.insertMolInCellOccupancy(newMol);
+        }
+        else //If molecule not a ghost then perform overlap testing
         {
             polyMolecule* overlapMol = NULL;
             overlapMol = checkForOverlaps(newMol, overlapEnergyLimit_);
@@ -2234,14 +2253,6 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
                 molCloud_.insertMolInCellOccupancy(newMol);
             }
         }
-        else //Ghost molecule insertion so no overlap testing needed, just insert into cloud
-        {
-            newInsert.mol = newMol;
-            molCloud_.insertMolecule(newMol);
-
-            molCloud_.updateNeighbouringRadii(newMol);
-            molCloud_.insertMolInCellOccupancy(newMol);
-        }
 
         //Molecule insertion succeeded, return pointer to new molecule
         return newInsert;
@@ -2270,13 +2281,10 @@ polyMolecule* mdDsmcCoupling::checkForOverlaps(polyMolecule* newMol, const scala
                 {
                     molJ = cellJ[cellJMols];
 
-                     if(newMol->origId() != molJ->origId())
-                     {
-                         if(molCloud_.evaluatePotentialLimit(newMol, molJ, potEnergyLimit))
-                         {
-                             return molJ;
-                         }
-                     }
+                    if(molCloud_.evaluatePotentialLimit(newMol, molJ, potEnergyLimit))
+                    {
+                        return molJ;
+                    }
                 }
             }
         }
@@ -2287,12 +2295,9 @@ polyMolecule* mdDsmcCoupling::checkForOverlaps(polyMolecule* newMol, const scala
 
             if (molJ > newMol)
             {
-                if(newMol->origId() != molJ->origId())
+                if(molCloud_.evaluatePotentialLimit(newMol, molJ, potEnergyLimit))
                 {
-                    if(molCloud_.evaluatePotentialLimit(newMol, molJ, potEnergyLimit))
-                    {
-                        return molJ;
-                    }
+                    return molJ;
                 }
             }
         }
@@ -2309,12 +2314,9 @@ polyMolecule* mdDsmcCoupling::checkForOverlaps(polyMolecule* newMol, const scala
 
             forAll(realCells, rC)
             {
-                if(newMol->origId() != molJ->origId())
+                if(molCloud_.evaluatePotentialLimit(newMol, molJ, potEnergyLimit))
                 {
-                    if(molCloud_.evaluatePotentialLimit(newMol, molJ, potEnergyLimit))
-                    {
-                        return molJ;
-                    }
+                    return molJ;
                 }
             }
         }
