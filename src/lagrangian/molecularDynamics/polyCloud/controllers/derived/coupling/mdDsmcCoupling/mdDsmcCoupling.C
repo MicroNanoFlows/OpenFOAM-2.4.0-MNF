@@ -1065,9 +1065,9 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
                             molHistory_[ifacepts][pts]->v()[0] = velocity[0];
                             molHistory_[ifacepts][pts]->v()[1] = velocity[1];
                             molHistory_[ifacepts][pts]->v()[2] = velocity[2];
-                        }
 
-                        molHistory_[ifacepts][pts]->updateAfterMove(cP, trackTime);
+                            molHistory_[ifacepts][pts]->updateAfterMove(cP, trackTime);
+                        }
 
                         molCount++;
                     }
@@ -1556,8 +1556,6 @@ mdDsmcCoupling::cplMoleculeInsert mdDsmcCoupling::insertCoupledMolecules()
 #ifdef USE_MUI
     if(molsReceived_.size() > 0)
     {
-        const constantMoleculeProperties& cP = molCloud_.cP();
-        const scalar trackTime = mesh_.time().deltaT().value();
         moleculeInsert newMol;
 
         forAll(molsReceived_, mol)
@@ -1572,8 +1570,6 @@ mdDsmcCoupling::cplMoleculeInsert mdDsmcCoupling::insertCoupledMolecules()
             {
                 newMolInsert.nmolsInserted++;
                 newMolInsert.nIts += newMol.addedIterations;
-
-                newMol.mol->updateAfterMove(cP, trackTime);
             }
         }
     }
