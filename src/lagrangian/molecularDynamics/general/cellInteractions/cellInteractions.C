@@ -1290,8 +1290,7 @@ void Foam::cellInteractions<ParticleType>::setReferredParticles
 
     pBufs.finishedSends(allNTrans);
 
-    bool transfered;
-    transfered = false;
+    bool transfered = false;
 
     forAll(allNTrans, i)
     {

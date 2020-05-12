@@ -2264,14 +2264,16 @@ polyMolecule* mdDsmcCoupling::checkForOverlaps(polyMolecule* newMol, const scala
 	polyMolecule* molJ = NULL;
 
 	// Real-Real interactions
+	const cellInteractions<polyMolecule>& il = molCloud_.il();
+	const labelListList& dil = il.dil();
+	const List<DynamicList<polyMolecule*> >& cellOccupancy = molCloud_.cellOccupancy();
 
-    forAll(molCloud_.il().dil(), d)
-    {
-        forAll(molCloud_.cellOccupancy()[d],cellIMols)
+	{
+        forAll(dil, d)
         {
-            forAll(molCloud_.il().dil()[d], interactingCells)
+            forAll(dil[d], interactingCells)
             {
-                List<polyMolecule*> cellJ =	molCloud_.cellOccupancy()[molCloud_.il().dil()[d][interactingCells]];
+                List<polyMolecule*> cellJ =	cellOccupancy[dil[d][interactingCells]];
 
                 forAll(cellJ, cellJMols)
                 {
@@ -2283,40 +2285,39 @@ polyMolecule* mdDsmcCoupling::checkForOverlaps(polyMolecule* newMol, const scala
                     }
                 }
             }
-        }
 
-        forAll(molCloud_.cellOccupancy()[d], cellIOtherMols)
-        {
-            molJ = molCloud_.cellOccupancy()[d][cellIOtherMols];
-
-            if (molJ > newMol)
+            forAll(cellOccupancy[d], cellIOtherMols)
             {
+                molJ = cellOccupancy[d][cellIOtherMols];
+
+                //if (molJ > newMol)
+                //{
+                    if(molCloud_.evaluatePotentialLimit(newMol, molJ, potEnergyLimit))
+                    {
+                        return molJ;
+                    }
+                //}
+            }
+        }
+	}
+
+	{
+        // Real-Referred interactions
+        forAll(il.refCellsParticles(), r)
+        {
+            const List<label>& realCells = il.refCells()[r].neighbouringCells();
+
+            forAll(il.refCellsParticles()[r], i)
+            {
+                molJ = il.refCellsParticles()[r][i];
+
                 if(molCloud_.evaluatePotentialLimit(newMol, molJ, potEnergyLimit))
                 {
                     return molJ;
                 }
             }
         }
-    }
-
-    // Real-Referred interactions
-    forAll(molCloud_.il().refCellsParticles(), r)
-    {
-        const List<label>& realCells = molCloud_.il().refCells()[r].neighbouringCells();
-
-        forAll(molCloud_.il().refCellsParticles()[r], i)
-        {
-            molJ = molCloud_.il().refCellsParticles()[r][i];
-
-            forAll(realCells, rC)
-            {
-                if(molCloud_.evaluatePotentialLimit(newMol, molJ, potEnergyLimit))
-                {
-                    return molJ;
-                }
-            }
-        }
-    }
+	}
 
 	return NULL;
 }
