@@ -2198,8 +2198,7 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
                             if(newMol != NULL)
                             {
                                 // Delete the created molecule as it will exceed energy limit according to force-field calculation
-                                molCloud_.removeMolFromCellOccupancy(newMol);
-                                molCloud_.deleteParticle(*newMol);
+                                delete(newMol);
                                 newMol = NULL;
                             }
 
@@ -2290,13 +2289,13 @@ polyMolecule* mdDsmcCoupling::checkForOverlaps(polyMolecule* newMol, const scala
             {
                 molJ = cellOccupancy[d][cellIOtherMols];
 
-                //if (molJ > newMol)
-                //{
+                if (molJ > newMol)
+                {
                     if(molCloud_.evaluatePotentialLimit(newMol, molJ, potEnergyLimit))
                     {
                         return molJ;
                     }
-                //}
+                }
             }
         }
 	}
@@ -2305,8 +2304,6 @@ polyMolecule* mdDsmcCoupling::checkForOverlaps(polyMolecule* newMol, const scala
         // Real-Referred interactions
         forAll(il.refCellsParticles(), r)
         {
-            const List<label>& realCells = il.refCells()[r].neighbouringCells();
-
             forAll(il.refCellsParticles()[r], i)
             {
                 molJ = il.refCellsParticles()[r][i];
