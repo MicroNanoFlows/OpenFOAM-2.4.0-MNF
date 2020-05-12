@@ -349,7 +349,6 @@ inline bool Foam::polyMoleculeCloud::evaluatePotentialLimit
                         scalar chargeJ = cP_.siteCharges(idJ)[sJ];
 
                         std::cout << "rsIsJMag: " << rsIsJMag << std::endl;
-                        std::cout << "k value: " << k << std::endl;
                         std::cout << "Overlap elec energy: " << mag(chargeI*chargeJ*p_.pairPots().electrostaticPot()->energy(rsIsJMag)) << std::endl;
         
                         if
