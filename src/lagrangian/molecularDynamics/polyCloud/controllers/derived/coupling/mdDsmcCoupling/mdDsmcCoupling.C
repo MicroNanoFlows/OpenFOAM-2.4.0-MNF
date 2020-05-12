@@ -2199,7 +2199,6 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
                             {
                                 // Delete the created molecule as it will exceed energy limit according to force-field calculation
                                 delete(newMol);
-                                newMol = NULL;
                             }
 
                             std::cout << "mdDsmcCoupling::insertMolecule(): Molecule insertion attempted outside of mesh whilst finding new location, molecule not inserted" << std::endl;
