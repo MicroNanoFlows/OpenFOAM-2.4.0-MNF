@@ -563,6 +563,7 @@ mdDsmcCoupling::mdDsmcCoupling
     if (propsDict_.found("potentialEnergyInsertLimit"))
     {
         overlapEnergyLimit_ = readScalar(propsDict_.lookup("potentialEnergyInsertLimit"));
+        overlapEnergyLimit_ /= rU_.refEnergy();
     }
 
     if (propsDict_.found("insertIterations"))
