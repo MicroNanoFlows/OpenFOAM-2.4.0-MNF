@@ -66,12 +66,11 @@ inline Foam::vector Foam::cachedRandomMD::vector01()
 // with zero mean and unity variance N(0, 1)
 inline Foam::scalar Foam::cachedRandomMD::GaussNormal()
 {
-	//static bool iset = false;
-	//static scalar gset;
-
     if (!iset_)
     {
-  	    scalar v1 = 0.0, v2 = 0.0, rsq = 0.0;
+  	    scalar v1 = 0.0;
+  	    scalar v2 = 0.0;
+  	    scalar rsq = 0.0;
 
     	while(rsq == 0.0 || rsq >= 1.0)
     	{
@@ -85,6 +84,16 @@ inline Foam::scalar Foam::cachedRandomMD::GaussNormal()
 		scalar fac = Foam::sqrt(absVal);
         gset_ = v1 * fac;
         iset_ = true;
+
+        if(v1 * fac == 0)
+        {
+            std::cout << "v1*fac = 0; rsq = " << rsq << "; fac = " << fac << "; v1 = " << v1 << std::endl;
+        }
+
+        if(v2 * fac == 0)
+        {
+            std::cout << "v2*fac = 0; rsq = " << rsq << "; fac = " << fac << "; v2 = " << v2 << std::endl;
+        }
 
         return v2 * fac;
     }

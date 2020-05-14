@@ -106,12 +106,16 @@ vector polyConfiguration::equipartitionLinearVelocity
     scalar mass
 )
 {
-    return sqrt(molCloud_.redUnits().kB()*temperature/mass)*vector
+    vector rndVec
     (
         molCloud_.rndGen().GaussNormalMD<scalar>(),
         molCloud_.rndGen().GaussNormalMD<scalar>(),
         molCloud_.rndGen().GaussNormalMD<scalar>()
     );
+
+    vector rndVel = sqrt(molCloud_.redUnits().kB()*temperature/mass) * rndVec;
+
+    return rndVel;
 }
 
 vector polyConfiguration::equipartitionAngularMomentum
