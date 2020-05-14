@@ -1311,7 +1311,7 @@ Foam::label Foam::osRandomInteger()
 Foam::scalar Foam::osRandomDouble()
 {
 #ifdef USE_RANDOM
-    return (scalar)random()/INT_MAX;
+    return (scalar)random()/(scalar)RAND_MAX;
 #else
     return drand48();
 #endif

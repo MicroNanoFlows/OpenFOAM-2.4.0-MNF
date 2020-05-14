@@ -88,6 +88,9 @@ private:
         //- Cache size multiplier
 		label cacheSizeMult_;
 
+		bool iset_;
+		scalar gset_;
+
 
     // Private Member Functions
 

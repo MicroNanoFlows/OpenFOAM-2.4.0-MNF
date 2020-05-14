@@ -66,14 +66,14 @@ inline Foam::vector Foam::cachedRandomMD::vector01()
 // with zero mean and unity variance N(0, 1)
 inline Foam::scalar Foam::cachedRandomMD::GaussNormal()
 {
-	static bool iset = false;
-	static scalar gset;
+	//static bool iset = false;
+	//static scalar gset;
 
-    if (!iset)
+    if (!iset_)
     {
-    	volatile long double v1 = 0.0, v2 = 0.0, rsq = 0.0;
+  	    scalar v1 = 0.0, v2 = 0.0, rsq = 0.0;
 
-    	while(rsq >= 1.0 || rsq == 0.0)
+    	while(rsq == 0.0 || rsq >= 1.0)
     	{
     		v1 = (2.0*scalar01())-1.0;
 			v2 = (2.0*scalar01())-1.0;
@@ -81,17 +81,17 @@ inline Foam::scalar Foam::cachedRandomMD::GaussNormal()
     	}
 
     	//Although log(rsq) should always return a negative number, this is wrapped in an abs() to ensure the value passed to sqrt() is positive
-    	scalar absVal = abs(static_cast<scalar>(-2.0*(Foam::log(static_cast<scalar>(rsq))/static_cast<scalar>(rsq))));
+    	scalar absVal = abs(-2.0 * (Foam::log(rsq) / rsq));
 		scalar fac = Foam::sqrt(absVal);
-        gset = static_cast<scalar>(v1)*fac;
-        iset = true;
+        gset_ = v1 * fac;
+        iset_ = true;
 
-        return static_cast<scalar>(v2)*fac;
+        return v2 * fac;
     }
     else
     {
-        iset = false;
-        return gset;
+        iset_ = false;
+        return gset_;
     }
 }
 
@@ -128,7 +128,9 @@ Foam::cachedRandomMD::cachedRandomMD(const label seed, const label cacheSizeMult
     samples_(0),
     sampleI_(-1),
 	cacheI_(0),
-	cacheSizeMult_(cacheSizeMult)
+	cacheSizeMult_(cacheSizeMult),
+	iset_(false),
+	gset_(0)
 {
     if (seed > 1)
     {
@@ -143,7 +145,9 @@ Foam::cachedRandomMD::cachedRandomMD(const cachedRandomMD& cr, const bool reset)
     samples_(cr.samples_),
     sampleI_(cr.sampleI_),
 	cacheI_(cr.cacheI_),
-	cacheSizeMult_(cr.cacheSizeMult_)
+	cacheSizeMult_(cr.cacheSizeMult_),
+	iset_(cr.iset_),
+    gset_(cr.gset_)
 {
     if (sampleI_ == -1)
     {
@@ -172,7 +176,9 @@ Foam::cachedRandomMD::cachedRandomMD
     samples_(0),
     sampleI_(-1),
     cacheI_(0),
-    cacheSizeMult_(cacheSizeMult)
+    cacheSizeMult_(cacheSizeMult),
+    iset_(false),
+    gset_(0)
 {
     if (seed > 1)
     {
