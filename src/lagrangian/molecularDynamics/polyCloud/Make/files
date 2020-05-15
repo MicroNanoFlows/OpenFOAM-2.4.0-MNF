@@ -42,6 +42,7 @@ potentials/pairPotentials/derived/pairPotentialModels/harmonicPotential/harmonic
 potentials/pairPotentials/derived/electrostaticPotentialModels/coulombShifted/coulombShifted.C
 potentials/pairPotentials/derived/electrostaticPotentialModels/coulomb/coulomb.C
 potentials/pairPotentials/derived/electrostaticPotentialModels/coulombEqn/coulombEqn.C
+potentials/pairPotentials/derived/electrostaticPotentialModels/noElectrostatic/noElectrostatic.C
 
 /*potentials/pairPotentials/derived/electrostaticPotentialModels/shortRangeElectrostatic/shortRangeElectrostatic.C*/
 
