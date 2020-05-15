@@ -142,8 +142,6 @@ autoPtr<pairPotentialModel> pairPotentialModel::New
         dict.lookup("pairPotential")
     );
 
-    pairPotentialModelName_ = pairPotentialModelName;
-
     Info<< "Selecting model: "
          << pairPotentialModelName << endl;
 
