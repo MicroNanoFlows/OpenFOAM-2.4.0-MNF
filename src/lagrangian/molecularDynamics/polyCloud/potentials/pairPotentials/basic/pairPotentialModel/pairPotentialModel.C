@@ -67,58 +67,61 @@ pairPotentialModel::pairPotentialModel
     writeTables_(false),
     exclusions_(false)   
 {
-    writeTables_ = false;  
+    if(pairPotentialModelName != "noElectrostatic")
+    {
+        writeTables_ = false;
 
-    if (dict.found("writeTables"))
-    {
-        writeTables_ = Switch(dict.lookup("writeTables"));
-    }
-    
-    if(rU_.runReducedUnits())
-    {
-        rCut_ /= rU_.refLength();
-        rMin_ /= rU_.refLength();
-        dr_ /= rU_.refLength();
-        rCutSqr_ = rCut_*rCut_;
-    }
-    
-    // splitting the name using a delimeter "A-B" => "A" and "B"
-    idList_.setSize(2);
-    
-//     Info << nl << "name = " << name_ << endl;
-    
-    std::string s = name_;
-    std::string delimiter = "-";
-    
-    size_t pos = 0;
-    std::string token;
-
-    while ((pos = s.find(delimiter)) != std::string::npos) {
-        token = s.substr(0, pos);
-        idList_[0]=token;
-        s.erase(0, pos + delimiter.length());
-        idList_[1]=s;
-    }
-    
-//     Info << " idList = " << idList_ << endl;
-    
-    
-    // exclusions 
-    if(dict.found("exclusionModel"))
-    {
-        exclusionModel_ = autoPtr<exclusionModel>
-        (
-            exclusionModel::New(mesh, molCloud_, dict)
-        );
-        
-        if(exclusionModel_->type() != "noExclusions")
+        if (dict.found("writeTables"))
         {
-            exclusions_ = true;
+            writeTables_ = Switch(dict.lookup("writeTables"));
         }
+
+        if(rU_.runReducedUnits())
+        {
+            rCut_ /= rU_.refLength();
+            rMin_ /= rU_.refLength();
+            dr_ /= rU_.refLength();
+            rCutSqr_ = rCut_*rCut_;
+        }
+
+        // splitting the name using a delimeter "A-B" => "A" and "B"
+        idList_.setSize(2);
+
+    //     Info << nl << "name = " << name_ << endl;
+
+        std::string s = name_;
+        std::string delimiter = "-";
+
+        size_t pos = 0;
+        std::string token;
+
+        while ((pos = s.find(delimiter)) != std::string::npos) {
+            token = s.substr(0, pos);
+            idList_[0]=token;
+            s.erase(0, pos + delimiter.length());
+            idList_[1]=s;
+        }
+
+    //     Info << " idList = " << idList_ << endl;
+
+
+        // exclusions
+        if(dict.found("exclusionModel"))
+        {
+            exclusionModel_ = autoPtr<exclusionModel>
+            (
+                exclusionModel::New(mesh, molCloud_, dict)
+            );
+
+            if(exclusionModel_->type() != "noExclusions")
+            {
+                exclusions_ = true;
+            }
+        }
+
+    /*    Info << "pairPotentialModel, " << name_ <<" exclusionModel =  "
+        << exclusions_ << endl;  */
     }
-    
-/*    Info << "pairPotentialModel, " << name_ <<" exclusionModel =  " 
-    << exclusions_ << endl;  */  
 }
 
 
