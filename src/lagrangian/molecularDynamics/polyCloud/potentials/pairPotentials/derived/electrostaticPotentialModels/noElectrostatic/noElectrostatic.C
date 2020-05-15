@@ -52,8 +52,7 @@ noElectrostatic::noElectrostatic
     const dictionary& dict
 )
 :
-    pairPotentialModel(mesh, molCloud, redUnits, name, dict),
-    propsDict_(dict.subDict(typeName + "Coeffs"))
+    pairPotentialModel(mesh, molCloud, redUnits, name, dict)
 {
 }
 

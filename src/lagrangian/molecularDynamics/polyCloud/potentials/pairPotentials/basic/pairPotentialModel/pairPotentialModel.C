@@ -57,9 +57,9 @@ pairPotentialModel::pairPotentialModel
     pairPotentialProperties_(dict),    
     name_(name),
     idList_(),
-    rCut_(readScalar(dict.lookup("rCut"))),
-    rMin_(readScalar(dict.lookup("rMin"))),
-    dr_(readScalar(dict.lookup("dr"))),
+    rCut_(0),
+    rMin_(0),
+    dr_(0),
     useTables_(true),
     forceLookup_(0),
     energyLookup_(0),
@@ -74,6 +74,10 @@ pairPotentialModel::pairPotentialModel
 
     if(pairPotentialModelName != "noElectrostatic")
     {
+        rCut_ = readScalar(dict.lookup("rCut"));
+        rMin_ = readScalar(dict.lookup("rMin"));
+        dr_ = readScalar(dict.lookup("dr"));
+
         writeTables_ = false;
 
         if (dict.found("writeTables"))
