@@ -67,18 +67,13 @@ pairPotentialModel::pairPotentialModel
     writeTables_(false),
     exclusions_(false)   
 {
-    word pairPotentialModelName
-    (
-        dict.lookup("pairPotential")
-    );
+    pairPotentialModelName_ = dict.lookup("pairPotential");
 
-    if(pairPotentialModelName != "noElectrostatic")
+    if(pairPotentialModelName_ != "noElectrostatic")
     {
         rCut_ = readScalar(dict.lookup("rCut"));
         rMin_ = readScalar(dict.lookup("rMin"));
         dr_ = readScalar(dict.lookup("dr"));
-
-        writeTables_ = false;
 
         if (dict.found("writeTables"))
         {
@@ -96,8 +91,6 @@ pairPotentialModel::pairPotentialModel
         // splitting the name using a delimeter "A-B" => "A" and "B"
         idList_.setSize(2);
 
-    //     Info << nl << "name = " << name_ << endl;
-
         std::string s = name_;
         std::string delimiter = "-";
 
@@ -110,9 +103,6 @@ pairPotentialModel::pairPotentialModel
             s.erase(0, pos + delimiter.length());
             idList_[1]=s;
         }
-
-    //     Info << " idList = " << idList_ << endl;
-
 
         // exclusions
         if(dict.found("exclusionModel"))
@@ -127,9 +117,6 @@ pairPotentialModel::pairPotentialModel
                 exclusions_ = true;
             }
         }
-
-    /*    Info << "pairPotentialModel, " << name_ <<" exclusionModel =  "
-        << exclusions_ << endl;  */
     }
 }
 
@@ -145,23 +132,20 @@ autoPtr<pairPotentialModel> pairPotentialModel::New
     const dictionary& dict
 )
 {
-    word pairPotentialModelName
-    (
-        dict.lookup("pairPotential")
-    );
+    pairPotentialModelName_ = dict.lookup("pairPotential");
 
     Info<< "Selecting model: "
-         << pairPotentialModelName << endl;
+         << pairPotentialModelName_ << endl;
 
     dictionaryConstructorTable::iterator cstrIter =
-        dictionaryConstructorTablePtr_->find(pairPotentialModelName);
+        dictionaryConstructorTablePtr_->find(pairPotentialModelName_);
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
         FatalError
             << "pairPotentialModel::New(const dictionary&) : " << endl
             << "    unknown pairPotential type "
-            << pairPotentialModelName
+            << pairPotentialModelName_
             << ", constructor not in hash table" << endl << endl
             << "    Valid types are :" << endl;
         Info<< dictionaryConstructorTablePtr_->toc() << abort(FatalError);
@@ -364,8 +348,11 @@ scalar pairPotentialModel::energyDerivative
 
 void pairPotentialModel::output(const fileName& pathName)
 {
-    writeEnergyAndForceTables(pathName);
-    write(pathName);
+    if(pairPotentialModelName_ != "noElectrostatic")
+    {
+        writeEnergyAndForceTables(pathName);
+        write(pathName);
+    }
 }
 
 void pairPotentialModel::writeEnergyAndForceTables(const fileName& pathName)

@@ -92,6 +92,8 @@ protected:
         
         bool useTables_;
         
+        word pairPotentialModelName_;
+
 //         word energyScalingFunction_;
 
 
