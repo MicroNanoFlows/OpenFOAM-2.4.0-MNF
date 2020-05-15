@@ -80,7 +80,7 @@ inline Foam::scalar Foam::cachedRandomMD::GaussNormal()
     	}
 
     	//Although log(rsq) should always return a negative number, this is wrapped in an abs() to ensure the value passed to sqrt() is positive
-		scalar fac = Foam::sqrt( fabs(-2.0 * (Foam::log(rsq) / rsq) );
+		scalar fac = Foam::sqrt( fabs(-2.0 * (Foam::log(rsq) / rsq)) );
         gset_ = v1 * fac;
         iset_ = true;
 
