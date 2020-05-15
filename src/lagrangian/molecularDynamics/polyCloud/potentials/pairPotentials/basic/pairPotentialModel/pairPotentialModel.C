@@ -67,6 +67,11 @@ pairPotentialModel::pairPotentialModel
     writeTables_(false),
     exclusions_(false)   
 {
+    word pairPotentialModelName
+    (
+        dict.lookup("pairPotential")
+    );
+
     if(pairPotentialModelName != "noElectrostatic")
     {
         writeTables_ = false;
