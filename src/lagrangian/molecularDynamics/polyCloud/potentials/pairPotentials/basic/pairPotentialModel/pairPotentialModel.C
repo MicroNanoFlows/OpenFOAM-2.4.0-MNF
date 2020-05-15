@@ -67,7 +67,12 @@ pairPotentialModel::pairPotentialModel
     writeTables_(false),
     exclusions_(false)   
 {
-    pairPotentialModelName_ = dict.lookup("pairPotential");
+    word pairPotentialModelName
+    (
+        dict.lookup("pairPotential")
+    );
+
+    pairPotentialModelName_ = pairPotentialModelName;
 
     if(pairPotentialModelName_ != "noElectrostatic")
     {
@@ -132,20 +137,25 @@ autoPtr<pairPotentialModel> pairPotentialModel::New
     const dictionary& dict
 )
 {
-    pairPotentialModelName_ = dict.lookup("pairPotential");
+    word pairPotentialModelName
+    (
+        dict.lookup("pairPotential")
+    );
+
+    pairPotentialModelName_ = pairPotentialModelName;
 
     Info<< "Selecting model: "
-         << pairPotentialModelName_ << endl;
+         << pairPotentialModelName << endl;
 
     dictionaryConstructorTable::iterator cstrIter =
-        dictionaryConstructorTablePtr_->find(pairPotentialModelName_);
+        dictionaryConstructorTablePtr_->find(pairPotentialModelName);
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
         FatalError
             << "pairPotentialModel::New(const dictionary&) : " << endl
             << "    unknown pairPotential type "
-            << pairPotentialModelName_
+            << pairPotentialModelName
             << ", constructor not in hash table" << endl << endl
             << "    Valid types are :" << endl;
         Info<< dictionaryConstructorTablePtr_->toc() << abort(FatalError);
