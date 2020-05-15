@@ -2263,6 +2263,22 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
 
 polyMolecule* mdDsmcCoupling::checkForOverlaps(polyMolecule* newMol, const scalar& potEnergyLimit)
 {
+    IDLList<polyMolecule>::iterator mol(molCloud_.begin());
+
+    for(mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
+    {
+        if(molCloud_.evaluatePotentialLimit(newMol, (polyMolecule*)(mol()), potEnergyLimit))
+        {
+            return (polyMolecule*)(mol());
+        }
+    }
+
+    return NULL;
+}
+
+/*
+polyMolecule* mdDsmcCoupling::checkForOverlaps(polyMolecule* newMol, const scalar& potEnergyLimit)
+{
 	polyMolecule* molJ = NULL;
 
 	// Real-Real interactions
@@ -2321,6 +2337,7 @@ polyMolecule* mdDsmcCoupling::checkForOverlaps(polyMolecule* newMol, const scala
 
 	return NULL;
 }
+*/
 
 scalar mdDsmcCoupling::calcTemperature()
 {
