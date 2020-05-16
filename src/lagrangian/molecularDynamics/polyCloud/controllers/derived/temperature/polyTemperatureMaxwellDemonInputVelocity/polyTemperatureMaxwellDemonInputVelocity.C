@@ -159,7 +159,7 @@ void polyTemperatureMaxwellDemonInputVelocity::controlAfterVelocityII()
         {
             vector velocity = vector::zero;
             
-            scalar y = abs(zeroPoint_ - mol().position().y());
+            scalar y = fabs(zeroPoint_ - mol().position().y());
             
             label index = label(y/binWidth_);
             
