@@ -1174,12 +1174,6 @@ void mdDsmcCoupling::sendCoupledRegionForces()
                             molCentre[1] = molecule->position()[1] * oneOverRefLength_;
                             molCentre[2] = molecule->position()[2] * oneOverRefLength_;
 
-                            // Push molecule type
-                            sendInterfaces_[iface]->push("type_region", molCentre, static_cast<std::string>(molNames_[typeIndex]));
-
-                            // Push molecule ID from receive history
-                            sendInterfaces_[iface]->push("id_region", molCentre, static_cast<label>(molId_[iface][mol]));
-
                             vector siteForcesAccum(vector::zero);
 
                             forAll(molecule->siteForces(), s)
@@ -1189,6 +1183,12 @@ void mdDsmcCoupling::sendCoupledRegionForces()
 
                             if(siteForcesAccum[0] != 0 || siteForcesAccum[1] != 0 || siteForcesAccum[2] != 0)
                             {
+                                // Push molecule type
+                                sendInterfaces_[iface]->push("type_region", molCentre, static_cast<std::string>(molNames_[typeIndex]));
+
+                                // Push molecule ID from receive history
+                                sendInterfaces_[iface]->push("id_region", molCentre, static_cast<label>(molId_[iface][mol]));
+
                                 // Push the molecule site forces to the interface
                                 sendInterfaces_[iface]->push("force_x_region", molCentre, siteForcesAccum[0] * rU_.refForce());
                                 sendInterfaces_[iface]->push("force_y_region", molCentre, siteForcesAccum[1] * rU_.refForce());
