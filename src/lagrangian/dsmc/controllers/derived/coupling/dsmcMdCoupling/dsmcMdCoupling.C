@@ -961,6 +961,8 @@ void dsmcMdCoupling::receiveCoupledRegionForces()
                         applyForce[1] = 0.5 * (rcvForceY[iface][parcel] / parcMass) * mesh_.time().deltaTValue();
                         applyForce[2] = 0.5 * (rcvForceZ[iface][parcel] / parcMass) * mesh_.time().deltaTValue();
 
+                        std::cout << applyForce[0] << "," << applyForce[1] << "," << applyForce[2] << std::endl;
+
                         parcelsInRegion[parcel]->U() += applyForce;
                     }
                 }

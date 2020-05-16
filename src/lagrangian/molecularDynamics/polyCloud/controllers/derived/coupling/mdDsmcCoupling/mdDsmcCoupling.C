@@ -1187,7 +1187,7 @@ void mdDsmcCoupling::sendCoupledRegionForces()
                                 siteForcesAccum += molecule->siteForces()[s];
                             }
 
-                            if(siteForcesAccum[0] > 0 || siteForcesAccum[1] > 0 || siteForcesAccum[2] > 0)
+                            if(siteForcesAccum[0] != 0 || siteForcesAccum[1] != 0 || siteForcesAccum[2] != 0)
                             {
                                 // Push the molecule site forces to the interface
                                 sendInterfaces_[iface]->push("force_x_region", molCentre, siteForcesAccum[0] * rU_.refForce());
