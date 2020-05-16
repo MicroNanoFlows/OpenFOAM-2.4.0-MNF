@@ -1168,12 +1168,6 @@ void mdDsmcCoupling::sendCoupledRegionForces()
 
                         if(typeIndex != -1)
                         {
-                            // Get the molecule centre
-                            mui::point3d molCentre;
-                            molCentre[0] = molecule->position()[0] * oneOverRefLength_;
-                            molCentre[1] = molecule->position()[1] * oneOverRefLength_;
-                            molCentre[2] = molecule->position()[2] * oneOverRefLength_;
-
                             vector siteForcesAccum(vector::zero);
 
                             forAll(molecule->siteForces(), s)
@@ -1183,6 +1177,12 @@ void mdDsmcCoupling::sendCoupledRegionForces()
 
                             if(siteForcesAccum[0] != 0 || siteForcesAccum[1] != 0 || siteForcesAccum[2] != 0)
                             {
+                                // Get the molecule centre
+                                mui::point3d molCentre;
+                                molCentre[0] = molecule->position()[0] * oneOverRefLength_;
+                                molCentre[1] = molecule->position()[1] * oneOverRefLength_;
+                                molCentre[2] = molecule->position()[2] * oneOverRefLength_;
+
                                 // Push molecule type
                                 sendInterfaces_[iface]->push("type_region", molCentre, static_cast<std::string>(molNames_[typeIndex]));
 

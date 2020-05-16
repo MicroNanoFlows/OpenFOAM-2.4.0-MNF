@@ -947,24 +947,23 @@ void dsmcMdCoupling::receiveCoupledRegionForces()
         // Iterate through all forces received for this controller and apply if IDs match
         forAll(rcvParcId, iface)
         {
-            if(parcelsInRegion.size() == rcvParcId[iface].size())
+            forAll(parcelsInRegion, parcel)
             {
-                forAll(parcelsInRegion, parcel)
+                if(rcvParcId[iface][parcel] == parcelsInRegion[parcel]->origId())
                 {
-                    if(rcvParcId[iface][parcel] == parcelsInRegion[parcel]->origId())
-                    {
-                        scalar parcMass(cloud_.constProps(parcelsInRegion[parcel]->typeId()).mass());
+                    scalar parcMass(cloud_.constProps(parcelsInRegion[parcel]->typeId()).mass());
 
-                        vector applyForce;
+                    vector applyForce;
 
-                        applyForce[0] = 0.5 * (rcvForceX[iface][parcel] / parcMass) * mesh_.time().deltaTValue();
-                        applyForce[1] = 0.5 * (rcvForceY[iface][parcel] / parcMass) * mesh_.time().deltaTValue();
-                        applyForce[2] = 0.5 * (rcvForceZ[iface][parcel] / parcMass) * mesh_.time().deltaTValue();
+                    applyForce[0] = 0.5 * (rcvForceX[iface][parcel] / parcMass) * mesh_.time().deltaTValue();
+                    applyForce[1] = 0.5 * (rcvForceY[iface][parcel] / parcMass) * mesh_.time().deltaTValue();
+                    applyForce[2] = 0.5 * (rcvForceZ[iface][parcel] / parcMass) * mesh_.time().deltaTValue();
 
-                        std::cout << applyForce[0] << "," << applyForce[1] << "," << applyForce[2] << std::endl;
+                    std::cout << applyForce[0] << "," << applyForce[1] << "," << applyForce[2] << std::endl;
 
-                        parcelsInRegion[parcel]->U() += applyForce;
-                    }
+                    parcelsInRegion[parcel]->U() += applyForce;
+
+                    break;
                 }
             }
         }
