@@ -242,8 +242,6 @@
                 //Check if smart send should be enabled for this interface
                 if(twoDInterfaces.interfaces->getInterfaceSmartSendStatus(i))
                 {
-                    scalar oneOverRefLength = 1.0 / twoDInterfaces.refLength;
-
                     label extentsDir = -1; //0 = 3D; 1 = Y/Z; 2 = X/Z; 3 = X/Y
 
                     if(extents[0] >= (0.0 - VSMALL) && extents[0] <= (0.0 + VSMALL)) // X extent is zero, 2D plane is in Y/Z
@@ -296,10 +294,10 @@
                                 end[1] = twoDInterfaces.interfaces->getInterfaceSendDomEnd(i)[1];
                             }
 
-                            start[0] *= oneOverRefLength;
-                            start[1] *= oneOverRefLength;
-                            end[0] *= oneOverRefLength;
-                            end[1] *= oneOverRefLength;
+                            start[0] *= twoDInterfaces.refLength;
+                            start[1] *= twoDInterfaces.refLength;
+                            end[0] *= twoDInterfaces.refLength;
+                            end[1] *= twoDInterfaces.refLength;
 
                             mui::geometry::box2d region_2d(start, end);
 
@@ -307,11 +305,11 @@
                             if(twoDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                             {
                                 label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value())+1;
-                                twoDInterfaces.interfaces->getInterface(i)->announce_send_span(static_cast<label>(0), totalIter, region_2d);
+                                twoDInterfaces.interfaces->getInterface(i)->announce_send_span(0, totalIter, region_2d);
                             }
                             else //- Using direct time based coupling
                             {
-                                twoDInterfaces.interfaces->getInterface(i)->announce_send_span((runTime.startTime().value() / twoDInterfaces.refTime), (runTime.endTime().value() / twoDInterfaces.refTime), region_2d);
+                                twoDInterfaces.interfaces->getInterface(i)->announce_send_span((runTime.startTime().value() * twoDInterfaces.refTime), (runTime.endTime().value() * twoDInterfaces.refTime), region_2d);
                             }
                         }
 
@@ -343,10 +341,10 @@
                                 end[1] = twoDInterfaces.interfaces->getInterfaceReceiveDomEnd(i)[1];
                             }
 
-                            start[0] *= oneOverRefLength;
-                            start[1] *= oneOverRefLength;
-                            end[0] *= oneOverRefLength;
-                            end[1] *= oneOverRefLength;
+                            start[0] *= twoDInterfaces.refLength;
+                            start[1] *= twoDInterfaces.refLength;
+                            end[0] *= twoDInterfaces.refLength;
+                            end[1] *= twoDInterfaces.refLength;
 
                             mui::geometry::box2d region_2d(start, end);
 
@@ -354,11 +352,11 @@
                             if(twoDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                             {
                                 label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value())+1;
-                                twoDInterfaces.interfaces->getInterface(i)->announce_recv_span(static_cast<label>(0), totalIter, region_2d);
+                                twoDInterfaces.interfaces->getInterface(i)->announce_recv_span(0, totalIter, region_2d);
                             }
                             else //- Using direct time based coupling
                             {
-                                twoDInterfaces.interfaces->getInterface(i)->announce_recv_span((runTime.startTime().value() / twoDInterfaces.refTime), (runTime.endTime().value() / twoDInterfaces.refTime), region_2d);
+                                twoDInterfaces.interfaces->getInterface(i)->announce_recv_span((runTime.startTime().value() * twoDInterfaces.refTime), (runTime.endTime().value() * twoDInterfaces.refTime), region_2d);
                             }
                         }
 
@@ -392,8 +390,6 @@
             {
                 if(threeDInterfaces.interfaces->getInterfaceSmartSendStatus(i)) //Check if smart send should be enabled for this interface
                 {
-                    scalar oneOverRefLength = 1.0 / threeDInterfaces.refLength;
-
                     bool isThreeD = true;
 
                     //If one (or more) of the extents of the mesh is zero then mesh is not 3D
@@ -417,12 +413,12 @@
                                              threeDInterfaces.interfaces->getInterfaceSendDomEnd(i)[1],
                                              threeDInterfaces.interfaces->getInterfaceSendDomEnd(i)[2]);
 
-                            start[0] *= oneOverRefLength;
-                            start[1] *= oneOverRefLength;
-                            start[2] *= oneOverRefLength;
-                            end[0] *= oneOverRefLength;
-                            end[1] *= oneOverRefLength;
-                            end[2] *= oneOverRefLength;
+                            start[0] *= threeDInterfaces.refLength;
+                            start[1] *= threeDInterfaces.refLength;
+                            start[2] *= threeDInterfaces.refLength;
+                            end[0] *= threeDInterfaces.refLength;
+                            end[1] *= threeDInterfaces.refLength;
+                            end[2] *= threeDInterfaces.refLength;
 
                             mui::geometry::box3d region_3d(start, end);
 
@@ -430,11 +426,11 @@
                             if(threeDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                             {
                                 label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value())+1;
-                                threeDInterfaces.interfaces->getInterface(i)->announce_send_span(static_cast<label>(0), totalIter, region_3d);
+                                threeDInterfaces.interfaces->getInterface(i)->announce_send_span(0, totalIter, region_3d);
                             }
                             else //- Using direct time based coupling
                             {
-                                threeDInterfaces.interfaces->getInterface(i)->announce_send_span((runTime.startTime().value() / threeDInterfaces.refTime), (runTime.endTime().value() / threeDInterfaces.refTime), region_3d);
+                                threeDInterfaces.interfaces->getInterface(i)->announce_send_span((runTime.startTime().value() * threeDInterfaces.refTime), (runTime.endTime().value() * threeDInterfaces.refTime), region_3d);
                             }
                         }
 
@@ -449,12 +445,12 @@
                                              threeDInterfaces.interfaces->getInterfaceReceiveDomEnd(i)[1],
                                              threeDInterfaces.interfaces->getInterfaceReceiveDomEnd(i)[2]);
 
-                            start[0] *= oneOverRefLength;
-                            start[1] *= oneOverRefLength;
-                            start[2] *= oneOverRefLength;
-                            end[0] *= oneOverRefLength;
-                            end[1] *= oneOverRefLength;
-                            end[2] *= oneOverRefLength;
+                            start[0] *= threeDInterfaces.refLength;
+                            start[1] *= threeDInterfaces.refLength;
+                            start[2] *= threeDInterfaces.refLength;
+                            end[0] *= threeDInterfaces.refLength;
+                            end[1] *= threeDInterfaces.refLength;
+                            end[2] *= threeDInterfaces.refLength;
 
                             mui::geometry::box3d region_3d(start, end);
 
@@ -462,11 +458,11 @@
                             if(threeDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                             {
                                 label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value())+1;
-                                threeDInterfaces.interfaces->getInterface(i)->announce_recv_span(static_cast<label>(0), totalIter, region_3d);
+                                threeDInterfaces.interfaces->getInterface(i)->announce_recv_span(0, totalIter, region_3d);
                             }
                             else //- Using direct time based coupling
                             {
-                                threeDInterfaces.interfaces->getInterface(i)->announce_recv_span((runTime.startTime().value() / threeDInterfaces.refTime), (runTime.endTime().value() / threeDInterfaces.refTime), region_3d);
+                                threeDInterfaces.interfaces->getInterface(i)->announce_recv_span((runTime.startTime().value() * threeDInterfaces.refTime), (runTime.endTime().value() * threeDInterfaces.refTime), region_3d);
                             }
                         }
 
