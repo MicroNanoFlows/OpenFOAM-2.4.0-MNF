@@ -689,7 +689,7 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
 
             //Calculate initial KE of whole cloud
             initKe_ = calcAvgLinearKe();
-            std::cout << "Initial MD average linear KE: " << initKe_ << std::endl;
+            std::cout << "Initial MD average linear KE per molecule: " << initKe_ << std::endl;
 
             returnVal = receiveCoupledRegion(true); // Receive ghost molecules in coupled region(s) at time = startTime and commit time=1 to release other side
 
@@ -700,8 +700,8 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
                 reduce(initKeDSMC_, maxOp<scalar>());
             }
 
-            std::cout << "Initial DSMC temperature = " << initTemperatureDSMC_ << std::endl;
-            std::cout << "Initial DSMC average linear KE = " << initKeDSMC_ << std::endl;
+            std::cout << "Initial DSMC temperature: " << initTemperatureDSMC_ << std::endl;
+            std::cout << "Initial DSMC average linear KE per parcel: " << initKeDSMC_ << std::endl;
 
             if(initScaling_)
             {
@@ -731,7 +731,7 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
 
                 //Calculate new KE of whole cloud
                 scalar newLinearKE = calcAvgLinearKe();
-                std::cout << "Scaled MD average linear KE: " << newLinearKE << std::endl;
+                std::cout << "Scaled MD average linear KE per molecule: " << newLinearKE << std::endl;
             }
         }
     }
@@ -2441,6 +2441,7 @@ scalar mdDsmcCoupling::calcTemperature()
 scalar mdDsmcCoupling::calcAvgLinearKe()
 {
     scalar avgKe = 0;
+    label count = 0;
 
     IDLList<polyMolecule>::iterator mol(molCloud_.begin());
 
@@ -2450,7 +2451,13 @@ scalar mdDsmcCoupling::calcAvgLinearKe()
         {
             const scalar& massI = molCloud_.cP().mass(mol().id()) * rU_.refMass();
             avgKe += (0.5 * massI)*(magSqr(mol().v() * rU_.refVelocity()));
+            count++;
         }
+    }
+
+    if(avgKe > 0)
+    {
+        avgKe /= static_cast<scalar>(count);
     }
 
     return avgKe;

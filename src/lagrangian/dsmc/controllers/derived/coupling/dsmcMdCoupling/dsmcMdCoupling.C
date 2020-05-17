@@ -707,13 +707,13 @@ void dsmcMdCoupling::initialConfiguration(label stage)
             if(Pstream::master())
             {
                 std::cout << "Initial temperature: " << initTemperature_ << std::endl;
-                std::cout << "Initial average linear KE: " << initKe_ << std::endl;
+                std::cout << "Initial average linear KE per parcel: " << initKe_ << std::endl;
             }
         }
         else
         {
             std::cout << "Initial temperature: " << initTemperature_ << std::endl;
-            std::cout << "Initial average linear KE: " << initKe_ << std::endl;
+            std::cout << "Initial average linear KE per parcel: " << initKe_ << std::endl;
         }
 
         sendCoupledRegion(true); // Send ghost parcels in coupled regions at time = startTime
@@ -1363,6 +1363,7 @@ scalar dsmcMdCoupling::calcTemperature()
 scalar dsmcMdCoupling::calcAvgLinearKe()
 {
     scalar avgKe = 0;
+    label count = 0;
 
     IDLList<dsmcParcel>::iterator parc(cloud_.begin());
 
@@ -1372,7 +1373,13 @@ scalar dsmcMdCoupling::calcAvgLinearKe()
         {
             const scalar parcMass = cloud_.constProps(parc().typeId()).mass()*cloud_.nParticle();
             avgKe += (0.5 * parcMass)*(magSqr(parc().U()));
+            count++;
         }
+    }
+
+    if(avgKe > 0)
+    {
+        avgKe /= static_cast<scalar>(count);
     }
 
     return avgKe;
