@@ -576,18 +576,12 @@ mdDsmcCoupling::mdDsmcCoupling
         output_ = Switch(propsDict_.lookup("output"));
     }
 
-    refLength_ = threeDInterfaces.refLength; //- Store the reference length
-    refTime_ = threeDInterfaces.refTime; //- Store the reference time
-
-    oneOverRefLength_ = 1.0 / refLength_;
-    oneOverRefTime_ = 1.0 / refTime_;
-    refVelocity_ = rU_.refVelocity();
-    oneOverRefVelocity_ = 1.0 / refVelocity_;
 #ifdef USE_MUI
     //Initialise exact time sampler for MUI
     chrono_sampler = new mui::chrono_sampler_exact3d();
     rcvPoints_.resize(recvInterfaces_.size());
 #endif
+
     rcvMolType_.resize(recvInterfaces_.size());
     rcvMolId_.resize(recvInterfaces_.size());
     rcvVelX_.resize(recvInterfaces_.size());
@@ -813,7 +807,7 @@ bool mdDsmcCoupling::controlAfterMove(label stage)
 
 void mdDsmcCoupling::controlAfterForces()
 {
-    sendCoupledRegionForces(); // Send the forces acting on molecules in the coupling region(s) (non-blocking)
+    sendCoupledRegionAcc(); // Send the accelerations for ghost molecules in the coupling region(s) (non-blocking)
 }
 
 bool mdDsmcCoupling::receiveCoupledRegion(bool init)
@@ -1004,7 +998,7 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
 
                 for (size_t pts = 0; pts < rcvPoints_[ifacepts].size(); pts++)
                 {
-                    point checkedPosition((rcvPoints_[ifacepts][pts][0] * refLength_), (rcvPoints_[ifacepts][pts][1] * refLength_), (rcvPoints_[ifacepts][pts][2] * refLength_));
+                    point checkedPosition((rcvPoints_[ifacepts][pts][0] / rU_.refLength()), (rcvPoints_[ifacepts][pts][1] / rU_.refLength()), (rcvPoints_[ifacepts][pts][2] / rU_.refLength()));
 
                     label cell = mesh_.findCell(checkedPosition);
 
@@ -1014,9 +1008,9 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
                         const label molId = findIndex(molNames_, rcvMolType_[ifacepts][pts]);
 
                         vector velocity;
-                        velocity[0] = rcvVelX_[ifacepts][pts] * oneOverRefVelocity_;
-                        velocity[1] = rcvVelY_[ifacepts][pts] * oneOverRefVelocity_;
-                        velocity[2] = rcvVelZ_[ifacepts][pts] * oneOverRefVelocity_;
+                        velocity[0] = rcvVelX_[ifacepts][pts] / rU_.refVelocity();
+                        velocity[1] = rcvVelY_[ifacepts][pts] / rU_.refVelocity();
+                        velocity[2] = rcvVelZ_[ifacepts][pts] / rU_.refVelocity();
 
                         if(couplingRegion_)
                         {
@@ -1145,7 +1139,7 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
     return molChanged;
 }
 
-void mdDsmcCoupling::sendCoupledRegionForces()
+void mdDsmcCoupling::sendCoupledRegionAcc()
 {
 #ifdef USE_MUI
     if(sendingRegion_)
@@ -1172,16 +1166,20 @@ void mdDsmcCoupling::sendCoupledRegionForces()
 
                             forAll(molecule->siteForces(), s)
                             {
-                                siteForcesAccum += molecule->siteForces()[s];
+                                siteForcesAccum[0] += molecule->siteForces()[s][0];
+                                siteForcesAccum[1] += molecule->siteForces()[s][1];
+                                siteForcesAccum[2] += molecule->siteForces()[s][2];
                             }
 
                             if(siteForcesAccum[0] != 0 || siteForcesAccum[1] != 0 || siteForcesAccum[2] != 0)
                             {
+                                const scalar& mass = molCloud_.cP().mass(molecule->id());
+
                                 // Get the molecule centre
                                 mui::point3d molCentre;
-                                molCentre[0] = molecule->position()[0] * oneOverRefLength_;
-                                molCentre[1] = molecule->position()[1] * oneOverRefLength_;
-                                molCentre[2] = molecule->position()[2] * oneOverRefLength_;
+                                molCentre[0] = molecule->position()[0] * rU_.refLength();
+                                molCentre[1] = molecule->position()[1] * rU_.refLength();
+                                molCentre[2] = molecule->position()[2] * rU_.refLength();
 
                                 // Push molecule type
                                 sendInterfaces_[iface]->push("type_region", molCentre, static_cast<std::string>(molNames_[typeIndex]));
@@ -1189,12 +1187,15 @@ void mdDsmcCoupling::sendCoupledRegionForces()
                                 // Push molecule ID from receive history
                                 sendInterfaces_[iface]->push("id_region", molCentre, static_cast<label>(molId_[iface][mol]));
 
-                                std::cout << "force: " << siteForcesAccum[0] << "," << siteForcesAccum[1] << "," << siteForcesAccum[2] << std::endl;
+                                // Push the molecule acceleration to the interface
+                                vector acc;
+                                acc[0] = ((siteForcesAccum[0] * rU_.refForce()) / (mass * rU_.refMass()));
+                                acc[1] = ((siteForcesAccum[1] * rU_.refForce()) / (mass * rU_.refMass()));
+                                acc[2] = ((siteForcesAccum[2] * rU_.refForce()) / (mass * rU_.refMass()));
 
-                                // Push the molecule site forces to the interface
-                                sendInterfaces_[iface]->push("force_x_region", molCentre, siteForcesAccum[0] * rU_.refForce());
-                                sendInterfaces_[iface]->push("force_y_region", molCentre, siteForcesAccum[1] * rU_.refForce());
-                                sendInterfaces_[iface]->push("force_z_region", molCentre, siteForcesAccum[2] * rU_.refForce());
+                                sendInterfaces_[iface]->push("acc_x_region", molCentre, acc[0]);
+                                sendInterfaces_[iface]->push("acc_y_region", molCentre, acc[1]);
+                                sendInterfaces_[iface]->push("acc_z_region", molCentre, acc[2]);
                             }
                         }
                     }
@@ -1382,9 +1383,9 @@ label mdDsmcCoupling::sendCoupledMolecules()
                 {
                     // Get the molecule centre
                     mui::point3d molCentre;
-                    molCentre[0] = molsToSend_[mols].position[0] * oneOverRefLength_;
-                    molCentre[1] = molsToSend_[mols].position[1] * oneOverRefLength_;
-                    molCentre[2] = molsToSend_[mols].position[2] * oneOverRefLength_;
+                    molCentre[0] = molsToSend_[mols].position[0] * rU_.refLength();
+                    molCentre[1] = molsToSend_[mols].position[1] * rU_.refLength();
+                    molCentre[2] = molsToSend_[mols].position[2] * rU_.refLength();
 
                     // Push molecule type
                     sendInterfaces_[iface]->push("type_bound", molCentre, static_cast<std::string>(molsToSend_[mols].molType));
@@ -1477,7 +1478,7 @@ label mdDsmcCoupling::receiveCoupledParcels()
             {
                 for (size_t pts = 0; pts < rcvPoints_[ifacepts].size(); pts++)
                 {
-                    point checkedPosition(rcvPoints_[ifacepts][pts][0] * refLength_, rcvPoints_[ifacepts][pts][1] * refLength_, rcvPoints_[ifacepts][pts][2] * refLength_);
+                    point checkedPosition(rcvPoints_[ifacepts][pts][0] / rU_.refLength(), rcvPoints_[ifacepts][pts][1] / rU_.refLength(), rcvPoints_[ifacepts][pts][2] / rU_.refLength());
 
                     label cell = mesh_.findCell(checkedPosition);
 
@@ -1485,9 +1486,9 @@ label mdDsmcCoupling::receiveCoupledParcels()
                     if(cell != -1)
                     {
                         vector velocity;
-                        velocity[0] = rcvVelX_[ifacepts][pts] * oneOverRefVelocity_;
-                        velocity[1] = rcvVelY_[ifacepts][pts] * oneOverRefVelocity_;
-                        velocity[2] = rcvVelZ_[ifacepts][pts] * oneOverRefVelocity_;
+                        velocity[0] = rcvVelX_[ifacepts][pts] / rU_.refVelocity();
+                        velocity[1] = rcvVelY_[ifacepts][pts] / rU_.refVelocity();
+                        velocity[2] = rcvVelZ_[ifacepts][pts] / rU_.refVelocity();
 
                         if(couplingBounds_)
                         {

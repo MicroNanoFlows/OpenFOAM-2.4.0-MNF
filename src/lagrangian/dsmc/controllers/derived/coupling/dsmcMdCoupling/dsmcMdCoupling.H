@@ -96,10 +96,6 @@ private:
 
         DynamicList<List<label> > parcelsInCellHistory_;
         DynamicList<label> regionCells_;
-        scalar refLength_;
-        scalar oneOverRefLength_;
-        scalar refTime_;
-        scalar oneOverRefTime_;
 #ifdef USE_MUI
 	mui::chrono_sampler_exact3d* chrono_sampler;
 #endif
@@ -166,8 +162,8 @@ public:
         //- send parcels that fall into the MD coupled region to coupled mdFoamPlus
         void sendCoupledRegion(bool init);
 
-        //- Receive forces for parcels that fall into MD coupled region
-        void receiveCoupledRegionForces();
+        //- Receive acceleration for parcels that fall into MD coupled region
+        void receiveCoupledRegionAcc();
 
         //- send parcels to mdFoamPlus that have crossed a coupling boundary
         void sendCoupledParcels();

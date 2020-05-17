@@ -128,12 +128,6 @@ private:
         bool receivingBound_;           //- Determine whether this controller will receive for the fixed boundary
         DynamicList<Foam::word> recvInterfaceNames_;
 
-        scalar refLength_;
-        scalar oneOverRefLength_;
-        scalar refVelocity_;
-        scalar oneOverRefVelocity_;
-        scalar refTime_;
-        scalar oneOverRefTime_;
         const List<word>& idList;
         const reducedUnits& rU_;
         List<List<polyMolecule*> > molHistory_;
@@ -224,8 +218,8 @@ public:
         //- receive molecules that fall into the coupled region
         bool receiveCoupledRegion(bool init);
 
-        //- send forces acting on molecules in coupled region
-        void sendCoupledRegionForces();
+        //- send accelerations for ghost molecules in coupled region
+        void sendCoupledRegionAcc();
 
         //- Collate and delete molecules that have crossed a coupling boundary
         bool findCoupledMolecules();

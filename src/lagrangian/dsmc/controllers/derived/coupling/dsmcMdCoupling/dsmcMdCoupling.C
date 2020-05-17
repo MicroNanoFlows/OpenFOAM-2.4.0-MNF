@@ -624,12 +624,6 @@ dsmcMdCoupling::dsmcMdCoupling
             }
         }
     }
-
-    refLength_ = threeDInterfaces.refLength; //- Store the reference length
-    refTime_ = threeDInterfaces.refTime; //- Store the reference time
-
-    oneOverRefLength_ = 1.0 / refLength_;
-    oneOverRefTime_ = 1.0 / refTime_;
 #ifdef USE_MUI
     //Initialise exact time sampler for MUI
     chrono_sampler = new mui::chrono_sampler_exact3d();
@@ -756,7 +750,7 @@ void dsmcMdCoupling::controlParcelsAfterCollisions(int stage)
 	}
     else if (stage == 2)
     {
-        receiveCoupledRegionForces(); // Receive MD forces on ghost molecules in coupled region(s) (blocking)
+        receiveCoupledRegionAcc(); // Receive MD acceleration on ghost molecules in coupled region(s) (blocking)
 	}
 }
 
@@ -806,9 +800,9 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
                         {
                             // Get the parcel centre
                             mui::point3d parcCentre;
-                            parcCentre[0] = parcel->position()[0] * oneOverRefLength_;
-                            parcCentre[1] = parcel->position()[1] * oneOverRefLength_;
-                            parcCentre[2] = parcel->position()[2] * oneOverRefLength_;
+                            parcCentre[0] = parcel->position()[0];
+                            parcCentre[1] = parcel->position()[1];
+                            parcCentre[2] = parcel->position()[2];
 
                             // Push parcel type
                             sendInterfaces_[iface]->push("type_region", parcCentre, static_cast<std::string>(typeNames_[typeIndex]));
@@ -842,16 +836,16 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 #endif
 }
 
-void dsmcMdCoupling::receiveCoupledRegionForces()
+void dsmcMdCoupling::receiveCoupledRegionAcc()
 {
 #ifdef USE_MUI
     if(receivingRegion_)
     {
         List<std::vector<std::string> > rcvParcType(recvInterfaces_.size());
         List<std::vector<label> > rcvParcId(recvInterfaces_.size());
-        List<std::vector<scalar> > rcvForceX(recvInterfaces_.size());
-        List<std::vector<scalar> > rcvForceY(recvInterfaces_.size());
-        List<std::vector<scalar> > rcvForceZ(recvInterfaces_.size());
+        List<std::vector<scalar> > rcvAccX(recvInterfaces_.size());
+        List<std::vector<scalar> > rcvAccY(recvInterfaces_.size());
+        List<std::vector<scalar> > rcvAccZ(recvInterfaces_.size());
 
         // Iterate through all receiving interfaces for this controller and extract a points list
         forAll(recvInterfaces_, iface)
@@ -865,9 +859,9 @@ void dsmcMdCoupling::receiveCoupledRegionForces()
                 rcvParcId[iface] = recvInterfaces_[iface]->fetch_values<label>("id_region", currIteration_, *chrono_sampler);
 
                 //- Extract a list of all molecule forces received from other solver through this interface
-                rcvForceX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_x_region", currIteration_, *chrono_sampler);
-                rcvForceY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_y_region", currIteration_, *chrono_sampler);
-                rcvForceZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_z_region", currIteration_, *chrono_sampler);
+                rcvAccX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("acc_x_region", currIteration_, *chrono_sampler);
+                rcvAccY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("acc_y_region", currIteration_, *chrono_sampler);
+                rcvAccZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("acc_z_region", currIteration_, *chrono_sampler);
             }
         }
 
@@ -878,9 +872,9 @@ void dsmcMdCoupling::receiveCoupledRegionForces()
             {
                 std::vector<std::string>::iterator rcvParcTypeIt;
                 std::vector<label>::iterator rcvParcIdIt = rcvParcId[ifacepts].begin();
-                std::vector<scalar>::iterator rcvForceXIt = rcvForceX[ifacepts].begin();
-                std::vector<scalar>::iterator rcvForceYIt = rcvForceY[ifacepts].begin();
-                std::vector<scalar>::iterator rcvForceZIt = rcvForceZ[ifacepts].begin();
+                std::vector<scalar>::iterator rcvAccXIt = rcvAccX[ifacepts].begin();
+                std::vector<scalar>::iterator rcAccYIt = rcvAccY[ifacepts].begin();
+                std::vector<scalar>::iterator rcvAccZIt = rcvAccZ[ifacepts].begin();
 
                 for (rcvParcTypeIt = rcvParcType[ifacepts].begin(); rcvParcTypeIt != rcvParcType[ifacepts].end(); rcvParcTypeIt++) {
                     const label parcId = findIndex(typeNames_, *rcvParcTypeIt);
@@ -889,15 +883,15 @@ void dsmcMdCoupling::receiveCoupledRegionForces()
                     {
                         rcvParcType[ifacepts].erase(rcvParcTypeIt--);
                         rcvParcId[ifacepts].erase(rcvParcIdIt--);
-                        rcvForceX[ifacepts].erase(rcvForceXIt--);
-                        rcvForceY[ifacepts].erase(rcvForceYIt--);
-                        rcvForceZ[ifacepts].erase(rcvForceZIt--);
+                        rcvAcccX[ifacepts].erase(rcvAccXIt--);
+                        rcvAccY[ifacepts].erase(rcvAccYIt--);
+                        rcvAccZ[ifacepts].erase(rcvAccZIt--);
                     }
 
                     rcvParcIdIt++;
-                    rcvForceXIt++;
-                    rcvForceYIt++;
-                    rcvForceZIt++;
+                    rcvAccXIt++;
+                    rcvAccYIt++;
+                    rcvAccZIt++;
                 }
             }
         }
@@ -947,21 +941,19 @@ void dsmcMdCoupling::receiveCoupledRegionForces()
         // Iterate through all forces received for this controller and apply if IDs match
         forAll(rcvParcId, iface)
         {
-            forAll(rcvParcId[iface], rcv_force)
+            forAll(rcvParcId[iface], rcv_acc)
             {
                 forAll(parcelsInRegion, parcel)
                 {
                     if(rcvParcId[iface][rcv_force] == parcelsInRegion[parcel]->origId())
                     {
-                        scalar parcMass(cloud_.constProps(parcelsInRegion[parcel]->typeId()).mass());
+                        vector applyVel;
 
-                        vector applyForce;
+                        applyVel[0] = 0.5 * rcvAccX[iface][rcv_acc] * mesh_.time().deltaTValue();
+                        applyVel[1] = 0.5 * rcvAccY[iface][rcv_acc] * mesh_.time().deltaTValue();
+                        applyVel[2] = 0.5 * rcvAccZ[iface][rcv_acc] * mesh_.time().deltaTValue();
 
-                        applyForce[0] = 0.5 * (rcvForceX[iface][rcv_force] / parcMass) * mesh_.time().deltaTValue();
-                        applyForce[1] = 0.5 * (rcvForceY[iface][rcv_force] / parcMass) * mesh_.time().deltaTValue();
-                        applyForce[2] = 0.5 * (rcvForceZ[iface][rcv_force] / parcMass) * mesh_.time().deltaTValue();
-
-                        parcelsInRegion[parcel]->U() += applyForce;
+                        parcelsInRegion[parcel]->U() += applyVel;
 
                         break;
                     }
@@ -995,9 +987,9 @@ void dsmcMdCoupling::sendCoupledParcels()
 
                         // Get the parcel centre
                         mui::point3d parcCentre;
-                        parcCentre[0] = parc->position()[0] * oneOverRefLength_;
-                        parcCentre[1] = parc->position()[1] * oneOverRefLength_;
-                        parcCentre[2] = parc->position()[2] * oneOverRefLength_;
+                        parcCentre[0] = parc->position()[0];
+                        parcCentre[1] = parc->position()[1];
+                        parcCentre[2] = parc->position()[2];
 
                         // Push parcel type
                         sendInterfaces_[iface]->push("type_bound", parcCentre, static_cast<std::string>(cloud_.typeIdList()[parc->typeId()]));
@@ -1095,7 +1087,7 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
             {
                 for (size_t pts = 0; pts < rcvPoints[ifacepts].size(); pts++)
                 {
-                    point checkedPosition(rcvPoints[ifacepts][pts][0] * refLength_, rcvPoints[ifacepts][pts][1] * refLength_, rcvPoints[ifacepts][pts][2] * refLength_);
+                    point checkedPosition(rcvPoints[ifacepts][pts][0], rcvPoints[ifacepts][pts][1], rcvPoints[ifacepts][pts][2]);
 
                     label cell = mesh_.findCell(checkedPosition);
 
