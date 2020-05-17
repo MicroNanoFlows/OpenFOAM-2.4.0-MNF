@@ -938,8 +938,6 @@ void dsmcMdCoupling::receiveCoupledRegionAcc()
             }
         }
 
-        label count = 0;
-
         // Iterate through all accelerations received for this controller and apply if IDs match
         forAll(rcvParcId, iface)
         {
@@ -957,14 +955,11 @@ void dsmcMdCoupling::receiveCoupledRegionAcc()
 
                         parcelsInRegion[parcel]->U() += applyVel;
 
-                        count++;
-
                         break;
                     }
                 }
             }
         }
-        std::cout << "Rcv " << count << " acc values" << std::endl;
     }
 #endif
 }

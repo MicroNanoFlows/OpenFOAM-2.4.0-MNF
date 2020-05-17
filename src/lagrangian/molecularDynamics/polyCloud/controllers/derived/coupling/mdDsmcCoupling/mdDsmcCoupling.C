@@ -1145,7 +1145,6 @@ void mdDsmcCoupling::sendCoupledRegionAcc()
     if(sendingRegion_)
     {
         polyMolecule* molecule = NULL;
-        label count = 0;
 
         // Iterate through all sending interfaces for this controller
         forAll(sendInterfaces_, iface)
@@ -1197,8 +1196,6 @@ void mdDsmcCoupling::sendCoupledRegionAcc()
                                 sendInterfaces_[iface]->push("acc_x_region", molCentre, acc[0]);
                                 sendInterfaces_[iface]->push("acc_y_region", molCentre, acc[1]);
                                 sendInterfaces_[iface]->push("acc_z_region", molCentre, acc[2]);
-
-                                count++;
                             }
                         }
                     }
@@ -1208,7 +1205,6 @@ void mdDsmcCoupling::sendCoupledRegionAcc()
             // Commit (transmit) values to the MUI interface
             sendInterfaces_[iface]->commit(currIteration_);
         }
-        std::cout << "Sent " << count << " acc values" << std::endl;
     }
 #endif
 }
