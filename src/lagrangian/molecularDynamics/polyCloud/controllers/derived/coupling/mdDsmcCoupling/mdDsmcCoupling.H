@@ -166,6 +166,8 @@ private:
         scalar initTemperatureDSMC_;
         scalar initKeDSMC_;
         label nparcsRcv_;
+        bool initScaling_;
+        label scaleType_; // 0 = temperature; 1 = KE
 
     // Private Member Functions
 

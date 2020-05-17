@@ -86,7 +86,9 @@ mdDsmcCoupling::mdDsmcCoupling
     initKe_(-VSMALL),
     initTemperatureDSMC_(-VSMALL),
     initKeDSMC_(-VSMALL),
-    nparcsRcv_(0)
+    nparcsRcv_(0),
+    initScaling_(false),
+    scaleType_(0)
 {
 #ifdef USE_MUI
     //- Determine sending interfaces if defined
@@ -576,6 +578,29 @@ mdDsmcCoupling::mdDsmcCoupling
         output_ = Switch(propsDict_.lookup("output"));
     }
 
+    if (propsDict_.found("initialVelScaling"))
+    {
+        initScaling_ = Switch(propsDict_.lookup("initialVelScaling"));
+    }
+
+    if(initScaling_)
+    {
+        word scalingType
+        (
+            propsDict_.lookup("scalingType")
+        );
+
+        if(scalingType == "temperature" || scalingType == "Temperature")
+        {
+            scaleType_ = 0;
+        }
+
+        if(scalingType == "linearKE" || scalingType == "LinearKE")
+        {
+            scaleType_ = 1;
+        }
+    }
+
 #ifdef USE_MUI
     //Initialise exact time sampler for MUI
     chrono_sampler = new mui::chrono_sampler_exact3d();
@@ -678,23 +703,36 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
             std::cout << "Initial DSMC temperature = " << initTemperatureDSMC_ << std::endl;
             std::cout << "Initial DSMC average linear KE = " << initKeDSMC_ << std::endl;
 
-            scalar scaleValue = 0;
-
-            if (initTemperature_ > 0)
+            if(initScaling_)
             {
-                scaleValue = sqrt(initTemperatureDSMC_ / initTemperature_);
+                scalar scaleValue = 0;
+
+                if(scaleType_ == 0) //Temperature
+                {
+                    if (initTemperature_ > 0)
+                    {
+                        scaleValue = sqrt(initTemperatureDSMC_ / initTemperature_);
+                    }
+                }
+                else if(scaleType_ == 1)
+                {
+                    if (initKe_ > 0)
+                    {
+                        scaleValue = sqrt(initKeDSMC_ / initKe_);
+                    }
+                }
+
+                //Scale molecule velocity field
+                scaleVelocity(scaleValue);
+
+                //Calculate new temperature of whole cloud
+                scalar newInitTemperature = calcTemperature();
+                std::cout << "Scaled MD temperature: " << newInitTemperature << std::endl;
+
+                //Calculate new KE of whole cloud
+                scalar newLinearKE = calcAvgLinearKe();
+                std::cout << "Scaled MD average linear KE: " << newLinearKE << std::endl;
             }
-
-            //Scale molecule velocity field
-            scaleVelocity(scaleValue);
-
-            //Calculate new temperature of whole cloud
-            scalar newInitTemperature = calcTemperature();
-            std::cout << "Scaled MD temperature: " << newInitTemperature << std::endl;
-
-            //Calculate new KE of whole cloud
-            scalar newLinearKE = calcAvgLinearKe();
-            std::cout << "Scaled MD average linear KE: " << newLinearKE << std::endl;
         }
     }
 
