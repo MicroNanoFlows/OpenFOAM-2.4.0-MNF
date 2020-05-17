@@ -1189,6 +1189,8 @@ void mdDsmcCoupling::sendCoupledRegionForces()
                                 // Push molecule ID from receive history
                                 sendInterfaces_[iface]->push("id_region", molCentre, static_cast<label>(molId_[iface][mol]));
 
+                                std::cout << "force: " << siteForcesAccum[0] << "," << siteForcesAccum[1] << "," << siteForcesAccum[2] << std::endl;
+
                                 // Push the molecule site forces to the interface
                                 sendInterfaces_[iface]->push("force_x_region", molCentre, siteForcesAccum[0] * rU_.refForce());
                                 sendInterfaces_[iface]->push("force_y_region", molCentre, siteForcesAccum[1] * rU_.refForce());
