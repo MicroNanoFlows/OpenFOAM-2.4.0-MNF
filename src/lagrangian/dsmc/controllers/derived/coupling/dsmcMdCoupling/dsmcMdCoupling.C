@@ -873,7 +873,7 @@ void dsmcMdCoupling::receiveCoupledRegionAcc()
                 std::vector<std::string>::iterator rcvParcTypeIt;
                 std::vector<label>::iterator rcvParcIdIt = rcvParcId[ifacepts].begin();
                 std::vector<scalar>::iterator rcvAccXIt = rcvAccX[ifacepts].begin();
-                std::vector<scalar>::iterator rcAccYIt = rcvAccY[ifacepts].begin();
+                std::vector<scalar>::iterator rcvAccYIt = rcvAccY[ifacepts].begin();
                 std::vector<scalar>::iterator rcvAccZIt = rcvAccZ[ifacepts].begin();
 
                 for (rcvParcTypeIt = rcvParcType[ifacepts].begin(); rcvParcTypeIt != rcvParcType[ifacepts].end(); rcvParcTypeIt++) {
@@ -883,7 +883,7 @@ void dsmcMdCoupling::receiveCoupledRegionAcc()
                     {
                         rcvParcType[ifacepts].erase(rcvParcTypeIt--);
                         rcvParcId[ifacepts].erase(rcvParcIdIt--);
-                        rcvAcccX[ifacepts].erase(rcvAccXIt--);
+                        rcvAccX[ifacepts].erase(rcvAccXIt--);
                         rcvAccY[ifacepts].erase(rcvAccYIt--);
                         rcvAccZ[ifacepts].erase(rcvAccZIt--);
                     }
@@ -945,7 +945,7 @@ void dsmcMdCoupling::receiveCoupledRegionAcc()
             {
                 forAll(parcelsInRegion, parcel)
                 {
-                    if(rcvParcId[iface][rcv_force] == parcelsInRegion[parcel]->origId())
+                    if(rcvParcId[iface][rcv_acc] == parcelsInRegion[parcel]->origId())
                     {
                         vector applyVel;
 
