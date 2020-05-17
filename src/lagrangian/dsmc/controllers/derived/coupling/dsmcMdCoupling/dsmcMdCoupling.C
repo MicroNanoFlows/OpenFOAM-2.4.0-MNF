@@ -1365,7 +1365,6 @@ scalar dsmcMdCoupling::calcAvgLinearKe()
     scalar avgKe = 0;
 
     IDLList<dsmcParcel>::iterator parc(cloud_.begin());
-    label parcCount = 0;
 
     for(parc = cloud_.begin(); parc != cloud_.end(); ++parc)
     {
@@ -1373,13 +1372,7 @@ scalar dsmcMdCoupling::calcAvgLinearKe()
         {
             const scalar parcMass = cloud_.constProps(parc().typeId()).mass()*cloud_.nParticle();
             avgKe += (0.5 * parcMass)*(magSqr(parc().U()));
-            parcCount++;
         }
-    }
-
-    if(avgKe > 0)
-    {
-        avgKe /= parcCount;
     }
 
     return avgKe;

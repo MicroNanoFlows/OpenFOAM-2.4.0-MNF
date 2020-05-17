@@ -2443,7 +2443,6 @@ scalar mdDsmcCoupling::calcAvgLinearKe()
     scalar avgKe = 0;
 
     IDLList<polyMolecule>::iterator mol(molCloud_.begin());
-    label molCount = 0;
 
     for(mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
     {
@@ -2451,13 +2450,7 @@ scalar mdDsmcCoupling::calcAvgLinearKe()
         {
             const scalar& massI = molCloud_.cP().mass(mol().id()) * rU_.refMass();
             avgKe += (0.5 * massI)*(magSqr(mol().v() * rU_.refVelocity()));
-            molCount++;
         }
-    }
-
-    if(avgKe > 0)
-    {
-        avgKe /= molCount;
     }
 
     return avgKe;
