@@ -2380,7 +2380,7 @@ scalar mdDsmcCoupling::calcTemperature()
 
     for(mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
     {
-        if(findIndex(molIds_, mol().id()) != -1)
+        if(!mol().ghost() && findIndex(molIds_, mol().id()) != -1)
         {
             const scalar& massI = molCloud_.cP().mass(mol().id());
 
@@ -2404,7 +2404,7 @@ scalar mdDsmcCoupling::calcTemperature()
 
     for(mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
     {
-        if(findIndex(molIds_, mol().id()) != -1)
+        if(!mol().ghost() && findIndex(molIds_, mol().id()) != -1)
         {
             const scalar& massI = molCloud_.cP().mass(mol().id());
 
@@ -2451,7 +2451,7 @@ scalar mdDsmcCoupling::calcAvgLinearKe()
 
     for(mol = molCloud_.begin(); mol != molCloud_.end(); ++mol)
     {
-        if(findIndex(molIds_, mol().id()) != -1)
+        if(!mol().ghost() && findIndex(molIds_, mol().id()) != -1)
         {
             const scalar& massI = molCloud_.cP().mass(mol().id()) * rU_.refMass();
             avgKe += (0.5 * massI)*(magSqr(mol().v() * rU_.refVelocity()));
