@@ -819,6 +819,9 @@ Foam::polyMoleculeCloud::polyMoleculeCloud
     boundaries_.setInitialConfig();
     controllers_.initialConfig();
 
+    // read in tracking numbers again after coupling initialisation
+    updateTrackingNumbersAfterRead();
+
     //check and remove high energy overlaps after coupling initialisation
     checkForOverlaps();
 

@@ -2455,6 +2455,12 @@ scalar mdDsmcCoupling::calcAvgLinearKe()
         }
     }
 
+    if (Pstream::parRun())
+    {
+        reduce(avgKe, sumOp<scalar>());
+        reduce(count, sumOp<label>());
+    }
+
     if(avgKe > 0)
     {
         avgKe /= static_cast<scalar>(count);
