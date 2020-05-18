@@ -81,7 +81,7 @@ void polyBCC::setInitialConfiguration()
         SIUnits = Switch(mdInitialiseDict_.lookup("SIUnits"));
     }
 
-    const scalar temperature(readScalar(mdInitialiseDict_.lookup("temperature")));
+    scalar temperature(readScalar(mdInitialiseDict_.lookup("temperature")));
 
     if(SIUnits)
     {
@@ -91,7 +91,7 @@ void polyBCC::setInitialConfiguration()
         }
     }
 
-    const vector bulkVelocity(mdInitialiseDict_.lookup("bulkVelocity"));
+    vector bulkVelocity(mdInitialiseDict_.lookup("bulkVelocity"));
 
     if(SIUnits)
     {
