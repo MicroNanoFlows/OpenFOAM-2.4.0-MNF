@@ -112,10 +112,6 @@ scalar lennardJonesEqn::energy(const scalar r) const
     {
         energy = rawEnergy(r);
     }
-    else
-    {
-        std::cout << "Energy truncated at r=" << r << std::endl;
-    }
     
     return energy;
 }
