@@ -165,9 +165,9 @@ void polyBCC::setInitialConfiguration()
 
     scalar s(readScalar(mdInitialiseDict_.lookup("unitCellSize")));
 
-    label nX = static_cast<label>((bb.span().x()/s) + 1);
-    label nY = static_cast<label>((bb.span().y()/s) + 1);
-    label nZ = static_cast<label>((bb.span().z()/s) + 1);
+    label nX = static_cast<label>(ceil(bb.span().x()/s));
+    label nY = static_cast<label>(ceil(bb.span().y()/s));
+    label nZ = static_cast<label>(ceil(bb.span().z()/s));
     
     // basis points for bcc lattice which includes 2 sites
     label nAtoms= 0;
