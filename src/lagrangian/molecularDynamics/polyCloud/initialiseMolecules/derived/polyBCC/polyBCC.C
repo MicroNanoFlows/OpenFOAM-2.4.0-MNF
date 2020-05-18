@@ -74,9 +74,42 @@ void polyBCC::setInitialConfiguration()
 
     Info << nl << "BCC lattice " << endl;
 
+    bool SIUnits = false;
+
+    if (mdInitialiseDict_.found("SIUnits"))
+    {
+        SIUnits = Switch(mdInitialiseDict_.lookup("SIUnits"));
+    }
+
     const scalar temperature(readScalar(mdInitialiseDict_.lookup("temperature")));
 
+    if(SIUnits)
+    {
+        if(temperature != 0)
+        {
+            temperature /= molCloud_.redUnits().refTemp();
+        }
+    }
+
     const vector bulkVelocity(mdInitialiseDict_.lookup("bulkVelocity"));
+
+    if(SIUnits)
+    {
+        if(bulkVelocity[0] != 0)
+        {
+            bulkVelocity[0] /= molCloud_.redUnits().refVelocity();
+        }
+
+        if(bulkVelocity[1] != 0)
+        {
+            bulkVelocity[1] /= molCloud_.redUnits().refVelocity();
+        }
+
+        if(bulkVelocity[2] != 0)
+        {
+            bulkVelocity[2] /= molCloud_.redUnits().refVelocity();
+        }
+    }
 
     const word molIdName(mdInitialiseDict_.lookup("molId")); 
     const List<word>& idList(molCloud_.cP().molIds());
@@ -89,8 +122,6 @@ void polyBCC::setInitialConfiguration()
             << "Cannot find molecule id: " << molIdName << nl << "in idList."
             << exit(FatalError);
     }
-
-//     const polyMolecule::constantProperties& cP(molCloud_.constProps(molId));
 
     scalar massI = molCloud_.cP().mass(molId);
 
@@ -121,11 +152,22 @@ void polyBCC::setInitialConfiguration()
     
     setBoundBox(mdInitialiseDict_, bb, "boundBox");
 
+    if(SIUnits)
+    {
+        bb.min()[0] /= molCloud_.redUnits().refLength();
+        bb.min()[1] /= molCloud_.redUnits().refLength();
+        bb.min()[2] /= molCloud_.redUnits().refLength();
+
+        bb.max()[0] /= molCloud_.redUnits().refLength();
+        bb.max()[1] /= molCloud_.redUnits().refLength();
+        bb.max()[2] /= molCloud_.redUnits().refLength();
+    }
+
     scalar s(readScalar(mdInitialiseDict_.lookup("unitCellSize")));
 
-    label nX = (bb.span().x()/s) + 1;
-    label nY = (bb.span().y()/s) + 1;
-    label nZ = (bb.span().z()/s) + 1;
+    label nX = static_cast<label>((bb.span().x()/s) + 1);
+    label nY = static_cast<label>((bb.span().y()/s) + 1);
+    label nZ = static_cast<label>((bb.span().z()/s) + 1);
     
     // basis points for bcc lattice which includes 2 sites
     label nAtoms= 0;
@@ -230,8 +272,6 @@ void polyBCC::setInitialConfiguration()
     {
         Info << "Using randomness to select molecules" << endl;
         
-        //label nToDel = positions.size()-N;
-        
         // use probability to delete to get close to estimate
         
         scalar p = scalar(N)/scalar(positions.size());
@@ -239,7 +279,6 @@ void polyBCC::setInitialConfiguration()
         Info << "probability to accept molecules = " << p << endl;
         
         DynamicList<vector> rejectedPositions;
-        
         
         // insert molecules
         forAll(positions, i)
@@ -436,7 +475,6 @@ void polyBCC::setInitialConfiguration()
             
             forAll(molsToDel, m)
             {
-                //Info << tab << "exchanging molecule at position = " << molsToDel[m]->position() << endl;
                 newPositions.append(molsToDel[m]->position());
                 molCloud_.deleteParticle(*molsToDel[m]);
             }            
@@ -495,6 +533,19 @@ void polyBCC::setBoundBox
     
     vector startPoint = dict.lookup("startPoint");
     vector endPoint = dict.lookup("endPoint");
+
+    bool SIUnits = false;
+
+    if (dict.found("SIUnits"))
+    {
+        SIUnits = Switch(mdInitialiseDict_.lookup("SIUnits"));
+    }
+
+    if(SIUnits)
+    {
+        startPoint /= molCloud_.redUnits().refLength();
+        endPoint /= molCloud_.redUnits().refLength();
+    }
 
     bb.resetBoundedBox(startPoint, endPoint);
 }

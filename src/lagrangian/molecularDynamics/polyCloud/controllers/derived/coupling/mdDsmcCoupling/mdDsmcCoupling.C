@@ -220,12 +220,14 @@ mdDsmcCoupling::mdDsmcCoupling
     if (propsDict_.found("couplingRegionMin"))
 	{
         couplingRegionMin_ = propsDict_.lookup("couplingRegionMin");
+        couplingRegionMin_ /= rU_.refLength();
         regionMinFound = true;
 	}
 
     if (propsDict_.found("couplingRegionMax"))
     {
         couplingRegionMax_ = propsDict_.lookup("couplingRegionMax");
+        couplingRegionMax_ /= rU_.refLength();
         regionMaxFound = true;
     }
 
@@ -276,12 +278,14 @@ mdDsmcCoupling::mdDsmcCoupling
     if (propsDict_.found("couplingBoundMin"))
     {
         couplingBoundMin_ = propsDict_.lookup("couplingBoundMin");
+        couplingBoundMin_ /= rU_.refLength();
         boundMinFound = true;
     }
 
     if (propsDict_.found("couplingBoundMax"))
     {
         couplingBoundMax_ = propsDict_.lookup("couplingBoundMax");
+        couplingBoundMax_ /= rU_.refLength();
         boundMaxFound = true;
     }
 
