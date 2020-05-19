@@ -73,6 +73,7 @@ void velocityVerlet::init()
 
 void velocityVerlet::evolve()
 {
+    molCloud_.clearLagrangianFields();
     molCloud_.controlBeforeVelocity();
     updateVelocity(mesh_.time().deltaT().value());
     molCloud_.controlBeforeMove();
