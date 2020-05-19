@@ -174,12 +174,16 @@ void polyBCC::setInitialConfiguration()
 
     DynamicList<vector> positions;
     
-    for (label k = 0; k < nX; k++)
+    for (label k_i = 0; k_i < nX; k_i++)
     {
-        for (label j = 0; j < nY; j++)
+        for (label j_i = 0; j_i < nY; j_i++)
         {
-            for (label i = 0; i < nZ; i++)
+            for (label i_i = 0; i_i < nZ; i_i++)
             {
+                scalar i = static_cast<scalar>(i_i);
+                scalar j = static_cast<scalar>(j_i);
+                scalar k = static_cast<scalar>(k_i);
+
                 vector p1 = vector(1, 0, 0)*k*s + vector(0, 1, 0)*j*s + vector(0, 0, 1)*i*s + bb.min();
                 vector p2 = vector(1, 0, 0)*k*s + vector(1, 0, 0)*s*0.5 + 
                             vector(0, 1, 0)*j*s + vector(0, 1, 0)*s*0.5 +
