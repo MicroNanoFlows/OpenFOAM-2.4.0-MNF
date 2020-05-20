@@ -178,7 +178,7 @@ void Foam::dsmcParcel::writeFields(const Cloud<dsmcParcel>& c)
     IOField<scalarField> wallTemperature(c.fieldIOobject("wallTemperature", IOobject::NO_READ), np);
     IOField<vectorField> wallVectors(c.fieldIOobject("wallVectors", IOobject::NO_READ), np);
     IOField<labelField> vibLevel(c.fieldIOobject("vibLevel", IOobject::NO_READ), np);
-    IOField<labelField> isGhosted(c.fieldIOobject("isGhosted", IOobject::NO_READ), np);
+    IOField<label> isGhosted(c.fieldIOobject("isGhosted", IOobject::NO_READ), np);
 
     label i = 0;
     forAllConstIter(dsmcCloud, c, iter)
