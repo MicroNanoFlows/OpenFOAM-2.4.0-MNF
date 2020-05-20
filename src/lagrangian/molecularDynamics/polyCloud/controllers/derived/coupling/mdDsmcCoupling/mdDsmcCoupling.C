@@ -1056,34 +1056,47 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
 
                         if(couplingRegion_)
                         {
+                            bool trunc = false;
+
                             if(checkedPosition[0] <= couplingRegionMin_[0])
                             {
                                 checkedPosition[0] = couplingRegionMin_[0] + boundCorr_;
+                                trunc = true;
                             }
 
                             if(checkedPosition[0] >= couplingRegionMax_[0])
                             {
                                 checkedPosition[0] = couplingRegionMax_[0] - boundCorr_;
+                                trunc = true;
                             }
 
                             if(checkedPosition[1] <= couplingRegionMin_[1])
                             {
                                 checkedPosition[1] = couplingRegionMin_[1] + boundCorr_;
+                                trunc = true;
                             }
 
                             if(checkedPosition[1] >= couplingRegionMax_[1])
                             {
                                 checkedPosition[1] = couplingRegionMax_[1] - boundCorr_;
+                                trunc = true;
                             }
 
                             if(checkedPosition[2] <= couplingRegionMin_[2])
                             {
                                 checkedPosition[2] = couplingRegionMin_[2] + boundCorr_;
+                                trunc = true;
                             }
 
                             if(checkedPosition[2] >= couplingRegionMax_[2])
                             {
                                 checkedPosition[2] = couplingRegionMax_[2] - boundCorr_;
+                                trunc = true;
+                            }
+
+                            if(trunc)
+                            {
+                                std::cout << "receiveCoupledRegion particle boundCorr_ applied" << std::endl;
                             }
                         }
 
@@ -1534,55 +1547,80 @@ label mdDsmcCoupling::receiveCoupledParcels()
 
                         if(couplingBounds_)
                         {
+                            bool trunc = false;
+
                             if(couplingBoundZeroThick_[0] == 1) //- Boundary has zero thickness in the x
                             {
-                                checkedPosition[0] = couplingBoundMin_[0] + (couplingBoundNorm_[0] * boundCorr_);
+                                if(checkedPosition[0] <= couplingBoundMin_[0])
+                                {
+                                    checkedPosition[0] = couplingBoundMin_[0] + (couplingBoundNorm_[0] * boundCorr_);
+                                    trunc = true;
+                                }
                             }
                             else
                             {
                                 if(checkedPosition[0] <= couplingBoundMin_[0])
                                 {
                                     checkedPosition[0] = couplingBoundMin_[0] + boundCorr_;
+                                    trunc = true;
                                 }
 
                                 if(checkedPosition[0] >= couplingBoundMax_[0])
                                 {
                                     checkedPosition[0] = couplingBoundMax_[0] - boundCorr_;
+                                    trunc = true;
                                 }
                             }
 
                             if(couplingBoundZeroThick_[1] == 1) //- Boundary has zero thickness in the y
                             {
-                                checkedPosition[1] = couplingBoundMin_[1] + (couplingBoundNorm_[1] * boundCorr_);
+                                if(checkedPosition[1] <= couplingBoundMin_[1])
+                                {
+                                    checkedPosition[1] = couplingBoundMin_[1] + (couplingBoundNorm_[1] * boundCorr_);
+                                    trunc = true;
+                                }
                             }
                             else
                             {
                                 if(checkedPosition[1] <= couplingBoundMin_[1])
                                 {
                                     checkedPosition[1] = couplingBoundMin_[1] + boundCorr_;
+                                    trunc = true;
                                 }
 
                                 if(checkedPosition[1] >= couplingBoundMax_[1])
                                 {
                                     checkedPosition[1] = couplingBoundMax_[1] - boundCorr_;
+                                    trunc = true;
                                 }
                             }
 
                             if(couplingBoundZeroThick_[2] == 1) //- Boundary has zero thickness in the z
                             {
-                                checkedPosition[2] = couplingBoundMin_[2] + (couplingBoundNorm_[2] * boundCorr_);
+                                if(checkedPosition[2] <= couplingBoundMin_[2])
+                                {
+                                    checkedPosition[2] = couplingBoundMin_[2] + (couplingBoundNorm_[2] * boundCorr_);
+                                    trunc = true;
+                                }
                             }
                             else
                             {
                                 if(checkedPosition[2] <= couplingBoundMin_[2])
                                 {
                                     checkedPosition[2] = couplingBoundMin_[2] + boundCorr_;
+                                    trunc = true;
                                 }
 
                                 if(checkedPosition[2] >= couplingBoundMax_[2])
                                 {
                                     checkedPosition[2] = couplingBoundMax_[2] - boundCorr_;
+                                    trunc = true;
                                 }
+                            }
+
+                            if(trunc)
+                            {
+                                std::cout << "receiveCoupledParcels particle boundCorr_ applied" << std::endl;
                             }
                         }
 
@@ -2018,6 +2056,21 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
                            (!trunkX && trunkY && trunkZ))
                         {
                             stuckIter++;
+                        }
+
+                        if(trunkX)
+                        {
+                            std::cout << "TruncX in insertMolecule" << std::endl;
+                        }
+
+                        if(trunkY)
+                        {
+                            std::cout << "TruncY in insertMolecule" << std::endl;
+                        }
+
+                        if(trunkZ)
+                        {
+                            std::cout << "TruncZ in insertMolecule" << std::endl;
                         }
 
                         //- Check if particle has been stuck for 2 iterations, if so reset its position and randomise normal to try again
