@@ -630,15 +630,15 @@ void dsmcControllers::controlAfterCollisions()
         stateControllers_[sC]->controlParcelsAfterCollisions();
     }
 
+    if(couplingControllers_.size() > 0)
+    {
+        couplingControllers_[0]->resetGhostedStatus();
+    }
+
     //- Send the coupled region
     forAll(couplingControllers_, cC)
     {
         couplingControllers_[cC]->controlParcelsAfterCollisions(1);
-    }
-
-    if(couplingControllers_.size() > 0)
-    {
-        couplingControllers_[0]->resetGhostedStatus();
     }
 
     // Receive forces for parcels in the coupled region (blocking)
