@@ -465,6 +465,9 @@ public:
             //- Return current face particle is on otherwise -1
             inline label face() const;
 
+            //- Return the normal of the face partice is on otherewise -1
+            inline vector faceNormal() const;
+
             //- Return the impact model to be used, soft or hard (default).
             inline bool softImpact() const;
 
