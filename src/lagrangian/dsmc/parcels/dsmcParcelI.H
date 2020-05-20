@@ -404,4 +404,15 @@ inline Foam::labelList& Foam::dsmcParcel::vibLevel()
 {
     return vibLevel_;
 }
+
+inline bool Foam::particle::ghost() const
+{
+    return ghost_;
+}
+
+inline void Foam::particle::setGhost(bool isGhost)
+{
+    ghost_ = isGhost;
+}
+
 // ************************************************************************* //
