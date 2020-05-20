@@ -825,7 +825,7 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 
                             parcelsInCellHistory_[iface].append(parcel->origId()); //Store the parcel ID that was sent
 
-                            parcel->setGhost(true); //Set this parcel as being ghosted
+                            parcel->isGhost(true); //Set this parcel as being ghosted
                         }
                     }
                 }
