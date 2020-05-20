@@ -762,7 +762,7 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
     // Reset ghost status for each parcel
     for(parc = cloud_.begin(); parc != cloud_.end(); ++parc)
     {
-        parc.setAsGhost(false);
+        parc().setAsGhost(false);
     }
 
     dsmcParcel* parcel = NULL;
