@@ -757,12 +757,12 @@ void dsmcMdCoupling::controlParcelsAfterCollisions(int stage)
 void dsmcMdCoupling::sendCoupledRegion(bool init)
 {
 #ifdef USE_MUI
-    IDLList<dsmcParcel>::iterator parcel(cloud_.begin());
+    IDLList<dsmcParcel>::iterator parc(cloud_.begin());
 
     // Reset ghost status for each parcel
-    for(parcel = cloud_.begin(); parcel != cloud_.end(); ++parcel)
+    for(parc = cloud_.begin(); parc != cloud_.end(); ++parc)
     {
-        parcel.setGhost(false);
+        parc.isGhost(false);
     }
 
     dsmcParcel* parcel = NULL;
