@@ -268,14 +268,6 @@ protected:
             const scalar trackFraction,
             const tetIndices& tetIs
         );
-        
-        template<class TrackData>
-        bool hitPatch
-        (
-            const polyPatch&,
-            TrackData& td,
-            const label patchI
-        );
 
         //- Overridable function to handle the particle hitting a wedgePatch
         template<class TrackData>
@@ -320,14 +312,6 @@ protected:
             const wallPolyPatch&,
             TrackData& td,
             const tetIndices& tetIs
-        );
-        
-        //- Overridable function to handle the particle hitting a wallPatch
-        template<class TrackData>
-        void hitWallPatch
-        (
-            const wallPolyPatch&,
-            TrackData& td
         );
 
         //- Overridable function to handle the particle hitting a
@@ -480,9 +464,6 @@ public:
 
             //- Return current face particle is on otherwise -1
             inline label face() const;
-            
-            //- Return the normal of the face partice is on otherewise -1
-            inline vector faceNormal() const;
 
             //- Return the impact model to be used, soft or hard (default).
             inline bool softImpact() const;
@@ -553,6 +534,17 @@ public:
             template<class TrackData>
             label track(const vector& endPosition, TrackData& td);
 
+            //- Track particle to end of trajectory
+            //  or until it hits the boundary.
+            //  On entry 'stepFraction()' should be set to the fraction of the
+            //  time-step at which the tracking starts and on exit it contains
+            //  the fraction of the time-step completed.
+            //  Returns the boundary face index if the track stops at the
+            //  boundary, -1 otherwise.
+            template<class TrackData>
+            label track(const vector& endPosition, TrackData& td,
+                                                                bool DSMC);
+
             //- Track particle to a given position and returns 1.0 if the
             //  trajectory is completed without hitting a face otherwise
             //  stops at the face and returns the fraction of the trajectory
@@ -569,10 +561,8 @@ public:
             //  on entry 'stepFraction()' should be set to the fraction of the
             //  time-step at which the tracking starts.
             template<class TrackData>
-            scalar rayTrace(const vector& endPosition, TrackData& td);
-            
-            template<class TrackData>
-            void faceInteraction(TrackData& td);
+            scalar trackToFace(const vector& endPosition, TrackData& td,
+                                                                bool DSMC);
 
             //- Return the index of the face to be used in the interpolation
             //  routine

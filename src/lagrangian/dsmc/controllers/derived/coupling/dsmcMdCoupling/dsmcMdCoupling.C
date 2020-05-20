@@ -790,9 +790,9 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
                     {
                         vector position = parcel->position();
 
-                        if((position[0] > couplingRegionMin_[0] && position[0] < couplingRegionMax_[0]) &&
-                           (position[1] > couplingRegionMin_[1] && position[1] < couplingRegionMax_[1]) &&
-                           (position[2] > couplingRegionMin_[2] && position[2] < couplingRegionMax_[2]))
+                        if((position[0] >= couplingRegionMin_[0] && position[0] <= couplingRegionMax_[0]) &&
+                           (position[1] >= couplingRegionMin_[1] && position[1] <= couplingRegionMax_[1]) &&
+                           (position[2] >= couplingRegionMin_[2] && position[2] <= couplingRegionMax_[2]))
                         {
                             insideRegion = true;
                         }
