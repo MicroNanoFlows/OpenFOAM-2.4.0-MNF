@@ -1053,7 +1053,7 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
                         velocity[0] = rcvVelX_[ifacepts][pts] / rU_.refVelocity();
                         velocity[1] = rcvVelY_[ifacepts][pts] / rU_.refVelocity();
                         velocity[2] = rcvVelZ_[ifacepts][pts] / rU_.refVelocity();
-
+/*
                         if(couplingRegion_)
                         {
                             bool trunc = false;
@@ -1099,7 +1099,7 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
                                 std::cout << "receiveCoupledRegion particle boundCorr_ applied" << std::endl;
                             }
                         }
-
+*/
                         if(molHistory_[ifacepts][pts] == NULL) //- This molecule is new so insert it
                         {
                             newMol = insertMolecule(checkedPosition, molIds_[molId], true, velocity);
@@ -1544,7 +1544,7 @@ label mdDsmcCoupling::receiveCoupledParcels()
                         velocity[0] = rcvVelX_[ifacepts][pts] / rU_.refVelocity();
                         velocity[1] = rcvVelY_[ifacepts][pts] / rU_.refVelocity();
                         velocity[2] = rcvVelZ_[ifacepts][pts] / rU_.refVelocity();
-
+/*
                         if(couplingBounds_)
                         {
                             bool trunc = false;
@@ -1623,6 +1623,7 @@ label mdDsmcCoupling::receiveCoupledParcels()
                                 std::cout << "receiveCoupledParcels particle boundCorr_ applied" << std::endl;
                             }
                         }
+                        */
 
                         coupledMolecule newMol;
                         newMol.molType = rcvMolType_[ifacepts][pts];
@@ -2056,21 +2057,6 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
                            (!trunkX && trunkY && trunkZ))
                         {
                             stuckIter++;
-                        }
-
-                        if(trunkX)
-                        {
-                            std::cout << "TruncX in insertMolecule" << std::endl;
-                        }
-
-                        if(trunkY)
-                        {
-                            std::cout << "TruncY in insertMolecule" << std::endl;
-                        }
-
-                        if(trunkZ)
-                        {
-                            std::cout << "TruncZ in insertMolecule" << std::endl;
                         }
 
                         //- Check if particle has been stuck for 2 iterations, if so reset its position and randomise normal to try again
