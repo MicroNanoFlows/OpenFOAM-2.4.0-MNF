@@ -757,6 +757,14 @@ void dsmcMdCoupling::controlParcelsAfterCollisions(int stage)
 void dsmcMdCoupling::sendCoupledRegion(bool init)
 {
 #ifdef USE_MUI
+    IDLList<dsmcParcel>::iterator parcel(cloud_.begin());
+
+    // Reset ghost status for each parcel
+    for(parcel = cloud_.begin(); parcel != cloud_.end(); ++parcel)
+    {
+        parcel.setGhost(false);
+    }
+
     dsmcParcel* parcel = NULL;
 
 	// Iterate through all sending interfaces for this controller
@@ -816,6 +824,8 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
                             sendInterfaces_[iface]->push("vel_z_region", parcCentre, parcel->U()[2]);
 
                             parcelsInCellHistory_[iface].append(parcel->origId()); //Store the parcel ID that was sent
+
+                            parcel->setGhost(true); //Set this parcel as being ghosted
                         }
                     }
                 }

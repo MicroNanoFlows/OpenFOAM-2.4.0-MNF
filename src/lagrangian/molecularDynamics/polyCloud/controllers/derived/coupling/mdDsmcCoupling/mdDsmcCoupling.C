@@ -2016,37 +2016,37 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
                         //Check against local mesh extents
                         if(position[0] <= meshMin_[0])
                         {
-                            position[0] = meshMin_[0] + boundCorr_;
+                            position[0] = meshMin_[0];
                             trunkX = true;
                         }
 
                         if(position[0] >= meshMax_[0])
                         {
-                            position[0] = meshMax_[0] - boundCorr_;
+                            position[0] = meshMax_[0];
                             trunkX = true;
                         }
 
                         if(position[1] <= meshMin_[1])
                         {
-                            position[1] = meshMin_[1] + boundCorr_;
+                            position[1] = meshMin_[1];
                             trunkY = true;
                         }
 
                         if(position[1] >= meshMax_[1])
                         {
-                            position[1] = meshMax_[1] - boundCorr_;
+                            position[1] = meshMax_[1];
                             trunkY = true;
                         }
 
                         if(position[2] <= meshMin_[2])
                         {
-                            position[2] = meshMin_[2] + boundCorr_;
+                            position[2] = meshMin_[2];
                             trunkZ = true;
                         }
 
                         if(position[2] >= meshMax_[2])
                         {
-                            position[2] = meshMax_[2] - boundCorr_;
+                            position[2] = meshMax_[2];
                             trunkZ = true;
                         }
 
@@ -2196,32 +2196,32 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
                             //Check against local mesh extents
                             if(position[0] <= meshMin_[0])
                             {
-                                position[0] = meshMin_[0] + boundCorr_;
+                                position[0] = meshMin_[0];
                             }
 
                             if(position[0] >= meshMax_[0])
                             {
-                                position[0] = meshMax_[0] - boundCorr_;
+                                position[0] = meshMax_[0];
                             }
 
                             if(position[1] <= meshMin_[1])
                             {
-                                position[1] = meshMin_[1] + boundCorr_;
+                                position[1] = meshMin_[1];
                             }
 
                             if(position[1] >= meshMax_[1])
                             {
-                                position[1] = meshMax_[1] - boundCorr_;
+                                position[1] = meshMax_[1];
                             }
 
                             if(position[2] <= meshMin_[2])
                             {
-                                position[2] = meshMin_[2] + boundCorr_;
+                                position[2] = meshMin_[2];
                             }
 
                             if(position[2] >= meshMax_[2])
                             {
-                                position[2] = meshMax_[2] - boundCorr_;
+                                position[2] = meshMax_[2];
                             }
                         }
 
