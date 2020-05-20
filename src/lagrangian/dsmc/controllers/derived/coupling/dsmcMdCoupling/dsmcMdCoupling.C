@@ -754,9 +754,8 @@ void dsmcMdCoupling::controlParcelsAfterCollisions(int stage)
 	}
 }
 
-void dsmcMdCoupling::sendCoupledRegion(bool init)
+void dsmcMdCoupling::resetGhostedStatus()
 {
-#ifdef USE_MUI
     IDLList<dsmcParcel>::iterator parc(cloud_.begin());
 
     // Reset ghost status for each parcel
@@ -764,7 +763,11 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
     {
         parc().setAsGhost(false);
     }
+}
 
+void dsmcMdCoupling::sendCoupledRegion(bool init)
+{
+#ifdef USE_MUI
     dsmcParcel* parcel = NULL;
 
 	// Iterate through all sending interfaces for this controller

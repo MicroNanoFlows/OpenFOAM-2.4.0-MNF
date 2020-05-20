@@ -558,6 +558,11 @@ void dsmcControllers::initialConfig()
         couplingControllers_[cC]->initialConfiguration(1);
     }
 
+    if(couplingControllers_.size() > 0)
+    {
+        couplingControllers_[0]->resetGhostedStatus();
+    }
+
     //- Run initial configuration stage 2
     forAll(couplingControllers_, cC)
     {
@@ -629,6 +634,11 @@ void dsmcControllers::controlAfterCollisions()
     forAll(couplingControllers_, cC)
     {
         couplingControllers_[cC]->controlParcelsAfterCollisions(1);
+    }
+
+    if(couplingControllers_.size() > 0)
+    {
+        couplingControllers_[0]->resetGhostedStatus();
     }
 
     // Receive forces for parcels in the coupled region (blocking)

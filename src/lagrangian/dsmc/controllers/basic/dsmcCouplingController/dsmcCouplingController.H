@@ -187,6 +187,9 @@ public:
         //- Forget the time frame received at specific time for specific interfaces
         virtual void forget(label iteration, label interface, bool forget) = 0;
 
+        //- Reset ghosted status of cloud
+        virtual void resetGhostedStatus() = 0;
+
     // Access
 
         const bool& controlInterForces() const;

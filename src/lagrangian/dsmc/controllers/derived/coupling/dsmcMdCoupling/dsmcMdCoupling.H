@@ -198,6 +198,9 @@ public:
 
         //- Forget the time frame received at specific iteration for specific interfaces
         void forget(label iteration, label interface, bool forget);
+
+        //- Reset ghosted status of cloud
+        void resetGhostedStatus();
 };
 
 
