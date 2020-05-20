@@ -416,6 +416,8 @@ public:
             //- Return access to vibrational energy
             inline labelList& vibLevel();
 
+            inline void setAsGhost(bool isGhost);
+
 
         // Main calculation loop
 

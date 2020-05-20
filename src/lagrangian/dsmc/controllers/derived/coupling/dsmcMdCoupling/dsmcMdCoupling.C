@@ -762,7 +762,7 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
     // Reset ghost status for each parcel
     for(parc = cloud_.begin(); parc != cloud_.end(); ++parc)
     {
-        parc.setGhost(false);
+        parc.setAsGhost(false);
     }
 
     dsmcParcel* parcel = NULL;
@@ -825,7 +825,7 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 
                             parcelsInCellHistory_[iface].append(parcel->origId()); //Store the parcel ID that was sent
 
-                            parcel->setGhost(true); //Set this parcel as being ghosted
+                            parcel->setAsGhost(true); //Set this parcel as being ghosted
                         }
                     }
                 }
