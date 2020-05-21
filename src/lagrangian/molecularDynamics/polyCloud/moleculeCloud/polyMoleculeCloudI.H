@@ -96,16 +96,16 @@ inline void Foam::polyMoleculeCloud::evaluatePair
     //
     //                 Info << "k = " << k << endl;
 
-                    if(molI->ghost())
-                    {
-                        std::cout << "ghost rsIsJ[0]: " << rsIsJ[0] << std::endl;
-                        std::cout << "ghost rsIsJ[1]: " << rsIsJ[1] << std::endl;
-                        std::cout << "ghost rsIsJ[2]: " << rsIsJ[2] << std::endl;
-                        std::cout << "ghost rsIsJMagSq: " << rsIsJMagSq << std::endl;
-                    }
-
                     if(p_.pairPots().rCutSqr(k, rsIsJMagSq))
                     {
+                        if(molI->ghost())
+                        {
+                            std::cout << "ghost rsIsJ[0]: " << rsIsJ[0] << std::endl;
+                            std::cout << "ghost rsIsJ[1]: " << rsIsJ[1] << std::endl;
+                            std::cout << "ghost rsIsJ[2]: " << rsIsJ[2] << std::endl;
+                            std::cout << "ghost rsIsJMagSq: " << rsIsJMagSq << std::endl;
+                        }
+
     //                     if(!p_.pairPots().excludeSites(molI, molJ, sI, sJ, k))
                         {
                             scalar rsIsJMag = mag(rsIsJ);
