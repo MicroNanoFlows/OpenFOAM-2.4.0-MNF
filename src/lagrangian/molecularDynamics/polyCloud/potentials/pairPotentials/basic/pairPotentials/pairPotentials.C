@@ -283,6 +283,7 @@ bool pairPotentials::rCutSqr
 {
     if(rIJSqr < pairPotentials_[k]->rCutSqr())
     {
+        std::cout << "Testing: " << rIJSqr << "against: " << pairPotentials_[k]->rCutSqr() << std::endl;
         return true;
     }
     else
