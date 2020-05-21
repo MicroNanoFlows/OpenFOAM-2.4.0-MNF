@@ -954,7 +954,6 @@ void dsmcMdCoupling::receiveCoupledRegionAcc()
         // Iterate through all accelerations received for this controller and apply if IDs match
         forAll(rcvParcId, iface)
         {
-            std::cout << "-------------------------------start" << std::endl;
             forAll(rcvParcId[iface], rcv_acc)
             {
                 forAll(parcelsInRegion, parcel)
@@ -965,15 +964,12 @@ void dsmcMdCoupling::receiveCoupledRegionAcc()
                                         (0.5 * rcvAccY[iface][rcv_acc] * mesh_.time().deltaTValue()),
                                         (0.5 * rcvAccZ[iface][rcv_acc] * mesh_.time().deltaTValue()));
 
-                        std::cout << "ApplyVel: " << applyVel[0] << "," << applyVel[1] << "," << applyVel[2] << std::endl;
-
                         parcelsInRegion[parcel]->U() += applyVel;
 
                         break;
                     }
                 }
             }
-            std::cout << "-------------------------------end" << std::endl;
         }
     }
 #endif

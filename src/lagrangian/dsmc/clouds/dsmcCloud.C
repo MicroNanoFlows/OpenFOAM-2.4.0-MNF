@@ -1061,18 +1061,25 @@ void Foam::dsmcCloud::evolve()
     }
 
     controllers_.controlBeforeCollisions();//**** // Coupling boundaries handled (receive/send)
-	boundaries_.controlBeforeCollisions();//****
+
+    if(coupled_)
+    {
+        // Update cell occupancy (coupling boundary interactions may have changed it)
+        buildCellOccupancy();
+    }
+
+    boundaries_.controlBeforeCollisions();//****
 
     // Calculate new velocities via stochastic collisions
     collisions();
     
-    if(chemReact_ || coupled_)
+    if(chemReact_)
     {
-        // Update cell occupancy (reactions or coupling boundary interactions may have changed it)
+        // Update cell occupancy (reactions may have changed it)
         buildCellOccupancy();
     }
 
-    controllers_.controlAfterCollisions();//****
+    controllers_.controlAfterCollisions();//**** //Coupling region sent and accelerations received applied to parcel velocity
     boundaries_.controlAfterCollisions();//****
 
     if(chemReact_)

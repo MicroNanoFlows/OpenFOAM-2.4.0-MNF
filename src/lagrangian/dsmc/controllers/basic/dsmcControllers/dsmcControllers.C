@@ -641,7 +641,7 @@ void dsmcControllers::controlAfterCollisions()
         couplingControllers_[cC]->controlParcelsAfterCollisions(1);
     }
 
-    // Receive forces for parcels in the coupled region (blocking)
+    // Receive any accelerations for parcels in the coupled region (blocking)
     forAll(couplingControllers_, cC)
     {
         couplingControllers_[cC]->controlParcelsAfterCollisions(2);
