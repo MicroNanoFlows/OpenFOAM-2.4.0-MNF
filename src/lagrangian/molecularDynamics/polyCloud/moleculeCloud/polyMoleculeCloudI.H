@@ -99,14 +99,14 @@ inline void Foam::polyMoleculeCloud::evaluatePair
                     if(molI->ghost())
                     {
                         std::cout << "ghost k: " << k << std::endl;
-                        std::cout << "ghost rsIsJMagSq: " << std::endl;
+                        std::cout << "ghost rsIsJMagSq: " << rsIsJMagSq << std::endl;
                     }
                     else
                     {
                         std::cout << "normal k: " << k << std::endl;
                         if(p_.pairPots().rCutSqr(k, rsIsJMagSq))
                         {
-                            std::cout << "normal rsIsJMagSq: " << std::endl;
+                            std::cout << "normal rsIsJMagSq: " << rsIsJMagSq << std::endl;
                         }
                     }
 
