@@ -965,7 +965,7 @@ void dsmcMdCoupling::receiveCoupledRegionAcc()
                                         (0.5 * rcvAccY[iface][rcv_acc] * mesh_.time().deltaTValue()),
                                         (0.5 * rcvAccZ[iface][rcv_acc] * mesh_.time().deltaTValue()));
 
-                        std::cout << "ApplyVel: " << applyVel[0] << "," applyVel[1] << "," << applyVel[2] << std::endl;
+                        std::cout << "ApplyVel: " << applyVel[0] << "," << applyVel[1] << "," << applyVel[2] << std::endl;
 
                         parcelsInRegion[parcel]->U() += applyVel;
 
