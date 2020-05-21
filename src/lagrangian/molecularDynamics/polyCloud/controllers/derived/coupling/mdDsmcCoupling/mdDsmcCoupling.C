@@ -1253,7 +1253,7 @@ void mdDsmcCoupling::sendCoupledRegionAcc()
                                 sendInterfaces_[iface]->push("acc_y_region", molCentre, acc[1]);
                                 sendInterfaces_[iface]->push("acc_z_region", molCentre, acc[2]);
 
-                                count++
+                                count++;
                             }
                         }
                     }
