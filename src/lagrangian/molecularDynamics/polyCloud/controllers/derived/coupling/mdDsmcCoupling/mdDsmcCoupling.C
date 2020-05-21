@@ -1199,6 +1199,7 @@ void mdDsmcCoupling::sendCoupledRegionAcc()
 #ifdef USE_MUI
     if(sendingRegion_)
     {
+        label count = 0;
         polyMolecule* molecule = NULL;
 
         // Iterate through all sending interfaces for this controller
@@ -1225,10 +1226,6 @@ void mdDsmcCoupling::sendCoupledRegionAcc()
                                 siteForcesAccum[1] += molecule->siteForces()[s][1];
                                 siteForcesAccum[2] += molecule->siteForces()[s][2];
                             }
-
-			    siteForcesAccum[0] *= 10.0;
-			    siteForcesAccum[1] *= 10.0;
-			    siteForcesAccum[2] *= 10.0;
 			
                             if(siteForcesAccum[0] != 0 || siteForcesAccum[1] != 0 || siteForcesAccum[2] != 0)
                             {
@@ -1255,6 +1252,8 @@ void mdDsmcCoupling::sendCoupledRegionAcc()
                                 sendInterfaces_[iface]->push("acc_x_region", molCentre, acc[0]);
                                 sendInterfaces_[iface]->push("acc_y_region", molCentre, acc[1]);
                                 sendInterfaces_[iface]->push("acc_z_region", molCentre, acc[2]);
+
+                                count++
                             }
                         }
                     }
@@ -1264,6 +1263,8 @@ void mdDsmcCoupling::sendCoupledRegionAcc()
             // Commit (transmit) values to the MUI interface
             sendInterfaces_[iface]->commit(currIteration_);
         }
+
+        std::cout << "Pushed " << count << " forces" << std::endl;
     }
 #endif
 }

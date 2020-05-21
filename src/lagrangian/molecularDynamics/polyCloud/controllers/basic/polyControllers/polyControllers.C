@@ -618,6 +618,14 @@ void polyControllers::controlBeforeMove()
 
 void polyControllers::controlAfterMove()
 {
+    //- Rebuild cell occupancy (only need to do with one controller)
+    if(couplingControllers_.size() > 0)
+    {
+        couplingControllers_[0]->rebuildCellOccupancy();
+        couplingControllers_[0]->resetTracking(); //- Lots of adds/deletes in coupled method, ensure tracking number hasn't exceeded maximum
+        couplingControllers_[0]->prepareInteractions();
+    }
+
     //- Collate, delete and send any molecules that passed through a coupling boundary
     forAll(couplingControllers_, cC)
     {

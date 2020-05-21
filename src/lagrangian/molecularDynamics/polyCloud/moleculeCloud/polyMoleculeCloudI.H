@@ -110,6 +110,14 @@ inline void Foam::polyMoleculeCloud::evaluatePair
                             molI->siteForces()[sI] += fsIsJ;
                             molJ->siteForces()[sJ] += -fsIsJ;
 
+                            if(molI->ghost())
+                            {
+                                if(fsIsJ[0] != 0 || fsIsJ[1] != 0 || fsIsJ[2] != 0)
+                                {
+                                    std::cout << "Ghost set force" << std::endl;
+                                }
+                            }
+
                             scalar potentialEnergy
                             (
                                 f*p_.pairPots().energy(k, rsIsJMag)
