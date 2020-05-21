@@ -51,6 +51,10 @@ inline void Foam::polyMoleculeCloud::evaluatePair
         // make sure both molecules aren't of a ghost type
         if(!molI->ghost() || !molJ->ghost())
         {
+            if(molI->ghost())
+            {
+                std::cout << "Testing ghost against other molecules" << std::endl;
+            }
             // fraction
             scalar f = molI->fraction();
 
