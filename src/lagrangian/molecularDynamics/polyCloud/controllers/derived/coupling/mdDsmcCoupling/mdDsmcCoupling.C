@@ -1218,7 +1218,7 @@ void mdDsmcCoupling::sendCoupledRegionAcc()
                         if(typeIndex != -1)
                         {
                             vector siteForcesAccum(vector::zero);
-
+			
                             forAll(molecule->siteForces(), s)
                             {
                                 siteForcesAccum[0] += molecule->siteForces()[s][0];
@@ -1226,6 +1226,10 @@ void mdDsmcCoupling::sendCoupledRegionAcc()
                                 siteForcesAccum[2] += molecule->siteForces()[s][2];
                             }
 
+			    siteForcesAccum[0] *= 10.0;
+			    siteForcesAccum[1] *= 10.0;
+			    siteForcesAccum[2] *= 10.0;
+			
                             if(siteForcesAccum[0] != 0 || siteForcesAccum[1] != 0 || siteForcesAccum[2] != 0)
                             {
                                 const scalar& mass = molCloud_.cP().mass(molecule->id());
