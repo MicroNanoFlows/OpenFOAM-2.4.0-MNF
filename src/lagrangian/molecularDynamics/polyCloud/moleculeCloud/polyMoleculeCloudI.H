@@ -96,6 +96,20 @@ inline void Foam::polyMoleculeCloud::evaluatePair
     //
     //                 Info << "k = " << k << endl;
 
+                    if(molI->ghost())
+                    {
+                        std::cout << "ghost k: " << k << std::endl;
+                        std::cout << "ghost rsIsJMagSq: " << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << "normal k: " << k << std::endl;
+                        if(p_.pairPots().rCutSqr(k, rsIsJMagSq))
+                        {
+                            std::cout << "normal rsIsJMagSq: " << std::endl;
+                        }
+                    }
+
                     if(p_.pairPots().rCutSqr(k, rsIsJMagSq))
                     {
     //                     if(!p_.pairPots().excludeSites(molI, molJ, sI, sJ, k))
@@ -109,24 +123,6 @@ inline void Foam::polyMoleculeCloud::evaluatePair
 
                             molI->siteForces()[sI] += fsIsJ;
                             molJ->siteForces()[sJ] += -fsIsJ;
-
-                            if(molI->ghost())
-                            {
-                                if(fsIsJ[0] != 0 || fsIsJ[1] != 0 || fsIsJ[2] != 0)
-                                {
-                                    std::cout << "Ghost set force" << std::endl;
-                                }
-                                else
-                                {
-
-
-                                    std::cout << "f: " << f << std::endl;
-                                    std::cout << "rsIsJ[0]: " << rsIsJ[0] << std::endl;
-                                    std::cout << "rsIsJ[1]: " << rsIsJ[1] << std::endl;
-                                    std::cout << "rsIsJ[2]: " << rsIsJ[2] << std::endl;
-                                    std::cout << "force: " << p_.pairPots().force(k, rsIsJMag) << std::endl;
-                                }
-                            }
 
                             scalar potentialEnergy
                             (
