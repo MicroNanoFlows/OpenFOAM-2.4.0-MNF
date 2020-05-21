@@ -926,9 +926,9 @@ void dsmcMdCoupling::receiveCoupledRegionAcc()
                 {
                     vector position = parcel->position();
 
-                    if((position[0] > couplingRegionMin_[0] && position[0] < couplingRegionMax_[0]) &&
-                       (position[1] > couplingRegionMin_[1] && position[1] < couplingRegionMax_[1]) &&
-                       (position[2] > couplingRegionMin_[2] && position[2] < couplingRegionMax_[2]))
+                    if((position[0] >= couplingRegionMin_[0] && position[0] <= couplingRegionMax_[0]) &&
+                       (position[1] >= couplingRegionMin_[1] && position[1] <= couplingRegionMax_[1]) &&
+                       (position[2] >= couplingRegionMin_[2] && position[2] <= couplingRegionMax_[2]))
                     {
                         insideRegion = true;
                     }
@@ -954,17 +954,18 @@ void dsmcMdCoupling::receiveCoupledRegionAcc()
         // Iterate through all accelerations received for this controller and apply if IDs match
         forAll(rcvParcId, iface)
         {
+            std::cout << "-------------------------------start" << std::endl;
             forAll(rcvParcId[iface], rcv_acc)
             {
                 forAll(parcelsInRegion, parcel)
                 {
                     if(rcvParcId[iface][rcv_acc] == parcelsInRegion[parcel]->origId())
                     {
-                        vector applyVel;
+                        vector applyVel((0.5 * rcvAccX[iface][rcv_acc] * mesh_.time().deltaTValue()),
+                                        (0.5 * rcvAccY[iface][rcv_acc] * mesh_.time().deltaTValue()),
+                                        (0.5 * rcvAccZ[iface][rcv_acc] * mesh_.time().deltaTValue()));
 
-                        applyVel[0] = 0.5 * rcvAccX[iface][rcv_acc] * mesh_.time().deltaTValue();
-                        applyVel[1] = 0.5 * rcvAccY[iface][rcv_acc] * mesh_.time().deltaTValue();
-                        applyVel[2] = 0.5 * rcvAccZ[iface][rcv_acc] * mesh_.time().deltaTValue();
+                        std::cout << "ApplyVel: " << applyVel[0] << "," applyVel[1] << "," applyVel[2] << std::endl;
 
                         parcelsInRegion[parcel]->U() += applyVel;
 
@@ -972,6 +973,7 @@ void dsmcMdCoupling::receiveCoupledRegionAcc()
                     }
                 }
             }
+            std::cout << "-------------------------------end" << std::endl;
         }
     }
 #endif

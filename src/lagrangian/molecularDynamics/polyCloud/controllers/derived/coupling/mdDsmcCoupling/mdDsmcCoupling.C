@@ -1199,7 +1199,6 @@ void mdDsmcCoupling::sendCoupledRegionAcc()
 #ifdef USE_MUI
     if(sendingRegion_)
     {
-        label count = 0;
         polyMolecule* molecule = NULL;
 
         // Iterate through all sending interfaces for this controller
@@ -1222,12 +1221,6 @@ void mdDsmcCoupling::sendCoupledRegionAcc()
 			
                             forAll(molecule->siteForces(), s)
                             {
-                                if(molecule->siteForces()[s][0] != 0 || molecule->siteForces()[s][1] != 0 || molecule->siteForces()[s][2] != 0)
-                                {
-                                    std::cout << "Force pos: " << molecule->position()[0] << "," << molecule->position()[1] << "," << molecule->position()[2] << std::endl;
-                                    std::cout << "Force: " << molecule->siteForces()[s][0] << "," << molecule->siteForces()[s][1] << "," << molecule->siteForces()[s][2] << std::endl;
-                                }
-
                                 siteForcesAccum[0] += molecule->siteForces()[s][0];
                                 siteForcesAccum[1] += molecule->siteForces()[s][1];
                                 siteForcesAccum[2] += molecule->siteForces()[s][2];
@@ -1250,20 +1243,13 @@ void mdDsmcCoupling::sendCoupledRegionAcc()
                                 sendInterfaces_[iface]->push("id_region", molCentre, static_cast<label>(molId_[iface][mol]));
 
                                 // Push the molecule acceleration to the interface
-                                vector acc;
-                                acc[0] = ((siteForcesAccum[0] * rU_.refForce()) / (mass * rU_.refMass()));
-                                acc[1] = ((siteForcesAccum[1] * rU_.refForce()) / (mass * rU_.refMass()));
-                                acc[2] = ((siteForcesAccum[2] * rU_.refForce()) / (mass * rU_.refMass()));
+                                vector acc(((siteForcesAccum[0] * rU_.refForce()) / (mass * rU_.refMass())),
+                                           ((siteForcesAccum[1] * rU_.refForce()) / (mass * rU_.refMass())),
+                                           ((siteForcesAccum[2] * rU_.refForce()) / (mass * rU_.refMass())));
 
                                 sendInterfaces_[iface]->push("acc_x_region", molCentre, acc[0]);
                                 sendInterfaces_[iface]->push("acc_y_region", molCentre, acc[1]);
                                 sendInterfaces_[iface]->push("acc_z_region", molCentre, acc[2]);
-
-                                std::cout << "Acc0: " << acc[0] << std::endl;
-                                std::cout << "Acc1: " << acc[1] << std::endl;
-                                std::cout << "Acc2: " << acc[2] << std::endl << std::endl;
-
-                                count++;
                             }
                         }
                     }
@@ -1273,8 +1259,6 @@ void mdDsmcCoupling::sendCoupledRegionAcc()
             // Commit (transmit) values to the MUI interface
             sendInterfaces_[iface]->commit(currIteration_);
         }
-
-        std::cout << "Pushed " << count << " forces" << std::endl;
     }
 #endif
 }
