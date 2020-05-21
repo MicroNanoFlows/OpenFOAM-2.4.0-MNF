@@ -1253,9 +1253,9 @@ void mdDsmcCoupling::sendCoupledRegionAcc()
                                 sendInterfaces_[iface]->push("acc_y_region", molCentre, acc[1]);
                                 sendInterfaces_[iface]->push("acc_z_region", molCentre, acc[2]);
 
-                                std::cout << "Acc0: " acc[0] << std::endl;
-                                std::cout << "Acc1: " acc[0] << std::endl;
-                                std::cout << "Acc2: " acc[0] << std::endl << std::endl;
+                                std::cout << "Acc0: " << acc[0] << std::endl;
+                                std::cout << "Acc1: " << acc[1] << std::endl;
+                                std::cout << "Acc2: " << acc[2] << std::endl << std::endl;
 
                                 count++;
                             }
