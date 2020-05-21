@@ -118,15 +118,13 @@ inline void Foam::polyMoleculeCloud::evaluatePair
                                 }
                                 else
                                 {
-                                    vector force = p_.pairPots().force(k, rsIsJMag);
+
 
                                     std::cout << "f: " << f << std::endl;
                                     std::cout << "rsIsJ[0]: " << rsIsJ[0] << std::endl;
                                     std::cout << "rsIsJ[1]: " << rsIsJ[1] << std::endl;
                                     std::cout << "rsIsJ[2]: " << rsIsJ[2] << std::endl;
-                                    std::cout << "force[0]: " << force[0] << std::endl;
-                                    std::cout << "force[1]: " << force[1] << std::endl;
-                                    std::cout << "force[2]: " << force[2] << std::endl;
+                                    std::cout << "force: " << p_.pairPots().force(k, rsIsJMag) << std::endl;
                                 }
                             }
 
