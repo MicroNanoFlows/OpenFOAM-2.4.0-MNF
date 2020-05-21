@@ -51,10 +51,6 @@ inline void Foam::polyMoleculeCloud::evaluatePair
         // make sure both molecules aren't of a ghost type
         if(!molI->ghost() || !molJ->ghost())
         {
-            if(molI->ghost())
-            {
-                std::cout << "Testing ghost against other molecules" << std::endl;
-            }
             // fraction
             scalar f = molI->fraction();
 
@@ -119,6 +115,18 @@ inline void Foam::polyMoleculeCloud::evaluatePair
                                 if(fsIsJ[0] != 0 || fsIsJ[1] != 0 || fsIsJ[2] != 0)
                                 {
                                     std::cout << "Ghost set force" << std::endl;
+                                }
+                                else
+                                {
+                                    vector force = p_.pairPots().force(k, rsIsJMag);
+
+                                    std::cout << "f: " << f << std::endl;
+                                    std::cout << "rsIsJ[0]: " << rsIsJ[0] << std::endl;
+                                    std::cout << "rsIsJ[1]: " << rsIsJ[1] << std::endl;
+                                    std::cout << "rsIsJ[2]: " << rsIsJ[2] << std::endl;
+                                    std::cout << "force[0]: " << force[0] << std::endl;
+                                    std::cout << "force[1]: " << force[1] << std::endl;
+                                    std::cout << "force[2]: " << force[2] << std::endl;
                                 }
                             }
 
