@@ -1222,6 +1222,12 @@ void mdDsmcCoupling::sendCoupledRegionAcc()
 			
                             forAll(molecule->siteForces(), s)
                             {
+                                if(siteForces()[0] != 0 || siteForces()[1] != 0 || siteForces()[2] != 0)
+                                {
+                                    std::cout << "Force pos: " << molecule->position()[0] << "," << molecule->position()[1] << "," << molecule->position()[2] << std::endl;
+                                    std::cout << "Force: " << siteForces()[0][0] << "," << siteForces()[0][1] << "," << siteForces()[0][2] << std::endl;
+                                }
+
                                 siteForcesAccum[0] += molecule->siteForces()[s][0];
                                 siteForcesAccum[1] += molecule->siteForces()[s][1];
                                 siteForcesAccum[2] += molecule->siteForces()[s][2];

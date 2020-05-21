@@ -96,11 +96,6 @@ inline void Foam::polyMoleculeCloud::evaluatePair
     //
     //                 Info << "k = " << k << endl;
 
-                    if(molI->ghost())
-                    {
-                        std::cout << ":::::::::Ghost Test:::::::::" << std::endl;
-                    }
-
                     if(p_.pairPots().rCutSqr(k, rsIsJMagSq))
                     {
                         //                     if(!p_.pairPots().excludeSites(molI, molJ, sI, sJ, k))
