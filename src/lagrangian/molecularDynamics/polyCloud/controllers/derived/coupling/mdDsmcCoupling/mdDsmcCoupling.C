@@ -1445,9 +1445,9 @@ label mdDsmcCoupling::sendCoupledMolecules()
                     sendInterfaces_[iface]->push("type_bound", molCentre, static_cast<std::string>(molsToSend_[mols].molType));
 
                     // Push molecule velocity
-                    sendInterfaces_[iface]->push("vel_x_bound", molCentre, molsToSend_[mols].velocity[0] * rU_.refVelocity());
-                    sendInterfaces_[iface]->push("vel_y_bound", molCentre, molsToSend_[mols].velocity[1] * rU_.refVelocity());
-                    sendInterfaces_[iface]->push("vel_z_bound", molCentre, molsToSend_[mols].velocity[2] * rU_.refVelocity());
+                    sendInterfaces_[iface]->push("vel_x_bound", molCentre, molsToSend_[mols].velocity[0] * rU_.refVelocity() * 0.8);
+                    sendInterfaces_[iface]->push("vel_y_bound", molCentre, molsToSend_[mols].velocity[1] * rU_.refVelocity() * 0.8);
+                    sendInterfaces_[iface]->push("vel_z_bound", molCentre, molsToSend_[mols].velocity[2] * rU_.refVelocity() * 0.8);
 
                     nmolsSent++;
                 }
