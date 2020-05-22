@@ -1294,7 +1294,6 @@ bool mdDsmcCoupling::findCoupledMolecules()
                             {
                                 scalar boundDiff = molsInCell[molecule]->position()[0] - couplingBoundMin_[0];
                                 molVel[0] -= boundDiff;
-                                std::cout << "boundDiff boundMin: " << boundDiff;
                                 removeMolecule = true;
                             }
                         }
@@ -1304,7 +1303,6 @@ bool mdDsmcCoupling::findCoupledMolecules()
                             {
                                 scalar boundDiff = molsInCell[molecule]->position()[0] - couplingBoundMax_[0];
                                 molVel[0] -= boundDiff;
-                                std::cout << "boundDiff boundMax: " << boundDiff;
                                 removeMolecule = true;
                             }
                         }
