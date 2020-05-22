@@ -1284,6 +1284,7 @@ bool mdDsmcCoupling::findCoupledMolecules()
                 if(!molsInCell[molecule]->ghost() && !molsInCell[molecule]->frozen())
                 {
                     bool removeMolecule = false;
+                    vector molVel(molsInCell[molecule]->v());
 
                     if(couplingBoundZeroThick_[0] == 1)
                     {
@@ -1291,6 +1292,9 @@ bool mdDsmcCoupling::findCoupledMolecules()
                         {
                             if(molsInCell[molecule]->position()[0] <= couplingBoundMin_[0])
                             {
+                                scalar boundDiff = molsInCell[molecule]->position()[0] - couplingBoundMin_[0];
+                                molVel[0] -= boundDiff;
+                                std::cout << "boundDiff boundMin: " << boundDiff;
                                 removeMolecule = true;
                             }
                         }
@@ -1298,6 +1302,9 @@ bool mdDsmcCoupling::findCoupledMolecules()
                         {
                             if(molsInCell[molecule]->position()[0] >= couplingBoundMax_[0])
                             {
+                                scalar boundDiff = molsInCell[molecule]->position()[0] - couplingBoundMax_[0];
+                                molVel[0] -= boundDiff;
+                                std::cout << "boundDiff boundMax: " << boundDiff;
                                 removeMolecule = true;
                             }
                         }
@@ -1309,6 +1316,8 @@ bool mdDsmcCoupling::findCoupledMolecules()
                         {
                             if(molsInCell[molecule]->position()[1] <= couplingBoundMin_[1])
                             {
+                                scalar boundDiff = molsInCell[molecule]->position()[1] - couplingBoundMin_[1];
+                                molVel[1] -= boundDiff;
                                 removeMolecule = true;
                             }
                         }
@@ -1316,6 +1325,8 @@ bool mdDsmcCoupling::findCoupledMolecules()
                         {
                             if(molsInCell[molecule]->position()[1] >= couplingBoundMax_[1])
                             {
+                                scalar boundDiff = molsInCell[molecule]->position()[1] - couplingBoundMax_[1];
+                                molVel[1] -= boundDiff;
                                 removeMolecule = true;
                             }
                         }
@@ -1327,6 +1338,8 @@ bool mdDsmcCoupling::findCoupledMolecules()
                         {
                             if(molsInCell[molecule]->position()[2] <= couplingBoundMin_[2])
                             {
+                                scalar boundDiff = molsInCell[molecule]->position()[2] - couplingBoundMin_[2];
+                                molVel[2] -= boundDiff;
                                 removeMolecule = true;
                             }
                         }
@@ -1334,6 +1347,8 @@ bool mdDsmcCoupling::findCoupledMolecules()
                         {
                             if(molsInCell[molecule]->position()[2] >= couplingBoundMax_[2])
                             {
+                                scalar boundDiff = molsInCell[molecule]->position()[2] - couplingBoundMax_[2];
+                                molVel[2] -= boundDiff;
                                 removeMolecule = true;
                             }
                         }
@@ -1354,12 +1369,12 @@ bool mdDsmcCoupling::findCoupledMolecules()
                             }
                             else
                             {
-                                if(newMolToSend.position[0] <= couplingBoundMin_[0])
+                                if(newMolToSend.position[0] < couplingBoundMin_[0])
                                 {
                                     newMolToSend.position[0] = couplingBoundMin_[0];
                                 }
 
-                                if(newMolToSend.position[0] >= couplingBoundMax_[0])
+                                if(newMolToSend.position[0] > couplingBoundMax_[0])
                                 {
                                     newMolToSend.position[0] = couplingBoundMax_[0];
                                 }
@@ -1371,12 +1386,12 @@ bool mdDsmcCoupling::findCoupledMolecules()
                             }
                             else
                             {
-                                if(newMolToSend.position[1] <= couplingBoundMin_[1])
+                                if(newMolToSend.position[1] < couplingBoundMin_[1])
                                 {
                                     newMolToSend.position[1] = couplingBoundMin_[1];
                                 }
 
-                                if(newMolToSend.position[1] >= couplingBoundMax_[1])
+                                if(newMolToSend.position[1] > couplingBoundMax_[1])
                                 {
                                     newMolToSend.position[1] = couplingBoundMax_[1];
                                 }
@@ -1388,19 +1403,19 @@ bool mdDsmcCoupling::findCoupledMolecules()
                             }
                             else
                             {
-                                if(newMolToSend.position[2] <= couplingBoundMin_[2])
+                                if(newMolToSend.position[2] < couplingBoundMin_[2])
                                 {
                                     newMolToSend.position[2] = couplingBoundMin_[2];
                                 }
 
-                                if(newMolToSend.position[2] >= couplingBoundMax_[2])
+                                if(newMolToSend.position[2] > couplingBoundMax_[2])
                                 {
                                     newMolToSend.position[2] = couplingBoundMax_[2];
                                 }
                             }
                         }
 
-                        newMolToSend.velocity = molsInCell[molecule]->v();
+                        newMolToSend.velocity = molVel;
                         molsToSend_.append(newMolToSend);
 
                         //- Store that this molecule needs to be removed
@@ -1445,9 +1460,9 @@ label mdDsmcCoupling::sendCoupledMolecules()
                     sendInterfaces_[iface]->push("type_bound", molCentre, static_cast<std::string>(molsToSend_[mols].molType));
 
                     // Push molecule velocity
-                    sendInterfaces_[iface]->push("vel_x_bound", molCentre, molsToSend_[mols].velocity[0] * rU_.refVelocity() * 0.8);
-                    sendInterfaces_[iface]->push("vel_y_bound", molCentre, molsToSend_[mols].velocity[1] * rU_.refVelocity() * 0.8);
-                    sendInterfaces_[iface]->push("vel_z_bound", molCentre, molsToSend_[mols].velocity[2] * rU_.refVelocity() * 0.8);
+                    sendInterfaces_[iface]->push("vel_x_bound", molCentre, molsToSend_[mols].velocity[0] * rU_.refVelocity());
+                    sendInterfaces_[iface]->push("vel_y_bound", molCentre, molsToSend_[mols].velocity[1] * rU_.refVelocity());
+                    sendInterfaces_[iface]->push("vel_z_bound", molCentre, molsToSend_[mols].velocity[2] * rU_.refVelocity());
 
                     nmolsSent++;
                 }
