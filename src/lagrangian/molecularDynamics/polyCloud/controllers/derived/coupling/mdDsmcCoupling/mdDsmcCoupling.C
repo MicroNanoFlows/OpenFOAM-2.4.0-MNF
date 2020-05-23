@@ -1056,42 +1056,35 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
 
                         if(couplingRegion_)
                         {
-                            bool trunc = false;
 
                             if(checkedPosition[0] <= couplingRegionMin_[0])
                             {
                                 checkedPosition[0] = couplingRegionMin_[0] + boundCorr_;
-                                trunc = true;
                             }
 
                             if(checkedPosition[0] >= couplingRegionMax_[0])
                             {
                                 checkedPosition[0] = couplingRegionMax_[0] - boundCorr_;
-                                trunc = true;
                             }
 
                             if(checkedPosition[1] <= couplingRegionMin_[1])
                             {
                                 checkedPosition[1] = couplingRegionMin_[1] + boundCorr_;
-                                trunc = true;
                             }
 
                             if(checkedPosition[1] >= couplingRegionMax_[1])
                             {
                                 checkedPosition[1] = couplingRegionMax_[1] - boundCorr_;
-                                trunc = true;
                             }
 
                             if(checkedPosition[2] <= couplingRegionMin_[2])
                             {
                                 checkedPosition[2] = couplingRegionMin_[2] + boundCorr_;
-                                trunc = true;
                             }
 
                             if(checkedPosition[2] >= couplingRegionMax_[2])
                             {
                                 checkedPosition[2] = couplingRegionMax_[2] - boundCorr_;
-                                trunc = true;
                             }
                         }
 
@@ -1795,6 +1788,8 @@ mdDsmcCoupling::cplMoleculeInsert mdDsmcCoupling::insertCoupledMolecules()
             const label molId = findIndex(molNames_, molsReceived_[mol].molType);
 
             point molPosition = molsReceived_[mol].position;
+
+            std::cout << "Mol inserted at: " << molPosition[0] << "," << molPosition[1] << "," << molPosition[2] << std::endl;
 
             newMol = insertMolecule(molPosition, molIds_[molId], false, molsReceived_[mol].velocity);
 
