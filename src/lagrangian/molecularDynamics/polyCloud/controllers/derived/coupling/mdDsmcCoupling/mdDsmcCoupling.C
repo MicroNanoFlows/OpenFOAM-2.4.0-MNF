@@ -1311,11 +1311,6 @@ bool mdDsmcCoupling::findCoupledMolecules()
                                 // Calculate adjustment based on current position
                                 vector velAdjust = molPos - intersectPoint;
 
-                                std::cout << "Vel adjustment min bound: " << velAdjust[0] << "," << velAdjust[1] << "," << velAdjust[2] << std::endl;
-                                std::cout << "intersect: " << intersectPoint[0] << "," << intersectPoint[1] << "," << intersectPoint[2] << std::endl;
-                                std::cout << "molPosHist: " << molPosHist[0] << "," << molPosHist[1] << "," << molPosHist[2] << std::endl;
-                                std::cout << "molPos: " << molPos[0] << "," << molPos[1] << "," << molPos[2] << std::endl;
-
                                 molVel -=  velAdjust;
 
                                 removeMolecule = true;
@@ -1341,8 +1336,6 @@ bool mdDsmcCoupling::findCoupledMolecules()
 
                                 // Calculate adjustment based on current position
                                 vector velAdjust = molPos - intersectPoint;
-
-                                std::cout << "Vel adjustment max bound: " << velAdjust[0] << "," << velAdjust[1] << "," << velAdjust[2] << std::endl;
 
                                 molVel -=  velAdjust;
 
@@ -1374,8 +1367,6 @@ bool mdDsmcCoupling::findCoupledMolecules()
                                 // Calculate adjustment based on current position
                                 vector velAdjust = molPos - intersectPoint;
 
-                                std::cout << "Vel adjustment: " << velAdjust[0] << "," << velAdjust[1] << "," << velAdjust[2] << std::endl;
-
                                 molVel -=  velAdjust;
 
                                 removeMolecule = true;
@@ -1401,8 +1392,6 @@ bool mdDsmcCoupling::findCoupledMolecules()
 
                                 // Calculate adjustment based on current position
                                 vector velAdjust = molPos - intersectPoint;
-
-                                std::cout << "Vel adjustment: " << velAdjust[0] << "," << velAdjust[1] << "," << velAdjust[2] << std::endl;
 
                                 molVel -=  velAdjust;
 
@@ -1434,8 +1423,6 @@ bool mdDsmcCoupling::findCoupledMolecules()
                                 // Calculate adjustment based on current position
                                 vector velAdjust = molPos - intersectPoint;
 
-                                std::cout << "Vel adjustment: " << velAdjust[0] << "," << velAdjust[1] << "," << velAdjust[2] << std::endl;
-
                                 molVel -=  velAdjust;
 
                                 removeMolecule = true;
@@ -1461,8 +1448,6 @@ bool mdDsmcCoupling::findCoupledMolecules()
 
                                 // Calculate adjustment based on current position
                                 vector velAdjust = molPos - intersectPoint;
-
-                                std::cout << "Vel adjustment: " << velAdjust[0] << "," << velAdjust[1] << "," << velAdjust[2] << std::endl;
 
                                 molVel -=  velAdjust;
 
