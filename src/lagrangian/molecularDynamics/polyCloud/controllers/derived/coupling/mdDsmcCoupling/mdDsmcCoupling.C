@@ -1297,9 +1297,6 @@ bool mdDsmcCoupling::findCoupledMolecules()
                                 vector& molPos = molsInCell[molecule]->position();
                                 vector molVec = molPosHist - molPos;
 
-                                std::cout << "History pos: " << molPosHist[0] << "," << molPosHist[1] << "," << molPosHist[2] << std::endl;
-                                std::cout << "Current pos: " << molPos[0] << "," << molPos[1] << "," << molPos[2] << std::endl;
-
                                 vector diff = molPosHist - couplingBoundMin_;
                                 scalar dotVec = molVec & couplingBoundNorm_;
                                 scalar mult = 0;
@@ -1310,6 +1307,10 @@ bool mdDsmcCoupling::findCoupledMolecules()
 
                                 // Find point where molecule crossed boundary
                                 vector intersectPoint = molPosHist - molVec * mult;
+
+                                std::cout << "molHistory: " << molPosHist[0] << "," << molPosHist[1] << "," << molPosHist[2] << std::endl;
+                                std::cout << "currPos: " << molPos[0] << "," << molPos[1] << "," << molPos[2] << std::endl;
+                                std::cout << "intersect: " << intersectPoint[0] << "," << intersectPoint[1] << "," << intersectPoint[2] << std::endl;
 
                                 // Calculate magSqr for final position and position at boundary
                                 scalar finalDistance = magSqr(molVec);
