@@ -337,8 +337,8 @@ mdDsmcCoupling::mdDsmcCoupling
         //- Find the whole mesh extents
         vector meshExtents = mesh_.bounds().max() - mesh_.bounds().min();
 
-        // Boundary correction value (0.001% extents) calculated against whole mesh extents for consistency at different parallelisation levels
-        vector boundCorr = meshExtents * (1e-3 / 100.0);
+        // Boundary correction value (0.0001% extents) calculated against whole mesh extents for consistency at different parallelisation levels
+        vector boundCorr = meshExtents * (1e-4 / 100.0);
 
         // Pick largest correction value as global in each direction
         if(boundCorr[0] > boundCorr[1] && boundCorr[0] > boundCorr[2])
@@ -1053,7 +1053,7 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
                         velocity[0] = rcvVelX_[ifacepts][pts] / rU_.refVelocity();
                         velocity[1] = rcvVelY_[ifacepts][pts] / rU_.refVelocity();
                         velocity[2] = rcvVelZ_[ifacepts][pts] / rU_.refVelocity();
-/*
+
                         if(couplingRegion_)
                         {
                             bool trunc = false;
@@ -1093,13 +1093,8 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
                                 checkedPosition[2] = couplingRegionMax_[2] - boundCorr_;
                                 trunc = true;
                             }
-
-                            if(trunc)
-                            {
-                                std::cout << "receiveCoupledRegion particle boundCorr_ applied" << std::endl;
-                            }
                         }
-*/
+
                         if(molHistory_[ifacepts][pts] == NULL) //- This molecule is new so insert it
                         {
                             newMol = insertMolecule(checkedPosition, molIds_[molId], true, velocity);
@@ -1716,6 +1711,60 @@ label mdDsmcCoupling::receiveCoupledParcels()
                         velocity[0] = rcvVelX_[ifacepts][pts] / rU_.refVelocity();
                         velocity[1] = rcvVelY_[ifacepts][pts] / rU_.refVelocity();
                         velocity[2] = rcvVelZ_[ifacepts][pts] / rU_.refVelocity();
+
+                        if(couplingBounds_)
+                        {
+                            if(couplingBoundZeroThick_[0] == 1) //- Boundary has zero thickness in the x
+                            {
+                                checkedPosition[0] = couplingBoundMin_[0] + (couplingBoundNorm_[0] * boundCorr_);
+                            }
+                            else
+                            {
+                                if(checkedPosition[0] <= couplingBoundMin_[0])
+                                {
+                                    checkedPosition[0] = couplingBoundMin_[0] + boundCorr_;
+                                }
+
+                                if(checkedPosition[0] >= couplingBoundMax_[0])
+                                {
+                                    checkedPosition[0] = couplingBoundMax_[0] - boundCorr_;
+                                }
+                            }
+
+                            if(couplingBoundZeroThick_[1] == 1) //- Boundary has zero thickness in the y
+                            {
+                                checkedPosition[1] = couplingBoundMin_[1] + (couplingBoundNorm_[1] * boundCorr_);
+                            }
+                            else
+                            {
+                                if(checkedPosition[1] <= couplingBoundMin_[1])
+                                {
+                                    checkedPosition[1] = couplingBoundMin_[1] + boundCorr_;
+                                }
+
+                                if(checkedPosition[1] >= couplingBoundMax_[1])
+                                {
+                                    checkedPosition[1] = couplingBoundMax_[1] - boundCorr_;
+                                }
+                            }
+
+                            if(couplingBoundZeroThick_[2] == 1) //- Boundary has zero thickness in the z
+                            {
+                                checkedPosition[2] = couplingBoundMin_[2] + (couplingBoundNorm_[2] * boundCorr_);
+                            }
+                            else
+                            {
+                                if(checkedPosition[2] <= couplingBoundMin_[2])
+                                {
+                                    checkedPosition[2] = couplingBoundMin_[2] + boundCorr_;
+                                }
+
+                                if(checkedPosition[2] >= couplingBoundMax_[2])
+                                {
+                                    checkedPosition[2] = couplingBoundMax_[2] - boundCorr_;
+                                }
+                            }
+                        }
 
                         coupledMolecule newMol;
                         newMol.molType = rcvMolType_[ifacepts][pts];
