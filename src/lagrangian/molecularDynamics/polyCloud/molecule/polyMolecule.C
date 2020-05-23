@@ -84,6 +84,9 @@ bool Foam::polyMolecule::move
         scalar tEnd = (1.0 - stepFraction())*trackTime;
         scalar dtMax = tEnd;
 
+        // Save the current position before update
+        positionHistory_ = position();
+
         while (td.keepParticle && !td.switchProcessor && tEnd > ROOTVSMALL)
         {
             // set the lagrangian time-step

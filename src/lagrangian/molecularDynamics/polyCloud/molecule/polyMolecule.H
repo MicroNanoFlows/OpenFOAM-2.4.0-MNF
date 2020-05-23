@@ -202,6 +202,8 @@ private:
 
         vector specialPosition_;
 
+        vector positionHistory_;
+
         scalar potentialEnergy_;
 
         // - r_ij f_ij, stress dyad
@@ -354,6 +356,9 @@ public:
 
             inline const vector& specialPosition() const;
             inline vector& specialPosition();
+
+            inline const vector& positionHistory() const;
+            inline vector& positionHistory();
 
             inline scalar potentialEnergy() const;
             inline scalar& potentialEnergy();

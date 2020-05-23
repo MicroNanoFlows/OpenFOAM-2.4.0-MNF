@@ -1292,8 +1292,29 @@ bool mdDsmcCoupling::findCoupledMolecules()
                         {
                             if(molsInCell[molecule]->position()[0] <= couplingBoundMin_[0])
                             {
-                                scalar boundDiff = molsInCell[molecule]->position()[0] - couplingBoundMin_[0];
-                                molVel[0] -= boundDiff;
+                                // Find Point where particle intersected boundary
+                                vector& molPosHist = molsInCell[molecule]->positionHistory();
+                                vector& molPos = molsInCell[molecule]->position();
+                                vector molVec = molPosHist - molPos;
+
+                                vector diff = molPosHist - couplingBoundMin_;
+                                scalar dotVec = molVec & couplingBoundNorm_;
+                                scalar mult = 0;
+                                if(dotVec != 0)
+                                {
+                                    mult = (diff & couplingBoundNorm_) / dotVec;
+                                }
+
+                                // Find point where molecule crossed boundary
+                                vector intersectPoint = molPosHist - molVec * mult;
+
+                                // Calculate adjustment based on current position
+                                vector velAdjust = molPos - intersectPoint;
+
+                                std::cout << "Vel adjustment min bound: " << velAdjust[0] << "," << velAdjust[1] << "," << velAdjust[2] << std::endl;
+
+                                molVel -=  velAdjust;
+
                                 removeMolecule = true;
                             }
                         }
@@ -1301,8 +1322,27 @@ bool mdDsmcCoupling::findCoupledMolecules()
                         {
                             if(molsInCell[molecule]->position()[0] >= couplingBoundMax_[0])
                             {
-                                scalar boundDiff = molsInCell[molecule]->position()[0] - couplingBoundMax_[0];
-                                molVel[0] -= boundDiff;
+                                // Find Point where particle intersected boundary
+                                vector& molPosHist = molsInCell[molecule]->positionHistory();
+                                vector& molPos = molsInCell[molecule]->position();
+                                vector molVec = molPosHist - molPos;
+
+                                vector diff = molPosHist - couplingBoundMax_;
+                                scalar dotVec = molVec & couplingBoundNorm_;
+                                scalar mult = 0;
+                                if(dotVec != 0)
+                                {
+                                    mult = (diff & couplingBoundNorm_) / dotVec;
+                                }
+                                vector intersectPoint = molPosHist - molVec * mult; // Find point where molecule crossed boundary
+
+                                // Calculate adjustment based on current position
+                                vector velAdjust = molPos - intersectPoint;
+
+                                std::cout << "Vel adjustment max bound: " << velAdjust[0] << "," << velAdjust[1] << "," << velAdjust[2] << std::endl;
+
+                                molVel -=  velAdjust;
+
                                 removeMolecule = true;
                             }
                         }
@@ -1314,8 +1354,27 @@ bool mdDsmcCoupling::findCoupledMolecules()
                         {
                             if(molsInCell[molecule]->position()[1] <= couplingBoundMin_[1])
                             {
-                                scalar boundDiff = molsInCell[molecule]->position()[1] - couplingBoundMin_[1];
-                                molVel[1] -= boundDiff;
+                                // Find Point where particle intersected boundary
+                                vector& molPosHist = molsInCell[molecule]->positionHistory();
+                                vector& molPos = molsInCell[molecule]->position();
+                                vector molVec = molPosHist - molPos;
+
+                                vector diff = molPosHist - couplingBoundMin_;
+                                scalar dotVec = molVec & couplingBoundNorm_;
+                                scalar mult = 0;
+                                if(dotVec != 0)
+                                {
+                                    mult = (diff & couplingBoundNorm_) / dotVec;
+                                }
+                                vector intersectPoint = molPosHist - molVec * mult; // Find point where molecule crossed boundary
+
+                                // Calculate adjustment based on current position
+                                vector velAdjust = molPos - intersectPoint;
+
+                                std::cout << "Vel adjustment: " << velAdjust[0] << "," << velAdjust[1] << "," << velAdjust[2] << std::endl;
+
+                                molVel -=  velAdjust;
+
                                 removeMolecule = true;
                             }
                         }
@@ -1323,8 +1382,27 @@ bool mdDsmcCoupling::findCoupledMolecules()
                         {
                             if(molsInCell[molecule]->position()[1] >= couplingBoundMax_[1])
                             {
-                                scalar boundDiff = molsInCell[molecule]->position()[1] - couplingBoundMax_[1];
-                                molVel[1] -= boundDiff;
+                                // Find Point where particle intersected boundary
+                                vector& molPosHist = molsInCell[molecule]->positionHistory();
+                                vector& molPos = molsInCell[molecule]->position();
+                                vector molVec = molPosHist - molPos;
+
+                                vector diff = molPosHist - couplingBoundMax_;
+                                scalar dotVec = molVec & couplingBoundNorm_;
+                                scalar mult = 0;
+                                if(dotVec != 0)
+                                {
+                                    mult = (diff & couplingBoundNorm_) / dotVec;
+                                }
+                                vector intersectPoint = molPosHist - molVec * mult; // Find point where molecule crossed boundary
+
+                                // Calculate adjustment based on current position
+                                vector velAdjust = molPos - intersectPoint;
+
+                                std::cout << "Vel adjustment: " << velAdjust[0] << "," << velAdjust[1] << "," << velAdjust[2] << std::endl;
+
+                                molVel -=  velAdjust;
+
                                 removeMolecule = true;
                             }
                         }
@@ -1336,8 +1414,27 @@ bool mdDsmcCoupling::findCoupledMolecules()
                         {
                             if(molsInCell[molecule]->position()[2] <= couplingBoundMin_[2])
                             {
-                                scalar boundDiff = molsInCell[molecule]->position()[2] - couplingBoundMin_[2];
-                                molVel[2] -= boundDiff;
+                                // Find Point where particle intersected boundary
+                                vector& molPosHist = molsInCell[molecule]->positionHistory();
+                                vector& molPos = molsInCell[molecule]->position();
+                                vector molVec = molPosHist - molPos;
+
+                                vector diff = molPosHist - couplingBoundMin_;
+                                scalar dotVec = molVec & couplingBoundNorm_;
+                                scalar mult = 0;
+                                if(dotVec != 0)
+                                {
+                                    mult = (diff & couplingBoundNorm_) / dotVec;
+                                }
+                                vector intersectPoint = molPosHist - molVec * mult; // Find point where molecule crossed boundary
+
+                                // Calculate adjustment based on current position
+                                vector velAdjust = molPos - intersectPoint;
+
+                                std::cout << "Vel adjustment: " << velAdjust[0] << "," << velAdjust[1] << "," << velAdjust[2] << std::endl;
+
+                                molVel -=  velAdjust;
+
                                 removeMolecule = true;
                             }
                         }
@@ -1345,8 +1442,27 @@ bool mdDsmcCoupling::findCoupledMolecules()
                         {
                             if(molsInCell[molecule]->position()[2] >= couplingBoundMax_[2])
                             {
-                                scalar boundDiff = molsInCell[molecule]->position()[2] - couplingBoundMax_[2];
-                                molVel[2] -= boundDiff;
+                                // Find Point where particle intersected boundary
+                                vector& molPosHist = molsInCell[molecule]->positionHistory();
+                                vector& molPos = molsInCell[molecule]->position();
+                                vector molVec = molPosHist - molPos;
+
+                                vector diff = molPosHist - couplingBoundMax_;
+                                scalar dotVec = molVec & couplingBoundNorm_;
+                                scalar mult = 0;
+                                if(dotVec != 0)
+                                {
+                                    mult = (diff & couplingBoundNorm_) / dotVec;
+                                }
+                                vector intersectPoint = molPosHist - molVec * mult; // Find point where molecule crossed boundary
+
+                                // Calculate adjustment based on current position
+                                vector velAdjust = molPos - intersectPoint;
+
+                                std::cout << "Vel adjustment: " << velAdjust[0] << "," << velAdjust[1] << "," << velAdjust[2] << std::endl;
+
+                                molVel -=  velAdjust;
+
                                 removeMolecule = true;
                             }
                         }
@@ -1556,86 +1672,6 @@ label mdDsmcCoupling::receiveCoupledParcels()
                         velocity[0] = rcvVelX_[ifacepts][pts] / rU_.refVelocity();
                         velocity[1] = rcvVelY_[ifacepts][pts] / rU_.refVelocity();
                         velocity[2] = rcvVelZ_[ifacepts][pts] / rU_.refVelocity();
-/*
-                        if(couplingBounds_)
-                        {
-                            bool trunc = false;
-
-                            if(couplingBoundZeroThick_[0] == 1) //- Boundary has zero thickness in the x
-                            {
-                                if(checkedPosition[0] <= couplingBoundMin_[0])
-                                {
-                                    checkedPosition[0] = couplingBoundMin_[0] + (couplingBoundNorm_[0] * boundCorr_);
-                                    trunc = true;
-                                }
-                            }
-                            else
-                            {
-                                if(checkedPosition[0] <= couplingBoundMin_[0])
-                                {
-                                    checkedPosition[0] = couplingBoundMin_[0] + boundCorr_;
-                                    trunc = true;
-                                }
-
-                                if(checkedPosition[0] >= couplingBoundMax_[0])
-                                {
-                                    checkedPosition[0] = couplingBoundMax_[0] - boundCorr_;
-                                    trunc = true;
-                                }
-                            }
-
-                            if(couplingBoundZeroThick_[1] == 1) //- Boundary has zero thickness in the y
-                            {
-                                if(checkedPosition[1] <= couplingBoundMin_[1])
-                                {
-                                    checkedPosition[1] = couplingBoundMin_[1] + (couplingBoundNorm_[1] * boundCorr_);
-                                    trunc = true;
-                                }
-                            }
-                            else
-                            {
-                                if(checkedPosition[1] <= couplingBoundMin_[1])
-                                {
-                                    checkedPosition[1] = couplingBoundMin_[1] + boundCorr_;
-                                    trunc = true;
-                                }
-
-                                if(checkedPosition[1] >= couplingBoundMax_[1])
-                                {
-                                    checkedPosition[1] = couplingBoundMax_[1] - boundCorr_;
-                                    trunc = true;
-                                }
-                            }
-
-                            if(couplingBoundZeroThick_[2] == 1) //- Boundary has zero thickness in the z
-                            {
-                                if(checkedPosition[2] <= couplingBoundMin_[2])
-                                {
-                                    checkedPosition[2] = couplingBoundMin_[2] + (couplingBoundNorm_[2] * boundCorr_);
-                                    trunc = true;
-                                }
-                            }
-                            else
-                            {
-                                if(checkedPosition[2] <= couplingBoundMin_[2])
-                                {
-                                    checkedPosition[2] = couplingBoundMin_[2] + boundCorr_;
-                                    trunc = true;
-                                }
-
-                                if(checkedPosition[2] >= couplingBoundMax_[2])
-                                {
-                                    checkedPosition[2] = couplingBoundMax_[2] - boundCorr_;
-                                    trunc = true;
-                                }
-                            }
-
-                            if(trunc)
-                            {
-                                std::cout << "receiveCoupledParcels particle boundCorr_ applied" << std::endl;
-                            }
-                        }
-                        */
 
                         coupledMolecule newMol;
                         newMol.molType = rcvMolType_[ifacepts][pts];
