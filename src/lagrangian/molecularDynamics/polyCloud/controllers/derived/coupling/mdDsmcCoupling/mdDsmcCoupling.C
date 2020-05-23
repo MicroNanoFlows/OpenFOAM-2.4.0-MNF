@@ -1318,6 +1318,10 @@ bool mdDsmcCoupling::findCoupledMolecules()
                                     // Calculate scaling based on difference in distance
                                     scalar scale = boundDistance / finalDistance;
 
+                                    std::cout << "boundDistance: " << boundDistance << std::endl;
+                                    std::cout << "finalDistance: " << finalDistance << std::endl;
+                                    std::cout << "scale: " << scale << std::endl;
+
                                     molVel *=  scale;
                                 }
 
@@ -1461,10 +1465,6 @@ bool mdDsmcCoupling::findCoupledMolecules()
                                 {
                                     // Calculate scaling based on difference in distance
                                     scalar scale = boundDistance / finalDistance;
-
-                                    std::cout << "boundDistance: " << boundDistance << std::endl;
-                                    std::cout << "finalDistance: " << finalDistance << std::endl;
-                                    std::cout << "scale: " << scale << std::endl;
 
                                     molVel *=  scale;
                                 }
