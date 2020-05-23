@@ -1308,10 +1308,17 @@ bool mdDsmcCoupling::findCoupledMolecules()
                                 // Find point where molecule crossed boundary
                                 vector intersectPoint = molPosHist - molVec * mult;
 
-                                // Calculate adjustment based on current position
-                                vector velAdjust = molPos - intersectPoint;
+                                // Calculate magSqr for final position and position at boundary
+                                scalar finalDistance = magSqr(molVec);
+                                vector boundVec = molPosHist - intersectPoint;
+                                scalar boundDistance = magSqr(boundVec);
 
-                                molVel -=  velAdjust;
+                                // Calculate scaling based on difference in distance
+                                scalar scale = boundDistance / finalDistance;
+
+                                std::cout << "scale: " << scale << std::endl;
+
+                                molVel *=  scale;
 
                                 removeMolecule = true;
                             }
@@ -1334,10 +1341,17 @@ bool mdDsmcCoupling::findCoupledMolecules()
                                 }
                                 vector intersectPoint = molPosHist - molVec * mult; // Find point where molecule crossed boundary
 
-                                // Calculate adjustment based on current position
-                                vector velAdjust = molPos - intersectPoint;
+                                // Calculate magSqr for final position and position at boundary
+                                scalar finalDistance = magSqr(molVec);
+                                vector boundVec = molPosHist - intersectPoint;
+                                scalar boundDistance = magSqr(boundVec);
 
-                                molVel -=  velAdjust;
+                                // Calculate scaling based on difference in distance
+                                scalar scale = boundDistance / finalDistance;
+
+                                std::cout << "scale: " << scale << std::endl;
+
+                                molVel *=  scale;
 
                                 removeMolecule = true;
                             }
@@ -1364,10 +1378,17 @@ bool mdDsmcCoupling::findCoupledMolecules()
                                 }
                                 vector intersectPoint = molPosHist - molVec * mult; // Find point where molecule crossed boundary
 
-                                // Calculate adjustment based on current position
-                                vector velAdjust = molPos - intersectPoint;
+                                // Calculate magSqr for final position and position at boundary
+                                scalar finalDistance = magSqr(molVec);
+                                vector boundVec = molPosHist - intersectPoint;
+                                scalar boundDistance = magSqr(boundVec);
 
-                                molVel -=  velAdjust;
+                                // Calculate scaling based on difference in distance
+                                scalar scale = boundDistance / finalDistance;
+
+                                std::cout << "scale: " << scale << std::endl;
+
+                                molVel *=  scale;
 
                                 removeMolecule = true;
                             }
@@ -1390,10 +1411,17 @@ bool mdDsmcCoupling::findCoupledMolecules()
                                 }
                                 vector intersectPoint = molPosHist - molVec * mult; // Find point where molecule crossed boundary
 
-                                // Calculate adjustment based on current position
-                                vector velAdjust = molPos - intersectPoint;
+                                // Calculate magSqr for final position and position at boundary
+                                scalar finalDistance = magSqr(molVec);
+                                vector boundVec = molPosHist - intersectPoint;
+                                scalar boundDistance = magSqr(boundVec);
 
-                                molVel -=  velAdjust;
+                                // Calculate scaling based on difference in distance
+                                scalar scale = boundDistance / finalDistance;
+
+                                std::cout << "scale: " << scale << std::endl;
+
+                                molVel *=  scale;
 
                                 removeMolecule = true;
                             }
@@ -1420,10 +1448,17 @@ bool mdDsmcCoupling::findCoupledMolecules()
                                 }
                                 vector intersectPoint = molPosHist - molVec * mult; // Find point where molecule crossed boundary
 
-                                // Calculate adjustment based on current position
-                                vector velAdjust = molPos - intersectPoint;
+                                // Calculate magSqr for final position and position at boundary
+                                scalar finalDistance = magSqr(molVec);
+                                vector boundVec = molPosHist - intersectPoint;
+                                scalar boundDistance = magSqr(boundVec);
 
-                                molVel -=  velAdjust;
+                                // Calculate scaling based on difference in distance
+                                scalar scale = boundDistance / finalDistance;
+
+                                std::cout << "scale: " << scale << std::endl;
+
+                                molVel *=  scale;
 
                                 removeMolecule = true;
                             }
@@ -1446,10 +1481,17 @@ bool mdDsmcCoupling::findCoupledMolecules()
                                 }
                                 vector intersectPoint = molPosHist - molVec * mult; // Find point where molecule crossed boundary
 
-                                // Calculate adjustment based on current position
-                                vector velAdjust = molPos - intersectPoint;
+                                // Calculate magSqr for final position and position at boundary
+                                scalar finalDistance = magSqr(molVec);
+                                vector boundVec = molPosHist - intersectPoint;
+                                scalar boundDistance = magSqr(boundVec);
 
-                                molVel -=  velAdjust;
+                                // Calculate scaling based on difference in distance
+                                scalar scale = boundDistance / finalDistance;
+
+                                std::cout << "scale: " << scale << std::endl;
+
+                                molVel *=  scale;
 
                                 removeMolecule = true;
                             }
