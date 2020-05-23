@@ -376,7 +376,6 @@ inline Foam::polyMolecule::polyMolecule
     particle(mesh, position, cellI, tetFaceI, tetPtI),
     Q_(Q),
     v_(v),
-    vHist_(vector::zero),
     a_(a),
     pi_(pi),
     tau_(tau),
