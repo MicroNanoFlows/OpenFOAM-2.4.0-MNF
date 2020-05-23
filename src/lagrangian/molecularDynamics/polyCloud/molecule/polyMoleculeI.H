@@ -521,7 +521,7 @@ inline const Foam::vector& Foam::polyMolecule::v() const
 }
 
 
-inline Foam::vector& Foam::polyMolecule::vHist()
+inline Foam::vector& Foam::polyMolecule::v()
 {
     return v_;
 }
