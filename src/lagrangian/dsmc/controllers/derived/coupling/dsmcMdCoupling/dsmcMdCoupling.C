@@ -1109,7 +1109,7 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
                         velocity[0] = rcvVelX[ifacepts][pts];
                         velocity[1] = rcvVelY[ifacepts][pts];
                         velocity[2] = rcvVelZ[ifacepts][pts];
-
+/*
                         if(couplingBounds_)
                         {
                             if(couplingBoundZeroThick_[0] == 1) //- Boundary has zero thickness in the x
@@ -1163,7 +1163,7 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
                                 }
                             }
                         }
-
+*/
                         const label typeIndex = findIndex(typeNames_, rcvParcType[ifacepts][pts]);
 
                         insertParcel(checkedPosition, velocity, typeIndex);
