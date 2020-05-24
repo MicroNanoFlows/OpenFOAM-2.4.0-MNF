@@ -125,7 +125,7 @@ private:
         void setMoleculesForDirectInteraction();
         void computePairForces();
         void accelerationUpdate();
-        void velocityUpdate(const scalar& trackTime);
+        void velocityUpdate(const scalar& trackTime, bool saveHistory);
 
 
         //- Disallow default bitwise copy construct
@@ -248,7 +248,7 @@ public:
         void evolveAfterForces();
         
         void controlBeforeVelocity();
-        void updateVelocity();
+        void updateVelocity(bool saveHistory);
         void controlBeforeMove();
         void move();
         void move(const scalar& trackTime);        

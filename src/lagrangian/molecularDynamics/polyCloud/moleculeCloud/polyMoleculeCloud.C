@@ -1090,7 +1090,7 @@ void Foam::polyMoleculeCloud::evolve()
 void Foam::polyMoleculeCloud::evolveBeforeForces()
 {
     controlBeforeVelocity();
-    updateVelocity();
+    updateVelocity(false);
     controlBeforeMove();
     move();
     controlAfterMove();
@@ -1103,7 +1103,7 @@ void Foam::polyMoleculeCloud::evolveAfterForces()
 {
     updateAcceleration();
     controlAfterForces();
-    updateVelocity();
+    updateVelocity(true);
     controlAfterVelocity();
     postTimeStep();
 }
@@ -1113,18 +1113,18 @@ void Foam::polyMoleculeCloud::controlBeforeVelocity()
     controllers_.controlVelocitiesI();
 }
 
-void Foam::polyMoleculeCloud::updateVelocity()
+void Foam::polyMoleculeCloud::updateVelocity(bool saveHistory)
 {
-    velocityUpdate(mesh_.time().deltaT().value());
+    velocityUpdate(mesh_.time().deltaT().value(), saveHistory);
 }
 
-void Foam::polyMoleculeCloud::velocityUpdate(const scalar& trackTime)
+void Foam::polyMoleculeCloud::velocityUpdate(const scalar& trackTime, bool saveHistory)
 {
     forAllIter(polyMoleculeCloud, *this, mol)
     {
         if(!mol().frozen() && !mol().ghost())
         {
-            mol().updateHalfVelocity(cP_, trackTime);
+            mol().updateHalfVelocity(cP_, trackTime, saveHistory);
         }
     }
 }
