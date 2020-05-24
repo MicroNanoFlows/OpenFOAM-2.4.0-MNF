@@ -1296,10 +1296,6 @@ bool mdDsmcCoupling::findCoupledMolecules()
                                 // Find point where molecule crossed boundary
                                 vector intersectPoint = molPosHist - molVec * mult;
 
-                                std::cout << "molHistory: " << molPosHist[0] << "," << molPosHist[1] << "," << molPosHist[2] << std::endl;
-                                std::cout << "currPos: " << molPos[0] << "," << molPos[1] << "," << molPos[2] << std::endl;
-                                std::cout << "intersect: " << intersectPoint[0] << "," << intersectPoint[1] << "," << intersectPoint[2] << std::endl;
-
                                 // Calculate magSqr for final position and position at boundary
                                 scalar finalDistance = magSqr(molVec);
                                 vector boundVec = molPosHist - intersectPoint;
@@ -1310,11 +1306,16 @@ bool mdDsmcCoupling::findCoupledMolecules()
                                     // Calculate scaling based on difference in distance
                                     scalar scale = boundDistance / finalDistance;
 
-                                    std::cout << "boundDistance: " << boundDistance << std::endl;
-                                    std::cout << "finalDistance: " << finalDistance << std::endl;
-                                    std::cout << "scale: " << scale << std::endl;
+                                    // Determine velocity difference since last time step
+                                    vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
 
-                                    molVel *=  scale;
+                                    molVel -=  velDiff * scale;
+                                }
+                                else
+                                {
+                                    std::cout << "Position: " << molPos[0] << "," << molPos[1] << "," << molPos[2] << std::endl;
+                                    std::cout << "PositionHist: " << molPosHist[0] << "," << molPosHist[1] << "," << molPosHist[2] << std::endl;
+                                    std::cout << "origId: " << molsInCell[molecule]->origId() << std::endl;
                                 }
 
                                 removeMolecule = true;
@@ -1348,7 +1349,16 @@ bool mdDsmcCoupling::findCoupledMolecules()
                                     // Calculate scaling based on difference in distance
                                     scalar scale = boundDistance / finalDistance;
 
-                                    molVel *=  scale;
+                                    // Determine velocity difference since last time step
+                                    vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
+
+                                    molVel -=  velDiff * scale;
+                                }
+                                else
+                                {
+                                    std::cout << "Position: " << molPos[0] << "," << molPos[1] << "," << molPos[2] << std::endl;
+                                    std::cout << "PositionHist: " << molPosHist[0] << "," << molPosHist[1] << "," << molPosHist[2] << std::endl;
+                                    std::cout << "origId: " << molsInCell[molecule]->origId() << std::endl;
                                 }
 
                                 removeMolecule = true;
@@ -1386,7 +1396,10 @@ bool mdDsmcCoupling::findCoupledMolecules()
                                     // Calculate scaling based on difference in distance
                                     scalar scale = boundDistance / finalDistance;
 
-                                    molVel *=  scale;
+                                    // Determine velocity difference since last time step
+                                    vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
+
+                                    molVel -=  velDiff * scale;
                                 }
 
                                 removeMolecule = true;
@@ -1420,7 +1433,10 @@ bool mdDsmcCoupling::findCoupledMolecules()
                                     // Calculate scaling based on difference in distance
                                     scalar scale = boundDistance / finalDistance;
 
-                                    molVel *=  scale;
+                                    // Determine velocity difference since last time step
+                                    vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
+
+                                    molVel -=  velDiff * scale;
                                 }
 
                                 removeMolecule = true;
@@ -1458,7 +1474,10 @@ bool mdDsmcCoupling::findCoupledMolecules()
                                     // Calculate scaling based on difference in distance
                                     scalar scale = boundDistance / finalDistance;
 
-                                    molVel *=  scale;
+                                    // Determine velocity difference since last time step
+                                    vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
+
+                                    molVel -=  velDiff * scale;
                                 }
 
                                 removeMolecule = true;
@@ -1492,7 +1511,10 @@ bool mdDsmcCoupling::findCoupledMolecules()
                                     // Calculate scaling based on difference in distance
                                     scalar scale = boundDistance / finalDistance;
 
-                                    molVel *=  scale;
+                                    // Determine velocity difference since last time step
+                                    vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
+
+                                    molVel -=  velDiff * scale;
                                 }
 
                                 removeMolecule = true;

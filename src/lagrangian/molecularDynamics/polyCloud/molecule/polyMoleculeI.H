@@ -376,6 +376,7 @@ inline Foam::polyMolecule::polyMolecule
     particle(mesh, position, cellI, tetFaceI, tetPtI),
     Q_(Q),
     v_(v),
+    vHist_(vector::zero),
     a_(a),
     pi_(pi),
     tau_(tau),
@@ -524,6 +525,17 @@ inline const Foam::vector& Foam::polyMolecule::v() const
 inline Foam::vector& Foam::polyMolecule::v()
 {
     return v_;
+}
+
+inline const Foam::vector& Foam::polyMolecule::vHist() const
+{
+    return vHist_;
+}
+
+
+inline Foam::vector& Foam::polyMolecule::vHist()
+{
+    return vHist_;
 }
 
 

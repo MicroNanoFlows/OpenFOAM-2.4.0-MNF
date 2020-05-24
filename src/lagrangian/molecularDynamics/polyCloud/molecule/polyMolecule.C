@@ -121,9 +121,15 @@ void Foam::polyMolecule::updateHalfVelocity
 (
 //     const constantProperties& constProps,
     const constantMoleculeProperties& cP,       
-    const scalar& trackTime
+    const scalar& trackTime,
+    bool saveHistory
 )
 {
+    if(saveHistory)
+    {
+        vHist_ = v_;
+    }
+
     v_ += 0.5*trackTime*a_;
 
     pi_ += 0.5*trackTime*tau_;

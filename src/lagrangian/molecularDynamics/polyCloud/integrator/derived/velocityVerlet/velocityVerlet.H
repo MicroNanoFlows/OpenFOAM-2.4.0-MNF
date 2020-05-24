@@ -68,7 +68,7 @@ private:
 
     // Private data
 
-       void updateVelocity(const scalar& trackTime);
+       void updateVelocity(const scalar& trackTime, bool saveHistory);
        
 public:
 
