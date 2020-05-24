@@ -750,7 +750,7 @@ void dsmcMdCoupling::controlParcelsAfterCollisions(int stage)
 	}
     else if (stage == 2)
     {
-        receiveCoupledRegionAcc(); // Receive MD acceleration on ghost molecules in coupled region(s) (blocking)
+        receiveCoupledRegionVel(); // Receive MD acceleration on ghost molecules in coupled region(s) (blocking)
 	}
 }
 
