@@ -1311,12 +1311,6 @@ bool mdDsmcCoupling::findCoupledMolecules()
 
                                     molVel -=  velDiff * scale;
                                 }
-                                else
-                                {
-                                    std::cout << "Position: " << molPos[0] << "," << molPos[1] << "," << molPos[2] << std::endl;
-                                    std::cout << "PositionHist: " << molPosHist[0] << "," << molPosHist[1] << "," << molPosHist[2] << std::endl;
-                                    std::cout << "origId: " << molsInCell[molecule]->origId() << std::endl;
-                                }
 
                                 removeMolecule = true;
                             }
@@ -1353,12 +1347,6 @@ bool mdDsmcCoupling::findCoupledMolecules()
                                     vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
 
                                     molVel -=  velDiff * scale;
-                                }
-                                else
-                                {
-                                    std::cout << "Position: " << molPos[0] << "," << molPos[1] << "," << molPos[2] << std::endl;
-                                    std::cout << "PositionHist: " << molPosHist[0] << "," << molPosHist[1] << "," << molPosHist[2] << std::endl;
-                                    std::cout << "origId: " << molsInCell[molecule]->origId() << std::endl;
                                 }
 
                                 removeMolecule = true;
@@ -1810,8 +1798,6 @@ mdDsmcCoupling::cplMoleculeInsert mdDsmcCoupling::insertCoupledMolecules()
             const label molId = findIndex(molNames_, molsReceived_[mol].molType);
 
             point molPosition = molsReceived_[mol].position;
-
-            std::cout << "Mol inserted at: " << molPosition[0] << "," << molPosition[1] << "," << molPosition[2] << std::endl;
 
             newMol = insertMolecule(molPosition, molIds_[molId], false, molsReceived_[mol].velocity);
 
