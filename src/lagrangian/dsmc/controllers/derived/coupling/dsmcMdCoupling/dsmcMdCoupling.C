@@ -1010,6 +1010,8 @@ void dsmcMdCoupling::sendCoupledParcels()
                         sendInterfaces_[iface]->push("vel_y_bound", parcCentre, parc->U()[1]);
                         sendInterfaces_[iface]->push("vel_z_bound", parcCentre, parc->U()[2]);
 
+                        std::cout << "Bound parcel sent at: " << parcCentre[0] << "," << parcCentre[1] << "," << parcCentre[2] << std::endl;
+
                         pushed++;
                     }
                 }

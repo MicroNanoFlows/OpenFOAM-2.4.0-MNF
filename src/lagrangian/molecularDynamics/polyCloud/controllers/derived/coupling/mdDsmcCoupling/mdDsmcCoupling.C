@@ -1630,6 +1630,7 @@ bool mdDsmcCoupling::findCoupledMolecules()
     //- Iterate through all parcels to be removed
     forAll(molsToRemove, molecule)
     {
+        molCloud_.removeMolFromCellOccupancy(molsToRemove[molecule]);
         molCloud_.deleteParticle(*molsToRemove[molecule]);
         molsDeleted = true;
     }
