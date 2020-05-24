@@ -1182,7 +1182,7 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
     return molChanged;
 }
 
-void mdDsmcCoupling::sendCoupledRegionAcc()
+void mdDsmcCoupling::sendCoupledRegionVel()
 {
 #ifdef USE_MUI
     if(sendingRegion_)
@@ -1216,7 +1216,7 @@ void mdDsmcCoupling::sendCoupledRegionAcc()
 			
                             if(siteForcesAccum[0] != 0 || siteForcesAccum[1] != 0 || siteForcesAccum[2] != 0)
                             {
-                                const scalar& mass = molCloud_.cP().mass(molecule->id());
+                                const scalar& mass = molCloud_.cP().mass(molecule->id()) * rU_.refMass();
 
                                 // Get the molecule centre
                                 mui::point3d molCentre;
@@ -1230,14 +1230,17 @@ void mdDsmcCoupling::sendCoupledRegionAcc()
                                 // Push molecule ID from receive history
                                 sendInterfaces_[iface]->push("id_region", molCentre, static_cast<label>(molId_[iface][mol]));
 
-                                // Push the molecule acceleration to the interface
-                                vector acc(((siteForcesAccum[0] * rU_.refForce()) / (mass * rU_.refMass())),
-                                           ((siteForcesAccum[1] * rU_.refForce()) / (mass * rU_.refMass())),
-                                           ((siteForcesAccum[2] * rU_.refForce()) / (mass * rU_.refMass())));
+                                const scalar deltaT = mesh_.time().deltaT().value() * rU_.refTime();
+                                vector force = siteForcesAccum * rU_.refForce();
 
-                                sendInterfaces_[iface]->push("acc_x_region", molCentre, acc[0]);
-                                sendInterfaces_[iface]->push("acc_y_region", molCentre, acc[1]);
-                                sendInterfaces_[iface]->push("acc_z_region", molCentre, acc[2]);
+                                // Push the molecule velocity addition to the interface
+                                vector velAdd((force[0] / mass) * deltaT,
+                                              (force[1] / mass) * deltaT,
+                                              (force[2] / mass) * deltaT);
+
+                                sendInterfaces_[iface]->push("veladd_x_region", molCentre, velAdd[0]);
+                                sendInterfaces_[iface]->push("veladd_y_region", molCentre, velAdd[1]);
+                                sendInterfaces_[iface]->push("veladd_z_region", molCentre, velAdd[2]);
                             }
                         }
                     }

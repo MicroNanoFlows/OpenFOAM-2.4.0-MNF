@@ -849,16 +849,16 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 #endif
 }
 
-void dsmcMdCoupling::receiveCoupledRegionAcc()
+void dsmcMdCoupling::receiveCoupledRegionVel()
 {
 #ifdef USE_MUI
     if(receivingRegion_)
     {
         List<std::vector<std::string> > rcvParcType(recvInterfaces_.size());
         List<std::vector<label> > rcvParcId(recvInterfaces_.size());
-        List<std::vector<scalar> > rcvAccX(recvInterfaces_.size());
-        List<std::vector<scalar> > rcvAccY(recvInterfaces_.size());
-        List<std::vector<scalar> > rcvAccZ(recvInterfaces_.size());
+        List<std::vector<scalar> > rcvVelX(recvInterfaces_.size());
+        List<std::vector<scalar> > rcvVelY(recvInterfaces_.size());
+        List<std::vector<scalar> > rcvVelZ(recvInterfaces_.size());
 
         // Iterate through all receiving interfaces for this controller and extract a points list
         forAll(recvInterfaces_, iface)
@@ -871,10 +871,10 @@ void dsmcMdCoupling::receiveCoupledRegionAcc()
                 //- Extract a list of all molecule Id's received from other solver through this interface
                 rcvParcId[iface] = recvInterfaces_[iface]->fetch_values<label>("id_region", currIteration_, *chrono_sampler);
 
-                //- Extract a list of all molecule forces received from other solver through this interface
-                rcvAccX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("acc_x_region", currIteration_, *chrono_sampler);
-                rcvAccY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("acc_y_region", currIteration_, *chrono_sampler);
-                rcvAccZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("acc_z_region", currIteration_, *chrono_sampler);
+                //- Extract a list of all molecule velocity additions received from other solver through this interface
+                rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("veladd_x_region", currIteration_, *chrono_sampler);
+                rcvVelY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("veladd_y_region", currIteration_, *chrono_sampler);
+                rcvVelZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("veladd_z_region", currIteration_, *chrono_sampler);
             }
         }
 
@@ -885,9 +885,9 @@ void dsmcMdCoupling::receiveCoupledRegionAcc()
             {
                 std::vector<std::string>::iterator rcvParcTypeIt;
                 std::vector<label>::iterator rcvParcIdIt = rcvParcId[ifacepts].begin();
-                std::vector<scalar>::iterator rcvAccXIt = rcvAccX[ifacepts].begin();
-                std::vector<scalar>::iterator rcvAccYIt = rcvAccY[ifacepts].begin();
-                std::vector<scalar>::iterator rcvAccZIt = rcvAccZ[ifacepts].begin();
+                std::vector<scalar>::iterator rcvVelXIt = rcvVelX[ifacepts].begin();
+                std::vector<scalar>::iterator rcvVelYIt = rcvVelY[ifacepts].begin();
+                std::vector<scalar>::iterator rcvVelZIt = rcvVelZ[ifacepts].begin();
 
                 for (rcvParcTypeIt = rcvParcType[ifacepts].begin(); rcvParcTypeIt != rcvParcType[ifacepts].end(); rcvParcTypeIt++) {
                     const label parcId = findIndex(typeNames_, *rcvParcTypeIt);
@@ -896,15 +896,15 @@ void dsmcMdCoupling::receiveCoupledRegionAcc()
                     {
                         rcvParcType[ifacepts].erase(rcvParcTypeIt--);
                         rcvParcId[ifacepts].erase(rcvParcIdIt--);
-                        rcvAccX[ifacepts].erase(rcvAccXIt--);
-                        rcvAccY[ifacepts].erase(rcvAccYIt--);
-                        rcvAccZ[ifacepts].erase(rcvAccZIt--);
+                        rcvVelX[ifacepts].erase(rcvVelXIt--);
+                        rcvVelY[ifacepts].erase(rcvVelYIt--);
+                        rcvVelZ[ifacepts].erase(rcvVelZIt--);
                     }
 
                     rcvParcIdIt++;
-                    rcvAccXIt++;
-                    rcvAccYIt++;
-                    rcvAccZIt++;
+                    rcvVelXIt++;
+                    rcvVelYIt++;
+                    rcvVelZIt++;
                 }
             }
         }
@@ -960,9 +960,9 @@ void dsmcMdCoupling::receiveCoupledRegionAcc()
                 {
                     if(rcvParcId[iface][rcv_acc] == parcelsInRegion[parcel]->origId())
                     {
-                        vector applyVel((0.5 * rcvAccX[iface][rcv_acc] * mesh_.time().deltaTValue()),
-                                        (0.5 * rcvAccY[iface][rcv_acc] * mesh_.time().deltaTValue()),
-                                        (0.5 * rcvAccZ[iface][rcv_acc] * mesh_.time().deltaTValue()));
+                        vector applyVel((rcvVelX[iface][rcv_acc]),
+                                        (rcvVelY[iface][rcv_acc]),
+                                        (rcvVelZ[iface][rcv_acc]));
 
                         parcelsInRegion[parcel]->U() += applyVel;
 

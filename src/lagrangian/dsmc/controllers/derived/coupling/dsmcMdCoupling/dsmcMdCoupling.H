@@ -162,8 +162,8 @@ public:
         //- send parcels that fall into the MD coupled region to coupled mdFoamPlus
         void sendCoupledRegion(bool init);
 
-        //- Receive acceleration for parcels that fall into MD coupled region
-        void receiveCoupledRegionAcc();
+        //- Receive velocity addition for parcels that fall into MD coupled region
+        void receiveCoupledRegionVel();
 
         //- send parcels to mdFoamPlus that have crossed a coupling boundary
         void sendCoupledParcels();
