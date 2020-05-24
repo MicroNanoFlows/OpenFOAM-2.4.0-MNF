@@ -338,7 +338,7 @@ mdDsmcCoupling::mdDsmcCoupling
         vector meshExtents = mesh_.bounds().max() - mesh_.bounds().min();
 
         // Boundary correction value (0.0001% extents) calculated against whole mesh extents for consistency at different parallelisation levels
-        vector boundCorr = meshExtents * (1e-8 / 100.0);
+        vector boundCorr = SMALL;
 
         // Pick largest correction value as global in each direction
         if(boundCorr[0] > boundCorr[1] && boundCorr[0] > boundCorr[2])
