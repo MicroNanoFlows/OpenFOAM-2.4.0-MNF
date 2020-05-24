@@ -338,7 +338,10 @@ mdDsmcCoupling::mdDsmcCoupling
         vector meshExtents = mesh_.bounds().max() - mesh_.bounds().min();
 
         // Boundary correction value (0.0001% extents) calculated against whole mesh extents for consistency at different parallelisation levels
-        vector boundCorr = SMALL;
+        vector boundCorr;
+        boundCorr[0] = SMALL;
+        boundCorr[1] = SMALL;
+        boundCorr[2] = SMALL;
 
         // Pick largest correction value as global in each direction
         if(boundCorr[0] > boundCorr[1] && boundCorr[0] > boundCorr[2])
@@ -849,7 +852,7 @@ bool mdDsmcCoupling::controlAfterMove(label stage)
 
 void mdDsmcCoupling::controlAfterForces()
 {
-    sendCoupledRegionAcc(); // Send the accelerations for ghost molecules in the coupling region(s) (non-blocking)
+    sendCoupledRegionVel(); // Send the accelerations for ghost molecules in the coupling region(s) (non-blocking)
 }
 
 bool mdDsmcCoupling::receiveCoupledRegion(bool init)
