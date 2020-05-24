@@ -1298,19 +1298,25 @@ bool mdDsmcCoupling::findCoupledMolecules()
 
                                 // Calculate magSqr for final position and position at boundary
                                 scalar finalDistance = magSqr(molVec);
-                                vector boundVec = molPosHist - intersectPoint;
-                                scalar boundDistance = magSqr(boundVec);
+                                scalar boundDistance = 0;
 
                                 if(finalDistance != 0)
                                 {
-                                    // Calculate scaling based on difference in distance
-                                    scalar scale = boundDistance / finalDistance;
-
-                                    // Determine velocity difference since last time step
-                                    vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
-
-                                    molVel -=  velDiff * scale;
+                                    scalar boundDistance = magSqr(molPosHist - intersectPoint);
                                 }
+                                else
+                                {
+                                    vector fakeIntersectPoint(couplingBoundMin_[0], molPos[1], molPos[2]);
+                                    scalar boundDistance = magSqr(molPosHist - fakeIntersectPoint);
+                                }
+
+                                // Calculate scaling based on difference in distance
+                                scalar scale = boundDistance / finalDistance;
+
+                                // Determine velocity difference since last time step
+                                vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
+
+                                molVel -=  velDiff * (1.0 - scale);
 
                                 removeMolecule = true;
                             }
@@ -1335,19 +1341,25 @@ bool mdDsmcCoupling::findCoupledMolecules()
 
                                 // Calculate magSqr for final position and position at boundary
                                 scalar finalDistance = magSqr(molVec);
-                                vector boundVec = molPosHist - intersectPoint;
-                                scalar boundDistance = magSqr(boundVec);
+                                scalar boundDistance = 0;
 
                                 if(finalDistance != 0)
                                 {
-                                    // Calculate scaling based on difference in distance
-                                    scalar scale = boundDistance / finalDistance;
-
-                                    // Determine velocity difference since last time step
-                                    vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
-
-                                    molVel -=  velDiff * scale;
+                                    scalar boundDistance = magSqr(molPosHist - intersectPoint);
                                 }
+                                else
+                                {
+                                    vector fakeIntersectPoint(couplingBoundMin_[0], molPos[1], molPos[2]);
+                                    scalar boundDistance = magSqr(molPosHist - fakeIntersectPoint);
+                                }
+
+                                // Calculate scaling based on difference in distance
+                                scalar scale = boundDistance / finalDistance;
+
+                                // Determine velocity difference since last time step
+                                vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
+
+                                molVel -=  velDiff * (1.0 - scale);
 
                                 removeMolecule = true;
                             }
@@ -1376,19 +1388,25 @@ bool mdDsmcCoupling::findCoupledMolecules()
 
                                 // Calculate magSqr for final position and position at boundary
                                 scalar finalDistance = magSqr(molVec);
-                                vector boundVec = molPosHist - intersectPoint;
-                                scalar boundDistance = magSqr(boundVec);
+                                scalar boundDistance = 0;
 
                                 if(finalDistance != 0)
                                 {
-                                    // Calculate scaling based on difference in distance
-                                    scalar scale = boundDistance / finalDistance;
-
-                                    // Determine velocity difference since last time step
-                                    vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
-
-                                    molVel -=  velDiff * scale;
+                                    scalar boundDistance = magSqr(molPosHist - intersectPoint);
                                 }
+                                else
+                                {
+                                    vector fakeIntersectPoint(couplingBoundMin_[0], molPos[1], molPos[2]);
+                                    scalar boundDistance = magSqr(molPosHist - fakeIntersectPoint);
+                                }
+
+                                // Calculate scaling based on difference in distance
+                                scalar scale = boundDistance / finalDistance;
+
+                                // Determine velocity difference since last time step
+                                vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
+
+                                molVel -=  velDiff * (1.0 - scale);
 
                                 removeMolecule = true;
                             }
@@ -1413,19 +1431,25 @@ bool mdDsmcCoupling::findCoupledMolecules()
 
                                 // Calculate magSqr for final position and position at boundary
                                 scalar finalDistance = magSqr(molVec);
-                                vector boundVec = molPosHist - intersectPoint;
-                                scalar boundDistance = magSqr(boundVec);
+                                scalar boundDistance = 0;
 
                                 if(finalDistance != 0)
                                 {
-                                    // Calculate scaling based on difference in distance
-                                    scalar scale = boundDistance / finalDistance;
-
-                                    // Determine velocity difference since last time step
-                                    vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
-
-                                    molVel -=  velDiff * scale;
+                                    scalar boundDistance = magSqr(molPosHist - intersectPoint);
                                 }
+                                else
+                                {
+                                    vector fakeIntersectPoint(couplingBoundMin_[0], molPos[1], molPos[2]);
+                                    scalar boundDistance = magSqr(molPosHist - fakeIntersectPoint);
+                                }
+
+                                // Calculate scaling based on difference in distance
+                                scalar scale = boundDistance / finalDistance;
+
+                                // Determine velocity difference since last time step
+                                vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
+
+                                molVel -=  velDiff * (1.0 - scale);
 
                                 removeMolecule = true;
                             }
@@ -1454,19 +1478,25 @@ bool mdDsmcCoupling::findCoupledMolecules()
 
                                 // Calculate magSqr for final position and position at boundary
                                 scalar finalDistance = magSqr(molVec);
-                                vector boundVec = molPosHist - intersectPoint;
-                                scalar boundDistance = magSqr(boundVec);
+                                scalar boundDistance = 0;
 
                                 if(finalDistance != 0)
                                 {
-                                    // Calculate scaling based on difference in distance
-                                    scalar scale = boundDistance / finalDistance;
-
-                                    // Determine velocity difference since last time step
-                                    vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
-
-                                    molVel -=  velDiff * scale;
+                                    scalar boundDistance = magSqr(molPosHist - intersectPoint);
                                 }
+                                else
+                                {
+                                    vector fakeIntersectPoint(couplingBoundMin_[0], molPos[1], molPos[2]);
+                                    scalar boundDistance = magSqr(molPosHist - fakeIntersectPoint);
+                                }
+
+                                // Calculate scaling based on difference in distance
+                                scalar scale = boundDistance / finalDistance;
+
+                                // Determine velocity difference since last time step
+                                vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
+
+                                molVel -=  velDiff * (1.0 - scale);
 
                                 removeMolecule = true;
                             }
@@ -1491,19 +1521,25 @@ bool mdDsmcCoupling::findCoupledMolecules()
 
                                 // Calculate magSqr for final position and position at boundary
                                 scalar finalDistance = magSqr(molVec);
-                                vector boundVec = molPosHist - intersectPoint;
-                                scalar boundDistance = magSqr(boundVec);
+                                scalar boundDistance = 0;
 
                                 if(finalDistance != 0)
                                 {
-                                    // Calculate scaling based on difference in distance
-                                    scalar scale = boundDistance / finalDistance;
-
-                                    // Determine velocity difference since last time step
-                                    vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
-
-                                    molVel -=  velDiff * scale;
+                                    scalar boundDistance = magSqr(molPosHist - intersectPoint);
                                 }
+                                else
+                                {
+                                    vector fakeIntersectPoint(couplingBoundMin_[0], molPos[1], molPos[2]);
+                                    scalar boundDistance = magSqr(molPosHist - fakeIntersectPoint);
+                                }
+
+                                // Calculate scaling based on difference in distance
+                                scalar scale = boundDistance / finalDistance;
+
+                                // Determine velocity difference since last time step
+                                vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
+
+                                molVel -=  velDiff * (1.0 - scale);
 
                                 removeMolecule = true;
                             }
