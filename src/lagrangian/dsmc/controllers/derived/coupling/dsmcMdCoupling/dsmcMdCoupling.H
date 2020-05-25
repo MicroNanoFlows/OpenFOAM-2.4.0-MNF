@@ -157,7 +157,7 @@ public:
         void controlParcelsBeforeCollisions(label stage);
 
         //- Run after collisions
-        void controlParcelsAfterCollisions(label stage);
+        void controlParcelsAfterCollisions();
 
         //- send parcels that fall into the MD coupled region to coupled mdFoamPlus
         void sendCoupledRegion(bool init);

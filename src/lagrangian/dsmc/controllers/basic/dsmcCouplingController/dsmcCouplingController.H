@@ -146,7 +146,7 @@ public:
         virtual void controlParcelsBeforeCollisions(label stage) = 0;
 
         //- run after move and collisions
-        virtual void controlParcelsAfterCollisions(label stage) = 0;
+        virtual void controlParcelsAfterCollisions() = 0;
 
         //- send parcels that fall into the MD coupled region to coupled mdFoamPlus
         virtual void sendCoupledRegion(bool init) = 0;

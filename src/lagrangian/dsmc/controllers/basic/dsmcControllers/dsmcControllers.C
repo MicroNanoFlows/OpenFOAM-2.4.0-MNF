@@ -621,14 +621,6 @@ void dsmcControllers::controlBeforeCollisions()
     {
         couplingControllers_[0]->controlParcelsBeforeCollisions(3);
     }
-}
-
-void dsmcControllers::controlAfterCollisions()
-{
-    forAll(stateControllers_, sC)
-    {
-        stateControllers_[sC]->controlParcelsAfterCollisions();
-    }
 
     if(couplingControllers_.size() > 0)
     {
@@ -638,13 +630,21 @@ void dsmcControllers::controlAfterCollisions()
     //- Send the coupled region
     forAll(couplingControllers_, cC)
     {
-        couplingControllers_[cC]->controlParcelsAfterCollisions(1);
+        couplingControllers_[cC]->controlParcelsBeforeCollisions(4);
+    }
+}
+
+void dsmcControllers::controlAfterCollisions()
+{
+    forAll(stateControllers_, sC)
+    {
+        stateControllers_[sC]->controlParcelsAfterCollisions();
     }
 
     // Receive any accelerations for parcels in the coupled region (blocking)
     forAll(couplingControllers_, cC)
     {
-        couplingControllers_[cC]->controlParcelsAfterCollisions(2);
+        couplingControllers_[cC]->controlParcelsAfterCollisions();
     }
 
     //- Forget received data and don't reset log time
