@@ -1964,7 +1964,7 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
 
         if(trackingNumber == -1)
         {
-
+            std::cout << "mdDsmcCoupling: Molecule tracking number being inserted is -1" << std::endl;
         }
 
         polyMolecule* newMol = molCloud_.createOnlyMolecule

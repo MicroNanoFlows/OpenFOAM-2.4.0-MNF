@@ -1111,18 +1111,18 @@ void Foam::polyMoleculeCloud::controlBeforeVelocity()
     controllers_.controlVelocitiesI();
 }
 
-void Foam::polyMoleculeCloud::updateVelocity(bool saveHistory)
+void Foam::polyMoleculeCloud::updateVelocity()
 {
-    velocityUpdate(mesh_.time().deltaT().value(), saveHistory);
+    velocityUpdate(mesh_.time().deltaT().value());
 }
 
-void Foam::polyMoleculeCloud::velocityUpdate(const scalar& trackTime, bool saveHistory)
+void Foam::polyMoleculeCloud::velocityUpdate(const scalar& trackTime)
 {
     forAllIter(polyMoleculeCloud, *this, mol)
     {
         if(!mol().frozen() && !mol().ghost())
         {
-            mol().updateHalfVelocity(cP_, trackTime, saveHistory);
+            mol().updateHalfVelocity(cP_, trackTime);
         }
     }
 }

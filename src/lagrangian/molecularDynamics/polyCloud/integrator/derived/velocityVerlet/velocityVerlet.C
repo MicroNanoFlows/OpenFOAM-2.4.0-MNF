@@ -74,7 +74,7 @@ void velocityVerlet::init()
 void velocityVerlet::evolve()
 {
     molCloud_.controlBeforeVelocity();
-    updateVelocity(mesh_.time().deltaT().value(), false);
+    updateVelocity(mesh_.time().deltaT().value());
     molCloud_.controlBeforeMove();
     molCloud_.move();
     molCloud_.controlAfterMove(); // Coupling boundaries handled (send/receive) and coupling region(s) receive
@@ -84,12 +84,12 @@ void velocityVerlet::evolve()
     molCloud_.calculateForce();
     molCloud_.updateAcceleration();
     molCloud_.controlAfterForces(); // Coupling region(s) forces send
-    updateVelocity(mesh_.time().deltaT().value(), true);
+    updateVelocity(mesh_.time().deltaT().value());
     molCloud_.controlAfterVelocity();
     molCloud_.postTimeStep();
 }
 
-void velocityVerlet::updateVelocity(const scalar& trackTime, bool saveHistory)
+void velocityVerlet::updateVelocity(const scalar& trackTime)
 {
     IDLList<polyMolecule>::iterator mol(molCloud_.begin());
 
@@ -97,7 +97,7 @@ void velocityVerlet::updateVelocity(const scalar& trackTime, bool saveHistory)
     {
         if(!mol().frozen() && !mol().ghost())
         {
-            mol().updateHalfVelocity(molCloud_.cP(), trackTime, saveHistory);
+            mol().updateHalfVelocity(molCloud_.cP(), trackTime);
         }
     }
 }

@@ -84,9 +84,6 @@ bool Foam::polyMolecule::move
         scalar tEnd = (1.0 - stepFraction())*trackTime;
         scalar dtMax = tEnd;
 
-        // Save the current position before update
-        positionHistory_ = position();
-
         while (td.keepParticle && !td.switchProcessor && tEnd > ROOTVSMALL)
         {
             // set the lagrangian time-step
@@ -121,15 +118,9 @@ void Foam::polyMolecule::updateHalfVelocity
 (
 //     const constantProperties& constProps,
     const constantMoleculeProperties& cP,       
-    const scalar& trackTime,
-    bool saveHistory
+    const scalar& trackTime
 )
 {
-    if(saveHistory)
-    {
-        vHist_ = v_;
-    }
-
     v_ += 0.5*trackTime*a_;
 
     pi_ += 0.5*trackTime*tau_;

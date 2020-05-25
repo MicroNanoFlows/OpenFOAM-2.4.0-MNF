@@ -40,7 +40,6 @@ Foam::polyMolecule::polyMolecule
     particle(mesh, is, readFields),
     Q_(tensor::zero),
     v_(vector::zero),
-    vHist_(vector::zero),
     a_(vector::zero),
     pi_(vector::zero),
     tau_(vector::zero),
@@ -51,7 +50,7 @@ Foam::polyMolecule::polyMolecule
     id_(0),
     R_(GREAT),
     frac_(1.0),
-    trackingNumber_(-2),
+    trackingNumber_(-1),
     siteForces_(0),
     sitePositions_(0)
 {

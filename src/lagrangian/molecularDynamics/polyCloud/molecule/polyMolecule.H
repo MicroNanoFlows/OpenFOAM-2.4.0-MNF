@@ -191,8 +191,6 @@ private:
         //- linear velocity
         vector v_;
 
-        vector vHist_;
-
         //- linear acceleration
         vector a_;
 
@@ -315,8 +313,7 @@ public:
             void updateHalfVelocity
             (
                 const constantMoleculeProperties& cP,
-                const scalar& trackTime,
-                bool saveHistory
+                const scalar& trackTime
             );
 
             void updateAcceleration
