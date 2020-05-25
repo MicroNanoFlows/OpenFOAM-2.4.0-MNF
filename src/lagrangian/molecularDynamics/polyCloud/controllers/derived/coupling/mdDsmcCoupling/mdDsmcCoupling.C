@@ -1960,6 +1960,13 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
 
         tensor Q = I;
 
+        label trackingNumber = molCloud_.getTrackingNumber();
+
+        if(trackingNumber == -1)
+        {
+
+        }
+
         polyMolecule* newMol = molCloud_.createOnlyMolecule
         (
             position,
@@ -1975,7 +1982,7 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
             special,
             id,
             1.0,
-            molCloud_.getTrackingNumber()
+            trackingNumber
         );
 
         if (ghost) //Ghost molecule insertion so no overlap testing needed, just insert into cloud

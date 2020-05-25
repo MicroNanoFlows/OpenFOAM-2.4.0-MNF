@@ -1288,8 +1288,9 @@ void Foam::cellInteractions<ParticleType>::setReferredParticles
 
     labelListList allNTrans(Pstream::nProcs());
 
-    pBufs.finishedSends(allNTrans);
+    pBufs.finishedSends(allNTrans, true);
 
+    /*
     bool transfered = false;
 
     forAll(allNTrans, i)
@@ -1303,7 +1304,7 @@ void Foam::cellInteractions<ParticleType>::setReferredParticles
             }
         }
     }
-
+    */
     /*if (!transfered)
     {
         break;
