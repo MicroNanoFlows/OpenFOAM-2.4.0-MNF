@@ -740,18 +740,15 @@ void dsmcMdCoupling::controlParcelsBeforeCollisions(label stage)
     {
         cloud_.clearCoupledParcels();
     }
-}
-
-void dsmcMdCoupling::controlParcelsAfterCollisions(int stage)
-{
-    if(stage == 1)
+    else if (stage == 4)
     {
         sendCoupledRegion(false); // Send parcel positions in coupled region(s) (non-blocking)
-	}
-    else if (stage == 2)
-    {
-        receiveCoupledRegionVel(); // Receive MD acceleration on ghost molecules in coupled region(s) (blocking)
-	}
+    }
+}
+
+void dsmcMdCoupling::controlParcelsAfterCollisions()
+{
+    receiveCoupledRegionVel(); // Receive MD acceleration on ghost molecules in coupled region(s) (blocking)
 }
 
 void dsmcMdCoupling::resetGhostedStatus()

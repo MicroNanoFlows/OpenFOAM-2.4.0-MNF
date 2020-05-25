@@ -1060,7 +1060,7 @@ void Foam::dsmcCloud::evolve()
         buildCellOccupancy();
     }
 
-    controllers_.controlBeforeCollisions();//**** // Coupling boundaries handled (receive/send)
+    controllers_.controlBeforeCollisions();//**** // Coupling boundaries handled (receive/send) and coupled region send
 
     if(coupled_)
     {
@@ -1079,7 +1079,7 @@ void Foam::dsmcCloud::evolve()
         buildCellOccupancy();
     }
 
-    controllers_.controlAfterCollisions();//**** //Coupling region sent and accelerations received applied to parcel velocity
+    controllers_.controlAfterCollisions();//**** //Velocity correction received and applied to parcels from coupling region
     boundaries_.controlAfterCollisions();//****
 
     if(chemReact_)
