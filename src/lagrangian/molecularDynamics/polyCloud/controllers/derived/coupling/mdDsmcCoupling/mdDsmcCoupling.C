@@ -1983,7 +1983,6 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
             newInsert.mol = newMol;
             molCloud_.insertMolecule(newMol);
 
-            molCloud_.updateNeighbouringRadii(newMol);
             molCloud_.insertMolInCellOccupancy(newMol);
         }
         else //If molecule not a ghost then perform overlap testing
@@ -2519,7 +2518,6 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
                 newInsert.mol = newMol;
                 molCloud_.insertMolecule(newMol);
 
-                molCloud_.updateNeighbouringRadii(newMol);
                 molCloud_.insertMolInCellOccupancy(newMol);
             }
             else //No overlapping molecule found and no iterations needed
@@ -2527,7 +2525,6 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
                 newInsert.mol = newMol;
                 molCloud_.insertMolecule(newMol);
 
-                molCloud_.updateNeighbouringRadii(newMol);
                 molCloud_.insertMolInCellOccupancy(newMol);
             }
         }

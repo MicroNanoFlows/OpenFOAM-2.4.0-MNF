@@ -589,7 +589,6 @@ void polyControllers::initialConfig()
     if(couplingControllers_.size() > 0)
     {
         couplingControllers_[0]->rebuildCellOccupancy();
-        couplingControllers_[0]->resetTracking(); //- Lots of adds/deletes in coupled method, ensure tracking number hasn't exceeded maximum
         couplingControllers_[0]->prepareInteractions();
     }
 
@@ -622,7 +621,6 @@ void polyControllers::controlAfterMove()
     if(couplingControllers_.size() > 0)
     {
         couplingControllers_[0]->rebuildCellOccupancy();
-        couplingControllers_[0]->resetTracking(); //- Lots of adds/deletes in coupled method, ensure tracking number hasn't exceeded maximum
         couplingControllers_[0]->prepareInteractions();
     }
 
@@ -636,7 +634,6 @@ void polyControllers::controlAfterMove()
     if(couplingControllers_.size() > 0)
     {
         couplingControllers_[0]->rebuildCellOccupancy();
-        couplingControllers_[0]->resetTracking(); //- Lots of adds/deletes in coupled method, ensure tracking number hasn't exceeded maximum
         couplingControllers_[0]->prepareInteractions();
     }
 
@@ -662,7 +659,6 @@ void polyControllers::controlAfterMove()
     if(couplingControllers_.size() > 0)
     {
         couplingControllers_[0]->rebuildCellOccupancy();
-        couplingControllers_[0]->resetTracking(); //- Lots of adds/deletes in coupled method, ensure tracking number hasn't exceeded maximum
         couplingControllers_[0]->prepareInteractions();
     }
 
@@ -676,7 +672,6 @@ void polyControllers::controlAfterMove()
     if(couplingControllers_.size() > 0)
     {
         couplingControllers_[0]->rebuildCellOccupancy();
-        couplingControllers_[0]->resetTracking(); //- Lots of adds/deletes in coupled method, ensure tracking number hasn't exceeded maximum
         couplingControllers_[0]->prepareInteractions();
     }
 

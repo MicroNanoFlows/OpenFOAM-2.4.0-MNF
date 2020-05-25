@@ -365,7 +365,6 @@ inline Foam::polyMolecule::polyMolecule
     const vector& pi,
     const vector& tau,
     const vector& specialPosition,
-//     const constantProperties& constProps,
     const constantMoleculeProperties& cP,
     const label special,
     const label id,
@@ -388,8 +387,6 @@ inline Foam::polyMolecule::polyMolecule
     R_(GREAT),
     frac_(frac),
     trackingNumber_(trackingNumber),
-//     siteForces_(constProps.nSites(), vector::zero),
-//     sitePositions_(constProps.nSites())
     siteForces_(cP.siteNames(id).size(), vector::zero),
     sitePositions_(cP.siteNames(id).size())
 {

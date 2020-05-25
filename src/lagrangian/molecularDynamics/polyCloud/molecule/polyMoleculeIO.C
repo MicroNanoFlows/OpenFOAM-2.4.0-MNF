@@ -40,6 +40,7 @@ Foam::polyMolecule::polyMolecule
     particle(mesh, is, readFields),
     Q_(tensor::zero),
     v_(vector::zero),
+    vHist_(vector::zero),
     a_(vector::zero),
     pi_(vector::zero),
     tau_(vector::zero),
@@ -60,6 +61,7 @@ Foam::polyMolecule::polyMolecule
         {
             is  >> Q_;
             is  >> v_;
+            is  >> vHist_;
             is  >> a_;
             is  >> pi_;
             is  >> tau_;
@@ -81,6 +83,7 @@ Foam::polyMolecule::polyMolecule
                 reinterpret_cast<char*>(&Q_),
                 sizeof(Q_)
               + sizeof(v_)
+              + sizeof(vHist_)
               + sizeof(a_)
               + sizeof(pi_)
               + sizeof(tau_)
@@ -299,6 +302,7 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const polyMolecule& mol)
             << token::SPACE << mol.stepFraction()
             << token::SPACE << mol.Q_
             << token::SPACE << mol.v_
+            << token::SPACE << mol.vHist_
             << token::SPACE << mol.a_
             << token::SPACE << mol.pi_
             << token::SPACE << mol.tau_
@@ -321,6 +325,7 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const polyMolecule& mol)
             reinterpret_cast<const char*>(&mol.Q_),
             sizeof(mol.Q_)
           + sizeof(mol.v_)
+          + sizeof(mol.vHist_)
           + sizeof(mol.a_)
           + sizeof(mol.pi_)
           + sizeof(mol.tau_)
