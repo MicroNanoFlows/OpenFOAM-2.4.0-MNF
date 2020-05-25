@@ -1088,7 +1088,7 @@ void Foam::polyMoleculeCloud::evolve()
 void Foam::polyMoleculeCloud::evolveBeforeForces()
 {
     controlBeforeVelocity();
-    updateVelocity(false);
+    updateVelocity();
     controlBeforeMove();
     move();
     controlAfterMove();
@@ -1101,7 +1101,7 @@ void Foam::polyMoleculeCloud::evolveAfterForces()
 {
     updateAcceleration();
     controlAfterForces();
-    updateVelocity(true);
+    updateVelocity();
     controlAfterVelocity();
     postTimeStep();
 }
