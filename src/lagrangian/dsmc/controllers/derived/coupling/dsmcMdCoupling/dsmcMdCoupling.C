@@ -948,6 +948,8 @@ void dsmcMdCoupling::receiveCoupledRegionVel()
             }
         }
 
+        const scalar deltaT = mesh_.time().deltaTValue();
+
         // Iterate through all accelerations received for this controller and apply if IDs match
         forAll(rcvParcId, iface)
         {
@@ -957,11 +959,13 @@ void dsmcMdCoupling::receiveCoupledRegionVel()
                 {
                     if(rcvParcId[iface][rcv_acc] == parcelsInRegion[parcel]->origId())
                     {
-                        vector applyVel((rcvVelX[iface][rcv_acc]),
-                                        (rcvVelY[iface][rcv_acc]),
-                                        (rcvVelZ[iface][rcv_acc]));
+                        const scalar parcMass = cloud_.constProps(parcelsInRegion[parcel]->typeId()).mass()*cloud_.nParticle();
 
-                        parcelsInRegion[parcel]->U() += applyVel;
+                        vector velAdd((rcvVelX[iface][rcv_acc] / parcMass) * deltaT,
+                                      (rcvVelY[iface][rcv_acc] / parcMass) * deltaT,
+                                      (rcvVelZ[iface][rcv_acc] / parcMass) * deltaT);
+
+                        parcelsInRegion[parcel]->U() += velAdd;
 
                         break;
                     }

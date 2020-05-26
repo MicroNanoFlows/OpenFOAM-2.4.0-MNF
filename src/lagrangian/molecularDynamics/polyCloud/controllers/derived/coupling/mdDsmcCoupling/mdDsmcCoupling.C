@@ -1212,9 +1212,7 @@ void mdDsmcCoupling::sendCoupledRegionVel()
 			
                             forAll(molecule->siteForces(), s)
                             {
-                                siteForcesAccum[0] += molecule->siteForces()[s][0];
-                                siteForcesAccum[1] += molecule->siteForces()[s][1];
-                                siteForcesAccum[2] += molecule->siteForces()[s][2];
+                                siteForcesAccum += molecule->siteForces()[s];
                             }
 			
                             if(siteForcesAccum[0] != 0 || siteForcesAccum[1] != 0 || siteForcesAccum[2] != 0)
@@ -1233,17 +1231,19 @@ void mdDsmcCoupling::sendCoupledRegionVel()
                                 // Push molecule ID from receive history
                                 sendInterfaces_[iface]->push("id_region", molCentre, static_cast<label>(molId_[iface][mol]));
 
-                                const scalar deltaT = mesh_.time().deltaT().value() * rU_.refTime();
-                                vector force = siteForcesAccum * rU_.refForce();
+                                //const scalar deltaT = mesh_.time().deltaT().value() * rU_.refTime();
+                                //vector force = siteForcesAccum * rU_.refForce();
 
                                 // Push the molecule velocity addition to the interface
+                                /*
                                 vector velAdd((force[0] / mass) * deltaT,
                                               (force[1] / mass) * deltaT,
                                               (force[2] / mass) * deltaT);
+                                              */
 
-                                sendInterfaces_[iface]->push("veladd_x_region", molCentre, velAdd[0]);
-                                sendInterfaces_[iface]->push("veladd_y_region", molCentre, velAdd[1]);
-                                sendInterfaces_[iface]->push("veladd_z_region", molCentre, velAdd[2]);
+                                sendInterfaces_[iface]->push("veladd_x_region", molCentre, siteForcesAccum[0] * rU_.refForce());
+                                sendInterfaces_[iface]->push("veladd_y_region", molCentre, siteForcesAccum[1] * rU_.refForce());
+                                sendInterfaces_[iface]->push("veladd_z_region", molCentre, siteForcesAccum[2] * rU_.refForce());
                             }
                         }
                     }
