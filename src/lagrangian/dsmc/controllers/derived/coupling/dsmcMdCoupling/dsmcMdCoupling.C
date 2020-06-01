@@ -611,13 +611,7 @@ dsmcMdCoupling::dsmcMdCoupling
             }
 
             //- There is an overlap between the coupling boundary and the local mesh so should have found at least 1 intersecting cell
-            if(overlap)
-            {
-                FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
-                             << "Coupling boundary defined but no intersecting cells found"
-                             << exit(FatalError);
-            }
-            else
+            if(!overlap)
             {
                 sendingBound_ = false;
                 receivingBound_ = false;
