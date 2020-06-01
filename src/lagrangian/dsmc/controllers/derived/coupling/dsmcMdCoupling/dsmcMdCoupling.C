@@ -603,9 +603,9 @@ dsmcMdCoupling::dsmcMdCoupling
 
             bool overlap = true;
 
-            if ((std::fabs(meshCentre[0] - couplingBoundCentre[0]) > (meshHalfWidth[0] + couplingBoundHalfWidth[0])) ||
-               (std::fabs(meshCentre[1] - couplingBoundCentre[1]) > (meshHalfWidth[1] + couplingBoundHalfWidth[1])) ||
-               (std::fabs(meshCentre[2] - couplingBoundCentre[2]) > (meshHalfWidth[2] + couplingBoundHalfWidth[2])))
+            if ((std::fabs(meshCentre[0] - couplingBoundCentre[0]) >= (meshHalfWidth[0] + couplingBoundHalfWidth[0])) ||
+               (std::fabs(meshCentre[1] - couplingBoundCentre[1]) >= (meshHalfWidth[1] + couplingBoundHalfWidth[1])) ||
+               (std::fabs(meshCentre[2] - couplingBoundCentre[2]) >= (meshHalfWidth[2] + couplingBoundHalfWidth[2])))
             {
                 overlap = false;
             }
