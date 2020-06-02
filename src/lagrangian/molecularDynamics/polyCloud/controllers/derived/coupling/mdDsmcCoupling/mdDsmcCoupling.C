@@ -254,17 +254,9 @@ mdDsmcCoupling::mdDsmcCoupling
                                    couplingRegionMin_[1] + couplingRegionHalfWidth[1],
                                    couplingRegionMin_[2] + couplingRegionHalfWidth[2]);
 
-        bool overlap = true;
-
-        if ((std::fabs(meshCentre[0] - couplingRegionCentre[0]) >= (meshHalfWidth[0] + couplingRegionHalfWidth[0])) ||
-           (std::fabs(meshCentre[1] - couplingRegionCentre[1]) >= (meshHalfWidth[1] + couplingRegionHalfWidth[1])) ||
-           (std::fabs(meshCentre[2] - couplingRegionCentre[2]) >= (meshHalfWidth[2] + couplingRegionHalfWidth[2])))
-        {
-            overlap = false;
-        }
-
-        //- There is an overlap between the coupling boundary and the local mesh so should have found at least 1 intersecting cell
-        if(!overlap)
+        if ((std::fabs(meshCentre[0] - couplingRegionCentre[0]) > (meshHalfWidth[0] + couplingRegionHalfWidth[0])) ||
+           (std::fabs(meshCentre[1] - couplingRegionCentre[1]) > (meshHalfWidth[1] + couplingRegionHalfWidth[1])) ||
+           (std::fabs(meshCentre[2] - couplingRegionCentre[2]) > (meshHalfWidth[2] + couplingRegionHalfWidth[2])))
         {
             sendingRegion_ = false;
             receivingRegion_ = false;
@@ -337,34 +329,8 @@ mdDsmcCoupling::mdDsmcCoupling
         //- Find the whole mesh extents
         vector meshExtents = mesh_.bounds().max() - mesh_.bounds().min();
 
-        // Boundary correction value (0.0001% extents) calculated against whole mesh extents for consistency at different parallelisation levels
-        vector boundCorr;
-        boundCorr[0] = SMALL;
-        boundCorr[1] = SMALL;
-        boundCorr[2] = SMALL;
-
-        // Pick largest correction value as global in each direction
-        if(boundCorr[0] > boundCorr[1] && boundCorr[0] > boundCorr[2])
-        {
-            boundCorr_ = boundCorr[0];
-        }
-
-        if(boundCorr[1] > boundCorr[0] && boundCorr[1] > boundCorr[2])
-        {
-            boundCorr_ = boundCorr[1];
-        }
-
-        if(boundCorr[2] > boundCorr[0] && boundCorr[2] > boundCorr[1])
-        {
-            boundCorr_ = boundCorr[2];
-        }
-
-        if(boundCorr[0] == boundCorr[1] && boundCorr[0] == boundCorr[2])
-        {
-            boundCorr_ = boundCorr[0];
-        }
-
-        std::cout << "Boundary correction value: " << boundCorr_ << std::endl;
+        // Small (1e-15 for Double) correction for boundary particles used during insertion perturbation)
+        boundCorr_ = SMALL;
 
         point cellMin;
         point cellMax;
@@ -545,23 +511,9 @@ mdDsmcCoupling::mdDsmcCoupling
                                    couplingBoundMin_[1] + couplingBoundHalfWidth[1],
                                    couplingBoundMin_[2] + couplingBoundHalfWidth[2]);
 
-            bool overlap = true;
-
             if ((std::fabs(meshCentre[0] - couplingBoundCentre[0]) > (meshHalfWidth[0] + couplingBoundHalfWidth[0])) ||
                (std::fabs(meshCentre[1] - couplingBoundCentre[1]) > (meshHalfWidth[1] + couplingBoundHalfWidth[1])) ||
                (std::fabs(meshCentre[2] - couplingBoundCentre[2]) > (meshHalfWidth[2] + couplingBoundHalfWidth[2])))
-            {
-                overlap = false;
-            }
-
-            //- There is an overlap between the coupling boundary and the local mesh so should have found at least 1 intersecting cell
-            if(overlap)
-            {
-                FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
-                             << "Coupling boundary defined but no intersecting cells found"
-                             << exit(FatalError);
-            }
-            else
             {
                 sendingBound_ = false;
                 receivingBound_ = false;
@@ -684,23 +636,6 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
             recvInterfaces_[iface]->commit(-1);
         }
     }
-
-    interfaceCommits.clear();
-
-    forAll(sendInterfaces_, iface)
-    {
-        sendInterfaces_[iface]->barrier(-1);
-        interfaceCommits.append(sendInterfaceNames_[iface]);
-    }
-
-    forAll(recvInterfaces_, iface)
-    {
-        label index = findIndex(interfaceCommits, recvInterfaceNames_[iface]);
-        if(index == -1)
-        {
-            recvInterfaces_[iface]->barrier(-1);
-        }
-    }
 #endif
     }
     else if (stage == 2)
@@ -709,11 +644,23 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
         {
             //Calculate initial temperature of whole cloud
             initTemperature_ = calcTemperature();
-            std::cout << "Initial MD temperature: " << initTemperature_ << std::endl;
 
             //Calculate initial KE of whole cloud
             initKe_ = calcAvgLinearKe();
-            std::cout << "Initial MD average linear KE per molecule: " << initKe_ << std::endl;
+
+            if (Pstream::parRun())
+            {
+                if(Pstream::master())
+                {
+                    std::cout << "Initial MD temperature: " << initTemperature_ << std::endl;
+                    std::cout << "Initial MD average linear KE per molecule: " << initKe_ << std::endl;
+                }
+            }
+            else
+            {
+                std::cout << "Initial MD temperature: " << initTemperature_ << std::endl;
+                std::cout << "Initial MD average linear KE per molecule: " << initKe_ << std::endl;
+            }
 
             returnVal = receiveCoupledRegion(true); // Receive ghost molecules in coupled region(s) at time = startTime and commit time=1 to release other side
 
@@ -724,8 +671,19 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
                 reduce(initKeDSMC_, maxOp<scalar>());
             }
 
-            std::cout << "Initial DSMC temperature: " << initTemperatureDSMC_ << std::endl;
-            std::cout << "Initial DSMC average linear KE per parcel: " << initKeDSMC_ << std::endl;
+            if (Pstream::parRun())
+            {
+                if(Pstream::master())
+                {
+                    std::cout << "Initial DSMC temperature: " << initTemperatureDSMC_ << std::endl;
+                    std::cout << "Initial DSMC average linear KE per parcel: " << initKeDSMC_ << std::endl;
+                }
+            }
+            else
+            {
+                std::cout << "Initial DSMC temperature: " << initTemperatureDSMC_ << std::endl;
+                std::cout << "Initial DSMC average linear KE per parcel: " << initKeDSMC_ << std::endl;
+            }
 
             if(initScaling_)
             {
@@ -751,11 +709,23 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
 
                 //Calculate new temperature of whole cloud
                 scalar newInitTemperature = calcTemperature();
-                std::cout << "Scaled MD temperature: " << newInitTemperature << std::endl;
 
                 //Calculate new KE of whole cloud
                 scalar newLinearKE = calcAvgLinearKe();
-                std::cout << "Scaled MD average linear KE per molecule: " << newLinearKE << std::endl;
+
+                if (Pstream::parRun())
+                {
+                    if(Pstream::master())
+                    {
+                        std::cout << "Scaled MD temperature: " << newInitTemperature << std::endl;
+                        std::cout << "Scaled MD average linear KE per molecule: " << newLinearKE << std::endl;
+                    }
+                }
+                else
+                {
+                    std::cout << "Scaled MD temperature: " << newInitTemperature << std::endl;
+                    std::cout << "Scaled MD average linear KE per molecule: " << newLinearKE << std::endl;
+                }
             }
         }
     }
@@ -1073,41 +1043,7 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
                         velocity[0] = rcvVelX_[ifacepts][pts] / rU_.refVelocity();
                         velocity[1] = rcvVelY_[ifacepts][pts] / rU_.refVelocity();
                         velocity[2] = rcvVelZ_[ifacepts][pts] / rU_.refVelocity();
-/*
-                        if(couplingRegion_)
-                        {
 
-                            if(checkedPosition[0] <= couplingRegionMin_[0])
-                            {
-                                checkedPosition[0] = couplingRegionMin_[0] + boundCorr_;
-                            }
-
-                            if(checkedPosition[0] >= couplingRegionMax_[0])
-                            {
-                                checkedPosition[0] = couplingRegionMax_[0] - boundCorr_;
-                            }
-
-                            if(checkedPosition[1] <= couplingRegionMin_[1])
-                            {
-                                checkedPosition[1] = couplingRegionMin_[1] + boundCorr_;
-                            }
-
-                            if(checkedPosition[1] >= couplingRegionMax_[1])
-                            {
-                                checkedPosition[1] = couplingRegionMax_[1] - boundCorr_;
-                            }
-
-                            if(checkedPosition[2] <= couplingRegionMin_[2])
-                            {
-                                checkedPosition[2] = couplingRegionMin_[2] + boundCorr_;
-                            }
-
-                            if(checkedPosition[2] >= couplingRegionMax_[2])
-                            {
-                                checkedPosition[2] = couplingRegionMax_[2] - boundCorr_;
-                            }
-                        }
-*/
                         if(molHistory_[ifacepts][pts] == NULL) //- This molecule is new so insert it
                         {
                             newMol = insertMolecule(checkedPosition, molIds_[molId], true, velocity);
@@ -1248,19 +1184,9 @@ void mdDsmcCoupling::sendCoupledRegionVel()
                                 // Push molecule ID from receive history
                                 sendInterfaces_[iface]->push("id_region", molCentre, static_cast<label>(molId_[iface][mol]));
 
-                                //const scalar deltaT = mesh_.time().deltaT().value() * rU_.refTime();
-                                //vector force = siteForcesAccum * rU_.refForce();
-
-                                // Push the molecule velocity addition to the interface
-                                /*
-                                vector velAdd((force[0] / mass) * deltaT,
-                                              (force[1] / mass) * deltaT,
-                                              (force[2] / mass) * deltaT);
-                                              */
-
-                                sendInterfaces_[iface]->push("veladd_x_region", molCentre, siteForcesAccum[0] * rU_.refForce());
-                                sendInterfaces_[iface]->push("veladd_y_region", molCentre, siteForcesAccum[1] * rU_.refForce());
-                                sendInterfaces_[iface]->push("veladd_z_region", molCentre, siteForcesAccum[2] * rU_.refForce());
+                                sendInterfaces_[iface]->push("force_x_region", molCentre, siteForcesAccum[0] * rU_.refForce());
+                                sendInterfaces_[iface]->push("force_y_region", molCentre, siteForcesAccum[1] * rU_.refForce());
+                                sendInterfaces_[iface]->push("force_z_region", molCentre, siteForcesAccum[2] * rU_.refForce());
                             }
                         }
                     }
@@ -1303,45 +1229,6 @@ bool mdDsmcCoupling::findCoupledMolecules()
                         {
                             if(molsInCell[molecule]->position()[0] <= couplingBoundMin_[0])
                             {
-                                /*
-                                // Find Point where particle intersected boundary
-                                vector& molPosHist = molsInCell[molecule]->positionHistory();
-                                vector& molPos = molsInCell[molecule]->position();
-                                vector molVec = molPosHist - molPos;
-
-                                vector diff = molPosHist - couplingBoundMin_;
-                                scalar dotVec = molVec & couplingBoundNorm_;
-                                scalar mult = 0;
-                                if(dotVec != 0)
-                                {
-                                    mult = (diff & couplingBoundNorm_) / dotVec;
-                                }
-
-                                // Find point where molecule crossed boundary
-                                vector intersectPoint = molPosHist - molVec * mult;
-
-                                // Calculate magSqr for final position and position at boundary
-                                scalar finalDistance = magSqr(molVec);
-                                scalar boundDistance = 0;
-
-                                if(finalDistance != 0)
-                                {
-                                    scalar boundDistance = magSqr(molPosHist - intersectPoint);
-                                }
-                                else
-                                {
-                                    vector fakeIntersectPoint(couplingBoundMin_[0], molPos[1], molPos[2]);
-                                    scalar boundDistance = magSqr(molPosHist - fakeIntersectPoint);
-                                }
-
-                                // Calculate scaling based on difference in distance
-                                scalar scale = boundDistance / finalDistance;
-
-                                // Determine velocity difference since last time step
-                                vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
-
-                                molVel -=  velDiff * (1.0 - scale);
-*/
                                 removeMolecule = true;
                             }
                         }
@@ -1349,43 +1236,6 @@ bool mdDsmcCoupling::findCoupledMolecules()
                         {
                             if(molsInCell[molecule]->position()[0] >= couplingBoundMax_[0])
                             {
-                                /*
-                                // Find Point where particle intersected boundary
-                                vector& molPosHist = molsInCell[molecule]->positionHistory();
-                                vector& molPos = molsInCell[molecule]->position();
-                                vector molVec = molPosHist - molPos;
-
-                                vector diff = molPosHist - couplingBoundMax_;
-                                scalar dotVec = molVec & couplingBoundNorm_;
-                                scalar mult = 0;
-                                if(dotVec != 0)
-                                {
-                                    mult = (diff & couplingBoundNorm_) / dotVec;
-                                }
-                                vector intersectPoint = molPosHist - molVec * mult; // Find point where molecule crossed boundary
-
-                                // Calculate magSqr for final position and position at boundary
-                                scalar finalDistance = magSqr(molVec);
-                                scalar boundDistance = 0;
-
-                                if(finalDistance != 0)
-                                {
-                                    scalar boundDistance = magSqr(molPosHist - intersectPoint);
-                                }
-                                else
-                                {
-                                    vector fakeIntersectPoint(couplingBoundMin_[0], molPos[1], molPos[2]);
-                                    scalar boundDistance = magSqr(molPosHist - fakeIntersectPoint);
-                                }
-
-                                // Calculate scaling based on difference in distance
-                                scalar scale = boundDistance / finalDistance;
-
-                                // Determine velocity difference since last time step
-                                vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
-
-                                molVel -=  velDiff * (1.0 - scale);
-*/
                                 removeMolecule = true;
                             }
                         }
@@ -1397,43 +1247,6 @@ bool mdDsmcCoupling::findCoupledMolecules()
                         {
                             if(molsInCell[molecule]->position()[1] <= couplingBoundMin_[1])
                             {
-                                /*
-                                // Find Point where particle intersected boundary
-                                vector& molPosHist = molsInCell[molecule]->positionHistory();
-                                vector& molPos = molsInCell[molecule]->position();
-                                vector molVec = molPosHist - molPos;
-
-                                vector diff = molPosHist - couplingBoundMin_;
-                                scalar dotVec = molVec & couplingBoundNorm_;
-                                scalar mult = 0;
-                                if(dotVec != 0)
-                                {
-                                    mult = (diff & couplingBoundNorm_) / dotVec;
-                                }
-                                vector intersectPoint = molPosHist - molVec * mult; // Find point where molecule crossed boundary
-
-                                // Calculate magSqr for final position and position at boundary
-                                scalar finalDistance = magSqr(molVec);
-                                scalar boundDistance = 0;
-
-                                if(finalDistance != 0)
-                                {
-                                    scalar boundDistance = magSqr(molPosHist - intersectPoint);
-                                }
-                                else
-                                {
-                                    vector fakeIntersectPoint(couplingBoundMin_[0], molPos[1], molPos[2]);
-                                    scalar boundDistance = magSqr(molPosHist - fakeIntersectPoint);
-                                }
-
-                                // Calculate scaling based on difference in distance
-                                scalar scale = boundDistance / finalDistance;
-
-                                // Determine velocity difference since last time step
-                                vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
-
-                                molVel -=  velDiff * (1.0 - scale);
-*/
                                 removeMolecule = true;
                             }
                         }
@@ -1441,43 +1254,6 @@ bool mdDsmcCoupling::findCoupledMolecules()
                         {
                             if(molsInCell[molecule]->position()[1] >= couplingBoundMax_[1])
                             {
-                                /*
-                                // Find Point where particle intersected boundary
-                                vector& molPosHist = molsInCell[molecule]->positionHistory();
-                                vector& molPos = molsInCell[molecule]->position();
-                                vector molVec = molPosHist - molPos;
-
-                                vector diff = molPosHist - couplingBoundMax_;
-                                scalar dotVec = molVec & couplingBoundNorm_;
-                                scalar mult = 0;
-                                if(dotVec != 0)
-                                {
-                                    mult = (diff & couplingBoundNorm_) / dotVec;
-                                }
-                                vector intersectPoint = molPosHist - molVec * mult; // Find point where molecule crossed boundary
-
-                                // Calculate magSqr for final position and position at boundary
-                                scalar finalDistance = magSqr(molVec);
-                                scalar boundDistance = 0;
-
-                                if(finalDistance != 0)
-                                {
-                                    scalar boundDistance = magSqr(molPosHist - intersectPoint);
-                                }
-                                else
-                                {
-                                    vector fakeIntersectPoint(couplingBoundMin_[0], molPos[1], molPos[2]);
-                                    scalar boundDistance = magSqr(molPosHist - fakeIntersectPoint);
-                                }
-
-                                // Calculate scaling based on difference in distance
-                                scalar scale = boundDistance / finalDistance;
-
-                                // Determine velocity difference since last time step
-                                vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
-
-                                molVel -=  velDiff * (1.0 - scale);
-*/
                                 removeMolecule = true;
                             }
                         }
@@ -1489,43 +1265,6 @@ bool mdDsmcCoupling::findCoupledMolecules()
                         {
                             if(molsInCell[molecule]->position()[2] <= couplingBoundMin_[2])
                             {
-                                /*
-                                // Find Point where particle intersected boundary
-                                vector& molPosHist = molsInCell[molecule]->positionHistory();
-                                vector& molPos = molsInCell[molecule]->position();
-                                vector molVec = molPosHist - molPos;
-
-                                vector diff = molPosHist - couplingBoundMin_;
-                                scalar dotVec = molVec & couplingBoundNorm_;
-                                scalar mult = 0;
-                                if(dotVec != 0)
-                                {
-                                    mult = (diff & couplingBoundNorm_) / dotVec;
-                                }
-                                vector intersectPoint = molPosHist - molVec * mult; // Find point where molecule crossed boundary
-
-                                // Calculate magSqr for final position and position at boundary
-                                scalar finalDistance = magSqr(molVec);
-                                scalar boundDistance = 0;
-
-                                if(finalDistance != 0)
-                                {
-                                    scalar boundDistance = magSqr(molPosHist - intersectPoint);
-                                }
-                                else
-                                {
-                                    vector fakeIntersectPoint(couplingBoundMin_[0], molPos[1], molPos[2]);
-                                    scalar boundDistance = magSqr(molPosHist - fakeIntersectPoint);
-                                }
-
-                                // Calculate scaling based on difference in distance
-                                scalar scale = boundDistance / finalDistance;
-
-                                // Determine velocity difference since last time step
-                                vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
-
-                                molVel -=  velDiff * (1.0 - scale);
-*/
                                 removeMolecule = true;
                             }
                         }
@@ -1533,43 +1272,6 @@ bool mdDsmcCoupling::findCoupledMolecules()
                         {
                             if(molsInCell[molecule]->position()[2] >= couplingBoundMax_[2])
                             {
-                               /*
-                                // Find Point where particle intersected boundary
-                                vector& molPosHist = molsInCell[molecule]->positionHistory();
-                                vector& molPos = molsInCell[molecule]->position();
-                                vector molVec = molPosHist - molPos;
-
-                                vector diff = molPosHist - couplingBoundMax_;
-                                scalar dotVec = molVec & couplingBoundNorm_;
-                                scalar mult = 0;
-                                if(dotVec != 0)
-                                {
-                                    mult = (diff & couplingBoundNorm_) / dotVec;
-                                }
-                                vector intersectPoint = molPosHist - molVec * mult; // Find point where molecule crossed boundary
-
-                                // Calculate magSqr for final position and position at boundary
-                                scalar finalDistance = magSqr(molVec);
-                                scalar boundDistance = 0;
-
-                                if(finalDistance != 0)
-                                {
-                                    scalar boundDistance = magSqr(molPosHist - intersectPoint);
-
-                                    // Calculate scaling based on difference in distance
-                                    scalar scale = boundDistance / finalDistance;
-                                }
-                                else
-                                {
-                                    vector fakeIntersectPoint(couplingBoundMin_[0], molPos[1], molPos[2]);
-                                    scalar boundDistance = magSqr(molPosHist - fakeIntersectPoint);
-                                }
-
-                                // Determine velocity difference since last time step
-                                vector velDiff = molsInCell[molecule]->v() - molsInCell[molecule]->vHist();
-
-                                molVel -=  velDiff * (1.0 - scale);
-*/
                                 removeMolecule = true;
                             }
                         }
@@ -1581,61 +1283,7 @@ bool mdDsmcCoupling::findCoupledMolecules()
                         coupledMolecule newMolToSend;
                         newMolToSend.molType = molCloud_.cP().molIds()[molsInCell[molecule]->id()];
                         newMolToSend.position = molsInCell[molecule]->position();
-/*
-                        if(couplingBounds_)
-                        {
-                            if(couplingBoundZeroThick_[0] == 1) //- Boundary has zero thickness in the x
-                            {
-                                newMolToSend.position[0] = couplingBoundMin_[0];
-                            }
-                            else
-                            {
-                                if(newMolToSend.position[0] < couplingBoundMin_[0])
-                                {
-                                    newMolToSend.position[0] = couplingBoundMin_[0];
-                                }
 
-                                if(newMolToSend.position[0] > couplingBoundMax_[0])
-                                {
-                                    newMolToSend.position[0] = couplingBoundMax_[0];
-                                }
-                            }
-
-                            if(couplingBoundZeroThick_[1] == 1) //- Boundary has zero thickness in the y
-                            {
-                                newMolToSend.position[1] = couplingBoundMin_[1];
-                            }
-                            else
-                            {
-                                if(newMolToSend.position[1] < couplingBoundMin_[1])
-                                {
-                                    newMolToSend.position[1] = couplingBoundMin_[1];
-                                }
-
-                                if(newMolToSend.position[1] > couplingBoundMax_[1])
-                                {
-                                    newMolToSend.position[1] = couplingBoundMax_[1];
-                                }
-                            }
-
-                            if(couplingBoundZeroThick_[2] == 1) //- Boundary has zero thickness in the z
-                            {
-                                newMolToSend.position[2] = couplingBoundMin_[2];
-                            }
-                            else
-                            {
-                                if(newMolToSend.position[2] < couplingBoundMin_[2])
-                                {
-                                    newMolToSend.position[2] = couplingBoundMin_[2];
-                                }
-
-                                if(newMolToSend.position[2] > couplingBoundMax_[2])
-                                {
-                                    newMolToSend.position[2] = couplingBoundMax_[2];
-                                }
-                            }
-                        }
-*/
                         newMolToSend.velocity = molVel;
                         molsToSend_.append(newMolToSend);
 
@@ -1780,61 +1428,7 @@ label mdDsmcCoupling::receiveCoupledParcels()
                         velocity[0] = rcvVelX_[ifacepts][pts] / rU_.refVelocity();
                         velocity[1] = rcvVelY_[ifacepts][pts] / rU_.refVelocity();
                         velocity[2] = rcvVelZ_[ifacepts][pts] / rU_.refVelocity();
-/*
-                        if(couplingBounds_)
-                        {
-                            if(couplingBoundZeroThick_[0] == 1) //- Boundary has zero thickness in the x
-                            {
-                                checkedPosition[0] = couplingBoundMin_[0] + (couplingBoundNorm_[0] * boundCorr_);
-                            }
-                            else
-                            {
-                                if(checkedPosition[0] <= couplingBoundMin_[0])
-                                {
-                                    checkedPosition[0] = couplingBoundMin_[0] + boundCorr_;
-                                }
 
-                                if(checkedPosition[0] >= couplingBoundMax_[0])
-                                {
-                                    checkedPosition[0] = couplingBoundMax_[0] - boundCorr_;
-                                }
-                            }
-
-                            if(couplingBoundZeroThick_[1] == 1) //- Boundary has zero thickness in the y
-                            {
-                                checkedPosition[1] = couplingBoundMin_[1] + (couplingBoundNorm_[1] * boundCorr_);
-                            }
-                            else
-                            {
-                                if(checkedPosition[1] <= couplingBoundMin_[1])
-                                {
-                                    checkedPosition[1] = couplingBoundMin_[1] + boundCorr_;
-                                }
-
-                                if(checkedPosition[1] >= couplingBoundMax_[1])
-                                {
-                                    checkedPosition[1] = couplingBoundMax_[1] - boundCorr_;
-                                }
-                            }
-
-                            if(couplingBoundZeroThick_[2] == 1) //- Boundary has zero thickness in the z
-                            {
-                                checkedPosition[2] = couplingBoundMin_[2] + (couplingBoundNorm_[2] * boundCorr_);
-                            }
-                            else
-                            {
-                                if(checkedPosition[2] <= couplingBoundMin_[2])
-                                {
-                                    checkedPosition[2] = couplingBoundMin_[2] + boundCorr_;
-                                }
-
-                                if(checkedPosition[2] >= couplingBoundMax_[2])
-                                {
-                                    checkedPosition[2] = couplingBoundMax_[2] - boundCorr_;
-                                }
-                            }
-                        }
-*/
                         coupledMolecule newMol;
                         newMol.molType = rcvMolType_[ifacepts][pts];
                         newMol.position = checkedPosition;
@@ -2721,7 +2315,17 @@ scalar mdDsmcCoupling::calcAvgLinearKe()
 
 void mdDsmcCoupling::scaleVelocity(scalar scaleValue)
 {
-    std::cout << "Scaling velocity using (" << scaleValue << ")" << std::endl;
+    if (Pstream::parRun())
+    {
+        if(Pstream::master())
+        {
+            std::cout << "Scaling velocity using (" << scaleValue << ")" << std::endl;
+        }
+    }
+    else
+    {
+        std::cout << "Scaling velocity using (" << scaleValue << ")" << std::endl;
+    }
 
     IDLList<polyMolecule>::iterator mol(molCloud_.begin());
 

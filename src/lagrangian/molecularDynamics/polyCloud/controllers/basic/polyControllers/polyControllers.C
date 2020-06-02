@@ -579,6 +579,18 @@ void polyControllers::initialConfig()
         couplingControllers_[cC]->initialConfiguration(1);
     }
 
+    //- Wait at barrier at time=-1 to ensure all interface disabled messages have been transferred
+    forAll(couplingControllers_, cC)
+    {
+        couplingControllers_[cC]->barrier(-1);
+    }
+
+    //- Forget all received frames and reset log
+    forAll(couplingControllers_, cC)
+    {
+        couplingControllers_[cC]->forget(true);
+    }
+
     //- Run initial configuration stage 2 (blocking)
     forAll(couplingControllers_, cC)
     {

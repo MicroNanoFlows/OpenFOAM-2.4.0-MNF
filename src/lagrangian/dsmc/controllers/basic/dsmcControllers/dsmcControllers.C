@@ -558,6 +558,18 @@ void dsmcControllers::initialConfig()
         couplingControllers_[cC]->initialConfiguration(1);
     }
 
+    //- Barrier at time=-1 to ensure all disabled status transferred
+    forAll(couplingControllers_, cC)
+    {
+        couplingControllers_[cC]->barrier(-1);
+    }
+
+    //- Forget time frames and reset log
+    forAll(couplingControllers_, cC)
+    {
+        couplingControllers_[cC]->forget(true);
+    }
+
     if(couplingControllers_.size() > 0)
     {
         couplingControllers_[0]->resetGhostedStatus();
@@ -572,7 +584,7 @@ void dsmcControllers::initialConfig()
     //- Wait here until other side has finished sending initialisation values (blocking)
     forAll(couplingControllers_, cC)
     {
-        couplingControllers_[cC]->barrier(static_cast<label>(0));
+        couplingControllers_[cC]->barrier(0);
     }
 
     //- Forget initial configuration time frame

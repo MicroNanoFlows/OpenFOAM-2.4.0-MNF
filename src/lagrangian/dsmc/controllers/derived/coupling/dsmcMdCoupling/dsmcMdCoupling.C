@@ -407,32 +407,6 @@ dsmcMdCoupling::dsmcMdCoupling
 
         vector meshExtents = mesh_.bounds().max() - mesh_.bounds().min();
 
-        // Boundary correction value (0.0001% extents) calculated against whole mesh extents for consistency at different parallelisation levels
-        vector boundCorr = meshExtents * (1e-8 / 100.0);
-
-        // Pick largest correction value as global
-        if(boundCorr[0] > boundCorr[1] && boundCorr[0] > boundCorr[2])
-        {
-            boundCorr_ = boundCorr[0];
-        }
-
-        if(boundCorr[1] > boundCorr[0] && boundCorr[1] > boundCorr[2])
-        {
-            boundCorr_ = boundCorr[1];
-        }
-
-        if(boundCorr[2] > boundCorr[0] && boundCorr[2] > boundCorr[1])
-        {
-            boundCorr_ = boundCorr[2];
-        }
-
-        if(boundCorr[0] == boundCorr[1] && boundCorr[0] == boundCorr[2])
-        {
-            boundCorr_ = boundCorr[0];
-        }
-
-        std::cout << "Boundary correction value: " << boundCorr_ << std::endl;
-
         point cellMin;
         point cellMax;
         bool intersectCell = false;
@@ -603,9 +577,9 @@ dsmcMdCoupling::dsmcMdCoupling
 
             bool overlap = true;
 
-            if ((std::fabs(meshCentre[0] - couplingBoundCentre[0]) >= (meshHalfWidth[0] + couplingBoundHalfWidth[0])) ||
-               (std::fabs(meshCentre[1] - couplingBoundCentre[1]) >= (meshHalfWidth[1] + couplingBoundHalfWidth[1])) ||
-               (std::fabs(meshCentre[2] - couplingBoundCentre[2]) >= (meshHalfWidth[2] + couplingBoundHalfWidth[2])))
+            if ((std::fabs(meshCentre[0] - couplingBoundCentre[0]) > (meshHalfWidth[0] + couplingBoundHalfWidth[0])) ||
+               (std::fabs(meshCentre[1] - couplingBoundCentre[1]) > (meshHalfWidth[1] + couplingBoundHalfWidth[1])) ||
+               (std::fabs(meshCentre[2] - couplingBoundCentre[2]) > (meshHalfWidth[2] + couplingBoundHalfWidth[2])))
             {
                 overlap = false;
             }
@@ -686,23 +660,6 @@ void dsmcMdCoupling::initialConfiguration(label stage)
             recvInterfaces_[iface]->commit(-1);
         }
     }
-
-    interfaceCommits.clear();
-
-    forAll(sendInterfaces_, iface)
-    {
-        sendInterfaces_[iface]->barrier(-1);
-        interfaceCommits.append(sendInterfaceNames_[iface]);
-    }
-
-    forAll(recvInterfaces_, iface)
-    {
-        label index = findIndex(interfaceCommits, recvInterfaceNames_[iface]);
-        if(index == -1)
-        {
-            recvInterfaces_[iface]->barrier(-1);
-        }
-    }
 #endif
     }
     else if (stage == 2)
@@ -759,7 +716,7 @@ void dsmcMdCoupling::controlParcelsBeforeCollisions(label stage)
 
 void dsmcMdCoupling::controlParcelsAfterCollisions()
 {
-    receiveCoupledRegionVel(); // Receive MD acceleration on ghost molecules in coupled region(s) (blocking)
+    receiveCoupledRegionForce(); // Receive MD acceleration on ghost molecules in coupled region(s) (blocking)
 }
 
 void dsmcMdCoupling::resetGhostedStatus()
@@ -798,9 +755,9 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
                     {
                         vector position = parcel->position();
 
-                        if((position[0] >= couplingRegionMin_[0] && position[0] <= couplingRegionMax_[0]) &&
-                           (position[1] >= couplingRegionMin_[1] && position[1] <= couplingRegionMax_[1]) &&
-                           (position[2] >= couplingRegionMin_[2] && position[2] <= couplingRegionMax_[2]))
+                        if((position[0] > couplingRegionMin_[0] && position[0] < couplingRegionMax_[0]) &&
+                           (position[1] > couplingRegionMin_[1] && position[1] < couplingRegionMax_[1]) &&
+                           (position[2] > couplingRegionMin_[2] && position[2] < couplingRegionMax_[2]))
                         {
                             insideRegion = true;
                         }
@@ -857,16 +814,16 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 #endif
 }
 
-void dsmcMdCoupling::receiveCoupledRegionVel()
+void dsmcMdCoupling::receiveCoupledRegionForce()
 {
 #ifdef USE_MUI
     if(receivingRegion_)
     {
         List<std::vector<std::string> > rcvParcType(recvInterfaces_.size());
         List<std::vector<label> > rcvParcId(recvInterfaces_.size());
-        List<std::vector<scalar> > rcvVelX(recvInterfaces_.size());
-        List<std::vector<scalar> > rcvVelY(recvInterfaces_.size());
-        List<std::vector<scalar> > rcvVelZ(recvInterfaces_.size());
+        List<std::vector<scalar> > rcvForceX(recvInterfaces_.size());
+        List<std::vector<scalar> > rcvForceY(recvInterfaces_.size());
+        List<std::vector<scalar> > rcvForceZ(recvInterfaces_.size());
 
         // Iterate through all receiving interfaces for this controller and extract a points list
         forAll(recvInterfaces_, iface)
@@ -879,10 +836,10 @@ void dsmcMdCoupling::receiveCoupledRegionVel()
                 //- Extract a list of all molecule Id's received from other solver through this interface
                 rcvParcId[iface] = recvInterfaces_[iface]->fetch_values<label>("id_region", currIteration_, *chrono_sampler);
 
-                //- Extract a list of all molecule velocity additions received from other solver through this interface
-                rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("veladd_x_region", currIteration_, *chrono_sampler);
-                rcvVelY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("veladd_y_region", currIteration_, *chrono_sampler);
-                rcvVelZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("veladd_z_region", currIteration_, *chrono_sampler);
+                //- Extract a list of all molecule force additions received from other solver through this interface
+                rcvForceX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_x_region", currIteration_, *chrono_sampler);
+                rcvForceY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_y_region", currIteration_, *chrono_sampler);
+                rcvForceZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_z_region", currIteration_, *chrono_sampler);
             }
         }
 
@@ -893,9 +850,9 @@ void dsmcMdCoupling::receiveCoupledRegionVel()
             {
                 std::vector<std::string>::iterator rcvParcTypeIt;
                 std::vector<label>::iterator rcvParcIdIt = rcvParcId[ifacepts].begin();
-                std::vector<scalar>::iterator rcvVelXIt = rcvVelX[ifacepts].begin();
-                std::vector<scalar>::iterator rcvVelYIt = rcvVelY[ifacepts].begin();
-                std::vector<scalar>::iterator rcvVelZIt = rcvVelZ[ifacepts].begin();
+                std::vector<scalar>::iterator rcvForceXIt = rcvForceX[ifacepts].begin();
+                std::vector<scalar>::iterator rcvForceYIt = rcvForceY[ifacepts].begin();
+                std::vector<scalar>::iterator rcvForceZIt = rcvForceZ[ifacepts].begin();
 
                 for (rcvParcTypeIt = rcvParcType[ifacepts].begin(); rcvParcTypeIt != rcvParcType[ifacepts].end(); rcvParcTypeIt++) {
                     const label parcId = findIndex(typeNames_, *rcvParcTypeIt);
@@ -904,15 +861,15 @@ void dsmcMdCoupling::receiveCoupledRegionVel()
                     {
                         rcvParcType[ifacepts].erase(rcvParcTypeIt--);
                         rcvParcId[ifacepts].erase(rcvParcIdIt--);
-                        rcvVelX[ifacepts].erase(rcvVelXIt--);
-                        rcvVelY[ifacepts].erase(rcvVelYIt--);
-                        rcvVelZ[ifacepts].erase(rcvVelZIt--);
+                        rcvForceX[ifacepts].erase(rcvForceXIt--);
+                        rcvForceY[ifacepts].erase(rcvForceYIt--);
+                        rcvForceZ[ifacepts].erase(rcvForceZIt--);
                     }
 
                     rcvParcIdIt++;
-                    rcvVelXIt++;
-                    rcvVelYIt++;
-                    rcvVelZIt++;
+                    rcvForceXIt++;
+                    rcvForceYIt++;
+                    rcvForceZIt++;
                 }
             }
         }
@@ -934,9 +891,9 @@ void dsmcMdCoupling::receiveCoupledRegionVel()
                 {
                     vector position = parcel->position();
 
-                    if((position[0] >= couplingRegionMin_[0] && position[0] <= couplingRegionMax_[0]) &&
-                       (position[1] >= couplingRegionMin_[1] && position[1] <= couplingRegionMax_[1]) &&
-                       (position[2] >= couplingRegionMin_[2] && position[2] <= couplingRegionMax_[2]))
+                    if((position[0] > couplingRegionMin_[0] && position[0] < couplingRegionMax_[0]) &&
+                       (position[1] > couplingRegionMin_[1] && position[1] < couplingRegionMax_[1]) &&
+                       (position[2] > couplingRegionMin_[2] && position[2] < couplingRegionMax_[2]))
                     {
                         insideRegion = true;
                     }
@@ -964,17 +921,17 @@ void dsmcMdCoupling::receiveCoupledRegionVel()
         // Iterate through all accelerations received for this controller and apply if IDs match
         forAll(rcvParcId, iface)
         {
-            forAll(rcvParcId[iface], rcv_acc)
+            forAll(rcvParcId[iface], rcv_force)
             {
                 forAll(parcelsInRegion, parcel)
                 {
-                    if(rcvParcId[iface][rcv_acc] == parcelsInRegion[parcel]->origId())
+                    if(rcvParcId[iface][rcv_force] == parcelsInRegion[parcel]->origId())
                     {
-                        const scalar parcMass = cloud_.constProps(parcelsInRegion[parcel]->typeId()).mass()*cloud_.nParticle();
+                        const scalar parcMass = cloud_.constProps(parcelsInRegion[parcel]->typeId()).mass();
 
-                        vector velAdd((rcvVelX[iface][rcv_acc] / parcMass) * deltaT,
-                                      (rcvVelY[iface][rcv_acc] / parcMass) * deltaT,
-                                      (rcvVelZ[iface][rcv_acc] / parcMass) * deltaT);
+                        vector velAdd((rcvForceX[iface][rcv_force] / parcMass) * deltaT,
+                                      (rcvForceY[iface][rcv_force] / parcMass) * deltaT,
+                                      (rcvForceZ[iface][rcv_force] / parcMass) * deltaT);
 
                         parcelsInRegion[parcel]->U() += velAdd;
 
@@ -1121,61 +1078,7 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
                         velocity[0] = rcvVelX[ifacepts][pts];
                         velocity[1] = rcvVelY[ifacepts][pts];
                         velocity[2] = rcvVelZ[ifacepts][pts];
-/*
-                        if(couplingBounds_)
-                        {
-                            if(couplingBoundZeroThick_[0] == 1) //- Boundary has zero thickness in the x
-                            {
-                                checkedPosition[0] = couplingBoundMin_[0] + (couplingBoundNorm_[0] * boundCorr_);
-                            }
-                            else
-                            {
-                                if(checkedPosition[0] <= couplingBoundMin_[0])
-                                {
-                                    checkedPosition[0] = couplingBoundMin_[0] + boundCorr_;
-                                }
 
-                                if(checkedPosition[0] >= couplingBoundMax_[0])
-                                {
-                                    checkedPosition[0] = couplingBoundMax_[0] - boundCorr_;
-                                }
-                            }
-
-                            if(couplingBoundZeroThick_[1] == 1) //- Boundary has zero thickness in the y
-                            {
-                                checkedPosition[1] = couplingBoundMin_[1] + (couplingBoundNorm_[1] * boundCorr_);
-                            }
-                            else
-                            {
-                                if(checkedPosition[1] <= couplingBoundMin_[1])
-                                {
-                                    checkedPosition[1] = couplingBoundMin_[1] + boundCorr_;
-                                }
-
-                                if(checkedPosition[1] >= couplingBoundMax_[1])
-                                {
-                                    checkedPosition[1] = couplingBoundMax_[1] - boundCorr_;
-                                }
-                            }
-
-                            if(couplingBoundZeroThick_[2] == 1) //- Boundary has zero thickness in the z
-                            {
-                                checkedPosition[2] = couplingBoundMin_[2] + (couplingBoundNorm_[2] * boundCorr_);
-                            }
-                            else
-                            {
-                                if(checkedPosition[2] <= couplingBoundMin_[2])
-                                {
-                                    checkedPosition[2] = couplingBoundMin_[2] + boundCorr_;
-                                }
-
-                                if(checkedPosition[2] >= couplingBoundMax_[2])
-                                {
-                                    checkedPosition[2] = couplingBoundMax_[2] - boundCorr_;
-                                }
-                            }
-                        }
-*/
                         const label typeIndex = findIndex(typeNames_, rcvParcType[ifacepts][pts]);
 
                         insertParcel(checkedPosition, velocity, typeIndex);

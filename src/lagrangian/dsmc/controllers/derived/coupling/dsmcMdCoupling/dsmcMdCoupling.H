@@ -110,7 +110,6 @@ private:
         vector couplingBoundNorm_;
         vector couplingBoundZeroThick_;
         label currIteration_;
-        scalar boundCorr_;
         scalar initTemperature_;
         scalar initKe_;
 
@@ -163,7 +162,7 @@ public:
         void sendCoupledRegion(bool init);
 
         //- Receive velocity addition for parcels that fall into MD coupled region
-        void receiveCoupledRegionVel();
+        void receiveCoupledRegionForce();
 
         //- send parcels to mdFoamPlus that have crossed a coupling boundary
         void sendCoupledParcels();
