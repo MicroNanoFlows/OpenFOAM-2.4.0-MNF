@@ -581,11 +581,15 @@ void dsmcControllers::initialConfig()
         couplingControllers_[cC]->initialConfiguration(2);
     }
 
+    std::cout << "DSMC barrier at time=0 start" << std::endl;
+
     //- Wait here until other side has finished sending initialisation values (blocking)
     forAll(couplingControllers_, cC)
     {
         couplingControllers_[cC]->barrier(0);
     }
+
+    std::cout << "DSMC barrier at time=0 end" << std::endl;
 
     //- Forget initial configuration time frame
     forAll(couplingControllers_, cC)
