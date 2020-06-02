@@ -573,7 +573,6 @@ void polyControllers::initialConfig()
         fluxControllers_[fC]->initialConfiguration();
     }
 
-    /*
     //- Run initial configuration stage 1
     forAll(couplingControllers_, cC)
     {
@@ -591,7 +590,6 @@ void polyControllers::initialConfig()
     {
         couplingControllers_[cC]->forget(true);
     }
-    */
 
     //- Run initial configuration stage 2 (blocking)
     forAll(couplingControllers_, cC)

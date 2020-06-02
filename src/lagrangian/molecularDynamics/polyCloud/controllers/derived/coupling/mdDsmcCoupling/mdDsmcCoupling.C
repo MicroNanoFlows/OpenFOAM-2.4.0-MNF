@@ -640,6 +640,8 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
     }
     else if (stage == 2)
     {
+        returnVal = receiveCoupledRegion(true); // Receive ghost molecules in coupled region(s) at time = startTime and commit time=1 to release other side
+
         if(!molCloud_.cloudVelocityScaled())
         {
             //Calculate initial temperature of whole cloud
@@ -661,8 +663,6 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
                 std::cout << "Initial MD temperature: " << initTemperature_ << std::endl;
                 std::cout << "Initial MD average linear KE per molecule: " << initKe_ << std::endl;
             }
-
-            returnVal = receiveCoupledRegion(true); // Receive ghost molecules in coupled region(s) at time = startTime and commit time=1 to release other side
 
             //Distribute received temperature from DSMC side to all MPI ranks
             if (Pstream::parRun())
