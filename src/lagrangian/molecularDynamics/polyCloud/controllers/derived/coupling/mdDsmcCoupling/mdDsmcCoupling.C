@@ -642,91 +642,88 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
     {
         returnVal = receiveCoupledRegion(true); // Receive ghost molecules in coupled region(s) at time = startTime and commit time=1 to release other side
 
-        if(!molCloud_.cloudVelocityScaled())
+        //Calculate initial temperature of whole cloud
+        initTemperature_ = calcTemperature();
+
+        //Calculate initial KE of whole cloud
+        initKe_ = calcAvgLinearKe();
+
+        if (Pstream::parRun())
         {
-            //Calculate initial temperature of whole cloud
-            initTemperature_ = calcTemperature();
-
-            //Calculate initial KE of whole cloud
-            initKe_ = calcAvgLinearKe();
-
-            if (Pstream::parRun())
-            {
-                if(Pstream::master())
-                {
-                    std::cout << "Initial MD temperature: " << initTemperature_ << std::endl;
-                    std::cout << "Initial MD average linear KE per molecule: " << initKe_ << std::endl;
-                }
-            }
-            else
+            if(Pstream::master())
             {
                 std::cout << "Initial MD temperature: " << initTemperature_ << std::endl;
                 std::cout << "Initial MD average linear KE per molecule: " << initKe_ << std::endl;
             }
+        }
+        else
+        {
+            std::cout << "Initial MD temperature: " << initTemperature_ << std::endl;
+            std::cout << "Initial MD average linear KE per molecule: " << initKe_ << std::endl;
+        }
 
-            //Distribute received temperature from DSMC side to all MPI ranks
-            if (Pstream::parRun())
-            {
-                reduce(initTemperatureDSMC_, maxOp<scalar>());
-                reduce(initKeDSMC_, maxOp<scalar>());
-            }
+        //Distribute received temperature from DSMC side to all MPI ranks
+        if (Pstream::parRun())
+        {
+            reduce(initTemperatureDSMC_, maxOp<scalar>());
+            reduce(initKeDSMC_, maxOp<scalar>());
+        }
 
-            if (Pstream::parRun())
-            {
-                if(Pstream::master())
-                {
-                    std::cout << "Initial DSMC temperature: " << initTemperatureDSMC_ << std::endl;
-                    std::cout << "Initial DSMC average linear KE per parcel: " << initKeDSMC_ << std::endl;
-                }
-            }
-            else
+        if (Pstream::parRun())
+        {
+            if(Pstream::master())
             {
                 std::cout << "Initial DSMC temperature: " << initTemperatureDSMC_ << std::endl;
                 std::cout << "Initial DSMC average linear KE per parcel: " << initKeDSMC_ << std::endl;
             }
+        }
+        else
+        {
+            std::cout << "Initial DSMC temperature: " << initTemperatureDSMC_ << std::endl;
+            std::cout << "Initial DSMC average linear KE per parcel: " << initKeDSMC_ << std::endl;
+        }
 
-            if(initScaling_)
+        if(initScaling_ && !molCloud_.cloudVelocityScaled())
+        {
+            scalar scaleValue = 0;
+
+            if(scaleType_ == 0) //Temperature
             {
-                scalar scaleValue = 0;
-
-                if(scaleType_ == 0) //Temperature
+                if (initTemperature_ > 0)
                 {
-                    if (initTemperature_ > 0)
-                    {
-                        scaleValue = sqrt(initTemperatureDSMC_ / initTemperature_);
-                    }
-                }
-                else if(scaleType_ == 1)
-                {
-                    if (initKe_ > 0)
-                    {
-                        scaleValue = sqrt(initKeDSMC_ / initKe_);
-                    }
-                }
-
-                //Scale molecule velocity field
-                scaleVelocity(scaleValue);
-
-                //Calculate new temperature of whole cloud
-                scalar newInitTemperature = calcTemperature();
-
-                //Calculate new KE of whole cloud
-                scalar newLinearKE = calcAvgLinearKe();
-
-                if (Pstream::parRun())
-                {
-                    if(Pstream::master())
-                    {
-                        std::cout << "Scaled MD temperature: " << newInitTemperature << std::endl;
-                        std::cout << "Scaled MD average linear KE per molecule: " << newLinearKE << std::endl;
-                    }
-                }
-                else
-                {
-                    std::cout << "Scaled MD temperature: " << newInitTemperature << std::endl;
-                    std::cout << "Scaled MD average linear KE per molecule: " << newLinearKE << std::endl;
+                    scaleValue = sqrt(initTemperatureDSMC_ / initTemperature_);
                 }
             }
+            else if(scaleType_ == 1)
+            {
+                if (initKe_ > 0)
+                {
+                    scaleValue = sqrt(initKeDSMC_ / initKe_);
+                }
+            }
+
+            //Scale molecule velocity field
+            scaleVelocity(scaleValue);
+        }
+
+        //Calculate new temperature of whole cloud
+        scalar newInitTemperature = calcTemperature();
+
+        //Calculate new KE of whole cloud
+        scalar newLinearKE = calcAvgLinearKe();
+
+        if (Pstream::parRun())
+        {
+            if(Pstream::master())
+            {
+                std::cout << "Scaled MD temperature: " << newInitTemperature << std::endl;
+                std::cout << "Scaled MD average linear KE per molecule: " << newLinearKE << std::endl;
+            }
+        }
+        else
+        {
+            std::cout << "Scaled MD temperature: " << newInitTemperature << std::endl;
+            std::cout << "Scaled MD average linear KE per molecule: " << newLinearKE << std::endl;
         }
     }
 
