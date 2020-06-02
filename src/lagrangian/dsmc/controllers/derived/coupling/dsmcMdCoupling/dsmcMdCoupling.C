@@ -72,7 +72,6 @@ dsmcMdCoupling::dsmcMdCoupling
     couplingBoundNorm_(vector::zero),
     couplingBoundZeroThick_(vector(-1, -1, -1)),
     currIteration_(0),
-    boundCorr_(0),
     meshMin_(VGREAT, VGREAT, VGREAT),
     meshMax_(-VSMALL, -VSMALL, -VSMALL),
     initTemperature_(-VSMALL),
