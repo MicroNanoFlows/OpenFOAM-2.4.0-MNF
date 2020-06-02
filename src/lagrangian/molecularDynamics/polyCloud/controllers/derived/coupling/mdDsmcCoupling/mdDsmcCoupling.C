@@ -1167,8 +1167,6 @@ void mdDsmcCoupling::sendCoupledRegionVel()
 			
                             if(siteForcesAccum[0] != 0 || siteForcesAccum[1] != 0 || siteForcesAccum[2] != 0)
                             {
-                                const scalar& mass = molCloud_.cP().mass(molecule->id()) * rU_.refMass();
-
                                 // Get the molecule centre
                                 mui::point3d molCentre;
                                 molCentre[0] = molecule->position()[0] * rU_.refLength();
