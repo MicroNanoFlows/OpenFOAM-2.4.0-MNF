@@ -551,14 +551,12 @@ void dsmcControllers::initialConfig()
     {
         fluxControllers_[fC]->initialConfiguration();
     }
-    /*
+
     //- Run initial configuration stage 1
     forAll(couplingControllers_, cC)
     {
         couplingControllers_[cC]->initialConfiguration(1);
     }
-
-    std::cout << "DSMC barrier at time=-1 start" << std::endl;
 
     //- Barrier at time=-1 to ensure all disabled status transferred
     forAll(couplingControllers_, cC)
@@ -566,14 +564,12 @@ void dsmcControllers::initialConfig()
         couplingControllers_[cC]->barrier(-1);
     }
 
-    std::cout << "DSMC barrier at time=-1 end" << std::endl;
-
     //- Forget time frames and reset log
     forAll(couplingControllers_, cC)
     {
         couplingControllers_[cC]->forget(true);
     }
-*/
+
     if(couplingControllers_.size() > 0)
     {
         couplingControllers_[0]->resetGhostedStatus();
