@@ -555,7 +555,7 @@ void dsmcControllers::initialConfig()
     //- Run initial configuration stage 1
     forAll(couplingControllers_, cC)
     {
-        couplingControllers_[cC]->initialConfiguration(0);
+        couplingControllers_[cC]->initialConfiguration(1);
     }
 
     //- Barrier at time=-1 to ensure all disabled status transferred
