@@ -552,6 +552,7 @@ void dsmcControllers::initialConfig()
         fluxControllers_[fC]->initialConfiguration();
     }
 
+    /*
     //- Run initial configuration stage 1
     forAll(couplingControllers_, cC)
     {
@@ -569,6 +570,7 @@ void dsmcControllers::initialConfig()
     {
         couplingControllers_[cC]->forget(true);
     }
+    */
 
     if(couplingControllers_.size() > 0)
     {
