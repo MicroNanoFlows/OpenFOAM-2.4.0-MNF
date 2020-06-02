@@ -558,11 +558,15 @@ void dsmcControllers::initialConfig()
         couplingControllers_[cC]->initialConfiguration(1);
     }
 
+    std::cout << "DSMC barrier at time=-1 start" << std::endl;
+
     //- Barrier at time=-1 to ensure all disabled status transferred
     forAll(couplingControllers_, cC)
     {
         couplingControllers_[cC]->barrier(-1);
     }
+
+    std::cout << "DSMC barrier at time=-1 end" << std::endl;
 
     //- Forget time frames and reset log
     forAll(couplingControllers_, cC)
@@ -581,11 +585,15 @@ void dsmcControllers::initialConfig()
         couplingControllers_[cC]->initialConfiguration(2);
     }
 
+    std::cout << "DSMC barrier at time=0 start" << std::endl;
+
     //- Wait here until other side has finished sending initialisation values (blocking)
     forAll(couplingControllers_, cC)
     {
         couplingControllers_[cC]->barrier(0);
     }
+
+    std::cout << "DSMC barrier at time=0 end" << std::endl;
 
     //- Forget initial configuration time frame
     forAll(couplingControllers_, cC)
