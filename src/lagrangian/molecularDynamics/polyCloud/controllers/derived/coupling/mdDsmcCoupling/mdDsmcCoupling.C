@@ -1141,7 +1141,7 @@ void mdDsmcCoupling::sendCoupledRegionVel()
     if(sendingRegion_)
     {
         polyMolecule* molecule = NULL;
-        const scalar deltaT = mesh_.time().deltaT().value();
+        const scalar deltaT = mesh_.time().deltaT().value() * rU_.refTime();
 
         // Iterate through all sending interfaces for this controller
         forAll(sendInterfaces_, iface)
