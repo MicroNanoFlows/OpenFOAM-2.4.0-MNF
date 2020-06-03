@@ -1141,6 +1141,7 @@ void mdDsmcCoupling::sendCoupledRegionVel()
     if(sendingRegion_)
     {
         polyMolecule* molecule = NULL;
+        const scalar deltaT = mesh_.time().deltaT().value();
 
         // Iterate through all sending interfaces for this controller
         forAll(sendInterfaces_, iface)
@@ -1167,6 +1168,9 @@ void mdDsmcCoupling::sendCoupledRegionVel()
 			
                             if(siteForcesAccum[0] != 0 || siteForcesAccum[1] != 0 || siteForcesAccum[2] != 0)
                             {
+                                // Get molecule mass
+                                const scalar& mass = molCloud_.cP().mass(molecule->id()) * rU_.refMass();
+
                                 // Get the molecule centre
                                 mui::point3d molCentre;
                                 molCentre[0] = molecule->position()[0] * rU_.refLength();
@@ -1179,9 +1183,13 @@ void mdDsmcCoupling::sendCoupledRegionVel()
                                 // Push molecule ID from receive history
                                 sendInterfaces_[iface]->push("id_region", molCentre, static_cast<label>(molId_[iface][mol]));
 
-                                sendInterfaces_[iface]->push("force_x_region", molCentre, siteForcesAccum[0] * rU_.refForce());
-                                sendInterfaces_[iface]->push("force_y_region", molCentre, siteForcesAccum[1] * rU_.refForce());
-                                sendInterfaces_[iface]->push("force_z_region", molCentre, siteForcesAccum[2] * rU_.refForce());
+                                vector velAdd(((siteForcesAccum[0] * rU_.refForce()) / mass) * deltaT,
+                                              ((siteForcesAccum[1] * rU_.refForce()) / mass) * deltaT,
+                                              ((siteForcesAccum[2] * rU_.refForce()) / mass) * deltaT);
+
+                                sendInterfaces_[iface]->push("veladd_x_region", molCentre, velAdd[0]);
+                                sendInterfaces_[iface]->push("veladd_y_region", molCentre, velAdd[1]);
+                                sendInterfaces_[iface]->push("veladd_z_region", molCentre, velAdd[2]);
                             }
                         }
                     }
