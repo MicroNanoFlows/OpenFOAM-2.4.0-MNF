@@ -924,7 +924,7 @@ void dsmcMdCoupling::receiveCoupledRegionVel()
                 {
                     if(rcvParcId[iface][rcv_vel] == parcelsInRegion[parcel]->origId())
                     {
-                        vector velAdd(rcvVelX[iface][rcv_vel], rcvVelX[iface][rcv_vel], rcvVelX[iface][rcv_vel]);
+                        vector velAdd(rcvVelX[iface][rcv_vel], rcvVelY[iface][rcv_vel], rcvVelZ[iface][rcv_vel]);
 
                         parcelsInRegion[parcel]->U() += velAdd;
 
