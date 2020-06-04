@@ -220,8 +220,8 @@ public:
         //- receive molecules that fall into the coupled region
         bool receiveCoupledRegion(bool init);
 
-        //- send velocity addition for ghost molecules in coupled region
-        void sendCoupledRegionVel();
+        //- send forces for ghost molecules in coupled region
+        void sendCoupledRegionForce();
 
         //- Collate and delete molecules that have crossed a coupling boundary
         bool findCoupledMolecules();

@@ -713,7 +713,7 @@ void dsmcMdCoupling::controlParcelsBeforeCollisions(label stage)
     }
     else if(stage == 5)
     {
-        receiveCoupledRegionVel(); // Receive MD velocity addition on ghost molecules in coupled region(s) (blocking)
+        receiveCoupledRegionForce(); // Receive MD force addition on ghost molecules in coupled region(s) (blocking)
     }
 }
 
@@ -817,16 +817,16 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 #endif
 }
 
-void dsmcMdCoupling::receiveCoupledRegionVel()
+void dsmcMdCoupling::receiveCoupledRegionForce()
 {
 #ifdef USE_MUI
     if(receivingRegion_)
     {
         List<std::vector<std::string> > rcvParcType(recvInterfaces_.size());
         List<std::vector<label> > rcvParcId(recvInterfaces_.size());
-        List<std::vector<scalar> > rcvVelX(recvInterfaces_.size());
-        List<std::vector<scalar> > rcvVelY(recvInterfaces_.size());
-        List<std::vector<scalar> > rcvVelZ(recvInterfaces_.size());
+        List<std::vector<scalar> > rcvForceX(recvInterfaces_.size());
+        List<std::vector<scalar> > rcvForceY(recvInterfaces_.size());
+        List<std::vector<scalar> > rcvForceZ(recvInterfaces_.size());
 
         // Iterate through all receiving interfaces for this controller and extract a points list
         forAll(recvInterfaces_, iface)
@@ -840,9 +840,9 @@ void dsmcMdCoupling::receiveCoupledRegionVel()
                 rcvParcId[iface] = recvInterfaces_[iface]->fetch_values<label>("id_region", currIteration_, *chrono_sampler);
 
                 //- Extract a list of all molecule force additions received from other solver through this interface
-                rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("veladd_x_region", currIteration_, *chrono_sampler);
-                rcvVelY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("veladd_y_region", currIteration_, *chrono_sampler);
-                rcvVelZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("veladd_z_region", currIteration_, *chrono_sampler);
+                rcvForceX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_x_region", currIteration_, *chrono_sampler);
+                rcvForceY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_y_region", currIteration_, *chrono_sampler);
+                rcvForceZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_z_region", currIteration_, *chrono_sampler);
             }
         }
 
@@ -853,9 +853,9 @@ void dsmcMdCoupling::receiveCoupledRegionVel()
             {
                 std::vector<std::string>::iterator rcvParcTypeIt;
                 std::vector<label>::iterator rcvParcIdIt = rcvParcId[ifacepts].begin();
-                std::vector<scalar>::iterator rcvVelXIt = rcvVelX[ifacepts].begin();
-                std::vector<scalar>::iterator rcvVelYIt = rcvVelY[ifacepts].begin();
-                std::vector<scalar>::iterator rcvVelZIt = rcvVelZ[ifacepts].begin();
+                std::vector<scalar>::iterator rcvForceXIt = rcvForceX[ifacepts].begin();
+                std::vector<scalar>::iterator rcvForceYIt = rcvForceY[ifacepts].begin();
+                std::vector<scalar>::iterator rcvForceZIt = rcvForceZ[ifacepts].begin();
 
                 for (rcvParcTypeIt = rcvParcType[ifacepts].begin(); rcvParcTypeIt != rcvParcType[ifacepts].end(); rcvParcTypeIt++) {
                     const label parcId = findIndex(typeNames_, *rcvParcTypeIt);
@@ -864,15 +864,15 @@ void dsmcMdCoupling::receiveCoupledRegionVel()
                     {
                         rcvParcType[ifacepts].erase(rcvParcTypeIt--);
                         rcvParcId[ifacepts].erase(rcvParcIdIt--);
-                        rcvVelX[ifacepts].erase(rcvVelXIt--);
-                        rcvVelY[ifacepts].erase(rcvVelYIt--);
-                        rcvVelZ[ifacepts].erase(rcvVelZIt--);
+                        rcvForceX[ifacepts].erase(rcvForceXIt--);
+                        rcvForceY[ifacepts].erase(rcvForceYIt--);
+                        rcvForceZ[ifacepts].erase(rcvForceZIt--);
                     }
 
                     rcvParcIdIt++;
-                    rcvVelXIt++;
-                    rcvVelYIt++;
-                    rcvVelZIt++;
+                    rcvForceXIt++;
+                    rcvForceYIt++;
+                    rcvForceZIt++;
                 }
             }
         }
@@ -919,16 +919,22 @@ void dsmcMdCoupling::receiveCoupledRegionVel()
             }
         }
 
+        const scalar deltaT = mesh_.time().deltaT().value();
+
         // Iterate through all accelerations received for this controller and apply if IDs match
         forAll(rcvParcId, iface)
         {
-            forAll(rcvParcId[iface], rcv_vel)
+            forAll(rcvParcId[iface], rcv_force)
             {
                 forAll(parcelsInRegion, parcel)
                 {
-                    if(rcvParcId[iface][rcv_vel] == parcelsInRegion[parcel]->origId())
+                    if(rcvParcId[iface][rcv_force] == parcelsInRegion[parcel]->origId())
                     {
-                        vector velAdd(rcvVelX[iface][rcv_vel], rcvVelY[iface][rcv_vel], rcvVelZ[iface][rcv_vel]);
+                        const scalar parcMass = cloud_.constProps(parcelsInRegion[parcel]->typeId()).mass();
+
+                        vector velAdd((rcvForceX[iface][rcv_force] / parcMass) * deltaT,
+                                      (rcvForceY[iface][rcv_force] / parcMass) * deltaT,
+                                      (rcvForceZ[iface][rcv_force] / parcMass) * deltaT);
 
                         parcelsInRegion[parcel]->U() += velAdd;
 

@@ -146,8 +146,8 @@ public:
         //- receive positions and velocities of molecules that fall into the coupled region
         virtual bool receiveCoupledRegion(bool init) = 0;
 
-        //- send velocity addition for ghost molecules in coupled region
-        virtual void sendCoupledRegionVel() = 0;
+        //- send forces for ghost molecules in coupled region
+        virtual void sendCoupledRegionForce() = 0;
 
         //- send molecules to dsmcFoamPlus that have crossed a coupling boundary
         virtual label sendCoupledMolecules() = 0;

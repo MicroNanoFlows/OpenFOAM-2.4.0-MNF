@@ -704,26 +704,26 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
 
             //Scale molecule velocity field
             scaleVelocity(scaleValue);
-        }
 
-        //Calculate new temperature of whole cloud
-        scalar newInitTemperature = calcTemperature();
+            //Calculate new temperature of whole cloud
+            scalar newInitTemperature = calcTemperature();
 
-        //Calculate new KE of whole cloud
-        scalar newLinearKE = calcAvgLinearKe();
+            //Calculate new KE of whole cloud
+            scalar newLinearKE = calcAvgLinearKe();
 
-        if (Pstream::parRun())
-        {
-            if(Pstream::master())
+            if (Pstream::parRun())
+            {
+                if(Pstream::master())
+                {
+                    std::cout << "Scaled MD temperature: " << newInitTemperature << std::endl;
+                    std::cout << "Scaled MD average linear KE per molecule: " << newLinearKE << std::endl;
+                }
+            }
+            else
             {
                 std::cout << "Scaled MD temperature: " << newInitTemperature << std::endl;
                 std::cout << "Scaled MD average linear KE per molecule: " << newLinearKE << std::endl;
             }
-        }
-        else
-        {
-            std::cout << "Scaled MD temperature: " << newInitTemperature << std::endl;
-            std::cout << "Scaled MD average linear KE per molecule: " << newLinearKE << std::endl;
         }
     }
 
@@ -836,7 +836,7 @@ bool mdDsmcCoupling::controlAfterMove(label stage)
 
 void mdDsmcCoupling::controlAfterForces()
 {
-    sendCoupledRegionVel(); // Send the accelerations for ghost molecules in the coupling region(s) (non-blocking)
+    sendCoupledRegionForce(); // Send the accelerations for ghost molecules in the coupling region(s) (non-blocking)
 }
 
 bool mdDsmcCoupling::receiveCoupledRegion(bool init)
@@ -1135,13 +1135,12 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
     return molChanged;
 }
 
-void mdDsmcCoupling::sendCoupledRegionVel()
+void mdDsmcCoupling::sendCoupledRegionForce()
 {
 #ifdef USE_MUI
     if(sendingRegion_)
     {
         polyMolecule* molecule = NULL;
-        const scalar deltaT = mesh_.time().deltaT().value() * rU_.refTime();
 
         // Iterate through all sending interfaces for this controller
         forAll(sendInterfaces_, iface)
@@ -1163,14 +1162,11 @@ void mdDsmcCoupling::sendCoupledRegionVel()
 			
                             forAll(molecule->siteForces(), s)
                             {
-                                siteForcesAccum += molecule->siteForces()[s];
+                                siteForcesAccum += molecule->siteForces()[s] * rU_.refForce();
                             }
 			
                             if(siteForcesAccum[0] != 0 || siteForcesAccum[1] != 0 || siteForcesAccum[2] != 0)
                             {
-                                // Get molecule mass
-                                const scalar& mass = molCloud_.cP().mass(molecule->id()) * rU_.refMass();
-
                                 // Get the molecule centre
                                 mui::point3d molCentre;
                                 molCentre[0] = molecule->position()[0] * rU_.refLength();
@@ -1183,13 +1179,9 @@ void mdDsmcCoupling::sendCoupledRegionVel()
                                 // Push molecule ID from receive history
                                 sendInterfaces_[iface]->push("id_region", molCentre, static_cast<label>(molId_[iface][mol]));
 
-                                vector velAdd(((siteForcesAccum[0] * rU_.refForce()) / mass) * deltaT,
-                                              ((siteForcesAccum[1] * rU_.refForce()) / mass) * deltaT,
-                                              ((siteForcesAccum[2] * rU_.refForce()) / mass) * deltaT);
-
-                                sendInterfaces_[iface]->push("veladd_x_region", molCentre, velAdd[0]);
-                                sendInterfaces_[iface]->push("veladd_y_region", molCentre, velAdd[1]);
-                                sendInterfaces_[iface]->push("veladd_z_region", molCentre, velAdd[2]);
+                                sendInterfaces_[iface]->push("force_x_region", molCentre, siteForcesAccum[0]);
+                                sendInterfaces_[iface]->push("force_y_region", molCentre, siteForcesAccum[1]);
+                                sendInterfaces_[iface]->push("force_z_region", molCentre, siteForcesAccum[2]);
                             }
                         }
                     }
