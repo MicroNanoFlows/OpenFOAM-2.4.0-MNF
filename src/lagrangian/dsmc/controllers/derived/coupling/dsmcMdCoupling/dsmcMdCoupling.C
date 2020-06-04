@@ -711,11 +711,15 @@ void dsmcMdCoupling::controlParcelsBeforeCollisions(label stage)
     {
         sendCoupledRegion(false); // Send parcel positions in coupled region(s) (non-blocking)
     }
+    else if(stage == 5)
+    {
+        receiveCoupledRegionVel(); // Receive MD velocity addition on ghost molecules in coupled region(s) (blocking)
+    }
 }
 
 void dsmcMdCoupling::controlParcelsAfterCollisions()
 {
-    receiveCoupledRegionVel(); // Receive MD velocity addition on ghost molecules in coupled region(s) (blocking)
+
 }
 
 void dsmcMdCoupling::resetGhostedStatus()
