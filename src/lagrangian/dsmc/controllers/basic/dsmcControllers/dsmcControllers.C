@@ -644,18 +644,6 @@ void dsmcControllers::controlBeforeCollisions()
     {
         couplingControllers_[cC]->controlParcelsBeforeCollisions(4);
     }
-
-    // Receive any added velocities for parcels in the coupled region (blocking)
-    forAll(couplingControllers_, cC)
-    {
-        couplingControllers_[cC]->controlParcelsBeforeCollisions(5);
-    }
-
-    //- Forget received data and don't reset log time
-    forAll(couplingControllers_, cC)
-    {
-        couplingControllers_[cC]->forget(false);
-    }
 }
 
 void dsmcControllers::controlAfterCollisions()
@@ -663,6 +651,18 @@ void dsmcControllers::controlAfterCollisions()
     forAll(stateControllers_, sC)
     {
         stateControllers_[sC]->controlParcelsAfterCollisions();
+    }
+
+    // Receive any added velocities for parcels in the coupled region (blocking)
+    forAll(couplingControllers_, cC)
+    {
+        couplingControllers_[cC]->controlParcelsAfterCollisions();
+    }
+
+    //- Forget received data and don't reset log time
+    forAll(couplingControllers_, cC)
+    {
+        couplingControllers_[cC]->forget(false);
     }
 }
 

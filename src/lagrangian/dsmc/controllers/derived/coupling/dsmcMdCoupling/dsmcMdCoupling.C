@@ -98,11 +98,10 @@ dsmcMdCoupling::dsmcMdCoupling
             }
         }
 
-        //- Check all interfaces were found
-        forAll(sendInterfaces_, i)
+        if(sendInterfaces_.size() != interfaces.size())
         {
-        	std::cout << "dsmcMdCoupling::dsmcMdCoupling(): Found 3D MUI coupling interface ("
-                 << interfaces[i] << ") to send for domain " << threeDInterfaces.domainName << std::endl;
+            FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
+                        << "Not all MUI sending interfaces found" << exit(FatalError);
         }
 
         parcelsInCellHistory_.setSize(sendInterfaces_.size());
@@ -128,11 +127,10 @@ dsmcMdCoupling::dsmcMdCoupling
             }
         }
 
-        //- Check all interfaces were found
-        forAll(recvInterfaces_, i)
+        if(recvInterfaces_.size() != interfaces.size())
         {
-        	std::cout << "dsmcMdCoupling::dsmcMdCoupling(): Found 3D MUI coupling interface ("
-                 << interfaces[i] << ") to receive for domain " << threeDInterfaces.domainName << std::endl;
+            FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
+                        << "Not all MUI receiving interfaces found" << exit(FatalError);
         }
     }
 
@@ -455,11 +453,13 @@ dsmcMdCoupling::dsmcMdCoupling
                 }
             }
 
+            vector cellExtents = cellMax - cellMin;
+
             if(couplingBoundZeroThick_[0] == 1) //- couplingBoundMin_ and couplingBoundMax_ are the same in the x
             {
                 if(couplingBoundNorm_[0] != 0)
                 {
-                    scalar boundaryExtend = localMeshExtents[0] * 1e-4;
+                    scalar boundaryExtend = cellExtents[0] * 1e-4;
 
                     bool test = false;
 
@@ -494,7 +494,7 @@ dsmcMdCoupling::dsmcMdCoupling
             {
                if(couplingBoundNorm_[1] != 0)
                {
-                   scalar boundaryExtend = localMeshExtents[1] * 1e-4;
+                   scalar boundaryExtend = cellExtents[1] * 1e-4;
                    bool test = false;
 
                    if((couplingBoundMin_[1] - boundaryExtend) >= cellMin[1] && (couplingBoundMin_[1] - boundaryExtend) <= cellMax[1])
@@ -528,7 +528,7 @@ dsmcMdCoupling::dsmcMdCoupling
             {
                if(couplingBoundNorm_[2] != 0)
                {
-                   scalar boundaryExtend = localMeshExtents[2] * 1e-4;
+                   scalar boundaryExtend = cellExtents[2] * 1e-4;
                    bool test = false;
 
                    if((couplingBoundMin_[2] - boundaryExtend) >= cellMin[2] && (couplingBoundMin_[2] - boundaryExtend) <= cellMax[2])
@@ -711,15 +711,11 @@ void dsmcMdCoupling::controlParcelsBeforeCollisions(label stage)
     {
         sendCoupledRegion(false); // Send parcel positions in coupled region(s) (non-blocking)
     }
-    else if(stage == 5)
-    {
-        receiveCoupledRegionForce(); // Receive MD force addition on ghost molecules in coupled region(s) (blocking)
-    }
 }
 
 void dsmcMdCoupling::controlParcelsAfterCollisions()
 {
-
+    receiveCoupledRegionForce(); // Receive MD force addition on ghost molecules in coupled region(s) (blocking)
 }
 
 void dsmcMdCoupling::resetGhostedStatus()
@@ -802,7 +798,10 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
                 }
             }
 
-            std::cout << "    Parcels sent to coupled region  = " << parcelsInCellHistory_[iface].size() << std::endl;
+            if(parcelsInCellHistory_[iface].size() > 0)
+            {
+                std::cout << "    Parcels sent to coupled region  = " << parcelsInCellHistory_[iface].size() << std::endl;
+            }
 
             if(init)
             {

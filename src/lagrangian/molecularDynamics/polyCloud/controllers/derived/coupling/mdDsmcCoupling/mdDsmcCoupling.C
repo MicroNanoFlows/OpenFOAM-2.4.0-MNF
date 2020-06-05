@@ -111,11 +111,10 @@ mdDsmcCoupling::mdDsmcCoupling
             }
         }
 
-        //- Check all interfaces were found
-        forAll(sendInterfaces_, i)
+        if(sendInterfaces_.size() != interfaces.size())
         {
-        	std::cout << "mdDsmcCoupling::mdDsmcCoupling(): Found 3D MUI coupling interface ("
-				      << interfaces[i] << ") to send for domain " << threeDInterfaces.domainName << std::endl;
+            FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
+                         << "Not all MUI sending interfaces found" << exit(FatalError);
         }
     }
 
@@ -139,11 +138,10 @@ mdDsmcCoupling::mdDsmcCoupling
             }
         }
 
-        //- Check all interfaces were found
-        forAll(recvInterfaces_, i)
+        if(recvInterfaces_.size() != interfaces.size())
         {
-        	std::cout << "mdDsmcCoupling::mdDsmcCoupling(): Found 3D MUI coupling interface ("
-				      << interfaces[i] << ") to receive for domain " << threeDInterfaces.domainName << std::endl;
+            FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
+                         << "Not all MUI receiving interfaces found" << exit(FatalError);
         }
 
         molId_.setSize(recvInterfaces_.size());
@@ -329,7 +327,7 @@ mdDsmcCoupling::mdDsmcCoupling
         //- Find the whole mesh extents
         vector meshExtents = mesh_.bounds().max() - mesh_.bounds().min();
 
-        // Small (1e-15 for Double) correction for boundary particles used during insertion perturbation)
+        // Small (1e-15 for double) correction for boundary particles used during insertion perturbation)
         boundCorr_ = SMALL;
 
         point cellMin;
@@ -380,11 +378,13 @@ mdDsmcCoupling::mdDsmcCoupling
                 }
             }
 
+            vector cellExtents = cellMax - cellMin;
+
             if(couplingBoundZeroThick_[0] == 1) //- couplingBoundMin_ and couplingBoundMax_ are the same in the x
             {
                 if(couplingBoundNorm_[0] != 0)
                 {
-                    scalar boundaryExtend = localMeshExtents[0] * 1e-4;
+                    scalar boundaryExtend = cellExtents[0] * 1e-4;
                     bool test = false;
 
                     if((couplingBoundMin_[0] - boundaryExtend) >= cellMin[0] && (couplingBoundMin_[0] - boundaryExtend) <= cellMax[0])
@@ -421,7 +421,7 @@ mdDsmcCoupling::mdDsmcCoupling
             {
                if(couplingBoundNorm_[1] != 0)
                {
-                   scalar boundaryExtend = localMeshExtents[1] * 1e-4;
+                   scalar boundaryExtend = cellExtents[1] * 1e-4;
                    bool test = false;
 
                    if((couplingBoundMin_[1] - boundaryExtend) >= cellMin[1] && (couplingBoundMin_[1] - boundaryExtend) <= cellMax[1])
@@ -458,7 +458,7 @@ mdDsmcCoupling::mdDsmcCoupling
             {
                if(couplingBoundNorm_[2] != 0)
                {
-                   scalar boundaryExtend = localMeshExtents[2] * 1e-4;
+                   scalar boundaryExtend = cellExtents[2] * 1e-4;
                    bool test = false;
 
                    if((couplingBoundMin_[2] - boundaryExtend) >= cellMin[2] && (couplingBoundMin_[2] - boundaryExtend) <= cellMax[2])
@@ -640,8 +640,6 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
     }
     else if (stage == 2)
     {
-        returnVal = receiveCoupledRegion(true); // Receive ghost molecules in coupled region(s) at time = startTime and commit time=1 to release other side
-
         //Calculate initial temperature of whole cloud
         initTemperature_ = calcTemperature();
 
@@ -661,6 +659,8 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
             std::cout << "Initial MD temperature: " << initTemperature_ << std::endl;
             std::cout << "Initial MD average linear KE per molecule: " << initKe_ << std::endl;
         }
+
+        returnVal = receiveCoupledRegion(true); // Receive ghost molecules in coupled region(s) at time = startTime and commit to release other side
 
         //Distribute received temperature from DSMC side to all MPI ranks
         if (Pstream::parRun())
