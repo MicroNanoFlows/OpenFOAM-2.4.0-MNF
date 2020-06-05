@@ -579,15 +579,11 @@ void polyControllers::initialConfig()
         couplingControllers_[cC]->initialConfiguration(1);
     }
 
-    std::cout << "Start md barrier at t=-1" << std::endl;
-
     //- Wait at barrier at time=-1 to ensure all interface disabled messages have been transferred
     forAll(couplingControllers_, cC)
     {
         couplingControllers_[cC]->barrier(-1);
     }
-
-    std::cout << "End md barrier at t=-1" << std::endl;
 
     //- Forget all received frames and reset log
     forAll(couplingControllers_, cC)
