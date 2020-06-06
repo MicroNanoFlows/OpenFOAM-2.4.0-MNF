@@ -454,6 +454,9 @@
                             end[1] *= threeDInterfaces.refLength;
                             end[2] *= threeDInterfaces.refLength;
 
+                            std::cout << "SS start: " << start[0] << "," << start[1] << "," << start[2] << std::endl;
+                            std::cout << "SS end: " << end[0] << "," << end[1] << "," << end[2] << std::endl;
+
                             mui::geometry::box3d region_3d(start, end);
 
                             //- Using iteration based coupling
