@@ -156,12 +156,12 @@
                     if(smart_send[cI] && send[cI])
                     {
                         // "domain_send_start" and "domain_send_end" not set in dictionary, so initialise domain values to mesh bounds
-                        sendStart[cI][0] = meshMin[0] + SMALL;
-                        sendStart[cI][1] = meshMin[1] + SMALL;
-                        sendStart[cI][2] = meshMin[2] + SMALL;
-                        sendEnd[cI][0] = meshMax[0] - SMALL;
-                        sendEnd[cI][1] = meshMax[1] - SMALL;
-                        sendEnd[cI][2] = meshMax[2] - SMALL;
+                        sendStart[cI][0] = meshMin[0];
+                        sendStart[cI][1] = meshMin[1];
+                        sendStart[cI][2] = meshMin[2];
+                        sendEnd[cI][0] = meshMax[0];
+                        sendEnd[cI][1] = meshMax[1];
+                        sendEnd[cI][2] = meshMax[2];
                     }
                     else // Smart send not enabled and/or interface not set to send so just initialise domain values to zero as they wont be used
                     {
@@ -187,12 +187,12 @@
                     if(smart_send[cI] && receive[cI])
                     {
                         // "domain_receive_start" and "domain_receive_end" not set in dictionary, so initialise domain values to mesh bounds
-                        rcvStart[cI][0] = meshMin[0] + SMALL;
-                        rcvStart[cI][1] = meshMin[1] + SMALL;
-                        rcvStart[cI][2] = meshMin[2] + SMALL;
-                        rcvEnd[cI][0] = meshMax[0] - SMALL;
-                        rcvEnd[cI][1] = meshMax[1] - SMALL;
-                        rcvEnd[cI][2] = meshMax[2] - SMALL;
+                        rcvStart[cI][0] = meshMin[0];
+                        rcvStart[cI][1] = meshMin[1];
+                        rcvStart[cI][2] = meshMin[2];
+                        rcvEnd[cI][0] = meshMax[0];
+                        rcvEnd[cI][1] = meshMax[1];
+                        rcvEnd[cI][2] = meshMax[2];
                     }
                     else // Smart send not enabled and/or interface not set to send so just initialise domain values to zero as they wont be used
                     {
@@ -341,10 +341,10 @@
                                 end[1] = twoDInterfaces.interfaces->getInterfaceReceiveDomEnd(i)[1];
                             }
 
-                            start[0] *= twoDInterfaces.refLength;
-                            start[1] *= twoDInterfaces.refLength;
-                            end[0] *= twoDInterfaces.refLength;
-                            end[1] *= twoDInterfaces.refLength;
+                            start[0] = (start[0] * twoDInterfaces.refLength) - SMALL;
+                            start[1] = (start[1] * twoDInterfaces.refLength) - SMALL;
+                            end[0] = (end[0] * twoDInterfaces.refLength) - SMALL;
+                            end[1] = (end[1] * twoDInterfaces.refLength) - SMALL;
 
                             mui::geometry::box2d region_2d(start, end);
 
@@ -415,12 +415,12 @@
                                              threeDInterfaces.interfaces->getInterfaceSendDomEnd(i)[1],
                                              threeDInterfaces.interfaces->getInterfaceSendDomEnd(i)[2]);
 
-                            start[0] *= threeDInterfaces.refLength;
-                            start[1] *= threeDInterfaces.refLength;
-                            start[2] *= threeDInterfaces.refLength;
-                            end[0] *= threeDInterfaces.refLength;
-                            end[1] *= threeDInterfaces.refLength;
-                            end[2] *= threeDInterfaces.refLength;
+                            start[0] = (start[0] * threeDInterfaces.refLength) - SMALL;
+                            start[1] = (start[1] * threeDInterfaces.refLength) - SMALL;
+                            start[2] = (start[2] * threeDInterfaces.refLength) - SMALL;
+                            end[0] = (end[0] * threeDInterfaces.refLength) - SMALL;
+                            end[1] = (end[1] * threeDInterfaces.refLength) - SMALL;
+                            end[2] = (end[2] * threeDInterfaces.refLength) - SMALL;
 
                             mui::geometry::box3d region_3d(start, end);
 
