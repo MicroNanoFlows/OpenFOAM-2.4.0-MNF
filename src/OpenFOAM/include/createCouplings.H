@@ -155,13 +155,9 @@
                     // Smart send enabled and interface set to send so define domain values according to dictionary input
                     if(smart_send[cI] && send[cI])
                     {
-                        // "domain_send_start" and "domain_send_end" not set in dictionary, so initialise domain values to mesh bounds +/- 1%
-                        sendStart[cI][0] = meshMin[0] + extents[0]*0.01;
-                        sendStart[cI][1] = meshMin[1] + extents[1]*0.01;
-                        sendStart[cI][2] = meshMin[2] + extents[2]*0.01;
-                        sendEnd[cI][0] = meshMax[0] - extents[0]*0.01;
-                        sendEnd[cI][1] = meshMax[1] - extents[1]*0.01;
-                        sendEnd[cI][2] = meshMax[2] - extents[2]*0.01;
+                        // "domain_send_start" and "domain_send_end" not set in dictionary, so initialise domain values to mesh bounds
+                        sendStart[cI] = meshMin + SMALL;
+                        sendEnd[cI] = meshMax - SMALL;
                     }
                     else // Smart send not enabled and/or interface not set to send so just initialise domain values to zero as they wont be used
                     {
@@ -186,13 +182,9 @@
                     // Smart send enabled and interface set to receive so define domain values according to dictionary input
                     if(smart_send[cI] && receive[cI])
                     {
-                        // "domain_receive_start" and "domain_receive_end" not set in dictionary, so initialise domain values to mesh bounds +/- 1%
-                        rcvStart[cI][0] = meshMin[0] + extents[0]*0.01;
-                        rcvStart[cI][1] = meshMin[1] + extents[1]*0.01;
-                        rcvStart[cI][2] = meshMin[2] + extents[2]*0.01;
-                        rcvEnd[cI][0] = meshMax[0] - extents[0]*0.01;
-                        rcvEnd[cI][1] = meshMax[1] - extents[1]*0.01;
-                        rcvEnd[cI][2] = meshMax[2] - extents[2]*0.01;
+                        // "domain_receive_start" and "domain_receive_end" not set in dictionary, so initialise domain values to mesh bounds
+                        rcvStart[cI] = meshMin + SMALL;
+                        rcvEnd[cI] = meshMax - SMALL;
                     }
                     else // Smart send not enabled and/or interface not set to send so just initialise domain values to zero as they wont be used
                     {
