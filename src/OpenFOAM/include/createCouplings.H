@@ -294,10 +294,10 @@
                                 end[1] = twoDInterfaces.interfaces->getInterfaceSendDomEnd(i)[1];
                             }
 
-                            start[0] *= twoDInterfaces.refLength;
-                            start[1] *= twoDInterfaces.refLength;
-                            end[0] *= twoDInterfaces.refLength;
-                            end[1] *= twoDInterfaces.refLength;
+                            start[0] = (start[0] * twoDInterfaces.refLength) + SMALL;
+                            start[1] = (start[1] * twoDInterfaces.refLength) + SMALL;
+                            end[0] = (end[0] * twoDInterfaces.refLength) - SMALL;
+                            end[1] = (end[1] * twoDInterfaces.refLength) - SMALL;
 
                             mui::geometry::box2d region_2d(start, end);
 
@@ -341,8 +341,8 @@
                                 end[1] = twoDInterfaces.interfaces->getInterfaceReceiveDomEnd(i)[1];
                             }
 
-                            start[0] = (start[0] * twoDInterfaces.refLength) - SMALL;
-                            start[1] = (start[1] * twoDInterfaces.refLength) - SMALL;
+                            start[0] = (start[0] * twoDInterfaces.refLength) + SMALL;
+                            start[1] = (start[1] * twoDInterfaces.refLength) + SMALL;
                             end[0] = (end[0] * twoDInterfaces.refLength) - SMALL;
                             end[1] = (end[1] * twoDInterfaces.refLength) - SMALL;
 
@@ -415,9 +415,9 @@
                                              threeDInterfaces.interfaces->getInterfaceSendDomEnd(i)[1],
                                              threeDInterfaces.interfaces->getInterfaceSendDomEnd(i)[2]);
 
-                            start[0] = (start[0] * threeDInterfaces.refLength) - SMALL;
-                            start[1] = (start[1] * threeDInterfaces.refLength) - SMALL;
-                            start[2] = (start[2] * threeDInterfaces.refLength) - SMALL;
+                            start[0] = (start[0] * threeDInterfaces.refLength) + SMALL;
+                            start[1] = (start[1] * threeDInterfaces.refLength) + SMALL;
+                            start[2] = (start[2] * threeDInterfaces.refLength) + SMALL;
                             end[0] = (end[0] * threeDInterfaces.refLength) - SMALL;
                             end[1] = (end[1] * threeDInterfaces.refLength) - SMALL;
                             end[2] = (end[2] * threeDInterfaces.refLength) - SMALL;
@@ -447,15 +447,12 @@
                                              threeDInterfaces.interfaces->getInterfaceReceiveDomEnd(i)[1],
                                              threeDInterfaces.interfaces->getInterfaceReceiveDomEnd(i)[2]);
 
-                            start[0] *= threeDInterfaces.refLength;
-                            start[1] *= threeDInterfaces.refLength;
-                            start[2] *= threeDInterfaces.refLength;
-                            end[0] *= threeDInterfaces.refLength;
-                            end[1] *= threeDInterfaces.refLength;
-                            end[2] *= threeDInterfaces.refLength;
-
-                            std::cout << "SS start: " << start[0] << "," << start[1] << "," << start[2] << std::endl;
-                            std::cout << "SS end: " << end[0] << "," << end[1] << "," << end[2] << std::endl;
+                            start[0] = (start[0] * threeDInterfaces.refLength) + SMALL;
+                            start[1] = (start[1] * threeDInterfaces.refLength) + SMALL;
+                            start[2] = (start[2] * threeDInterfaces.refLength) + SMALL;
+                            end[0] = (end[0] * threeDInterfaces.refLength) - SMALL;
+                            end[1] = (end[1] * threeDInterfaces.refLength) - SMALL;
+                            end[2] = (end[2] * threeDInterfaces.refLength) - SMALL;
 
                             mui::geometry::box3d region_3d(start, end);
 
