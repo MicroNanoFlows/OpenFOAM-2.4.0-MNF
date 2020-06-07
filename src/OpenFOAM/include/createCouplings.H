@@ -428,6 +428,7 @@
                             if(threeDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                             {
                                 label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value())+1;
+                                std::cout << "Coupling iterations send: " << totalIter << std::endl;
                                 threeDInterfaces.interfaces->getInterface(i)->announce_send_span(0, totalIter, region_3d);
                             }
                             else //- Using direct time based coupling
@@ -460,6 +461,7 @@
                             if(threeDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                             {
                                 label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value())+1;
+                                std::cout << "Coupling iterations rcv: " << totalIter << std::endl;
                                 threeDInterfaces.interfaces->getInterface(i)->announce_recv_span(0, totalIter, region_3d);
                             }
                             else //- Using direct time based coupling
