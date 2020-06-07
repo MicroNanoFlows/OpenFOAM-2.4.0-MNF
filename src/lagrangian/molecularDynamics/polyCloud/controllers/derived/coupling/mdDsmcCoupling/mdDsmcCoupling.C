@@ -587,12 +587,14 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
     if(stage == 1)
     {
 #ifdef USE_MUI
+        /*
     if((!sendingBound_ && !sendingRegion_) && (!receivingBound_ && !receivingRegion_))
     {
         std::cout << "MUI interface(s) disabled for this rank" << std::endl;
 
         forAll(sendInterfaces_, iface)
         {
+
             sendInterfaces_[iface]->announce_send_disable();
         }
 
@@ -619,7 +621,7 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
             recvInterfaces_[iface]->announce_recv_disable();
         }
     }
-
+*/
     DynamicList<word> interfaceCommits;
 
     forAll(sendInterfaces_, iface)
