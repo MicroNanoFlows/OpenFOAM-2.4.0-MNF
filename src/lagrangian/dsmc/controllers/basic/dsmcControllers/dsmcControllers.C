@@ -564,6 +564,8 @@ void dsmcControllers::initialConfig()
         couplingControllers_[cC]->barrier(-1);
     }
 
+    std::cout << "dsc end barrier -1" << std::endl;
+
     //- Forget time frames and reset log
     forAll(couplingControllers_, cC)
     {
@@ -586,6 +588,8 @@ void dsmcControllers::initialConfig()
     {
         couplingControllers_[cC]->barrier(0);
     }
+
+    std::cout << "dsc end barrier 0" << std::endl;
 
     //- Forget initial configuration time frame
     forAll(couplingControllers_, cC)
