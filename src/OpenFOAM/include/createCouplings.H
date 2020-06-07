@@ -415,12 +415,12 @@
                                              threeDInterfaces.interfaces->getInterfaceSendDomEnd(i)[1],
                                              threeDInterfaces.interfaces->getInterfaceSendDomEnd(i)[2]);
 
-                            start[0] = (start[0] * threeDInterfaces.refLength) - VSMALL;
-                            start[1] = (start[1] * threeDInterfaces.refLength) - VSMALL;
-                            start[2] = (start[2] * threeDInterfaces.refLength) - VSMALL;
-                            end[0] = (end[0] * threeDInterfaces.refLength) + VSMALL;
-                            end[1] = (end[1] * threeDInterfaces.refLength) + VSMALL;
-                            end[2] = (end[2] * threeDInterfaces.refLength) + VSMALL;
+                            start[0] = (start[0] * threeDInterfaces.refLength) + VSMALL;
+                            start[1] = (start[1] * threeDInterfaces.refLength) + VSMALL;
+                            start[2] = (start[2] * threeDInterfaces.refLength) + VSMALL;
+                            end[0] = (end[0] * threeDInterfaces.refLength) - VSMALL;
+                            end[1] = (end[1] * threeDInterfaces.refLength) - VSMALL;
+                            end[2] = (end[2] * threeDInterfaces.refLength) - VSMALL;
 
                             mui::geometry::box3d region_3d(start, end);
 
@@ -447,12 +447,12 @@
                                              threeDInterfaces.interfaces->getInterfaceReceiveDomEnd(i)[1],
                                              threeDInterfaces.interfaces->getInterfaceReceiveDomEnd(i)[2]);
 
-                            start[0] = (start[0] * threeDInterfaces.refLength) - VSMALL;
-                            start[1] = (start[1] * threeDInterfaces.refLength) - VSMALL;
-                            start[2] = (start[2] * threeDInterfaces.refLength) - VSMALL;
-                            end[0] = (end[0] * threeDInterfaces.refLength) + VSMALL;
-                            end[1] = (end[1] * threeDInterfaces.refLength) + VSMALL;
-                            end[2] = (end[2] * threeDInterfaces.refLength) + VSMALL;
+                            start[0] = (start[0] * threeDInterfaces.refLength) + VSMALL;
+                            start[1] = (start[1] * threeDInterfaces.refLength) + VSMALL;
+                            start[2] = (start[2] * threeDInterfaces.refLength) + VSMALL;
+                            end[0] = (end[0] * threeDInterfaces.refLength) - VSMALL;
+                            end[1] = (end[1] * threeDInterfaces.refLength) - VSMALL;
+                            end[2] = (end[2] * threeDInterfaces.refLength) - VSMALL;
 
                             mui::geometry::box3d region_3d(start, end);
 
