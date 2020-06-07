@@ -294,10 +294,10 @@
                                 end[1] = twoDInterfaces.interfaces->getInterfaceSendDomEnd(i)[1];
                             }
 
-                            start[0] = (start[0] * twoDInterfaces.refLength) + VSMALL;
-                            start[1] = (start[1] * twoDInterfaces.refLength) + VSMALL;
-                            end[0] = (end[0] * twoDInterfaces.refLength) - VSMALL;
-                            end[1] = (end[1] * twoDInterfaces.refLength) - VSMALL;
+                            start[0] = (start[0] * twoDInterfaces.refLength);
+                            start[1] = (start[1] * twoDInterfaces.refLength);
+                            end[0] = (end[0] * twoDInterfaces.refLength);
+                            end[1] = (end[1] * twoDInterfaces.refLength);
 
                             mui::geometry::box2d region_2d(start, end);
 
@@ -341,10 +341,10 @@
                                 end[1] = twoDInterfaces.interfaces->getInterfaceReceiveDomEnd(i)[1];
                             }
 
-                            start[0] = (start[0] * twoDInterfaces.refLength) + VSMALL;
-                            start[1] = (start[1] * twoDInterfaces.refLength) + VSMALL;
-                            end[0] = (end[0] * twoDInterfaces.refLength) - VSMALL;
-                            end[1] = (end[1] * twoDInterfaces.refLength) - VSMALL;
+                            start[0] = (start[0] * twoDInterfaces.refLength);
+                            start[1] = (start[1] * twoDInterfaces.refLength);
+                            end[0] = (end[0] * twoDInterfaces.refLength);
+                            end[1] = (end[1] * twoDInterfaces.refLength);
 
                             mui::geometry::box2d region_2d(start, end);
 
@@ -424,9 +424,6 @@
 
                             mui::geometry::box3d region_3d(start, end);
 
-                            std::cout << "Send start: " << start[0] << "," << start[1] << "," << start[2] << std::endl;
-                            std::cout << "Send end: " << end[0] << "," << end[1] << "," << end[2] << std::endl;
-
                             //- Using iteration based coupling
                             if(threeDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                             {
@@ -458,9 +455,6 @@
                             end[2] = (end[2] * threeDInterfaces.refLength);
 
                             mui::geometry::box3d region_3d(start, end);
-
-                            std::cout << "Recv start: " << start[0] << "," << start[1] << "," << start[2] << std::endl;
-                            std::cout << "Recv end: " << end[0] << "," << end[1] << "," << end[2] << std::endl;
 
                             //- Using iteration based coupling
                             if(threeDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
