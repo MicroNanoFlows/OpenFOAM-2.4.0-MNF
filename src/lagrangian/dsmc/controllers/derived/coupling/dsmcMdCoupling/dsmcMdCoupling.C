@@ -822,130 +822,127 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 void dsmcMdCoupling::receiveCoupledRegionForce()
 {
 #ifdef USE_MUI
-    //if(receivingRegion_)
-    //{
-        List<std::vector<std::string> > rcvParcType(recvInterfaces_.size());
-        List<std::vector<label> > rcvParcId(recvInterfaces_.size());
-        List<std::vector<scalar> > rcvForceX(recvInterfaces_.size());
-        List<std::vector<scalar> > rcvForceY(recvInterfaces_.size());
-        List<std::vector<scalar> > rcvForceZ(recvInterfaces_.size());
+    List<std::vector<std::string> > rcvParcType(recvInterfaces_.size());
+    List<std::vector<label> > rcvParcId(recvInterfaces_.size());
+    List<std::vector<scalar> > rcvForceX(recvInterfaces_.size());
+    List<std::vector<scalar> > rcvForceY(recvInterfaces_.size());
+    List<std::vector<scalar> > rcvForceZ(recvInterfaces_.size());
 
-        // Iterate through all receiving interfaces for this controller and extract a points list
-        forAll(recvInterfaces_, iface)
+    // Iterate through all receiving interfaces for this controller and extract a points list
+    forAll(recvInterfaces_, iface)
+    {
+        //- Extract a list of all parcel types
+        rcvParcType[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_region", currIteration_, *chrono_sampler);
+
+        if(rcvParcType[iface].size() > 0)
         {
-            //- Extract a list of all parcel types
-            rcvParcType[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_region", currIteration_, *chrono_sampler);
+            //- Extract a list of all molecule Id's received from other solver through this interface
+            rcvParcId[iface] = recvInterfaces_[iface]->fetch_values<label>("id_region", currIteration_, *chrono_sampler);
 
-            if(rcvParcType[iface].size() > 0)
-            {
-                //- Extract a list of all molecule Id's received from other solver through this interface
-                rcvParcId[iface] = recvInterfaces_[iface]->fetch_values<label>("id_region", currIteration_, *chrono_sampler);
-
-                //- Extract a list of all molecule force additions received from other solver through this interface
-                rcvForceX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_x_region", currIteration_, *chrono_sampler);
-                rcvForceY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_y_region", currIteration_, *chrono_sampler);
-                rcvForceZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_z_region", currIteration_, *chrono_sampler);
-            }
+            //- Extract a list of all molecule force additions received from other solver through this interface
+            rcvForceX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_x_region", currIteration_, *chrono_sampler);
+            rcvForceY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_y_region", currIteration_, *chrono_sampler);
+            rcvForceZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_z_region", currIteration_, *chrono_sampler);
         }
+    }
 
-        //- Go through received values and find any that are not of the type set to be received
-        forAll(rcvParcType, ifacepts)
+    //- Go through received values and find any that are not of the type set to be received
+    forAll(rcvParcType, ifacepts)
+    {
+        if(rcvParcType[ifacepts].size() > 0)
         {
-            if(rcvParcType[ifacepts].size() > 0)
-            {
-                std::vector<std::string>::iterator rcvParcTypeIt;
-                std::vector<label>::iterator rcvParcIdIt = rcvParcId[ifacepts].begin();
-                std::vector<scalar>::iterator rcvForceXIt = rcvForceX[ifacepts].begin();
-                std::vector<scalar>::iterator rcvForceYIt = rcvForceY[ifacepts].begin();
-                std::vector<scalar>::iterator rcvForceZIt = rcvForceZ[ifacepts].begin();
+            std::vector<std::string>::iterator rcvParcTypeIt;
+            std::vector<label>::iterator rcvParcIdIt = rcvParcId[ifacepts].begin();
+            std::vector<scalar>::iterator rcvForceXIt = rcvForceX[ifacepts].begin();
+            std::vector<scalar>::iterator rcvForceYIt = rcvForceY[ifacepts].begin();
+            std::vector<scalar>::iterator rcvForceZIt = rcvForceZ[ifacepts].begin();
 
-                for (rcvParcTypeIt = rcvParcType[ifacepts].begin(); rcvParcTypeIt != rcvParcType[ifacepts].end(); rcvParcTypeIt++) {
-                    const label parcId = findIndex(typeNames_, *rcvParcTypeIt);
+            for (rcvParcTypeIt = rcvParcType[ifacepts].begin(); rcvParcTypeIt != rcvParcType[ifacepts].end(); rcvParcTypeIt++) {
+                const label parcId = findIndex(typeNames_, *rcvParcTypeIt);
 
-                    if(parcId == -1) //- parcId not found in local list as one to receive so store it as one to remove from lists
-                    {
-                        rcvParcType[ifacepts].erase(rcvParcTypeIt--);
-                        rcvParcId[ifacepts].erase(rcvParcIdIt--);
-                        rcvForceX[ifacepts].erase(rcvForceXIt--);
-                        rcvForceY[ifacepts].erase(rcvForceYIt--);
-                        rcvForceZ[ifacepts].erase(rcvForceZIt--);
-                    }
-
-                    rcvParcIdIt++;
-                    rcvForceXIt++;
-                    rcvForceYIt++;
-                    rcvForceZIt++;
-                }
-            }
-        }
-
-        DynamicList<dsmcParcel*> parcelsInRegion;
-        dsmcParcel* parcel = NULL;
-
-        //- Extract a list of all parcels in the control zone(s)
-        forAll(regionCells_, cell)
-        {
-            const List<dsmcParcel*>& parcelsInCell = cloud_.cellOccupancy()[regionCells_[cell]];
-
-            forAll(parcelsInCell, p)
-            {
-                parcel = parcelsInCell[p];
-                bool insideRegion = false;
-
-                if(couplingRegion_)
+                if(parcId == -1) //- parcId not found in local list as one to receive so store it as one to remove from lists
                 {
-                    vector position = parcel->position();
-
-                    if((position[0] > couplingRegionMin_[0] && position[0] < couplingRegionMax_[0]) &&
-                       (position[1] > couplingRegionMin_[1] && position[1] < couplingRegionMax_[1]) &&
-                       (position[2] > couplingRegionMin_[2] && position[2] < couplingRegionMax_[2]))
-                    {
-                        insideRegion = true;
-                    }
+                    rcvParcType[ifacepts].erase(rcvParcTypeIt--);
+                    rcvParcId[ifacepts].erase(rcvParcIdIt--);
+                    rcvForceX[ifacepts].erase(rcvForceXIt--);
+                    rcvForceY[ifacepts].erase(rcvForceYIt--);
+                    rcvForceZ[ifacepts].erase(rcvForceZIt--);
                 }
-                else
+
+                rcvParcIdIt++;
+                rcvForceXIt++;
+                rcvForceYIt++;
+                rcvForceZIt++;
+            }
+        }
+    }
+
+    DynamicList<dsmcParcel*> parcelsInRegion;
+    dsmcParcel* parcel = NULL;
+
+    //- Extract a list of all parcels in the control zone(s)
+    forAll(regionCells_, cell)
+    {
+        const List<dsmcParcel*>& parcelsInCell = cloud_.cellOccupancy()[regionCells_[cell]];
+
+        forAll(parcelsInCell, p)
+        {
+            parcel = parcelsInCell[p];
+            bool insideRegion = false;
+
+            if(couplingRegion_)
+            {
+                vector position = parcel->position();
+
+                if((position[0] > couplingRegionMin_[0] && position[0] < couplingRegionMax_[0]) &&
+                   (position[1] > couplingRegionMin_[1] && position[1] < couplingRegionMax_[1]) &&
+                   (position[2] > couplingRegionMin_[2] && position[2] < couplingRegionMax_[2]))
                 {
                     insideRegion = true;
                 }
-
-                if(insideRegion)
-                {
-                    //- Determine whether parcel is of a type set to receive
-                    const label typeIndex = findIndex(typeNames_, cloud_.typeIdList()[parcel->typeId()]);
-
-                    if(typeIndex != -1)
-                    {
-                        parcelsInRegion.append(parcel);
-                    }
-                }
             }
-        }
-
-        const scalar deltaT = mesh_.time().deltaT().value();
-
-        // Iterate through all accelerations received for this controller and apply if IDs match
-        forAll(rcvParcId, iface)
-        {
-            forAll(rcvParcId[iface], rcv_force)
+            else
             {
-                forAll(parcelsInRegion, parcel)
+                insideRegion = true;
+            }
+
+            if(insideRegion)
+            {
+                //- Determine whether parcel is of a type set to receive
+                const label typeIndex = findIndex(typeNames_, cloud_.typeIdList()[parcel->typeId()]);
+
+                if(typeIndex != -1)
                 {
-                    if(rcvParcId[iface][rcv_force] == parcelsInRegion[parcel]->origId())
-                    {
-                        const scalar parcMass = cloud_.constProps(parcelsInRegion[parcel]->typeId()).mass();
-
-                        vector velAdd((rcvForceX[iface][rcv_force] / parcMass) * deltaT,
-                                      (rcvForceY[iface][rcv_force] / parcMass) * deltaT,
-                                      (rcvForceZ[iface][rcv_force] / parcMass) * deltaT);
-
-                        parcelsInRegion[parcel]->U() += velAdd;
-
-                        break;
-                    }
+                    parcelsInRegion.append(parcel);
                 }
             }
         }
-    //}
+    }
+
+    const scalar deltaT = mesh_.time().deltaT().value();
+
+    // Iterate through all accelerations received for this controller and apply if IDs match
+    forAll(rcvParcId, iface)
+    {
+        forAll(rcvParcId[iface], rcv_force)
+        {
+            forAll(parcelsInRegion, parcel)
+            {
+                if(rcvParcId[iface][rcv_force] == parcelsInRegion[parcel]->origId())
+                {
+                    const scalar parcMass = cloud_.constProps(parcelsInRegion[parcel]->typeId()).mass();
+
+                    vector velAdd((rcvForceX[iface][rcv_force] / parcMass) * deltaT,
+                                  (rcvForceY[iface][rcv_force] / parcMass) * deltaT,
+                                  (rcvForceZ[iface][rcv_force] / parcMass) * deltaT);
+
+                    parcelsInRegion[parcel]->U() += velAdd;
+
+                    break;
+                }
+            }
+        }
+    }
 #endif
 }
 
@@ -1008,100 +1005,97 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
 {
     bool parcelAdded = false;
 #ifdef USE_MUI
-    //if(receivingBound_)
-    //{
-        List<std::vector<mui::point3d> > rcvPoints(recvInterfaces_.size());
-        List<std::vector<std::string> > rcvParcType(recvInterfaces_.size());
-        List<std::vector<scalar> > rcvVelX(recvInterfaces_.size());
-        List<std::vector<scalar> > rcvVelY(recvInterfaces_.size());
-        List<std::vector<scalar> > rcvVelZ(recvInterfaces_.size());
-        std::stringstream rcvStr;
+    List<std::vector<mui::point3d> > rcvPoints(recvInterfaces_.size());
+    List<std::vector<std::string> > rcvParcType(recvInterfaces_.size());
+    List<std::vector<scalar> > rcvVelX(recvInterfaces_.size());
+    List<std::vector<scalar> > rcvVelY(recvInterfaces_.size());
+    List<std::vector<scalar> > rcvVelZ(recvInterfaces_.size());
+    std::stringstream rcvStr;
 
-        // Iterate through all receiving interfaces for this controller and extract a points list for each molecule type handled
-        forAll(recvInterfaces_, iface)
+    // Iterate through all receiving interfaces for this controller and extract a points list for each molecule type handled
+    forAll(recvInterfaces_, iface)
+    {
+        //- Extract a list of all parcel locations
+        rcvPoints[iface] = recvInterfaces_[iface]->fetch_points<std::string>("type_bound", currIteration_, *chrono_sampler);
+
+        if(rcvPoints[iface].size() > 0)
         {
-            //- Extract a list of all parcel locations
-            rcvPoints[iface] = recvInterfaces_[iface]->fetch_points<std::string>("type_bound", currIteration_, *chrono_sampler);
+            //- Extract a list of all parcel types
+            rcvParcType[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_bound", currIteration_, *chrono_sampler);
 
-            if(rcvPoints[iface].size() > 0)
-            {
-                //- Extract a list of all parcel types
-                rcvParcType[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_bound", currIteration_, *chrono_sampler);
-
-                //- Extract a list of all molecule velocities received from other solver through this interface
-                rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_x_bound", currIteration_, *chrono_sampler);
-                rcvVelY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_y_bound", currIteration_, *chrono_sampler);
-                rcvVelZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_z_bound", currIteration_, *chrono_sampler);
-            }
+            //- Extract a list of all molecule velocities received from other solver through this interface
+            rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_x_bound", currIteration_, *chrono_sampler);
+            rcvVelY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_y_bound", currIteration_, *chrono_sampler);
+            rcvVelZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_z_bound", currIteration_, *chrono_sampler);
         }
+    }
 
-        //- Go through received values and find any that are not of the type set to be received
-        forAll(rcvParcType, ifacepts)
+    //- Go through received values and find any that are not of the type set to be received
+    forAll(rcvParcType, ifacepts)
+    {
+        if(rcvParcType[ifacepts].size() > 0)
         {
-            if(rcvParcType[ifacepts].size() > 0)
-            {
-                std::vector<std::string>::iterator rcvParcTypeIt;
-                std::vector<mui::point3d>::iterator rcvPointsIt = rcvPoints[ifacepts].begin();
-                std::vector<scalar>::iterator rcvVelXIt = rcvVelX[ifacepts].begin();
-                std::vector<scalar>::iterator rcvVelYIt = rcvVelY[ifacepts].begin();
-                std::vector<scalar>::iterator rcvVelZIt = rcvVelZ[ifacepts].begin();
+            std::vector<std::string>::iterator rcvParcTypeIt;
+            std::vector<mui::point3d>::iterator rcvPointsIt = rcvPoints[ifacepts].begin();
+            std::vector<scalar>::iterator rcvVelXIt = rcvVelX[ifacepts].begin();
+            std::vector<scalar>::iterator rcvVelYIt = rcvVelY[ifacepts].begin();
+            std::vector<scalar>::iterator rcvVelZIt = rcvVelZ[ifacepts].begin();
 
-                for (rcvParcTypeIt = rcvParcType[ifacepts].begin(); rcvParcTypeIt != rcvParcType[ifacepts].end(); rcvParcTypeIt++) {
-                    const label parcId = findIndex(typeNames_, *rcvParcTypeIt);
+            for (rcvParcTypeIt = rcvParcType[ifacepts].begin(); rcvParcTypeIt != rcvParcType[ifacepts].end(); rcvParcTypeIt++) {
+                const label parcId = findIndex(typeNames_, *rcvParcTypeIt);
 
-                    if(parcId == -1) //- parcId not found in local list as one to receive so store it as one to remove from lists
-                    {
-                        rcvParcType[ifacepts].erase(rcvParcTypeIt--);
-                        rcvPoints[ifacepts].erase(rcvPointsIt--);
-                        rcvVelX[ifacepts].erase(rcvVelXIt--);
-                        rcvVelY[ifacepts].erase(rcvVelYIt--);
-                        rcvVelZ[ifacepts].erase(rcvVelZIt--);
-                    }
-
-                    rcvPointsIt++;
-                    rcvVelXIt++;
-                    rcvVelYIt++;
-                    rcvVelZIt++;
-                }
-            }
-        }
-
-        label inserted = 0;
-
-        // Iterate through all received points
-        forAll(rcvPoints, ifacepts)
-        {
-            if(rcvPoints[ifacepts].size() > 0)
-            {
-                for (size_t pts = 0; pts < rcvPoints[ifacepts].size(); pts++)
+                if(parcId == -1) //- parcId not found in local list as one to receive so store it as one to remove from lists
                 {
-                    point checkedPosition(rcvPoints[ifacepts][pts][0], rcvPoints[ifacepts][pts][1], rcvPoints[ifacepts][pts][2]);
+                    rcvParcType[ifacepts].erase(rcvParcTypeIt--);
+                    rcvPoints[ifacepts].erase(rcvPointsIt--);
+                    rcvVelX[ifacepts].erase(rcvVelXIt--);
+                    rcvVelY[ifacepts].erase(rcvVelYIt--);
+                    rcvVelZ[ifacepts].erase(rcvVelZIt--);
+                }
 
-                    label cell = mesh_.findCell(checkedPosition);
+                rcvPointsIt++;
+                rcvVelXIt++;
+                rcvVelYIt++;
+                rcvVelZIt++;
+            }
+        }
+    }
 
-                    // Attempt insertion/update only if received molecule falls within local mesh extents
-                    if(cell != -1)
-                    {
-                        vector velocity;
-                        velocity[0] = rcvVelX[ifacepts][pts];
-                        velocity[1] = rcvVelY[ifacepts][pts];
-                        velocity[2] = rcvVelZ[ifacepts][pts];
+    label inserted = 0;
 
-                        const label typeIndex = findIndex(typeNames_, rcvParcType[ifacepts][pts]);
+    // Iterate through all received points
+    forAll(rcvPoints, ifacepts)
+    {
+        if(rcvPoints[ifacepts].size() > 0)
+        {
+            for (size_t pts = 0; pts < rcvPoints[ifacepts].size(); pts++)
+            {
+                point checkedPosition(rcvPoints[ifacepts][pts][0], rcvPoints[ifacepts][pts][1], rcvPoints[ifacepts][pts][2]);
 
-                        insertParcel(checkedPosition, velocity, typeIndex);
-                        parcelAdded = true;
-                        inserted++;
-                    }
+                label cell = mesh_.findCell(checkedPosition);
+
+                // Attempt insertion/update only if received molecule falls within local mesh extents
+                if(cell != -1)
+                {
+                    vector velocity;
+                    velocity[0] = rcvVelX[ifacepts][pts];
+                    velocity[1] = rcvVelY[ifacepts][pts];
+                    velocity[2] = rcvVelZ[ifacepts][pts];
+
+                    const label typeIndex = findIndex(typeNames_, rcvParcType[ifacepts][pts]);
+
+                    insertParcel(checkedPosition, velocity, typeIndex);
+                    parcelAdded = true;
+                    inserted++;
                 }
             }
         }
+    }
 
-        if(inserted > 0)
-        {
-            std::cout << "    Coupling parcels inserted       = " << inserted << std::endl;
-        }
-    //}
+    if(inserted > 0)
+    {
+        std::cout << "    Coupling parcels inserted       = " << inserted << std::endl;
+    }
 #endif
 	return parcelAdded;
 }

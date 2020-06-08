@@ -663,11 +663,7 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
             std::cout << "Initial MD average linear KE per molecule: " << initKe_ << std::endl;
         }
 
-        std::cout << "Start receiveCoupledRegion()" << std::endl;
-
         returnVal = receiveCoupledRegion(true); // Receive ghost molecules in coupled region(s) at time = startTime and commit to release other side
-
-        std::cout << "End receiveCoupledRegion()" << std::endl;
 
         //Distribute received temperature from DSMC side to all MPI ranks
         if (Pstream::parRun())
@@ -850,265 +846,240 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
 {
     bool molChanged = false;
 #ifdef USE_MUI
-	//if(receivingRegion_)
-    //{
-	    const constantMoleculeProperties& cP = molCloud_.cP();
-	    const scalar trackTime = mesh_.time().deltaT().value();
-	    label molCount = 0;
-	    moleculeInsert newMol;
+    const constantMoleculeProperties& cP = molCloud_.cP();
+    const scalar trackTime = mesh_.time().deltaT().value();
+    label molCount = 0;
+    moleculeInsert newMol;
 
-        // Iterate through all receiving interfaces for this controller and extract a points list
-        forAll(recvInterfaces_, iface)
+    // Iterate through all receiving interfaces for this controller and extract a points list
+    forAll(recvInterfaces_, iface)
+    {
+        rcvPoints_[iface].clear();
+        rcvMolType_[iface].clear();
+        rcvMolId_[iface].clear();
+        rcvVelX_[iface].clear();
+        rcvVelY_[iface].clear();
+        rcvVelZ_[iface].clear();
+
+        std::cout << "Start type_region fetch points" << std::endl;
+
+        //- Extract a list of all molecule locations received from other solver through this interface
+        rcvPoints_[iface] = recvInterfaces_[iface]->fetch_points<std::string>("type_region", currIteration_, *chrono_sampler);
+
+        if(rcvPoints_[iface].size() > 0)
         {
-            rcvPoints_[iface].clear();
-            rcvMolType_[iface].clear();
-            rcvMolId_[iface].clear();
-            rcvVelX_[iface].clear();
-            rcvVelY_[iface].clear();
-            rcvVelZ_[iface].clear();
+            std::cout << "Start type_region fetch values" << std::endl;
+            //- Extract a list of all molecule change status values received from other solver through this interface
+            rcvMolType_[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_region", currIteration_, *chrono_sampler);
+            std::cout << "Start id_region fetch values" << std::endl;
+            //- Extract a list of all molecule Id's received from other solver through this interface
+            rcvMolId_[iface] = recvInterfaces_[iface]->fetch_values<label>("id_region", currIteration_, *chrono_sampler);
+            std::cout << "Start vel_x_region fetch values" << std::endl;
+            //- Extract a list of all molecule velocities received from other solver through this interface
+            rcvVelX_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_x_region", currIteration_, *chrono_sampler);
+            rcvVelY_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_y_region", currIteration_, *chrono_sampler);
+            rcvVelZ_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_z_region", currIteration_, *chrono_sampler);
+        }
+    }
 
-            std::cout << "Start type_region fetch points" << std::endl;
+    //- Go through received values and find any that are not of the type set to be received
+    forAll(rcvMolType_, ifacepts)
+    {
+        if(rcvMolType_[ifacepts].size() > 0)
+        {
+            std::vector<std::string>::iterator rcvMolTypeIt;
+            std::vector<mui::point3d>::iterator rcvPointsIt = rcvPoints_[ifacepts].begin();
+            std::vector<label>::iterator rcvMolIdIt = rcvMolId_[ifacepts].begin();
+            std::vector<scalar>::iterator rcvVelXIt = rcvVelX_[ifacepts].begin();
+            std::vector<scalar>::iterator rcvVelYIt = rcvVelY_[ifacepts].begin();
+            std::vector<scalar>::iterator rcvVelZIt = rcvVelZ_[ifacepts].begin();
 
-            //- Extract a list of all molecule locations received from other solver through this interface
-            rcvPoints_[iface] = recvInterfaces_[iface]->fetch_points<std::string>("type_region", currIteration_, *chrono_sampler);
+            for (rcvMolTypeIt = rcvMolType_[ifacepts].begin(); rcvMolTypeIt != rcvMolType_[ifacepts].end(); rcvMolTypeIt++) {
+                const label molId = findIndex(molNames_, *rcvMolTypeIt);
 
-            if(rcvPoints_[iface].size() > 0)
-            {
-                std::cout << "Start type_region fetch values" << std::endl;
-                //- Extract a list of all molecule change status values received from other solver through this interface
-                rcvMolType_[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_region", currIteration_, *chrono_sampler);
-                std::cout << "Start id_region fetch values" << std::endl;
-                //- Extract a list of all molecule Id's received from other solver through this interface
-                rcvMolId_[iface] = recvInterfaces_[iface]->fetch_values<label>("id_region", currIteration_, *chrono_sampler);
-                std::cout << "Start vel_x_region fetch values" << std::endl;
-                //- Extract a list of all molecule velocities received from other solver through this interface
-                rcvVelX_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_x_region", currIteration_, *chrono_sampler);
-                rcvVelY_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_y_region", currIteration_, *chrono_sampler);
-                rcvVelZ_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_z_region", currIteration_, *chrono_sampler);
+                if(molId == -1) //- molId not found in local list as one to receive so store it as one to remove from lists
+                {
+                    rcvMolType_[ifacepts].erase(rcvMolTypeIt--);
+                    rcvPoints_[ifacepts].erase(rcvPointsIt--);
+                    rcvMolId_[ifacepts].erase(rcvMolIdIt--);
+                    rcvVelX_[ifacepts].erase(rcvVelXIt--);
+                    rcvVelY_[ifacepts].erase(rcvVelYIt--);
+                    rcvVelZ_[ifacepts].erase(rcvVelZIt--);
+                }
+
+                rcvPointsIt++;
+                rcvMolIdIt++;
+                rcvVelXIt++;
+                rcvVelYIt++;
+                rcvVelZIt++;
             }
         }
+    }
 
-        //- Go through received values and find any that are not of the type set to be received
-        forAll(rcvMolType_, ifacepts)
+    //- Insert/update the ghost molecules
+    forAll(rcvPoints_, ifacepts)
+    {
+        if(rcvPoints_[ifacepts].size() > 0)
         {
-            if(rcvMolType_[ifacepts].size() > 0)
+            bool newList = false;
+            bool newSize = false;
+
+            //- List size has changed, treat as a new list
+            if(molId_[ifacepts].size() != rcvMolId_[ifacepts].size())
             {
-                std::vector<std::string>::iterator rcvMolTypeIt;
-                std::vector<mui::point3d>::iterator rcvPointsIt = rcvPoints_[ifacepts].begin();
-                std::vector<label>::iterator rcvMolIdIt = rcvMolId_[ifacepts].begin();
-                std::vector<scalar>::iterator rcvVelXIt = rcvVelX_[ifacepts].begin();
-                std::vector<scalar>::iterator rcvVelYIt = rcvVelY_[ifacepts].begin();
-                std::vector<scalar>::iterator rcvVelZIt = rcvVelZ_[ifacepts].begin();
+                newList = true;
 
-                for (rcvMolTypeIt = rcvMolType_[ifacepts].begin(); rcvMolTypeIt != rcvMolType_[ifacepts].end(); rcvMolTypeIt++) {
-                    const label molId = findIndex(molNames_, *rcvMolTypeIt);
+                if(molId_[ifacepts].size() == 0) //- Local storage is zero size, so resize here instead of later
+                {
+                    //- Resize local storage to new received size
+                    molId_[ifacepts].setSize(rcvMolId_[ifacepts].size(), -1);
+                    molHistory_[ifacepts].setSize(rcvMolId_[ifacepts].size(), NULL);
 
-                    if(molId == -1) //- molId not found in local list as one to receive so store it as one to remove from lists
-                    {
-                        rcvMolType_[ifacepts].erase(rcvMolTypeIt--);
-                        rcvPoints_[ifacepts].erase(rcvPointsIt--);
-                        rcvMolId_[ifacepts].erase(rcvMolIdIt--);
-                        rcvVelX_[ifacepts].erase(rcvVelXIt--);
-                        rcvVelY_[ifacepts].erase(rcvVelYIt--);
-                        rcvVelZ_[ifacepts].erase(rcvVelZIt--);
-                    }
-
-                    rcvPointsIt++;
-                    rcvMolIdIt++;
-                    rcvVelXIt++;
-                    rcvVelYIt++;
-                    rcvVelZIt++;
+                    newSize = false;
+                }
+                else //- Local storage not zero size, so resize later
+                {
+                    newSize = true;
                 }
             }
-        }
-
-        //- Insert/update the ghost molecules
-        forAll(rcvPoints_, ifacepts)
-        {
-            if(rcvPoints_[ifacepts].size() > 0)
+            else //- List size the same, ensure list hasn't changed internally
             {
-                bool newList = false;
-                bool newSize = false;
-
-                //- List size has changed, treat as a new list
-                if(molId_[ifacepts].size() != rcvMolId_[ifacepts].size())
+                forAll(rcvMolId_[ifacepts], rcvMol)
                 {
-                    newList = true;
-
-                    if(molId_[ifacepts].size() == 0) //- Local storage is zero size, so resize here instead of later
+                    if(rcvMolId_[ifacepts][rcvMol] != molId_[ifacepts][rcvMol]) //- If a molecule ID changes then treat as new list
                     {
-                        //- Resize local storage to new received size
-                        molId_[ifacepts].setSize(rcvMolId_[ifacepts].size(), -1);
-                        molHistory_[ifacepts].setSize(rcvMolId_[ifacepts].size(), NULL);
-
-                        newSize = false;
-                    }
-                    else //- Local storage not zero size, so resize later
-                    {
-                        newSize = true;
+                        newList = true;
+                        break; //- Break once first change detected
                     }
                 }
-                else //- List size the same, ensure list hasn't changed internally
+            }
+
+            if(newList)
+            {
+                DynamicList<label> molsToDelete;
+                List<polyMolecule*> rcvMolHistory(rcvMolId_[ifacepts].size(), NULL);
+
+                //- Determine which molecules from the last iteration no longer exist in the received list and so need to be deleted
+                forAll(molId_[ifacepts], currMol)
                 {
+                    bool molFound = false;
+
                     forAll(rcvMolId_[ifacepts], rcvMol)
                     {
-                        if(rcvMolId_[ifacepts][rcvMol] != molId_[ifacepts][rcvMol]) //- If a molecule ID changes then treat as new list
+                        if(molId_[ifacepts][currMol] == rcvMolId_[ifacepts][rcvMol])
                         {
-                            newList = true;
-                            break; //- Break once first change detected
+                            molFound = true;
+                            break; //- Break inner loop as match found
+                        }
+                    }
+
+                    if(!molFound)
+                    {
+                        molsToDelete.append(molId_[ifacepts][currMol]);
+                    }
+                }
+
+                // Delete any molecules that need to be
+                forAll(molId_[ifacepts], currMol)
+                {
+                    forAll(molsToDelete, delMol)
+                    {
+                        if(molsToDelete[delMol] == molId_[ifacepts][currMol])
+                        {
+                            if(molHistory_[ifacepts][currMol] != NULL)
+                            {
+                                molCloud_.deleteParticle(*molHistory_[ifacepts][currMol]);
+                                molHistory_[ifacepts][currMol] = NULL;
+                                molChanged = true;
+                            }
                         }
                     }
                 }
 
-                if(newList)
+                molsToDelete.clear();
+
+                //- Determine which molecules in the received list did not exist in the last iteration and so are new
+                forAll(rcvMolId_[ifacepts], rcvMol)
                 {
-                    DynamicList<label> molsToDelete;
-                    List<polyMolecule*> rcvMolHistory(rcvMolId_[ifacepts].size(), NULL);
-
-                    //- Determine which molecules from the last iteration no longer exist in the received list and so need to be deleted
                     forAll(molId_[ifacepts], currMol)
                     {
-                        bool molFound = false;
-
-                        forAll(rcvMolId_[ifacepts], rcvMol)
+                        if(rcvMolId_[ifacepts][rcvMol] == molId_[ifacepts][currMol])
                         {
-                            if(molId_[ifacepts][currMol] == rcvMolId_[ifacepts][rcvMol])
-                            {
-                                molFound = true;
-                                break; //- Break inner loop as match found
-                            }
-                        }
-
-                        if(!molFound)
-                        {
-                            molsToDelete.append(molId_[ifacepts][currMol]);
+                            rcvMolHistory[rcvMol] = molHistory_[ifacepts][currMol];
+                            break; //- Break inner loop as match found
                         }
                     }
-
-                    // Delete any molecules that need to be
-                    forAll(molId_[ifacepts], currMol)
-                    {
-                        forAll(molsToDelete, delMol)
-                        {
-                            if(molsToDelete[delMol] == molId_[ifacepts][currMol])
-                            {
-                                if(molHistory_[ifacepts][currMol] != NULL)
-                                {
-                                    molCloud_.deleteParticle(*molHistory_[ifacepts][currMol]);
-                                    molHistory_[ifacepts][currMol] = NULL;
-                                    molChanged = true;
-                                }
-                            }
-                        }
-                    }
-
-                    molsToDelete.clear();
-
-                    //- Determine which molecules in the received list did not exist in the last iteration and so are new
-                    forAll(rcvMolId_[ifacepts], rcvMol)
-                    {
-                        forAll(molId_[ifacepts], currMol)
-                        {
-                            if(rcvMolId_[ifacepts][rcvMol] == molId_[ifacepts][currMol])
-                            {
-                                rcvMolHistory[rcvMol] = molHistory_[ifacepts][currMol];
-                                break; //- Break inner loop as match found
-                            }
-                        }
-                    }
-
-                    //- Resize local storage if new list size required it
-                    if(newSize)
-                    {
-                        //- Resize local storage to new received size
-                        molId_[ifacepts].setSize(rcvMolId_[ifacepts].size(), -1);
-                        molHistory_[ifacepts].setSize(rcvMolId_[ifacepts].size(), NULL);
-                    }
-
-                    //- Update the local molecule ID store to the received version
-                    forAll(rcvMolId_[ifacepts], mol)
-                    {
-                        molId_[ifacepts][mol] = rcvMolId_[ifacepts][mol];
-                        molHistory_[ifacepts][mol] = rcvMolHistory[mol];
-                    }
-
-                    rcvMolHistory.clear();
                 }
 
-                for (size_t pts = 0; pts < rcvPoints_[ifacepts].size(); pts++)
+                //- Resize local storage if new list size required it
+                if(newSize)
                 {
-                    point checkedPosition((rcvPoints_[ifacepts][pts][0] / rU_.refLength()), (rcvPoints_[ifacepts][pts][1] / rU_.refLength()), (rcvPoints_[ifacepts][pts][2] / rU_.refLength()));
+                    //- Resize local storage to new received size
+                    molId_[ifacepts].setSize(rcvMolId_[ifacepts].size(), -1);
+                    molHistory_[ifacepts].setSize(rcvMolId_[ifacepts].size(), NULL);
+                }
 
-                    label cell = mesh_.findCell(checkedPosition);
+                //- Update the local molecule ID store to the received version
+                forAll(rcvMolId_[ifacepts], mol)
+                {
+                    molId_[ifacepts][mol] = rcvMolId_[ifacepts][mol];
+                    molHistory_[ifacepts][mol] = rcvMolHistory[mol];
+                }
 
-                    // Attempt insertion/update only if received molecule falls within local mesh extents
-                    if(cell != -1)
+                rcvMolHistory.clear();
+            }
+
+            for (size_t pts = 0; pts < rcvPoints_[ifacepts].size(); pts++)
+            {
+                point checkedPosition((rcvPoints_[ifacepts][pts][0] / rU_.refLength()), (rcvPoints_[ifacepts][pts][1] / rU_.refLength()), (rcvPoints_[ifacepts][pts][2] / rU_.refLength()));
+
+                label cell = mesh_.findCell(checkedPosition);
+
+                // Attempt insertion/update only if received molecule falls within local mesh extents
+                if(cell != -1)
+                {
+                    const label molId = findIndex(molNames_, rcvMolType_[ifacepts][pts]);
+
+                    vector velocity;
+                    velocity[0] = rcvVelX_[ifacepts][pts] / rU_.refVelocity();
+                    velocity[1] = rcvVelY_[ifacepts][pts] / rU_.refVelocity();
+                    velocity[2] = rcvVelZ_[ifacepts][pts] / rU_.refVelocity();
+
+                    if(molHistory_[ifacepts][pts] == NULL) //- This molecule is new so insert it
                     {
-                        const label molId = findIndex(molNames_, rcvMolType_[ifacepts][pts]);
-
-                        vector velocity;
-                        velocity[0] = rcvVelX_[ifacepts][pts] / rU_.refVelocity();
-                        velocity[1] = rcvVelY_[ifacepts][pts] / rU_.refVelocity();
-                        velocity[2] = rcvVelZ_[ifacepts][pts] / rU_.refVelocity();
-
-                        if(molHistory_[ifacepts][pts] == NULL) //- This molecule is new so insert it
-                        {
-                            newMol = insertMolecule(checkedPosition, molIds_[molId], true, velocity);
-                            molHistory_[ifacepts][pts] = newMol.mol;
-                            molChanged = true;
-                        }
-                        else //- This molecule already exists, so just update its values
-                        {
-                            molHistory_[ifacepts][pts]->position()[0] = checkedPosition[0];
-                            molHistory_[ifacepts][pts]->position()[1] = checkedPosition[1];
-                            molHistory_[ifacepts][pts]->position()[2] = checkedPosition[2];
-                            molHistory_[ifacepts][pts]->specialPosition()[0] = checkedPosition[0];
-                            molHistory_[ifacepts][pts]->specialPosition()[1] = checkedPosition[1];
-                            molHistory_[ifacepts][pts]->specialPosition()[2] = checkedPosition[2];
-
-                            molHistory_[ifacepts][pts]->v()[0] = velocity[0];
-                            molHistory_[ifacepts][pts]->v()[1] = velocity[1];
-                            molHistory_[ifacepts][pts]->v()[2] = velocity[2];
-
-                            molHistory_[ifacepts][pts]->updateAfterMove(cP, trackTime);
-                        }
-
-                        molCount++;
+                        newMol = insertMolecule(checkedPosition, molIds_[molId], true, velocity);
+                        molHistory_[ifacepts][pts] = newMol.mol;
+                        molChanged = true;
                     }
+                    else //- This molecule already exists, so just update its values
+                    {
+                        molHistory_[ifacepts][pts]->position()[0] = checkedPosition[0];
+                        molHistory_[ifacepts][pts]->position()[1] = checkedPosition[1];
+                        molHistory_[ifacepts][pts]->position()[2] = checkedPosition[2];
+                        molHistory_[ifacepts][pts]->specialPosition()[0] = checkedPosition[0];
+                        molHistory_[ifacepts][pts]->specialPosition()[1] = checkedPosition[1];
+                        molHistory_[ifacepts][pts]->specialPosition()[2] = checkedPosition[2];
+
+                        molHistory_[ifacepts][pts]->v()[0] = velocity[0];
+                        molHistory_[ifacepts][pts]->v()[1] = velocity[1];
+                        molHistory_[ifacepts][pts]->v()[2] = velocity[2];
+
+                        molHistory_[ifacepts][pts]->updateAfterMove(cP, trackTime);
+                    }
+
+                    molCount++;
                 }
             }
         }
+    }
 
-        if(molCount > 0)
+    if(molCount > 0)
+    {
+        if(molCount != prevMolCount_)
         {
-            if(molCount != prevMolCount_)
+            if (Pstream::parRun())
             {
-                if (Pstream::parRun())
-                {
-                    if(Pstream::master())
-                    {
-                        if(prevMolCount_ > 0)
-                        {
-                            std::cout << "Number of molecules in coupled region now equals " << molCount << " (previously " << prevMolCount_ << ")" << std::endl;
-                        }
-                        else
-                        {
-                            std::cout << "Number of molecules in coupled region now equals " << molCount << std::endl;
-                        }
-                    }
-                    else
-                    {
-                        if(prevMolCount_ > 0)
-                        {
-                            std::cout << "[" << time_.time().value() << "s] Number of molecules in coupled region now equals " << molCount << " (previously " << prevMolCount_ << ")" << std::endl;
-                        }
-                        else
-                        {
-                            std::cout << "[" << time_.time().value() << "s] Number of molecules in coupled region now equals " << molCount << std::endl;
-                        }
-                    }
-                }
-                else
+                if(Pstream::master())
                 {
                     if(prevMolCount_ > 0)
                     {
@@ -1119,28 +1090,47 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
                         std::cout << "Number of molecules in coupled region now equals " << molCount << std::endl;
                     }
                 }
-
-                prevMolCount_ = molCount;
+                else
+                {
+                    if(prevMolCount_ > 0)
+                    {
+                        std::cout << "[" << time_.time().value() << "s] Number of molecules in coupled region now equals " << molCount << " (previously " << prevMolCount_ << ")" << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << "[" << time_.time().value() << "s] Number of molecules in coupled region now equals " << molCount << std::endl;
+                    }
+                }
             }
+            else
+            {
+                if(prevMolCount_ > 0)
+                {
+                    std::cout << "Number of molecules in coupled region now equals " << molCount << " (previously " << prevMolCount_ << ")" << std::endl;
+                }
+                else
+                {
+                    std::cout << "Number of molecules in coupled region now equals " << molCount << std::endl;
+                }
+            }
+
+            prevMolCount_ = molCount;
         }
-    //}
+    }
 
 	//- This is the initialisation call so commit at iteration = 1 to allow other side to continue
     if(init)
     {
-       // if(receivingRegion_)
-        //{
-            forAll(recvInterfaces_, iface)
-            {
-                //Fetch initial DSMC system temperature
-                initTemperatureDSMC_ = recvInterfaces_[iface]->fetch<scalar>("init_temp");
-                //Fetch initial DSMC system linear KE
-                initKeDSMC_ = recvInterfaces_[iface]->fetch<scalar>("init_ke");
-                std::cout << "Commit at " << currIteration_ << std::endl;
-                //Commit at t=1 to allow other side to continue
-                recvInterfaces_[iface]->commit(currIteration_);
-            }
-        //}
+        forAll(recvInterfaces_, iface)
+        {
+            //Fetch initial DSMC system temperature
+            initTemperatureDSMC_ = recvInterfaces_[iface]->fetch<scalar>("init_temp");
+            //Fetch initial DSMC system linear KE
+            initKeDSMC_ = recvInterfaces_[iface]->fetch<scalar>("init_ke");
+
+            //Commit at t=1 to allow other side to continue
+            recvInterfaces_[iface]->commit(currIteration_);
+        }
     }
 #endif
     return molChanged;
