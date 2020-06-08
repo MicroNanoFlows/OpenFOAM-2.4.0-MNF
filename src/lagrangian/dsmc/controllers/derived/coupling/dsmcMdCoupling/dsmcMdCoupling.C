@@ -647,7 +647,8 @@ void dsmcMdCoupling::initialConfiguration(label stage)
 
     forAll(sendInterfaces_, iface)
     {
-        sendInterfaces_[iface]->commit(-1);
+        label commitTime = -1;
+        sendInterfaces_[iface]->commit(commitTime);
         interfaceCommits.append(sendInterfaceNames_[iface]);
     }
 
@@ -656,7 +657,8 @@ void dsmcMdCoupling::initialConfiguration(label stage)
         label index = findIndex(interfaceCommits, recvInterfaceNames_[iface]);
         if(index == -1)
         {
-            recvInterfaces_[iface]->commit(-1);
+            label commitTime = -1;
+            recvInterfaces_[iface]->commit(commitTime);
         }
     }
 #endif
