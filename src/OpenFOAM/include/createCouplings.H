@@ -442,6 +442,9 @@
 
                             mui::geometry::box3d region_3d(start, end);
 
+                            std::cout << "[" << start[0] << "," << start[1] << "," << start[2] << "] "
+                                      << "[" << end[0] << "," << end[1] << "," << end[2] << "]" << std::endl;
+
                             //- Using iteration based coupling
                             if(threeDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                             {
