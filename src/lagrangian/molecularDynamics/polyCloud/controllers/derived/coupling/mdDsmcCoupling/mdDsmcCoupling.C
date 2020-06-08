@@ -663,7 +663,11 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
             std::cout << "Initial MD average linear KE per molecule: " << initKe_ << std::endl;
         }
 
+        std::cout << "Start receiveCoupledRegion()" << std::endl;
+
         returnVal = receiveCoupledRegion(true); // Receive ghost molecules in coupled region(s) at time = startTime and commit to release other side
+
+        std::cout << "End receiveCoupledRegion()" << std::endl;
 
         //Distribute received temperature from DSMC side to all MPI ranks
         if (Pstream::parRun())
