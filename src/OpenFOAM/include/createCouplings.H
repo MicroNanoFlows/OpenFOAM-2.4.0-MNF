@@ -363,14 +363,14 @@
                         //- Using iteration based coupling
                         if(twoDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                         {
-                            label time = -10;
+                            label time = -1;
                             twoDInterfaces.interfaces->getInterface(i)->commit(time);
                             twoDInterfaces.interfaces->getInterface(i)->barrier(time);
                             twoDInterfaces.interfaces->getInterface(i)->forget(true);
                         }
                         else //- Using direct time based coupling
                         {
-                            scalar time = -10;
+                            scalar time = -1;
                             twoDInterfaces.interfaces->getInterface(i)->commit(time);
                             twoDInterfaces.interfaces->getInterface(i)->barrier(time);
                             twoDInterfaces.interfaces->getInterface(i)->forget(true);
@@ -471,14 +471,14 @@
                         //- Using iteration based coupling
                         if(threeDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                         {
-                            label time = -10;
+                            label time = -1;
                             threeDInterfaces.interfaces->getInterface(i)->commit(time);
                             threeDInterfaces.interfaces->getInterface(i)->barrier(time);
                             threeDInterfaces.interfaces->getInterface(i)->forget(true);
                         }
                         else //- Using direct time based coupling
                         {
-                            scalar time = -10;
+                            scalar time = -1;
                             threeDInterfaces.interfaces->getInterface(i)->commit(time);
                             threeDInterfaces.interfaces->getInterface(i)->barrier(time);
                             threeDInterfaces.interfaces->getInterface(i)->forget(true);
