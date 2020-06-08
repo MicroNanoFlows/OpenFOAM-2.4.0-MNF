@@ -1128,8 +1128,8 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
 	//- This is the initialisation call so commit at iteration = 1 to allow other side to continue
     if(init)
     {
-        if(receivingRegion_)
-        {
+        //if(receivingRegion_)
+        //{
             forAll(recvInterfaces_, iface)
             {
                 //Fetch initial DSMC system temperature
@@ -1140,7 +1140,7 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
                 //Commit at t=1 to allow other side to continue
                 recvInterfaces_[iface]->commit(currIteration_);
             }
-        }
+        //}
     }
 #endif
     return molChanged;
