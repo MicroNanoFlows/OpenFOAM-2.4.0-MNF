@@ -850,8 +850,8 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
 {
     bool molChanged = false;
 #ifdef USE_MUI
-	if(receivingRegion_)
-    {
+	//if(receivingRegion_)
+    //{
 	    const constantMoleculeProperties& cP = molCloud_.cP();
 	    const scalar trackTime = mesh_.time().deltaT().value();
 	    label molCount = 0;
@@ -1123,12 +1123,12 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
                 prevMolCount_ = molCount;
             }
         }
-    }
+    //}
 
 	//- This is the initialisation call so commit at iteration = 1 to allow other side to continue
     if(init)
     {
-        //if(receivingRegion_)
+       // if(receivingRegion_)
         //{
             forAll(recvInterfaces_, iface)
             {
