@@ -625,8 +625,7 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
 
     forAll(sendInterfaces_, iface)
     {
-        label commitTime = -1;
-        sendInterfaces_[iface]->commit(commitTime);
+        sendInterfaces_[iface]->commit(-1);
         interfaceCommits.append(sendInterfaceNames_[iface]);
     }
 
@@ -635,8 +634,7 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
         label index = findIndex(interfaceCommits, recvInterfaceNames_[iface]);
         if(index == -1)
         {
-            label commitTime = -1;
-            recvInterfaces_[iface]->commit(commitTime);
+            recvInterfaces_[iface]->commit(-1);
         }
     }
 #endif
@@ -1185,14 +1183,10 @@ void mdDsmcCoupling::sendCoupledRegionForce()
                     }
                 }
             }
-        }
-    }
 
-    // Iterate through all sending interfaces for this controller
-    forAll(sendInterfaces_, iface)
-    {
-        // Commit (transmit) values to the MUI interface
-        sendInterfaces_[iface]->commit(currIteration_);
+            // Commit (transmit) values to the MUI interface
+            sendInterfaces_[iface]->commit(currIteration_);
+        }
     }
 #endif
 }
@@ -1334,13 +1328,10 @@ label mdDsmcCoupling::sendCoupledMolecules()
                     nmolsSent++;
                 }
             }
-        }
-    }
 
-    forAll(sendInterfaces_, iface)
-    {
-        // Commit (transmit) values to the coupling interface
-        sendInterfaces_[iface]->commit(currIteration_);
+            // Commit (transmit) values to the coupling interface
+            sendInterfaces_[iface]->commit(currIteration_);
+        }
     }
 #endif
     //- Clear the sent molecules
@@ -1353,94 +1344,91 @@ label mdDsmcCoupling::receiveCoupledParcels()
 {
     label nparcsRcv = 0;
 #ifdef USE_MUI
-    //if(receivingBound_)
-    //{
-        // Iterate through all receiving interfaces for this controller and extract a points list for each molecule type handled
-        forAll(recvInterfaces_, iface)
+    // Iterate through all receiving interfaces for this controller and extract a points list for each molecule type handled
+    forAll(recvInterfaces_, iface)
+    {
+        rcvPoints_[iface].clear();
+        rcvMolType_[iface].clear();
+        rcvVelX_[iface].clear();
+        rcvVelY_[iface].clear();
+        rcvVelZ_[iface].clear();
+
+        //- Extract a list of all molecule locations
+        rcvPoints_[iface] = recvInterfaces_[iface]->fetch_points<std::string>("type_bound", currIteration_, *chrono_sampler);
+
+        if(rcvPoints_[iface].size() > 0)
         {
-            rcvPoints_[iface].clear();
-            rcvMolType_[iface].clear();
-            rcvVelX_[iface].clear();
-            rcvVelY_[iface].clear();
-            rcvVelZ_[iface].clear();
+            //- Extract a list of all molecule types
+            rcvMolType_[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_bound", currIteration_, *chrono_sampler);
 
-            //- Extract a list of all molecule locations
-            rcvPoints_[iface] = recvInterfaces_[iface]->fetch_points<std::string>("type_bound", currIteration_, *chrono_sampler);
-
-            if(rcvPoints_[iface].size() > 0)
-            {
-                //- Extract a list of all molecule types
-                rcvMolType_[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_bound", currIteration_, *chrono_sampler);
-
-                //- Extract a list of all molecule velocities received from other solver through this interface
-                rcvVelX_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_x_bound", currIteration_, *chrono_sampler);
-                rcvVelY_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_y_bound", currIteration_, *chrono_sampler);
-                rcvVelZ_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_z_bound", currIteration_, *chrono_sampler);
-            }
+            //- Extract a list of all molecule velocities received from other solver through this interface
+            rcvVelX_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_x_bound", currIteration_, *chrono_sampler);
+            rcvVelY_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_y_bound", currIteration_, *chrono_sampler);
+            rcvVelZ_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_z_bound", currIteration_, *chrono_sampler);
         }
+    }
 
-        //- Go through received values and find any that are not of the type set to be received
-        forAll(rcvMolType_, ifacepts)
+    //- Go through received values and find any that are not of the type set to be received
+    forAll(rcvMolType_, ifacepts)
+    {
+        if(rcvMolType_[ifacepts].size() > 0)
         {
-            if(rcvMolType_[ifacepts].size() > 0)
-            {
-                std::vector<std::string>::iterator rcvMolTypeIt;
-                std::vector<mui::point3d>::iterator rcvPointsIt = rcvPoints_[ifacepts].begin();
-                std::vector<scalar>::iterator rcvVelXIt = rcvVelX_[ifacepts].begin();
-                std::vector<scalar>::iterator rcvVelYIt = rcvVelY_[ifacepts].begin();
-                std::vector<scalar>::iterator rcvVelZIt = rcvVelZ_[ifacepts].begin();
+            std::vector<std::string>::iterator rcvMolTypeIt;
+            std::vector<mui::point3d>::iterator rcvPointsIt = rcvPoints_[ifacepts].begin();
+            std::vector<scalar>::iterator rcvVelXIt = rcvVelX_[ifacepts].begin();
+            std::vector<scalar>::iterator rcvVelYIt = rcvVelY_[ifacepts].begin();
+            std::vector<scalar>::iterator rcvVelZIt = rcvVelZ_[ifacepts].begin();
 
-                for (rcvMolTypeIt = rcvMolType_[ifacepts].begin(); rcvMolTypeIt != rcvMolType_[ifacepts].end(); rcvMolTypeIt++) {
-                    const label molId = findIndex(molNames_, *rcvMolTypeIt);
+            for (rcvMolTypeIt = rcvMolType_[ifacepts].begin(); rcvMolTypeIt != rcvMolType_[ifacepts].end(); rcvMolTypeIt++) {
+                const label molId = findIndex(molNames_, *rcvMolTypeIt);
 
-                    if(molId == -1) //- molId not found in local list as one to receive so store it as one to remove from lists
-                    {
-                        rcvMolType_[ifacepts].erase(rcvMolTypeIt--);
-                        rcvPoints_[ifacepts].erase(rcvPointsIt--);
-                        rcvVelX_[ifacepts].erase(rcvVelXIt--);
-                        rcvVelY_[ifacepts].erase(rcvVelYIt--);
-                        rcvVelZ_[ifacepts].erase(rcvVelZIt--);
-                    }
-
-                    rcvPointsIt++;
-                    rcvVelXIt++;
-                    rcvVelYIt++;
-                    rcvVelZIt++;
-                }
-            }
-        }
-
-        // Iterate through points received
-        forAll(rcvPoints_, ifacepts)
-        {
-            if(rcvPoints_[ifacepts].size() > 0)
-            {
-                for (size_t pts = 0; pts < rcvPoints_[ifacepts].size(); pts++)
+                if(molId == -1) //- molId not found in local list as one to receive so store it as one to remove from lists
                 {
-                    point checkedPosition(rcvPoints_[ifacepts][pts][0] / rU_.refLength(), rcvPoints_[ifacepts][pts][1] / rU_.refLength(), rcvPoints_[ifacepts][pts][2] / rU_.refLength());
+                    rcvMolType_[ifacepts].erase(rcvMolTypeIt--);
+                    rcvPoints_[ifacepts].erase(rcvPointsIt--);
+                    rcvVelX_[ifacepts].erase(rcvVelXIt--);
+                    rcvVelY_[ifacepts].erase(rcvVelYIt--);
+                    rcvVelZ_[ifacepts].erase(rcvVelZIt--);
+                }
 
-                    label cell = mesh_.findCell(checkedPosition);
+                rcvPointsIt++;
+                rcvVelXIt++;
+                rcvVelYIt++;
+                rcvVelZIt++;
+            }
+        }
+    }
 
-                    // Attempt insertion/update only if received molecule falls within local mesh extents
-                    if(cell != -1)
-                    {
-                        vector velocity;
-                        velocity[0] = rcvVelX_[ifacepts][pts] / rU_.refVelocity();
-                        velocity[1] = rcvVelY_[ifacepts][pts] / rU_.refVelocity();
-                        velocity[2] = rcvVelZ_[ifacepts][pts] / rU_.refVelocity();
+    // Iterate through points received
+    forAll(rcvPoints_, ifacepts)
+    {
+        if(rcvPoints_[ifacepts].size() > 0)
+        {
+            for (size_t pts = 0; pts < rcvPoints_[ifacepts].size(); pts++)
+            {
+                point checkedPosition(rcvPoints_[ifacepts][pts][0] / rU_.refLength(), rcvPoints_[ifacepts][pts][1] / rU_.refLength(), rcvPoints_[ifacepts][pts][2] / rU_.refLength());
 
-                        coupledMolecule newMol;
-                        newMol.molType = rcvMolType_[ifacepts][pts];
-                        newMol.position = checkedPosition;
-                        newMol.velocity = velocity;
-                        molsReceived_.append(newMol);
+                label cell = mesh_.findCell(checkedPosition);
 
-                        nparcsRcv++;
-                    }
+                // Attempt insertion/update only if received molecule falls within local mesh extents
+                if(cell != -1)
+                {
+                    vector velocity;
+                    velocity[0] = rcvVelX_[ifacepts][pts] / rU_.refVelocity();
+                    velocity[1] = rcvVelY_[ifacepts][pts] / rU_.refVelocity();
+                    velocity[2] = rcvVelZ_[ifacepts][pts] / rU_.refVelocity();
+
+                    coupledMolecule newMol;
+                    newMol.molType = rcvMolType_[ifacepts][pts];
+                    newMol.position = checkedPosition;
+                    newMol.velocity = velocity;
+                    molsReceived_.append(newMol);
+
+                    nparcsRcv++;
                 }
             }
         }
-    //}
+    }
 #endif
     return nparcsRcv;
 }
