@@ -736,13 +736,14 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 #ifdef USE_MUI
     dsmcParcel* parcel = NULL;
 
-	// Iterate through all sending interfaces for this controller
-    if(sendingRegion_)
+    // Iterate through all sending interfaces for this controller
+    forAll(sendInterfaces_, iface)
     {
-        forAll(sendInterfaces_, iface)
-        {
-            parcelsInCellHistory_[iface].clear(); // Clear the send history list
+        parcelsInCellHistory_[iface].clear(); // Clear the send history list
 
+        // If this rank is sending data to the coupled region
+        if(sendingRegion_)
+        {
             forAll(regionCells_, cell)
             {
                 const List<dsmcParcel*>& parcelsInCell = cloud_.cellOccupancy()[regionCells_[cell]];
@@ -810,11 +811,11 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
                 sendInterfaces_[iface]->push("init_temp", initTemperature_);
                 sendInterfaces_[iface]->push("init_ke", initKe_);
             }
+        }
 
-            // Commit (transmit) values to the MUI interface
-            sendInterfaces_[iface]->commit(currIteration_);
-	    }
-	}
+        // Commit (transmit) values to the MUI interface
+        sendInterfaces_[iface]->commit(currIteration_);
+    }
 #endif
 }
 
