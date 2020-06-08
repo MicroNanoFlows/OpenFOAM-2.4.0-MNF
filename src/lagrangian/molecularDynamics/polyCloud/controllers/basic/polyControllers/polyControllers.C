@@ -587,7 +587,7 @@ void polyControllers::initialConfig()
     //- Forget all received frames and reset log
     forAll(couplingControllers_, cC)
     {
-        couplingControllers_[cC]->forget(true);
+        couplingControllers_[cC]->forget(0, true);
     }
 
     //- Run initial configuration stage 2 (blocking)

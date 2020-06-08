@@ -567,7 +567,7 @@ void dsmcControllers::initialConfig()
     //- Forget time frames and reset log
     forAll(couplingControllers_, cC)
     {
-        couplingControllers_[cC]->forget(true);
+        couplingControllers_[cC]->forget(0, true);
     }
 
     if(couplingControllers_.size() > 0)
