@@ -822,8 +822,8 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 void dsmcMdCoupling::receiveCoupledRegionForce()
 {
 #ifdef USE_MUI
-    if(receivingRegion_)
-    {
+    //if(receivingRegion_)
+    //{
         List<std::vector<std::string> > rcvParcType(recvInterfaces_.size());
         List<std::vector<label> > rcvParcId(recvInterfaces_.size());
         List<std::vector<scalar> > rcvForceX(recvInterfaces_.size());
@@ -945,7 +945,7 @@ void dsmcMdCoupling::receiveCoupledRegionForce()
                 }
             }
         }
-    }
+    //}
 #endif
 }
 
@@ -993,11 +993,14 @@ void dsmcMdCoupling::sendCoupledParcels()
             {
                 std::cout << "    Coupling parcels pushed         = " << pushed << std::endl;
             }
-
-            // Commit (transmit) values to the MUI interface
-            sendInterfaces_[iface]->commit(currIteration_);
         }
 	}
+
+    forAll(sendInterfaces_, iface)
+    {
+        // Commit (transmit) values to the MUI interface
+        sendInterfaces_[iface]->commit(currIteration_);
+    }
 #endif
 }
 
@@ -1005,8 +1008,8 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
 {
     bool parcelAdded = false;
 #ifdef USE_MUI
-    if(receivingBound_)
-    {
+    //if(receivingBound_)
+    //{
         List<std::vector<mui::point3d> > rcvPoints(recvInterfaces_.size());
         List<std::vector<std::string> > rcvParcType(recvInterfaces_.size());
         List<std::vector<scalar> > rcvVelX(recvInterfaces_.size());
@@ -1094,11 +1097,11 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
             }
         }
 
-        if(inserted != 0)
+        if(inserted > 0)
         {
             std::cout << "    Coupling parcels inserted       = " << inserted << std::endl;
         }
-    }
+    //}
 #endif
 	return parcelAdded;
 }

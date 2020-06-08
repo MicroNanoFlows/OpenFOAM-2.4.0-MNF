@@ -1198,10 +1198,14 @@ void mdDsmcCoupling::sendCoupledRegionForce()
                     }
                 }
             }
-
-            // Commit (transmit) values to the MUI interface
-            sendInterfaces_[iface]->commit(currIteration_);
         }
+    }
+
+    // Iterate through all sending interfaces for this controller
+    forAll(sendInterfaces_, iface)
+    {
+        // Commit (transmit) values to the MUI interface
+        sendInterfaces_[iface]->commit(currIteration_);
     }
 #endif
 }
@@ -1343,10 +1347,13 @@ label mdDsmcCoupling::sendCoupledMolecules()
                     nmolsSent++;
                 }
             }
-
-            // Commit (transmit) values to the coupling interface
-            sendInterfaces_[iface]->commit(currIteration_);
         }
+    }
+
+    forAll(sendInterfaces_, iface)
+    {
+        // Commit (transmit) values to the coupling interface
+        sendInterfaces_[iface]->commit(currIteration_);
     }
 #endif
     //- Clear the sent molecules
@@ -1359,8 +1366,8 @@ label mdDsmcCoupling::receiveCoupledParcels()
 {
     label nparcsRcv = 0;
 #ifdef USE_MUI
-    if(receivingBound_)
-    {
+    //if(receivingBound_)
+    //{
         // Iterate through all receiving interfaces for this controller and extract a points list for each molecule type handled
         forAll(recvInterfaces_, iface)
         {
@@ -1446,7 +1453,7 @@ label mdDsmcCoupling::receiveCoupledParcels()
                 }
             }
         }
-    }
+    //}
 #endif
     return nparcsRcv;
 }
