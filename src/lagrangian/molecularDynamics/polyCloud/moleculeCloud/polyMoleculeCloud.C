@@ -361,16 +361,19 @@ void Foam::polyMoleculeCloud::checkForOverlaps()
 
         forAll (molsToDelete, mTD)
         {
-            nMolsDeleted++;
+            if(molsToDelete[mTD] != NULL)
+            {
+                nMolsDeleted++;
 
-            Pout << nl << " WARNING: Deleting molecule "
-                <<  " proc no = " << Pstream::myProcNo()
-                << ", position = " << molsToDelete[mTD]->position()
-                << ", molecule = " << cP_.molIds()[molsToDelete[mTD]->id()]
-                << endl;
+                Pout << nl << " WARNING: Deleting molecule "
+                    <<  " proc no = " << Pstream::myProcNo()
+                    << ", position = " << molsToDelete[mTD]->position()
+                    << ", molecule = " << cP_.molIds()[molsToDelete[mTD]->id()]
+                    << endl;
 
-            deleteParticle(*(molsToDelete[mTD]));
-
+                deleteParticle(*molsToDelete[mTD]);
+                molsToDelete[mTD] = NULL;
+            }
         }
 
         if (Pstream::parRun())
