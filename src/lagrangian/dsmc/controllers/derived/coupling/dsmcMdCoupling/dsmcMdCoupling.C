@@ -1122,24 +1122,24 @@ void dsmcMdCoupling::updateProperties(const dictionary& newDict)
 
 void dsmcMdCoupling::barrier()
 {
-	forAll(sendInterfaces_, iface)
+	forAll(recvInterfaces_, iface)
 	{
-		sendInterfaces_[iface]->barrier(currIteration_);
+	    recvInterfaces_[iface]->barrier(currIteration_);
 	}
 }
 
 void dsmcMdCoupling::barrier(label iteration)
 {
-	forAll(sendInterfaces_, iface)
+	forAll(recvInterfaces_, iface)
 	{
-		sendInterfaces_[iface]->barrier(iteration);
+	    recvInterfaces_[iface]->barrier(iteration);
 	}
 }
 
 void dsmcMdCoupling::barrier(label iteration, label interface)
 {
 	// Wait for the other side to catch up
-	sendInterfaces_[interface]->barrier(iteration);
+    recvInterfaces_[interface]->barrier(iteration);
 }
 
 void dsmcMdCoupling::forget(bool forget)

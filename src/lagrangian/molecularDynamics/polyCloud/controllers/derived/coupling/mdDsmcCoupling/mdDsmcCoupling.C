@@ -1504,23 +1504,23 @@ void mdDsmcCoupling::updateProperties(const dictionary& newDict)
 
 void mdDsmcCoupling::barrier()
 {
-	forAll(sendInterfaces_, iface)
+	forAll(recvInterfaces_, iface)
 	{
-		sendInterfaces_[iface]->barrier(currIteration_);
+	    recvInterfaces_[iface]->barrier(currIteration_);
 	}
 }
 
 void mdDsmcCoupling::barrier(label iteration)
 {
-	forAll(sendInterfaces_, iface)
+	forAll(recvInterfaces_, iface)
 	{
-		sendInterfaces_[iface]->barrier(iteration);
+	    recvInterfaces_[iface]->barrier(iteration);
 	}
 }
 
 void mdDsmcCoupling::barrier(label iteration, label interface)
 {
-	sendInterfaces_[interface]->barrier(iteration);
+    recvInterfaces_[interface]->barrier(iteration);
 }
 
 void mdDsmcCoupling::forget(bool forget)
