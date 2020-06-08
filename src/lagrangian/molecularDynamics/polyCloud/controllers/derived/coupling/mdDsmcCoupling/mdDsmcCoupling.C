@@ -867,17 +867,20 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
             rcvVelY_[iface].clear();
             rcvVelZ_[iface].clear();
 
+            std::cout << "Start type_region fetch points" << std::endl;
+
             //- Extract a list of all molecule locations received from other solver through this interface
             rcvPoints_[iface] = recvInterfaces_[iface]->fetch_points<std::string>("type_region", currIteration_, *chrono_sampler);
 
             if(rcvPoints_[iface].size() > 0)
             {
+                std::cout << "Start type_region fetch values" << std::endl;
                 //- Extract a list of all molecule change status values received from other solver through this interface
                 rcvMolType_[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_region", currIteration_, *chrono_sampler);
-
+                std::cout << "Start id_region fetch values" << std::endl;
                 //- Extract a list of all molecule Id's received from other solver through this interface
                 rcvMolId_[iface] = recvInterfaces_[iface]->fetch_values<label>("id_region", currIteration_, *chrono_sampler);
-
+                std::cout << "Start vel_x_region fetch values" << std::endl;
                 //- Extract a list of all molecule velocities received from other solver through this interface
                 rcvVelX_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_x_region", currIteration_, *chrono_sampler);
                 rcvVelY_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_y_region", currIteration_, *chrono_sampler);
@@ -1133,6 +1136,7 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
                 initTemperatureDSMC_ = recvInterfaces_[iface]->fetch<scalar>("init_temp");
                 //Fetch initial DSMC system linear KE
                 initKeDSMC_ = recvInterfaces_[iface]->fetch<scalar>("init_ke");
+                std::cout << "Commit at " << currIteration_ << std::endl;
                 //Commit at t=1 to allow other side to continue
                 recvInterfaces_[iface]->commit(currIteration_);
             }
