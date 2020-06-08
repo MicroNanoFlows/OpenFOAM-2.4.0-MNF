@@ -365,21 +365,39 @@
                         {
                             label time = -1;
                             twoDInterfaces.interfaces->getInterface(i)->commit(time);
-                            twoDInterfaces.interfaces->getInterface(i)->barrier(time);
-                            twoDInterfaces.interfaces->getInterface(i)->forget(0, true);
                         }
                         else //- Using direct time based coupling
                         {
                             scalar time = -1;
                             twoDInterfaces.interfaces->getInterface(i)->commit(time);
-                            twoDInterfaces.interfaces->getInterface(i)->barrier(time);
-                            twoDInterfaces.interfaces->getInterface(i)->forget(0, true);
                         }
                     }
                     else if (extentsDir == 0) //Mesh is 3D
                     {
                         FatalIOErrorIn("", couplingDict)
                                        << "Trying to create a 2D interface in a 3D mesh" << exit(FatalIOError);
+                    }
+                }
+            }
+
+            //Announce send and receive spans for 2D interfaces that have smart send enabled
+            for(size_t i=0; i<twoDInterfaces.interfaces->size(); i++)
+            {
+                //Check if smart send should be enabled for this interface
+                if(twoDInterfaces.interfaces->getInterfaceSmartSendStatus(i))
+                {
+                    //- Using iteration based coupling
+                    if(twoDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
+                    {
+                        label time = -1;
+                        twoDInterfaces.interfaces->getInterface(i)->barrier(time);
+                        twoDInterfaces.interfaces->getInterface(i)->forget(0, true);
+                    }
+                    else //- Using direct time based coupling
+                    {
+                        scalar time = -1;
+                        twoDInterfaces.interfaces->getInterface(i)->barrier(time);
+                        twoDInterfaces.interfaces->getInterface(i)->forget(0, true);
                     }
                 }
             }
@@ -473,21 +491,37 @@
                         {
                             label time = -1;
                             threeDInterfaces.interfaces->getInterface(i)->commit(time);
-                            threeDInterfaces.interfaces->getInterface(i)->barrier(time);
-                            threeDInterfaces.interfaces->getInterface(i)->forget(0, true);
                         }
                         else //- Using direct time based coupling
                         {
                             scalar time = -1;
                             threeDInterfaces.interfaces->getInterface(i)->commit(time);
-                            threeDInterfaces.interfaces->getInterface(i)->barrier(time);
-                            threeDInterfaces.interfaces->getInterface(i)->forget(0, true);
                         }
                     }
                     else
                     {
                         FatalIOErrorIn("", couplingDict)
                                        << "Trying to create a 3D interface in a 2D mesh" << exit(FatalIOError);
+                    }
+                }
+            }
+
+            for(size_t i=0; i<threeDInterfaces.interfaces->size(); i++)
+            {
+                if(threeDInterfaces.interfaces->getInterfaceSmartSendStatus(i)) //Check if smart send should be enabled for this interface
+                {
+                    //- Using iteration based coupling
+                    if(threeDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
+                    {
+                        label time = -1;
+                        threeDInterfaces.interfaces->getInterface(i)->barrier(time);
+                        threeDInterfaces.interfaces->getInterface(i)->forget(0, true);
+                    }
+                    else //- Using direct time based coupling
+                    {
+                        scalar time = -1;
+                        threeDInterfaces.interfaces->getInterface(i)->barrier(time);
+                        threeDInterfaces.interfaces->getInterface(i)->forget(0, true);
                     }
                 }
             }
