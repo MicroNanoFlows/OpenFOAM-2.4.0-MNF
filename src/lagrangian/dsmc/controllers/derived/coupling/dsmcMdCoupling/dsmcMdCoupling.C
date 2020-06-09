@@ -805,12 +805,12 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
             {
                 std::cout << "    Parcels sent to coupled region  = " << parcelsInCellHistory_[iface].size() << std::endl;
             }
+        }
 
-            if(init)
-            {
-                sendInterfaces_[iface]->push("init_temp", initTemperature_);
-                sendInterfaces_[iface]->push("init_ke", initKe_);
-            }
+        if(init)
+        {
+            sendInterfaces_[iface]->push("init_temp", initTemperature_);
+            sendInterfaces_[iface]->push("init_ke", initKe_);
         }
 
         // Commit (transmit) values to the MUI interface
@@ -834,8 +834,8 @@ void dsmcMdCoupling::receiveCoupledRegionForce()
         //- Extract a list of all parcel types
         rcvParcType[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_region", currIteration_, *chrono_sampler);
 
-        if(rcvParcType[iface].size() > 0)
-        {
+        //if(rcvParcType[iface].size() > 0)
+        //{
             //- Extract a list of all molecule Id's received from other solver through this interface
             rcvParcId[iface] = recvInterfaces_[iface]->fetch_values<label>("id_region", currIteration_, *chrono_sampler);
 
@@ -843,7 +843,7 @@ void dsmcMdCoupling::receiveCoupledRegionForce()
             rcvForceX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_x_region", currIteration_, *chrono_sampler);
             rcvForceY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_y_region", currIteration_, *chrono_sampler);
             rcvForceZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_z_region", currIteration_, *chrono_sampler);
-        }
+        //}
     }
 
     if(receivingRegion_)
@@ -1028,8 +1028,8 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
         //- Extract a list of all parcel locations
         rcvPoints[iface] = recvInterfaces_[iface]->fetch_points<std::string>("type_bound", currIteration_, *chrono_sampler);
 
-        if(rcvPoints[iface].size() > 0)
-        {
+        //if(rcvPoints[iface].size() > 0)
+        //{
             //- Extract a list of all parcel types
             rcvParcType[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_bound", currIteration_, *chrono_sampler);
 
@@ -1037,7 +1037,7 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
             rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_x_bound", currIteration_, *chrono_sampler);
             rcvVelY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_y_bound", currIteration_, *chrono_sampler);
             rcvVelZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_z_bound", currIteration_, *chrono_sampler);
-        }
+        //}
     }
 
     if(receivingBound_)

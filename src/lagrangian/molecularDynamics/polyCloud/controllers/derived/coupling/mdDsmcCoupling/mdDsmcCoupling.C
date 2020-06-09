@@ -864,8 +864,8 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
         //- Extract a list of all molecule locations received from other solver through this interface
         rcvPoints_[iface] = recvInterfaces_[iface]->fetch_points<std::string>("type_region", currIteration_, *chrono_sampler);
 
-        if(rcvPoints_[iface].size() > 0)
-        {
+        //if(rcvPoints_[iface].size() > 0)
+        //{
             //- Extract a list of all molecule change status values received from other solver through this interface
             rcvMolType_[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_region", currIteration_, *chrono_sampler);
 
@@ -876,7 +876,7 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
             rcvVelX_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_x_region", currIteration_, *chrono_sampler);
             rcvVelY_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_y_region", currIteration_, *chrono_sampler);
             rcvVelZ_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_z_region", currIteration_, *chrono_sampler);
-        }
+        //}
     }
 
     if(receivingRegion_)
@@ -1368,8 +1368,8 @@ label mdDsmcCoupling::receiveCoupledParcels()
         //- Extract a list of all molecule locations
         rcvPoints_[iface] = recvInterfaces_[iface]->fetch_points<std::string>("type_bound", currIteration_, *chrono_sampler);
 
-        if(rcvPoints_[iface].size() > 0)
-        {
+        //if(rcvPoints_[iface].size() > 0)
+        //{
             //- Extract a list of all molecule types
             rcvMolType_[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_bound", currIteration_, *chrono_sampler);
 
@@ -1377,7 +1377,7 @@ label mdDsmcCoupling::receiveCoupledParcels()
             rcvVelX_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_x_bound", currIteration_, *chrono_sampler);
             rcvVelY_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_y_bound", currIteration_, *chrono_sampler);
             rcvVelZ_[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_z_bound", currIteration_, *chrono_sampler);
-        }
+       // }
     }
 
     if(receivingBound_)
