@@ -610,7 +610,6 @@ void dsmcMdCoupling::initialConfiguration(label stage)
     if(stage == 1)
     {
 #ifdef USE_MUI
-    /*
     if((!sendingBound_ && !sendingRegion_) && (!receivingBound_ && !receivingRegion_))
     {
         std::cout << "MUI interface(s) disabled for this rank" << std::endl;
@@ -643,7 +642,6 @@ void dsmcMdCoupling::initialConfiguration(label stage)
             recvInterfaces_[iface]->announce_recv_disable();
         }
     }
-    */
 
     DynamicList<word> interfaceCommits;
 
@@ -811,10 +809,10 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
                 sendInterfaces_[iface]->push("init_temp", initTemperature_);
                 sendInterfaces_[iface]->push("init_ke", initKe_);
             }
-
-            // Commit (transmit) values to the MUI interface
-            sendInterfaces_[iface]->commit(currIteration_);
         }
+
+        // Commit (transmit) values to the MUI interface
+        sendInterfaces_[iface]->commit(currIteration_);
     }
 #endif
 }
@@ -1000,11 +998,14 @@ void dsmcMdCoupling::sendCoupledParcels()
             {
                 std::cout << "    Coupling parcels pushed         = " << pushed << std::endl;
             }
-
-            // Commit (transmit) values to the MUI interface
-            sendInterfaces_[iface]->commit(currIteration_);
         }
 	}
+
+    forAll(sendInterfaces_, iface)
+    {
+        // Commit (transmit) values to the MUI interface
+        sendInterfaces_[iface]->commit(currIteration_);
+    }
 #endif
 }
 

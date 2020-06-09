@@ -587,7 +587,6 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
     if(stage == 1)
     {
 #ifdef USE_MUI
-    /*
     if((!sendingBound_ && !sendingRegion_) && (!receivingBound_ && !receivingRegion_))
     {
         std::cout << "MUI interface(s) disabled for this rank" << std::endl;
@@ -621,7 +620,7 @@ bool mdDsmcCoupling::initialConfiguration(label stage)
             recvInterfaces_[iface]->announce_recv_disable();
         }
     }
-    */
+
     DynamicList<word> interfaceCommits;
 
     forAll(sendInterfaces_, iface)
@@ -1187,10 +1186,14 @@ void mdDsmcCoupling::sendCoupledRegionForce()
                     }
                 }
             }
-
-            // Commit (transmit) values to the MUI interface
-            sendInterfaces_[iface]->commit(currIteration_);
         }
+    }
+
+    // Iterate through all sending interfaces for this controller
+    forAll(sendInterfaces_, iface)
+    {
+        // Commit (transmit) values to the MUI interface
+        sendInterfaces_[iface]->commit(currIteration_);
     }
 #endif
 }
@@ -1332,10 +1335,13 @@ label mdDsmcCoupling::sendCoupledMolecules()
                     nmolsSent++;
                 }
             }
-
-            // Commit (transmit) values to the coupling interface
-            sendInterfaces_[iface]->commit(currIteration_);
         }
+    }
+
+    forAll(sendInterfaces_, iface)
+    {
+        // Commit (transmit) values to the coupling interface
+        sendInterfaces_[iface]->commit(currIteration_);
     }
 #endif
     //- Clear the sent molecules
