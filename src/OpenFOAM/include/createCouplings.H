@@ -486,12 +486,13 @@
                         //- Using iteration based coupling
                         if(threeDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                         {
-                            label time = 1;
-                            threeDInterfaces.interfaces->getInterface(i)->commit(time);
+                            label time = -1;
+                            label comm = threeDInterfaces.interfaces->getInterface(i)->commit(time);
+                            std::cout << "Commit createCouplings: " << comm << std::endl;
                         }
                         else //- Using direct time based coupling
                         {
-                            scalar time = 1;
+                            scalar time = -1;
                             threeDInterfaces.interfaces->getInterface(i)->commit(time);
                         }
                     }
@@ -510,15 +511,15 @@
                     //- Using iteration based coupling
                     if(threeDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                     {
-                        label time = 1;
+                        label time = -1;
                         threeDInterfaces.interfaces->getInterface(i)->barrier(time);
-                        threeDInterfaces.interfaces->getInterface(i)->forget(1, true);
+                        threeDInterfaces.interfaces->getInterface(i)->forget(0, true);
                     }
                     else //- Using direct time based coupling
                     {
-                        scalar time = 1;
+                        scalar time = -1;
                         threeDInterfaces.interfaces->getInterface(i)->barrier(time);
-                        threeDInterfaces.interfaces->getInterface(i)->forget(1, true);
+                        threeDInterfaces.interfaces->getInterface(i)->forget(0, true);
                     }
                 }
             }
