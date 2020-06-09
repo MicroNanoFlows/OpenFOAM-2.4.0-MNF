@@ -814,7 +814,8 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
         }
 
         // Commit (transmit) values to the MUI interface
-        sendInterfaces_[iface]->commit(currIteration_);
+        label comm = sendInterfaces_[iface]->commit(currIteration_);
+        std::cout << "sendCoupledRegion: " << comm << std::endl;
     }
 #endif
 }
@@ -1006,7 +1007,8 @@ void dsmcMdCoupling::sendCoupledParcels()
     forAll(sendInterfaces_, iface)
     {
         // Commit (transmit) values to the MUI interface
-        sendInterfaces_[iface]->commit(currIteration_);
+        label comm = sendInterfaces_[iface]->commit(currIteration_);
+        std::cout << "sendCoupledParcels: " << comm << std::endl;
     }
 #endif
 }
