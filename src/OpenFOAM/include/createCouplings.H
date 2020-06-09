@@ -488,7 +488,6 @@
                         {
                             label time = -1;
                             label comm = threeDInterfaces.interfaces->getInterface(i)->commit(time);
-                            std::cout << "Commit createCouplings: " << comm << std::endl;
                         }
                         else //- Using direct time based coupling
                         {
