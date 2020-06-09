@@ -55,10 +55,7 @@
         }
 
         //Determine mesh extents
-        vector extents;
-        extents[0] = meshMax[0] - meshMin[0];
-        extents[1] = meshMax[1] - meshMin[1];
-        extents[2] = meshMax[2] - meshMin[2];
+        vector extents = meshMax - meshMin;
 
         string inputFile("couplingDict");
 
