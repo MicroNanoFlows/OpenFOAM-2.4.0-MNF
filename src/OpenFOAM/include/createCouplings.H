@@ -510,13 +510,13 @@
                     //- Using iteration based coupling
                     if(threeDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
                     {
-                        label time = 2;
+                        label time = 1;
                         threeDInterfaces.interfaces->getInterface(i)->barrier(time);
                         threeDInterfaces.interfaces->getInterface(i)->forget(1, true);
                     }
                     else //- Using direct time based coupling
                     {
-                        scalar time = 2;
+                        scalar time = 1;
                         threeDInterfaces.interfaces->getInterface(i)->barrier(time);
                         threeDInterfaces.interfaces->getInterface(i)->forget(1, true);
                     }
