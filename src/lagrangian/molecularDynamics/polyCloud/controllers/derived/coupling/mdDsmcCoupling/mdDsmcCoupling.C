@@ -1186,10 +1186,14 @@ void mdDsmcCoupling::sendCoupledRegionForce()
                     }
                 }
             }
-
-            // Commit (transmit) values to the MUI interface
-            sendInterfaces_[iface]->commit(currIteration_);
         }
+    }
+
+    // Iterate through all sending interfaces for this controller
+    forAll(sendInterfaces_, iface)
+    {
+        // Commit (transmit) values to the MUI interface
+        sendInterfaces_[iface]->commit(currIteration_);
     }
 #endif
 }
@@ -1331,10 +1335,13 @@ label mdDsmcCoupling::sendCoupledMolecules()
                     nmolsSent++;
                 }
             }
-
-            // Commit (transmit) values to the coupling interface
-            sendInterfaces_[iface]->commit(currIteration_);
         }
+    }
+
+    forAll(sendInterfaces_, iface)
+    {
+        // Commit (transmit) values to the coupling interface
+        sendInterfaces_[iface]->commit(currIteration_);
     }
 #endif
     //- Clear the sent molecules

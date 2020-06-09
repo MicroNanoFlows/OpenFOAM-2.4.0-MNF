@@ -809,10 +809,10 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
                 sendInterfaces_[iface]->push("init_temp", initTemperature_);
                 sendInterfaces_[iface]->push("init_ke", initKe_);
             }
-
-            // Commit (transmit) values to the MUI interface
-            sendInterfaces_[iface]->commit(currIteration_);
         }
+
+        // Commit (transmit) values to the MUI interface
+        sendInterfaces_[iface]->commit(currIteration_);
     }
 #endif
 }
@@ -998,11 +998,14 @@ void dsmcMdCoupling::sendCoupledParcels()
             {
                 std::cout << "    Coupling parcels pushed         = " << pushed << std::endl;
             }
-
-            // Commit (transmit) values to the MUI interface
-            sendInterfaces_[iface]->commit(currIteration_);
         }
 	}
+
+    forAll(sendInterfaces_, iface)
+    {
+        // Commit (transmit) values to the MUI interface
+        sendInterfaces_[iface]->commit(currIteration_);
+    }
 #endif
 }
 
