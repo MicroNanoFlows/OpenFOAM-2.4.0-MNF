@@ -639,19 +639,11 @@ void dsmcControllers::controlBeforeCollisions()
         couplingControllers_[0]->resetGhostedStatus();
     }
 
-    for(size_t i=0; i<couplingControllers_.size(); i++)
-    {
-        std::cout << "Controller " << i << std::endl;
-        couplingControllers_[i]->controlParcelsBeforeCollisions(4);
-    }
-
-    /*
     //- Send the coupled region
     forAll(couplingControllers_, cC)
     {
         couplingControllers_[cC]->controlParcelsBeforeCollisions(4);
     }
-    */
 }
 
 void dsmcControllers::controlAfterCollisions()
