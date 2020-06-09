@@ -822,33 +822,32 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 void dsmcMdCoupling::receiveCoupledRegionForce()
 {
 #ifdef USE_MUI
+    List<std::vector<std::string> > rcvParcType(recvInterfaces_.size());
+    List<std::vector<label> > rcvParcId(recvInterfaces_.size());
+    List<std::vector<scalar> > rcvForceX(recvInterfaces_.size());
+    List<std::vector<scalar> > rcvForceY(recvInterfaces_.size());
+    List<std::vector<scalar> > rcvForceZ(recvInterfaces_.size());
+
+    // Iterate through all receiving interfaces for this controller and extract a points list
+    forAll(recvInterfaces_, iface)
+    {
+        //- Extract a list of all parcel types
+        rcvParcType[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_region", currIteration_, *chrono_sampler);
+
+        if(rcvParcType[iface].size() > 0)
+        {
+            //- Extract a list of all molecule Id's received from other solver through this interface
+            rcvParcId[iface] = recvInterfaces_[iface]->fetch_values<label>("id_region", currIteration_, *chrono_sampler);
+
+            //- Extract a list of all molecule force additions received from other solver through this interface
+            rcvForceX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_x_region", currIteration_, *chrono_sampler);
+            rcvForceY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_y_region", currIteration_, *chrono_sampler);
+            rcvForceZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_z_region", currIteration_, *chrono_sampler);
+        }
+    }
+
     if(receivingRegion_)
     {
-        List<std::vector<std::string> > rcvParcType(recvInterfaces_.size());
-        List<std::vector<label> > rcvParcId(recvInterfaces_.size());
-        List<std::vector<scalar> > rcvForceX(recvInterfaces_.size());
-        List<std::vector<scalar> > rcvForceY(recvInterfaces_.size());
-        List<std::vector<scalar> > rcvForceZ(recvInterfaces_.size());
-
-        // Iterate through all receiving interfaces for this controller and extract a points list
-        forAll(recvInterfaces_, iface)
-        {
-            //- Extract a list of all parcel types
-            rcvParcType[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_region", currIteration_, *chrono_sampler);
-
-            if(rcvParcType[iface].size() > 0)
-            {
-                //- Extract a list of all molecule Id's received from other solver through this interface
-                rcvParcId[iface] = recvInterfaces_[iface]->fetch_values<label>("id_region", currIteration_, *chrono_sampler);
-
-                //- Extract a list of all molecule force additions received from other solver through this interface
-                rcvForceX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_x_region", currIteration_, *chrono_sampler);
-                rcvForceY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_y_region", currIteration_, *chrono_sampler);
-                rcvForceZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_z_region", currIteration_, *chrono_sampler);
-            }
-        }
-
-
         bool parcelsRcv = false;
 
         //- Go through received values and find any that are not of the type set to be received
@@ -1016,33 +1015,33 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
 {
     bool parcelAdded = false;
 #ifdef USE_MUI
+    List<std::vector<mui::point3d> > rcvPoints(recvInterfaces_.size());
+    List<std::vector<std::string> > rcvParcType(recvInterfaces_.size());
+    List<std::vector<scalar> > rcvVelX(recvInterfaces_.size());
+    List<std::vector<scalar> > rcvVelY(recvInterfaces_.size());
+    List<std::vector<scalar> > rcvVelZ(recvInterfaces_.size());
+    std::stringstream rcvStr;
+
+    // Iterate through all receiving interfaces for this controller and extract a points list for each molecule type handled
+    forAll(recvInterfaces_, iface)
+    {
+        //- Extract a list of all parcel locations
+        rcvPoints[iface] = recvInterfaces_[iface]->fetch_points<std::string>("type_bound", currIteration_, *chrono_sampler);
+
+        if(rcvPoints[iface].size() > 0)
+        {
+            //- Extract a list of all parcel types
+            rcvParcType[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_bound", currIteration_, *chrono_sampler);
+
+            //- Extract a list of all molecule velocities received from other solver through this interface
+            rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_x_bound", currIteration_, *chrono_sampler);
+            rcvVelY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_y_bound", currIteration_, *chrono_sampler);
+            rcvVelZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_z_bound", currIteration_, *chrono_sampler);
+        }
+    }
+
     if(receivingBound_)
     {
-        List<std::vector<mui::point3d> > rcvPoints(recvInterfaces_.size());
-        List<std::vector<std::string> > rcvParcType(recvInterfaces_.size());
-        List<std::vector<scalar> > rcvVelX(recvInterfaces_.size());
-        List<std::vector<scalar> > rcvVelY(recvInterfaces_.size());
-        List<std::vector<scalar> > rcvVelZ(recvInterfaces_.size());
-        std::stringstream rcvStr;
-
-        // Iterate through all receiving interfaces for this controller and extract a points list for each molecule type handled
-        forAll(recvInterfaces_, iface)
-        {
-            //- Extract a list of all parcel locations
-            rcvPoints[iface] = recvInterfaces_[iface]->fetch_points<std::string>("type_bound", currIteration_, *chrono_sampler);
-
-            if(rcvPoints[iface].size() > 0)
-            {
-                //- Extract a list of all parcel types
-                rcvParcType[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_bound", currIteration_, *chrono_sampler);
-
-                //- Extract a list of all molecule velocities received from other solver through this interface
-                rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_x_bound", currIteration_, *chrono_sampler);
-                rcvVelY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_y_bound", currIteration_, *chrono_sampler);
-                rcvVelZ[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_z_bound", currIteration_, *chrono_sampler);
-            }
-        }
-
         //- Go through received values and find any that are not of the type set to be received
         forAll(rcvParcType, ifacepts)
         {
