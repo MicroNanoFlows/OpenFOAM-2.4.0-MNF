@@ -1008,7 +1008,7 @@ void dsmcMdCoupling::sendCoupledParcels()
     {
         // Commit (transmit) values to the MUI interface
         label comm = sendInterfaces_[iface]->commit(currIteration_);
-        std::cout << "sendCoupledParcels: " << comm << std::endl;
+        std::cout << "sendCoupledRegion: " << comm << std::endl;
     }
 #endif
 }

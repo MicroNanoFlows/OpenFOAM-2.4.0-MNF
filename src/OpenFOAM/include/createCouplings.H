@@ -419,38 +419,6 @@
 
                     if(isThreeD)
                     {
-                        //Interface is set to send
-                        if(threeDInterfaces.interfaces->getInterfaceSendStatus(i))
-                        {
-			                //Create a 3D box geometry based on pre-computed send domain
-                            mui::point3d start(threeDInterfaces.interfaces->getInterfaceSendDomStart(i)[0],
-                                               threeDInterfaces.interfaces->getInterfaceSendDomStart(i)[1],
-                                               threeDInterfaces.interfaces->getInterfaceSendDomStart(i)[2]);
-                            mui::point3d end(threeDInterfaces.interfaces->getInterfaceSendDomEnd(i)[0],
-                                             threeDInterfaces.interfaces->getInterfaceSendDomEnd(i)[1],
-                                             threeDInterfaces.interfaces->getInterfaceSendDomEnd(i)[2]);
-
-                            start[0] = (start[0] * threeDInterfaces.refLength);
-                            start[1] = (start[1] * threeDInterfaces.refLength);
-                            start[2] = (start[2] * threeDInterfaces.refLength);
-                            end[0] = (end[0] * threeDInterfaces.refLength);
-                            end[1] = (end[1] * threeDInterfaces.refLength);
-                            end[2] = (end[2] * threeDInterfaces.refLength);
-
-                            mui::geometry::box3d region_3d(start, end);
-
-                            //- Using iteration based coupling
-                            if(threeDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
-                            {
-                                label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value())+1;
-                                threeDInterfaces.interfaces->getInterface(i)->announce_send_span(0, totalIter, region_3d);
-                            }
-                            else //- Using direct time based coupling
-                            {
-                                threeDInterfaces.interfaces->getInterface(i)->announce_send_span((runTime.startTime().value() * threeDInterfaces.refTime), (runTime.endTime().value() * threeDInterfaces.refTime), region_3d);
-                            }
-                        }
-
                         //Interface is set to receive
                         if(threeDInterfaces.interfaces->getInterfaceReceiveStatus(i))
                         {
@@ -476,49 +444,61 @@
                             {
                                 label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value())+1;
                                 threeDInterfaces.interfaces->getInterface(i)->announce_recv_span(0, totalIter, region_3d);
+                                label time = -1;
+                                threeDInterfaces.interfaces->getInterface(i)->barrier(time);
+                                threeDInterfaces.interfaces->getInterface(i)->forget(0, true);
                             }
                             else //- Using direct time based coupling
                             {
                                 threeDInterfaces.interfaces->getInterface(i)->announce_recv_span((runTime.startTime().value() * threeDInterfaces.refTime), (runTime.endTime().value() * threeDInterfaces.refTime), region_3d);
+                                scalar time = -1;
+                                threeDInterfaces.interfaces->getInterface(i)->barrier(time);
+                                threeDInterfaces.interfaces->getInterface(i)->forget(0, true);
                             }
                         }
 
-                        //- Using iteration based coupling
-                        if(threeDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
+                        //Interface is set to send
+                        if(threeDInterfaces.interfaces->getInterfaceSendStatus(i))
                         {
-                            label time = -1;
-                            label comm = threeDInterfaces.interfaces->getInterface(i)->commit(time);
-                        }
-                        else //- Using direct time based coupling
-                        {
-                            scalar time = -1;
-                            threeDInterfaces.interfaces->getInterface(i)->commit(time);
+			                //Create a 3D box geometry based on pre-computed send domain
+                            mui::point3d start(threeDInterfaces.interfaces->getInterfaceSendDomStart(i)[0],
+                                               threeDInterfaces.interfaces->getInterfaceSendDomStart(i)[1],
+                                               threeDInterfaces.interfaces->getInterfaceSendDomStart(i)[2]);
+                            mui::point3d end(threeDInterfaces.interfaces->getInterfaceSendDomEnd(i)[0],
+                                             threeDInterfaces.interfaces->getInterfaceSendDomEnd(i)[1],
+                                             threeDInterfaces.interfaces->getInterfaceSendDomEnd(i)[2]);
+
+                            start[0] = (start[0] * threeDInterfaces.refLength);
+                            start[1] = (start[1] * threeDInterfaces.refLength);
+                            start[2] = (start[2] * threeDInterfaces.refLength);
+                            end[0] = (end[0] * threeDInterfaces.refLength);
+                            end[1] = (end[1] * threeDInterfaces.refLength);
+                            end[2] = (end[2] * threeDInterfaces.refLength);
+
+                            mui::geometry::box3d region_3d(start, end);
+
+                            //- Using iteration based coupling
+                            if(threeDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
+                            {
+                                label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value())+1;
+                                threeDInterfaces.interfaces->getInterface(i)->announce_send_span(0, totalIter, region_3d);
+                                label time = -1;
+                                threeDInterfaces.interfaces->getInterface(i)->barrier(time);
+                                threeDInterfaces.interfaces->getInterface(i)->forget(0, true);
+                            }
+                            else //- Using direct time based coupling
+                            {
+                                threeDInterfaces.interfaces->getInterface(i)->announce_send_span((runTime.startTime().value() * threeDInterfaces.refTime), (runTime.endTime().value() * threeDInterfaces.refTime), region_3d);
+                                scalar time = -1;
+                                threeDInterfaces.interfaces->getInterface(i)->barrier(time);
+                                threeDInterfaces.interfaces->getInterface(i)->forget(0, true);
+                            }
                         }
                     }
                     else
                     {
                         FatalIOErrorIn("", couplingDict)
                                        << "Trying to create a 3D interface in a 2D mesh" << exit(FatalIOError);
-                    }
-                }
-            }
-
-            for(size_t i=0; i<threeDInterfaces.interfaces->size(); i++)
-            {
-                if(threeDInterfaces.interfaces->getInterfaceSmartSendStatus(i)) //Check if smart send should be enabled for this interface
-                {
-                    //- Using iteration based coupling
-                    if(threeDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
-                    {
-                        label time = -1;
-                        threeDInterfaces.interfaces->getInterface(i)->barrier(time);
-                        threeDInterfaces.interfaces->getInterface(i)->forget(0, true);
-                    }
-                    else //- Using direct time based coupling
-                    {
-                        scalar time = -1;
-                        threeDInterfaces.interfaces->getInterface(i)->barrier(time);
-                        threeDInterfaces.interfaces->getInterface(i)->forget(0, true);
                     }
                 }
             }
