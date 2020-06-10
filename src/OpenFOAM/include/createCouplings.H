@@ -445,6 +445,7 @@
                                 label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value())+1;
                                 threeDInterfaces.interfaces->getInterface(i)->announce_recv_span(0, totalIter, region_3d);
                                 label time = -1;
+                                threeDInterfaces.interfaces->getInterface(i)->commit(time);
                                 threeDInterfaces.interfaces->getInterface(i)->barrier(time);
                                 threeDInterfaces.interfaces->getInterface(i)->forget(0, true);
                             }
@@ -452,6 +453,7 @@
                             {
                                 threeDInterfaces.interfaces->getInterface(i)->announce_recv_span((runTime.startTime().value() * threeDInterfaces.refTime), (runTime.endTime().value() * threeDInterfaces.refTime), region_3d);
                                 scalar time = -1;
+                                threeDInterfaces.interfaces->getInterface(i)->commit(time);
                                 threeDInterfaces.interfaces->getInterface(i)->barrier(time);
                                 threeDInterfaces.interfaces->getInterface(i)->forget(0, true);
                             }
@@ -483,6 +485,7 @@
                                 label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value())+1;
                                 threeDInterfaces.interfaces->getInterface(i)->announce_send_span(0, totalIter, region_3d);
                                 label time = -1;
+                                threeDInterfaces.interfaces->getInterface(i)->commit(time);
                                 threeDInterfaces.interfaces->getInterface(i)->barrier(time);
                                 threeDInterfaces.interfaces->getInterface(i)->forget(0, true);
                             }
@@ -490,6 +493,7 @@
                             {
                                 threeDInterfaces.interfaces->getInterface(i)->announce_send_span((runTime.startTime().value() * threeDInterfaces.refTime), (runTime.endTime().value() * threeDInterfaces.refTime), region_3d);
                                 scalar time = -1;
+                                threeDInterfaces.interfaces->getInterface(i)->commit(time);
                                 threeDInterfaces.interfaces->getInterface(i)->barrier(time);
                                 threeDInterfaces.interfaces->getInterface(i)->forget(0, true);
                             }
