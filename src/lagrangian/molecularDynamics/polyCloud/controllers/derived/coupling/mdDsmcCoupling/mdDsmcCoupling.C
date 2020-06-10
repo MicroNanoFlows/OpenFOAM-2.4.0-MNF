@@ -1195,8 +1195,7 @@ void mdDsmcCoupling::sendCoupledRegionForce()
     forAll(sendInterfaces_, iface)
     {
         // Commit (transmit) values to the MUI interface
-        label comm = sendInterfaces_[iface]->commit(currIteration_);
-        std::cout << "sendCoupledRegionForce: " << comm << std::endl;
+        sendInterfaces_[iface]->commit(currIteration_);
     }
 #endif
 }
@@ -1344,8 +1343,7 @@ label mdDsmcCoupling::sendCoupledMolecules()
     forAll(sendInterfaces_, iface)
     {
         // Commit (transmit) values to the coupling interface
-        label comm = sendInterfaces_[iface]->commit(currIteration_);
-        std::cout << "sendCoupledMolecules: " << comm << std::endl;
+        sendInterfaces_[iface]->commit(currIteration_);
     }
 #endif
     //- Clear the sent molecules
