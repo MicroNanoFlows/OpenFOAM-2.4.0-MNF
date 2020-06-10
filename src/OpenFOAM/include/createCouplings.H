@@ -263,53 +263,6 @@
                     {
                         mui::point2d start, end;
 
-                        // Interface is set to send
-                        if(twoDInterfaces.interfaces->getInterfaceSendStatus(i))
-                        {
-                            if(extentsDir == 1) //Extents in Y/Z
-                            {
-                                start[0] = twoDInterfaces.interfaces->getInterfaceSendDomStart(i)[1];
-                                start[1] = twoDInterfaces.interfaces->getInterfaceSendDomStart(i)[2];
-
-                                end[0] = twoDInterfaces.interfaces->getInterfaceSendDomEnd(i)[1];
-                                end[1] = twoDInterfaces.interfaces->getInterfaceSendDomEnd(i)[2];
-                            }
-                            else if (extentsDir == 2) //Extents in X/Z
-                            {
-                                start[0] = twoDInterfaces.interfaces->getInterfaceSendDomStart(i)[0];
-                                start[1] = twoDInterfaces.interfaces->getInterfaceSendDomStart(i)[2];
-
-                                end[0] = twoDInterfaces.interfaces->getInterfaceSendDomEnd(i)[0];
-                                end[1] = twoDInterfaces.interfaces->getInterfaceSendDomEnd(i)[2];
-                            }
-                            else if (extentsDir == 3) //Extents in X/Y
-                            {
-                                start[0] = twoDInterfaces.interfaces->getInterfaceSendDomStart(i)[0];
-                                start[1] = twoDInterfaces.interfaces->getInterfaceSendDomStart(i)[1];
-
-                                end[0] = twoDInterfaces.interfaces->getInterfaceSendDomEnd(i)[0];
-                                end[1] = twoDInterfaces.interfaces->getInterfaceSendDomEnd(i)[1];
-                            }
-
-                            start[0] = (start[0] * twoDInterfaces.refLength);
-                            start[1] = (start[1] * twoDInterfaces.refLength);
-                            end[0] = (end[0] * twoDInterfaces.refLength);
-                            end[1] = (end[1] * twoDInterfaces.refLength);
-
-                            mui::geometry::box2d region_2d(start, end);
-
-                            //- Using iteration based coupling
-                            if(twoDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
-                            {
-                                label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value())+1;
-                                twoDInterfaces.interfaces->getInterface(i)->announce_send_span(0, totalIter, region_2d);
-                            }
-                            else //- Using direct time based coupling
-                            {
-                                twoDInterfaces.interfaces->getInterface(i)->announce_send_span((runTime.startTime().value() * twoDInterfaces.refTime), (runTime.endTime().value() * twoDInterfaces.refTime), region_2d);
-                            }
-                        }
-
                         //Interface is set to receive
                         if(twoDInterfaces.interfaces->getInterfaceReceiveStatus(i))
                         {
@@ -350,23 +303,19 @@
                             {
                                 label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value())+1;
                                 twoDInterfaces.interfaces->getInterface(i)->announce_recv_span(0, totalIter, region_2d);
+                                label time = -1;
+                                twoDInterfaces.interfaces->getInterface(i)->commit(time);
+                                twoDInterfaces.interfaces->getInterface(i)->barrier(time);
+                                twoDInterfaces.interfaces->getInterface(i)->forget(0, true);
                             }
                             else //- Using direct time based coupling
                             {
                                 twoDInterfaces.interfaces->getInterface(i)->announce_recv_span((runTime.startTime().value() * twoDInterfaces.refTime), (runTime.endTime().value() * twoDInterfaces.refTime), region_2d);
+                                scalar time = -1;
+                                twoDInterfaces.interfaces->getInterface(i)->commit(time);
+                                twoDInterfaces.interfaces->getInterface(i)->barrier(time);
+                                twoDInterfaces.interfaces->getInterface(i)->forget(0, true);
                             }
-                        }
-
-                        //- Using iteration based coupling
-                        if(twoDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
-                        {
-                            label time = -1;
-                            twoDInterfaces.interfaces->getInterface(i)->commit(time);
-                        }
-                        else //- Using direct time based coupling
-                        {
-                            scalar time = -1;
-                            twoDInterfaces.interfaces->getInterface(i)->commit(time);
                         }
                     }
                     else if (extentsDir == 0) //Mesh is 3D
@@ -383,18 +332,89 @@
                 //Check if smart send should be enabled for this interface
                 if(twoDInterfaces.interfaces->getInterfaceSmartSendStatus(i))
                 {
-                    //- Using iteration based coupling
-                    if(twoDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
+                    label extentsDir = -1; //0 = 3D; 1 = Y/Z; 2 = X/Z; 3 = X/Y
+
+                    if(extents[0] >= (0.0 - VSMALL) && extents[0] <= (0.0 + VSMALL)) // X extent is zero, 2D plane is in Y/Z
                     {
-                        label time = -1;
-                        twoDInterfaces.interfaces->getInterface(i)->barrier(time);
-                        twoDInterfaces.interfaces->getInterface(i)->forget(0, true);
+                        extentsDir = 1;
                     }
-                    else //- Using direct time based coupling
+                    else if(extents[1] >= (0.0 - VSMALL) && extents[1] <= (0.0 + VSMALL)) // Y extent is zero, 2D plane is in X/Z
                     {
-                        scalar time = -1;
-                        twoDInterfaces.interfaces->getInterface(i)->barrier(time);
-                        twoDInterfaces.interfaces->getInterface(i)->forget(0, true);
+                        extentsDir = 2;
+                    }
+                    else if(extents[2] >= (0.0 - VSMALL) && extents[2] <= (0.0 + VSMALL)) // Z extent is zero, 2D plane is in X/Y
+                    {
+                        extentsDir = 3;
+                    }
+                    else // Mesh is 3D
+                    {
+                        extentsDir = 0;
+                    }
+
+                    //Check mesh is 2D or 3D
+                    if(extentsDir > 0)
+                    {
+                        mui::point2d start, end;
+
+                        // Interface is set to send
+                        if(twoDInterfaces.interfaces->getInterfaceSendStatus(i))
+                        {
+                            if(extentsDir == 1) //Extents in Y/Z
+                            {
+                                start[0] = twoDInterfaces.interfaces->getInterfaceSendDomStart(i)[1];
+                                start[1] = twoDInterfaces.interfaces->getInterfaceSendDomStart(i)[2];
+
+                                end[0] = twoDInterfaces.interfaces->getInterfaceSendDomEnd(i)[1];
+                                end[1] = twoDInterfaces.interfaces->getInterfaceSendDomEnd(i)[2];
+                            }
+                            else if (extentsDir == 2) //Extents in X/Z
+                            {
+                                start[0] = twoDInterfaces.interfaces->getInterfaceSendDomStart(i)[0];
+                                start[1] = twoDInterfaces.interfaces->getInterfaceSendDomStart(i)[2];
+
+                                end[0] = twoDInterfaces.interfaces->getInterfaceSendDomEnd(i)[0];
+                                end[1] = twoDInterfaces.interfaces->getInterfaceSendDomEnd(i)[2];
+                            }
+                            else if (extentsDir == 3) //Extents in X/Y
+                            {
+                                start[0] = twoDInterfaces.interfaces->getInterfaceSendDomStart(i)[0];
+                                start[1] = twoDInterfaces.interfaces->getInterfaceSendDomStart(i)[1];
+
+                                end[0] = twoDInterfaces.interfaces->getInterfaceSendDomEnd(i)[0];
+                                end[1] = twoDInterfaces.interfaces->getInterfaceSendDomEnd(i)[1];
+                            }
+
+                            start[0] = (start[0] * twoDInterfaces.refLength);
+                            start[1] = (start[1] * twoDInterfaces.refLength);
+                            end[0] = (end[0] * twoDInterfaces.refLength);
+                            end[1] = (end[1] * twoDInterfaces.refLength);
+
+                            mui::geometry::box2d region_2d(start, end);
+
+                            //- Using iteration based coupling
+                            if(twoDInterfaces.interfaces->getInterfaceItCouplingStatus(i))
+                            {
+                                label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value())+1;
+                                twoDInterfaces.interfaces->getInterface(i)->announce_send_span(0, totalIter, region_2d);
+                                label time = -1;
+                                twoDInterfaces.interfaces->getInterface(i)->commit(time);
+                                twoDInterfaces.interfaces->getInterface(i)->barrier(time);
+                                twoDInterfaces.interfaces->getInterface(i)->forget(0, true);
+                            }
+                            else //- Using direct time based coupling
+                            {
+                                twoDInterfaces.interfaces->getInterface(i)->announce_send_span((runTime.startTime().value() * twoDInterfaces.refTime), (runTime.endTime().value() * twoDInterfaces.refTime), region_2d);
+                                scalar time = -1;
+                                twoDInterfaces.interfaces->getInterface(i)->commit(time);
+                                twoDInterfaces.interfaces->getInterface(i)->barrier(time);
+                                twoDInterfaces.interfaces->getInterface(i)->forget(0, true);
+                            }
+                        }
+                    }
+                    else if (extentsDir == 0) //Mesh is 3D
+                    {
+                        FatalIOErrorIn("", couplingDict)
+                                       << "Trying to create a 2D interface in a 3D mesh" << exit(FatalIOError);
                     }
                 }
             }
@@ -444,16 +464,19 @@
                             {
                                 label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value())+1;
                                 threeDInterfaces.interfaces->getInterface(i)->announce_recv_span(0, totalIter, region_3d);
+                                label time = -1;
+                                threeDInterfaces.interfaces->getInterface(i)->commit(time);
+                                threeDInterfaces.interfaces->getInterface(i)->barrier(time);
+                                threeDInterfaces.interfaces->getInterface(i)->forget(0, true);
                             }
                             else //- Using direct time based coupling
                             {
                                 threeDInterfaces.interfaces->getInterface(i)->announce_recv_span((runTime.startTime().value() * threeDInterfaces.refTime), (runTime.endTime().value() * threeDInterfaces.refTime), region_3d);
+                                scalar time = -1;
+                                threeDInterfaces.interfaces->getInterface(i)->commit(time);
+                                threeDInterfaces.interfaces->getInterface(i)->barrier(time);
+                                threeDInterfaces.interfaces->getInterface(i)->forget(0, true);
                             }
-
-                            scalar time = -1;
-                            threeDInterfaces.interfaces->getInterface(i)->commit(time);
-                            threeDInterfaces.interfaces->getInterface(i)->barrier(time);
-                            threeDInterfaces.interfaces->getInterface(i)->forget(0, true);
                         }
                     }
                     else
@@ -506,16 +529,19 @@
                             {
                                 label totalIter = label((runTime.endTime().value() - runTime.startTime().value()) / runTime.deltaT().value())+1;
                                 threeDInterfaces.interfaces->getInterface(i)->announce_send_span(0, totalIter, region_3d);
+                                label time = -1;
+                                threeDInterfaces.interfaces->getInterface(i)->commit(time);
+                                threeDInterfaces.interfaces->getInterface(i)->barrier(time);
+                                threeDInterfaces.interfaces->getInterface(i)->forget(0, true);
                             }
                             else //- Using direct time based coupling
                             {
                                 threeDInterfaces.interfaces->getInterface(i)->announce_send_span((runTime.startTime().value() * threeDInterfaces.refTime), (runTime.endTime().value() * threeDInterfaces.refTime), region_3d);
+                                scalar time = -1;
+                                threeDInterfaces.interfaces->getInterface(i)->commit(time);
+                                threeDInterfaces.interfaces->getInterface(i)->barrier(time);
+                                threeDInterfaces.interfaces->getInterface(i)->forget(0, true);
                             }
-
-                            label time = -1;
-                            threeDInterfaces.interfaces->getInterface(i)->commit(time);
-                            threeDInterfaces.interfaces->getInterface(i)->barrier(time);
-                            threeDInterfaces.interfaces->getInterface(i)->forget(0, true);
                         }
                     }
                     else
