@@ -612,7 +612,7 @@ bool mdDsmcCoupling::controlAfterMove(label stage)
 	}
 	else if (stage == 3) // Receive ghost molecules in coupled region (blocking)
 	{
-	    //returnVal = receiveCoupledRegion(false);
+	    returnVal = receiveCoupledRegion(false);
     }
 	else if (stage == 4) // Insert any coupling boundary molecules from stage 2
 	{
@@ -718,6 +718,7 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
         }
     }
 
+    /*
     if(receivingRegion_)
     {
         //- Go through received values and find any that are not of the type set to be received
@@ -956,6 +957,7 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
             }
         }
     }
+    */
 
 	//- This is the initialisation call so commit to allow other side to continue
     if(init)
