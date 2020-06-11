@@ -315,9 +315,9 @@ dsmcMdCoupling::dsmcMdCoupling
                                  cellMin[2] + cellHalfWidth[2]);
 
                 //- Check if cell overlaps defined coupling region
-                if (!(std::fabs(cellCentre[0] - couplingRegionCentre[0]) > (cellHalfWidth[0] + couplingRegionHalfWidth[0])) ||
-                    !(std::fabs(cellCentre[1] - couplingRegionCentre[1]) > (cellHalfWidth[1] + couplingRegionHalfWidth[1])) ||
-                    !(std::fabs(cellCentre[2] - couplingRegionCentre[2]) > (cellHalfWidth[2] + couplingRegionHalfWidth[2])))
+                if ((std::fabs(cellCentre[0] - couplingRegionCentre[0]) < (cellHalfWidth[0] + couplingRegionHalfWidth[0])) ||
+                    (std::fabs(cellCentre[1] - couplingRegionCentre[1]) < (cellHalfWidth[1] + couplingRegionHalfWidth[1])) ||
+                    (std::fabs(cellCentre[2] - couplingRegionCentre[2]) < (cellHalfWidth[2] + couplingRegionHalfWidth[2])))
                 {
                     regionCells_.append(cell);
                 }
