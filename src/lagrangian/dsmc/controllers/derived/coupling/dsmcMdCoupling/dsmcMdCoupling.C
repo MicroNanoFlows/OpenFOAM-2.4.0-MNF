@@ -554,7 +554,7 @@ void dsmcMdCoupling::controlParcelsBeforeCollisions(label stage)
 
 void dsmcMdCoupling::controlParcelsAfterCollisions()
 {
-    receiveCoupledRegionForce(); // Receive MD force addition on ghost molecules in coupled region(s) (blocking)
+    //receiveCoupledRegionForce(); // Receive MD force addition on ghost molecules in coupled region(s) (blocking)
 }
 
 void dsmcMdCoupling::resetGhostedStatus()
