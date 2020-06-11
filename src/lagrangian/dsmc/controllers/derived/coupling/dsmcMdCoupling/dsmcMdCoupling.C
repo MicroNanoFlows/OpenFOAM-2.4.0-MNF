@@ -647,8 +647,12 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
 
     if(init)
     {
-        sendInterfaces_[iface]->push("init_temp", initTemperature_);
-        sendInterfaces_[iface]->push("init_ke", initKe_);
+        // Iterate through all sending interfaces for this controller
+        forAll(sendInterfaces_, iface)
+        {
+            sendInterfaces_[iface]->push("init_temp", initTemperature_);
+            sendInterfaces_[iface]->push("init_ke", initKe_);
+        }
     }
 
     // Iterate through all sending interfaces for this controller
