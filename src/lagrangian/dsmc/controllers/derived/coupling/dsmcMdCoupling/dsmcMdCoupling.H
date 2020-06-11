@@ -150,7 +150,7 @@ public:
     // Member Functions
 
         //- create an initial configuration
-        void initialConfiguration(label stage);
+        void initialConfiguration();
 
         //- Run after move and before collisions
         void controlParcelsBeforeCollisions(label stage);

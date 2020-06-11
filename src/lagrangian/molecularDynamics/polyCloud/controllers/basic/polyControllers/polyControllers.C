@@ -572,28 +572,10 @@ void polyControllers::initialConfig()
         fluxControllers_[fC]->initialConfiguration();
     }
 
-    //- Run initial configuration stage 1
+    //- Run initial configuration (blocking)
     forAll(couplingControllers_, cC)
     {
-        couplingControllers_[cC]->initialConfiguration(1);
-    }
-
-    // - Wait at barrier at time=-1 to ensure all interface disabled messages have been transferred
-    forAll(couplingControllers_, cC)
-    {
-        couplingControllers_[cC]->barrier(-1);
-    }
-
-    //- Forget all received frames and reset log
-    forAll(couplingControllers_, cC)
-    {
-        couplingControllers_[cC]->forget(0, true);
-    }
-
-    //- Run initial configuration stage 2 (blocking)
-    forAll(couplingControllers_, cC)
-    {
-        couplingControllers_[cC]->initialConfiguration(2);
+        couplingControllers_[cC]->initialConfiguration();
     }
 
     //- Rebuild cell occupancy (only need to do with one controller)

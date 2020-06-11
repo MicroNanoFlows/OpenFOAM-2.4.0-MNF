@@ -135,7 +135,7 @@ public:
 
 
         //- create an initial configuration
-        virtual bool initialConfiguration(label stage) = 0;
+        virtual bool initialConfiguration() = 0;
 
         //- run at start of MD time step before molecules move
         virtual bool controlAfterMove(label stage) = 0;

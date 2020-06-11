@@ -413,159 +413,6 @@ dsmcMdCoupling::dsmcMdCoupling
         point cellMax;
         bool intersectCell = false;
 
-        /*
-        //- Determine which cells the coupling boundary intersects
-        forAll(cells, cell)
-        {
-            const labelList& pointList = mesh_.cellPoints(cell);
-
-            cellMin[0] = VGREAT;
-            cellMin[1] = VGREAT;
-            cellMin[2] = VGREAT;
-            cellMax[0] = -VSMALL;
-            cellMax[1] = -VSMALL;
-            cellMax[2] = -VSMALL;
-
-            forAll(pointList, cellPoint)
-            {
-                if(meshPoints[pointList[cellPoint]][0] < cellMin[0])
-                {
-                    cellMin[0] = meshPoints[pointList[cellPoint]][0];
-                }
-
-                if(meshPoints[pointList[cellPoint]][0] > cellMax[0])
-                {
-                    cellMax[0] = meshPoints[pointList[cellPoint]][0];
-                }
-
-                if(meshPoints[pointList[cellPoint]][1] < cellMin[1])
-                {
-                    cellMin[1] = meshPoints[pointList[cellPoint]][1];
-                }
-
-                if(meshPoints[pointList[cellPoint]][1] > cellMax[1])
-                {
-                    cellMax[1] = meshPoints[pointList[cellPoint]][1];
-                }
-
-                if(meshPoints[pointList[cellPoint]][2] < cellMin[2])
-                {
-                    cellMin[2] = meshPoints[pointList[cellPoint]][2];
-                }
-
-                if(meshPoints[pointList[cellPoint]][2] > cellMax[2])
-                {
-                    cellMax[2] = meshPoints[pointList[cellPoint]][2];
-                }
-            }
-
-            vector cellExtents = cellMax - cellMin;
-
-            if(couplingBoundZeroThick_[0] == 1) //- couplingBoundMin_ and couplingBoundMax_ are the same in the x
-            {
-                if(couplingBoundNorm_[0] != 0)
-                {
-                    scalar boundaryExtend = cellExtents[0] * 1e-4;
-
-                    bool test = false;
-
-                    if((couplingBoundMin_[0] - boundaryExtend) >= cellMin[0] && (couplingBoundMin_[0] - boundaryExtend) <= cellMax[0])
-                    {
-                        test = true;
-                    }
-
-                    if((couplingBoundMin_[0] + boundaryExtend) >= cellMin[0] && (couplingBoundMin_[0] + boundaryExtend) <= cellMax[0])
-                    {
-                        test = true;
-                    }
-
-                    if(test)
-                    {
-                        if((cellMin[1] >= couplingBoundMin_[1] && cellMax[1] <= couplingBoundMax_[1]) &&
-                           (cellMin[2] >= couplingBoundMin_[2] && cellMax[2] <= couplingBoundMax_[2]))
-                        {
-                            intersectCell = true;
-                        }
-                    }
-                }
-                else
-                {
-                    FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
-                                 << "Coupling boundary zero thickness in x direction but normal value zero"
-                                 << exit(FatalError);
-                }
-            }
-
-            if(couplingBoundZeroThick_[1] == 1) //- couplingBoundMin_ and couplingBoundMax_ are the same in the y
-            {
-               if(couplingBoundNorm_[1] != 0)
-               {
-                   scalar boundaryExtend = cellExtents[1] * 1e-4;
-                   bool test = false;
-
-                   if((couplingBoundMin_[1] - boundaryExtend) >= cellMin[1] && (couplingBoundMin_[1] - boundaryExtend) <= cellMax[1])
-                   {
-                       test = true;
-                   }
-
-                   if((couplingBoundMin_[1] + boundaryExtend) >= cellMin[1] && (couplingBoundMin_[1] + boundaryExtend) <= cellMax[1])
-                   {
-                       test = true;
-                   }
-
-                   if(test)
-                   {
-                       if((cellMin[0] >= couplingBoundMin_[0] && cellMax[0] <= couplingBoundMax_[0]) &&
-                          (cellMin[2] >= couplingBoundMin_[2] && cellMax[2] <= couplingBoundMax_[2]))
-                       {
-                           intersectCell = true;
-                       }
-                   }
-               }
-               else
-               {
-                   FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
-                                << "Coupling boundary zero thickness in y direction but normal value zero"
-                                << exit(FatalError);
-               }
-            }
-
-            if(couplingBoundZeroThick_[2] == 1) //- couplingBoundMin_ and couplingBoundMax_ are the same in the z
-            {
-               if(couplingBoundNorm_[2] != 0)
-               {
-                   scalar boundaryExtend = cellExtents[2] * 1e-4;
-                   bool test = false;
-
-                   if((couplingBoundMin_[2] - boundaryExtend) >= cellMin[2] && (couplingBoundMin_[2] - boundaryExtend) <= cellMax[2])
-                   {
-                       test = true;
-                   }
-
-                   if((couplingBoundMin_[2] + boundaryExtend) >= cellMin[2] && (couplingBoundMin_[2] + boundaryExtend) <= cellMax[2])
-                   {
-                       test = true;
-                   }
-
-                   if(test)
-                   {
-                       if((cellMin[0] >= couplingBoundMin_[0] && cellMax[0] <= couplingBoundMax_[0]) &&
-                          (cellMin[1] >= couplingBoundMin_[1] && cellMax[1] <= couplingBoundMax_[1]))
-                       {
-                           intersectCell = true;
-                       }
-                   }
-               }
-               else
-               {
-                   FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
-                                << "Coupling boundary zero thickness in z direction but normal value zero"
-                                << exit(FatalError);
-               }
-            }
-        }
-        */
-
         //- Determine which cells the coupling region intersects
         forAll(cells, cell)
         {
@@ -640,40 +487,6 @@ dsmcMdCoupling::dsmcMdCoupling
             receivingBound_ = false;
             std::cout << "Boundary disabled" << std::endl;
         }
-
-        /*
-        if(!intersectCell)
-        {
-            vector meshHalfWidth(((meshMax_[0] - meshMin_[0]) * 0.5),
-                                 ((meshMax_[1] - meshMin_[1]) * 0.5),
-                                 ((meshMax_[2] - meshMin_[2]) * 0.5));
-            vector couplingBoundHalfWidth(((couplingBoundMax_[0] - couplingBoundMin_[0]) * 0.5),
-                                       ((couplingBoundMax_[1] - couplingBoundMin_[1]) * 0.5),
-                                       ((couplingBoundMax_[2] - couplingBoundMin_[2]) * 0.5));
-            point meshCentre(meshMin_[0] + meshHalfWidth[0],
-                             meshMin_[1] + meshHalfWidth[1],
-                             meshMin_[2] + meshHalfWidth[2]);
-            point couplingBoundCentre(couplingBoundMin_[0] + couplingBoundHalfWidth[0],
-                                   couplingBoundMin_[1] + couplingBoundHalfWidth[1],
-                                   couplingBoundMin_[2] + couplingBoundHalfWidth[2]);
-
-            bool overlap = true;
-
-            if ((std::fabs(meshCentre[0] - couplingBoundCentre[0]) > (meshHalfWidth[0] + couplingBoundHalfWidth[0])) ||
-               (std::fabs(meshCentre[1] - couplingBoundCentre[1]) > (meshHalfWidth[1] + couplingBoundHalfWidth[1])) ||
-               (std::fabs(meshCentre[2] - couplingBoundCentre[2]) > (meshHalfWidth[2] + couplingBoundHalfWidth[2])))
-            {
-                overlap = false;
-            }
-
-            //- There is an overlap between the coupling boundary and the local mesh so should have found at least 1 intersecting cell
-            if(!overlap)
-            {
-                sendingBound_ = false;
-                receivingBound_ = false;
-            }
-        }
-        */
     }
 #ifdef USE_MUI
     //Initialise exact time sampler for MUI
@@ -689,88 +502,29 @@ dsmcMdCoupling::~dsmcMdCoupling()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void dsmcMdCoupling::initialConfiguration(label stage)
+void dsmcMdCoupling::initialConfiguration()
 {
-    if(stage == 1)
+    //Calculate initial temperature of whole cloud
+    initTemperature_ = calcTemperature();
+
+    //Calculate initial average linear KE of whole cloud
+    initKe_ = calcAvgLinearKe();
+
+    if (Pstream::parRun())
     {
-#ifdef USE_MUI
-    /*
-    if((!sendingBound_ && !sendingRegion_) && (!receivingBound_ && !receivingRegion_))
-    {
-        std::cout << "MUI interface(s) disabled for this rank" << std::endl;
-
-        forAll(sendInterfaces_, iface)
-        {
-            sendInterfaces_[iface]->announce_send_disable();
-        }
-
-        forAll(recvInterfaces_, iface)
-        {
-            recvInterfaces_[iface]->announce_recv_disable();
-        }
-    }
-    else if((!sendingBound_ && !sendingRegion_))
-    {
-        std::cout << "MUI interface(s) sending disabled for this rank" << std::endl;
-
-        forAll(sendInterfaces_, iface)
-        {
-            sendInterfaces_[iface]->announce_send_disable();
-        }
-    }
-    else if((!receivingBound_ && !receivingRegion_))
-    {
-        std::cout << "MUI interface(s) receiving disabled for this rank" << std::endl;
-
-        forAll(recvInterfaces_, iface)
-        {
-            recvInterfaces_[iface]->announce_recv_disable();
-        }
-    }
-    */
-
-    DynamicList<word> interfaceCommits;
-
-    forAll(sendInterfaces_, iface)
-    {
-        sendInterfaces_[iface]->commit(-1);
-        interfaceCommits.append(sendInterfaceNames_[iface]);
-    }
-
-    forAll(recvInterfaces_, iface)
-    {
-        label index = findIndex(interfaceCommits, recvInterfaceNames_[iface]);
-        if(index == -1)
-        {
-            recvInterfaces_[iface]->commit(-1);
-        }
-    }
-#endif
-    }
-    else if (stage == 2)
-    {
-        //Calculate initial temperature of whole cloud
-        initTemperature_ = calcTemperature();
-
-        //Calculate initial average linear KE of whole cloud
-        initKe_ = calcAvgLinearKe();
-
-        if (Pstream::parRun())
-        {
-            if(Pstream::master())
-            {
-                std::cout << "Initial temperature: " << initTemperature_ << std::endl;
-                std::cout << "Initial average linear KE per parcel: " << initKe_ << std::endl;
-            }
-        }
-        else
+        if(Pstream::master())
         {
             std::cout << "Initial temperature: " << initTemperature_ << std::endl;
             std::cout << "Initial average linear KE per parcel: " << initKe_ << std::endl;
         }
-
-        sendCoupledRegion(true); // Send ghost parcels in coupled regions at time = startTime
     }
+    else
+    {
+        std::cout << "Initial temperature: " << initTemperature_ << std::endl;
+        std::cout << "Initial average linear KE per parcel: " << initKe_ << std::endl;
+    }
+
+    sendCoupledRegion(true); // Send ghost parcels in coupled regions at time = startTime
 }
 
 void dsmcMdCoupling::controlParcelsBeforeCollisions(label stage)
