@@ -831,16 +831,14 @@ void dsmcMdCoupling::receiveCoupledRegionForce()
     // Iterate through all receiving interfaces for this controller and extract a points list
     forAll(recvInterfaces_, iface)
     {
-        std::cout << "dsmcFoam: Start fetch_values type_region in receiveCoupledRegionForce" << std::endl;
         //- Extract a list of all parcel types
         rcvParcType[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_region", currIteration_, *chrono_sampler);
 
         if(rcvParcType[iface].size() > 0)
         {
-            std::cout << "dsmcFoam: Start fetch_values id_region in receiveCoupledRegionForce" << std::endl;
             //- Extract a list of all molecule Id's received from other solver through this interface
             rcvParcId[iface] = recvInterfaces_[iface]->fetch_values<label>("id_region", currIteration_, *chrono_sampler);
-            std::cout << "dsmcFoam: Start fetch_values force_region in receiveCoupledRegionForce" << std::endl;
+
             //- Extract a list of all molecule force additions received from other solver through this interface
             rcvForceX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_x_region", currIteration_, *chrono_sampler);
             rcvForceY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("force_y_region", currIteration_, *chrono_sampler);
@@ -1027,16 +1025,14 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
     // Iterate through all receiving interfaces for this controller and extract a points list for each molecule type handled
     forAll(recvInterfaces_, iface)
     {
-        std::cout << "dsmcFoam: Start fetch_points type_bound in receiveCoupledMolecules" << std::endl;
         //- Extract a list of all parcel locations
         rcvPoints[iface] = recvInterfaces_[iface]->fetch_points<std::string>("type_bound", currIteration_, *chrono_sampler);
 
         if(rcvPoints[iface].size() > 0)
         {
-            std::cout << "dsmcFoam: Start fetch_values type_bound in receiveCoupledMolecules" << std::endl;
             //- Extract a list of all parcel types
             rcvParcType[iface] = recvInterfaces_[iface]->fetch_values<std::string>("type_bound", currIteration_, *chrono_sampler);
-            std::cout << "dsmcFoam: Start fetch_values vel_bound in receiveCoupledMolecules" << std::endl;
+
             //- Extract a list of all molecule velocities received from other solver through this interface
             rcvVelX[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_x_bound", currIteration_, *chrono_sampler);
             rcvVelY[iface] = recvInterfaces_[iface]->fetch_values<scalar>("vel_y_bound", currIteration_, *chrono_sampler);
