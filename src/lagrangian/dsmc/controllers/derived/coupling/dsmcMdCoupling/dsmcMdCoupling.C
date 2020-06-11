@@ -576,11 +576,11 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
     // Iterate through all sending interfaces for this controller
     forAll(sendInterfaces_, iface)
     {
-        parcelsInCellHistory_[iface].clear(); // Clear the send history list
-
         // If this rank is sending data to the coupled region
         if(sendingRegion_)
         {
+            parcelsInCellHistory_[iface].clear(); // Clear the send history list
+
             forAll(regionCells_, cell)
             {
                 const List<dsmcParcel*>& parcelsInCell = cloud_.cellOccupancy()[regionCells_[cell]];

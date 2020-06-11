@@ -612,7 +612,7 @@ bool mdDsmcCoupling::controlAfterMove(label stage)
 	}
 	else if (stage == 3) // Receive ghost molecules in coupled region (blocking)
 	{
-	    returnVal = receiveCoupledRegion(false);
+	    //returnVal = receiveCoupledRegion(false);
     }
 	else if (stage == 4) // Insert any coupling boundary molecules from stage 2
 	{
