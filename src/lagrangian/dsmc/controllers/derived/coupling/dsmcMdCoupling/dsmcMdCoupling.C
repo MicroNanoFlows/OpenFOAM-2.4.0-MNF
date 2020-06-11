@@ -571,13 +571,13 @@ void dsmcMdCoupling::resetGhostedStatus()
 void dsmcMdCoupling::sendCoupledRegion(bool init)
 {
 #ifdef USE_MUI
-    dsmcParcel* parcel = NULL;
-
-    // Iterate through all sending interfaces for this controller
-    forAll(sendInterfaces_, iface)
+    // If this rank is sending data to the coupled region
+    if(sendingRegion_)
     {
-        // If this rank is sending data to the coupled region
-        if(sendingRegion_)
+        dsmcParcel* parcel = NULL;
+
+        // Iterate through all sending interfaces for this controller
+        forAll(sendInterfaces_, iface)
         {
             parcelsInCellHistory_[iface].clear(); // Clear the send history list
 
@@ -643,13 +643,17 @@ void dsmcMdCoupling::sendCoupledRegion(bool init)
                 std::cout << "    Parcels sent to coupled region  = " << parcelsInCellHistory_[iface].size() << std::endl;
             }
         }
+    }
 
-        if(init)
-        {
-            sendInterfaces_[iface]->push("init_temp", initTemperature_);
-            sendInterfaces_[iface]->push("init_ke", initKe_);
-        }
+    if(init)
+    {
+        sendInterfaces_[iface]->push("init_temp", initTemperature_);
+        sendInterfaces_[iface]->push("init_ke", initKe_);
+    }
 
+    // Iterate through all sending interfaces for this controller
+    forAll(sendInterfaces_, iface)
+    {
         // Commit (transmit) values to the MUI interface
         sendInterfaces_[iface]->commit(currIteration_);
     }

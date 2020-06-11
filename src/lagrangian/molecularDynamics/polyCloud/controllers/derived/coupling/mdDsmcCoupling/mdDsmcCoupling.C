@@ -718,7 +718,6 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
         }
     }
 
-    /*
     if(receivingRegion_)
     {
         //- Go through received values and find any that are not of the type set to be received
@@ -957,7 +956,6 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
             }
         }
     }
-    */
 
 	//- This is the initialisation call so commit to allow other side to continue
     if(init)
@@ -969,7 +967,7 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
             //Fetch initial DSMC system linear KE
             initKeDSMC_ = recvInterfaces_[iface]->fetch<scalar>("init_ke");
 
-            //Commit at t=1 to allow other side to continue
+            //Commit to allow other side to continue after initialisation
             recvInterfaces_[iface]->commit(currIteration_);
         }
     }
