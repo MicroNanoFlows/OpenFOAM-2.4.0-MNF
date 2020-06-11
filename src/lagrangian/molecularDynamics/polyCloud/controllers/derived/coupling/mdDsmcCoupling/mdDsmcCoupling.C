@@ -505,8 +505,6 @@ bool mdDsmcCoupling::initialConfiguration()
         std::cout << "Initial MD average linear KE per molecule: " << initKe_ << std::endl;
     }
 
-
-
     // Distribute received temperature from DSMC side to all MPI ranks
     if (Pstream::parRun())
     {
@@ -514,22 +512,22 @@ bool mdDsmcCoupling::initialConfiguration()
         reduce(initKeDSMC_, maxOp<scalar>());
     }
 
-    if (Pstream::parRun())
+    if(initScaling_ && !molCloud_.cloudVelocityScaled())
     {
-        if(Pstream::master())
+        if (Pstream::parRun())
+        {
+            if(Pstream::master())
+            {
+                std::cout << "Initial DSMC temperature: " << initTemperatureDSMC_ << std::endl;
+                std::cout << "Initial DSMC average linear KE per parcel: " << initKeDSMC_ << std::endl;
+            }
+        }
+        else
         {
             std::cout << "Initial DSMC temperature: " << initTemperatureDSMC_ << std::endl;
             std::cout << "Initial DSMC average linear KE per parcel: " << initKeDSMC_ << std::endl;
         }
-    }
-    else
-    {
-        std::cout << "Initial DSMC temperature: " << initTemperatureDSMC_ << std::endl;
-        std::cout << "Initial DSMC average linear KE per parcel: " << initKeDSMC_ << std::endl;
-    }
 
-    if(initScaling_ && !molCloud_.cloudVelocityScaled())
-    {
         scalar scaleValue = 0;
 
         if(scaleType_ == 0) //Temperature
