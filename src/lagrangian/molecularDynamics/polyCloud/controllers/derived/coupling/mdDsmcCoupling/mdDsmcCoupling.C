@@ -308,6 +308,8 @@ mdDsmcCoupling::mdDsmcCoupling
         boundNormFound = true;
     }
 
+    const cellList& cells = mesh_.cells();
+
     if((boundMinFound && !boundMaxFound && !boundNormFound) ||
        (boundMaxFound && !boundMinFound && !boundNormFound) ||
        (boundNormFound && !boundMinFound && !boundMaxFound))
@@ -320,7 +322,18 @@ mdDsmcCoupling::mdDsmcCoupling
     {
         couplingBounds_ = true;
 
-        const cellList& cells = mesh_.cells();
+        vector meshHalfWidth(((meshMax_[0] - meshMin_[0]) * 0.5),
+                             ((meshMax_[1] - meshMin_[1]) * 0.5),
+                             ((meshMax_[2] - meshMin_[2]) * 0.5));
+        vector couplingRegionHalfWidth(((couplingRegionMax_[0] - couplingRegionMin_[0]) * 0.5),
+                                   ((couplingRegionMax_[1] - couplingRegionMin_[1]) * 0.5),
+                                   ((couplingRegionMax_[2] - couplingRegionMin_[2]) * 0.5));
+        point meshCentre(meshMin_[0] + meshHalfWidth[0],
+                         meshMin_[1] + meshHalfWidth[1],
+                         meshMin_[2] + meshHalfWidth[2]);
+        point couplingRegionCentre(couplingRegionMin_[0] + couplingRegionHalfWidth[0],
+                                   couplingRegionMin_[1] + couplingRegionHalfWidth[1],
+                                   couplingRegionMin_[2] + couplingRegionHalfWidth[2]);
 
         // Small (1e-15 for double) correction for boundary particles used during insertion perturbation)
         boundCorr_ = SMALL;
@@ -328,6 +341,7 @@ mdDsmcCoupling::mdDsmcCoupling
         point cellMin;
         point cellMax;
 
+        /*
         //- Determine which cells the coupling boundary intersects
         forAll(cells, cell)
         {
@@ -382,19 +396,12 @@ mdDsmcCoupling::mdDsmcCoupling
                     scalar boundaryExtend = cellExtents[0] * 1e-6;
                     bool test = false;
 
-                    /*
                     if((couplingBoundMin_[0] - boundaryExtend) >= cellMin[0] && (couplingBoundMin_[0] - boundaryExtend) <= cellMax[0])
                     {
                         test = true;
                     }
 
                     if((couplingBoundMin_[0] + boundaryExtend) >= cellMin[0] && (couplingBoundMin_[0] + boundaryExtend) <= cellMax[0])
-                    {
-                        test = true;
-                    }
-                    */
-
-                    if((couplingBoundMin_[0]) >= cellMin[0] && (couplingBoundMin_[0]) <= cellMax[0])
                     {
                         test = true;
                     }
@@ -493,13 +500,76 @@ mdDsmcCoupling::mdDsmcCoupling
                }
             }
         }
+        */
+
+        //- Determine which cells the coupling region intersects
+        forAll(cells, cell)
+        {
+            const labelList& pointList = mesh_.cellPoints(cell);
+
+            cellMin[0] = VGREAT;
+            cellMin[1] = VGREAT;
+            cellMin[2] = VGREAT;
+            cellMax[0] = -VSMALL;
+            cellMax[1] = -VSMALL;
+            cellMax[2] = -VSMALL;
+
+            forAll(pointList, cellPoint)
+            {
+                if(meshPoints[pointList[cellPoint]][0] < cellMin[0])
+                {
+                    cellMin[0] = meshPoints[pointList[cellPoint]][0];
+                }
+
+                if(meshPoints[pointList[cellPoint]][0] > cellMax[0])
+                {
+                    cellMax[0] = meshPoints[pointList[cellPoint]][0];
+                }
+
+                if(meshPoints[pointList[cellPoint]][1] < cellMin[1])
+                {
+                    cellMin[1] = meshPoints[pointList[cellPoint]][1];
+                }
+
+                if(meshPoints[pointList[cellPoint]][1] > cellMax[1])
+                {
+                    cellMax[1] = meshPoints[pointList[cellPoint]][1];
+                }
+
+                if(meshPoints[pointList[cellPoint]][2] < cellMin[2])
+                {
+                    cellMin[2] = meshPoints[pointList[cellPoint]][2];
+                }
+
+                if(meshPoints[pointList[cellPoint]][2] > cellMax[2])
+                {
+                    cellMax[2] = meshPoints[pointList[cellPoint]][2];
+                }
+            }
+
+            vector cellHalfWidth(((cellMax[0] - cellMin[0]) * 0.5),
+                                 ((cellMax[1] - cellMin[1]) * 0.5),
+                                 ((cellMax[2] - cellMin[2]) * 0.5));
+            point cellCentre(cellMin[0] + cellHalfWidth[0],
+                             cellMin[1] + cellHalfWidth[1],
+                             cellMin[2] + cellHalfWidth[2]);
+
+            //- Check if cell overlaps boundary
+            if (!(std::fabs(cellCentre[0] - couplingRegionCentre[0]) > (cellHalfWidth[0] + couplingRegionHalfWidth[0])) ||
+                !(std::fabs(cellCentre[1] - couplingRegionCentre[1]) > (cellHalfWidth[1] + couplingRegionHalfWidth[1])) ||
+                !(std::fabs(cellCentre[2] - couplingRegionCentre[2]) > (cellHalfWidth[2] + couplingRegionHalfWidth[2])))
+            {
+                intersectingCells_.append(cell);
+            }
+        }
 
         if(intersectingCells_.size() > 0)
         {
             std::cout << "Coupling boundary intersecting cell count: " << intersectingCells_.size() << std::endl;
         }
-        else
+        else //- No cells found that overlap boundary so disable
         {
+            /*
             vector meshHalfWidth(((meshMax_[0] - meshMin_[0]) * 0.5),
                                  ((meshMax_[1] - meshMin_[1]) * 0.5),
                                  ((meshMax_[2] - meshMin_[2]) * 0.5));
@@ -520,6 +590,10 @@ mdDsmcCoupling::mdDsmcCoupling
                 sendingBound_ = false;
                 receivingBound_ = false;
             }
+            */
+
+            sendingBound_ = false;
+            receivingBound_ = false;
         }
     }
 

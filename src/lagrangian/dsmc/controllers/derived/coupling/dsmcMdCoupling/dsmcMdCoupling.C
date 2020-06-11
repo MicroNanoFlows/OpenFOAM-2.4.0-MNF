@@ -249,17 +249,10 @@ dsmcMdCoupling::dsmcMdCoupling
                                    couplingRegionMin_[1] + couplingRegionHalfWidth[1],
                                    couplingRegionMin_[2] + couplingRegionHalfWidth[2]);
 
-        bool overlap = true;
-
+        //- Check if there is an overlap between the bounds of the local mesh and the defined coupling region
         if ((std::fabs(meshCentre[0] - couplingRegionCentre[0]) > (meshHalfWidth[0] + couplingRegionHalfWidth[0])) ||
-           (std::fabs(meshCentre[1] - couplingRegionCentre[1]) > (meshHalfWidth[1] + couplingRegionHalfWidth[1])) ||
-           (std::fabs(meshCentre[2] - couplingRegionCentre[2]) > (meshHalfWidth[2] + couplingRegionHalfWidth[2])))
-        {
-            overlap = false;
-        }
-
-        //- There is an overlap between the coupling region and the local mesh so should have found at least 1 intersecting cell
-        if(!overlap)
+            (std::fabs(meshCentre[1] - couplingRegionCentre[1]) > (meshHalfWidth[1] + couplingRegionHalfWidth[1])) ||
+            (std::fabs(meshCentre[2] - couplingRegionCentre[2]) > (meshHalfWidth[2] + couplingRegionHalfWidth[2])))
         {
             sendingRegion_ = false;
             receivingRegion_ = false;
@@ -321,16 +314,10 @@ dsmcMdCoupling::dsmcMdCoupling
                                  cellMin[1] + cellHalfWidth[1],
                                  cellMin[2] + cellHalfWidth[2]);
 
-                bool overlap = true;
-
-                if ((std::fabs(cellCentre[0] - couplingRegionCentre[0]) > (cellHalfWidth[0] + couplingRegionHalfWidth[0])) ||
-                   (std::fabs(cellCentre[1] - couplingRegionCentre[1]) > (cellHalfWidth[1] + couplingRegionHalfWidth[1])) ||
-                   (std::fabs(cellCentre[2] - couplingRegionCentre[2]) > (cellHalfWidth[2] + couplingRegionHalfWidth[2])))
-                {
-                    overlap = false;
-                }
-
-                if(overlap)
+                //- Check if cell overlaps defined coupling region
+                if (!(std::fabs(cellCentre[0] - couplingRegionCentre[0]) > (cellHalfWidth[0] + couplingRegionHalfWidth[0])) ||
+                    !(std::fabs(cellCentre[1] - couplingRegionCentre[1]) > (cellHalfWidth[1] + couplingRegionHalfWidth[1])) ||
+                    !(std::fabs(cellCentre[2] - couplingRegionCentre[2]) > (cellHalfWidth[2] + couplingRegionHalfWidth[2])))
                 {
                     regionCells_.append(cell);
                 }
@@ -400,14 +387,24 @@ dsmcMdCoupling::dsmcMdCoupling
     {
         couplingBounds_ = true;
 
-        vector localMeshExtents = meshMax_ - meshMin_;
-
-        vector meshExtents = mesh_.bounds().max() - mesh_.bounds().min();
+        vector meshHalfWidth(((meshMax_[0] - meshMin_[0]) * 0.5),
+                             ((meshMax_[1] - meshMin_[1]) * 0.5),
+                             ((meshMax_[2] - meshMin_[2]) * 0.5));
+        vector couplingRegionHalfWidth(((couplingRegionMax_[0] - couplingRegionMin_[0]) * 0.5),
+                                   ((couplingRegionMax_[1] - couplingRegionMin_[1]) * 0.5),
+                                   ((couplingRegionMax_[2] - couplingRegionMin_[2]) * 0.5));
+        point meshCentre(meshMin_[0] + meshHalfWidth[0],
+                         meshMin_[1] + meshHalfWidth[1],
+                         meshMin_[2] + meshHalfWidth[2]);
+        point couplingRegionCentre(couplingRegionMin_[0] + couplingRegionHalfWidth[0],
+                                   couplingRegionMin_[1] + couplingRegionHalfWidth[1],
+                                   couplingRegionMin_[2] + couplingRegionHalfWidth[2]);
 
         point cellMin;
         point cellMax;
         bool intersectCell = false;
 
+        /*
         //- Determine which cells the coupling boundary intersects
         forAll(cells, cell)
         {
@@ -558,7 +555,76 @@ dsmcMdCoupling::dsmcMdCoupling
                }
             }
         }
+        */
 
+        //- Determine which cells the coupling region intersects
+        forAll(cells, cell)
+        {
+            const labelList& pointList = mesh_.cellPoints(cell);
+
+            cellMin[0] = VGREAT;
+            cellMin[1] = VGREAT;
+            cellMin[2] = VGREAT;
+            cellMax[0] = -VSMALL;
+            cellMax[1] = -VSMALL;
+            cellMax[2] = -VSMALL;
+
+            forAll(pointList, cellPoint)
+            {
+                if(meshPoints[pointList[cellPoint]][0] < cellMin[0])
+                {
+                    cellMin[0] = meshPoints[pointList[cellPoint]][0];
+                }
+
+                if(meshPoints[pointList[cellPoint]][0] > cellMax[0])
+                {
+                    cellMax[0] = meshPoints[pointList[cellPoint]][0];
+                }
+
+                if(meshPoints[pointList[cellPoint]][1] < cellMin[1])
+                {
+                    cellMin[1] = meshPoints[pointList[cellPoint]][1];
+                }
+
+                if(meshPoints[pointList[cellPoint]][1] > cellMax[1])
+                {
+                    cellMax[1] = meshPoints[pointList[cellPoint]][1];
+                }
+
+                if(meshPoints[pointList[cellPoint]][2] < cellMin[2])
+                {
+                    cellMin[2] = meshPoints[pointList[cellPoint]][2];
+                }
+
+                if(meshPoints[pointList[cellPoint]][2] > cellMax[2])
+                {
+                    cellMax[2] = meshPoints[pointList[cellPoint]][2];
+                }
+            }
+
+            vector cellHalfWidth(((cellMax[0] - cellMin[0]) * 0.5),
+                                 ((cellMax[1] - cellMin[1]) * 0.5),
+                                 ((cellMax[2] - cellMin[2]) * 0.5));
+            point cellCentre(cellMin[0] + cellHalfWidth[0],
+                             cellMin[1] + cellHalfWidth[1],
+                             cellMin[2] + cellHalfWidth[2]);
+
+            //- Check if cell overlaps boundary
+            if (!(std::fabs(cellCentre[0] - couplingRegionCentre[0]) > (cellHalfWidth[0] + couplingRegionHalfWidth[0])) ||
+                !(std::fabs(cellCentre[1] - couplingRegionCentre[1]) > (cellHalfWidth[1] + couplingRegionHalfWidth[1])) ||
+                !(std::fabs(cellCentre[2] - couplingRegionCentre[2]) > (cellHalfWidth[2] + couplingRegionHalfWidth[2])))
+            {
+                intersectCell = true;
+            }
+        }
+
+        if(!intersectCell)
+        {
+            sendingBound_ = false;
+            receivingBound_ = false;
+        }
+
+        /*
         if(!intersectCell)
         {
             vector meshHalfWidth(((meshMax_[0] - meshMin_[0]) * 0.5),
@@ -590,6 +656,7 @@ dsmcMdCoupling::dsmcMdCoupling
                 receivingBound_ = false;
             }
         }
+        */
     }
 #ifdef USE_MUI
     //Initialise exact time sampler for MUI
