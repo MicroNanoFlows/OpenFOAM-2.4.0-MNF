@@ -394,6 +394,8 @@ dsmcMdCoupling::dsmcMdCoupling
     {
         couplingBounds_ = true;
 
+        const cellList& cells = mesh_.cells();
+
         vector meshHalfWidth(((meshMax_[0] - meshMin_[0]) * 0.5),
                              ((meshMax_[1] - meshMin_[1]) * 0.5),
                              ((meshMax_[2] - meshMin_[2]) * 0.5));
