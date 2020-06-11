@@ -622,6 +622,7 @@ dsmcMdCoupling::dsmcMdCoupling
         {
             sendingBound_ = false;
             receivingBound_ = false;
+            std::cout << "Boundary disabled" << std::endl;
         }
 
         /*

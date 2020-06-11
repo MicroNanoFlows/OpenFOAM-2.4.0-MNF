@@ -252,9 +252,10 @@ mdDsmcCoupling::mdDsmcCoupling
                                    couplingRegionMin_[1] + couplingRegionHalfWidth[1],
                                    couplingRegionMin_[2] + couplingRegionHalfWidth[2]);
 
+        //- Check for overlap between bounds of local mesh and defined coupling region, if no overlap then disable
         if ((std::fabs(meshCentre[0] - couplingRegionCentre[0]) > (meshHalfWidth[0] + couplingRegionHalfWidth[0])) ||
-           (std::fabs(meshCentre[1] - couplingRegionCentre[1]) > (meshHalfWidth[1] + couplingRegionHalfWidth[1])) ||
-           (std::fabs(meshCentre[2] - couplingRegionCentre[2]) > (meshHalfWidth[2] + couplingRegionHalfWidth[2])))
+            (std::fabs(meshCentre[1] - couplingRegionCentre[1]) > (meshHalfWidth[1] + couplingRegionHalfWidth[1])) ||
+            (std::fabs(meshCentre[2] - couplingRegionCentre[2]) > (meshHalfWidth[2] + couplingRegionHalfWidth[2])))
         {
             sendingRegion_ = false;
             receivingRegion_ = false;
