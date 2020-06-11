@@ -322,11 +322,6 @@ mdDsmcCoupling::mdDsmcCoupling
 
         const cellList& cells = mesh_.cells();
 
-        vector localMeshExtents = meshMax_ - meshMin_;
-
-        //- Find the whole mesh extents
-        vector meshExtents = mesh_.bounds().max() - mesh_.bounds().min();
-
         // Small (1e-15 for double) correction for boundary particles used during insertion perturbation)
         boundCorr_ = SMALL;
 
@@ -387,12 +382,19 @@ mdDsmcCoupling::mdDsmcCoupling
                     scalar boundaryExtend = cellExtents[0] * 1e-6;
                     bool test = false;
 
+                    /*
                     if((couplingBoundMin_[0] - boundaryExtend) >= cellMin[0] && (couplingBoundMin_[0] - boundaryExtend) <= cellMax[0])
                     {
                         test = true;
                     }
 
                     if((couplingBoundMin_[0] + boundaryExtend) >= cellMin[0] && (couplingBoundMin_[0] + boundaryExtend) <= cellMax[0])
+                    {
+                        test = true;
+                    }
+                    */
+
+                    if((couplingBoundMin_[0]) >= cellMin[0] && (couplingBoundMin_[0]) <= cellMax[0])
                     {
                         test = true;
                     }
