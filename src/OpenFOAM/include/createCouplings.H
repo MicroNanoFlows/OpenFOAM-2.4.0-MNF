@@ -457,6 +457,18 @@
                             end[1] = (end[1] * threeDInterfaces.refLength);
                             end[2] = (end[2] * threeDInterfaces.refLength);
 
+                            vector boundReduce;
+                            boundReduce[0] = (end[0] - start[0]) * 1e-6;
+                            boundReduce[1] = (end[1] - start[1]) * 1e-6;
+                            boundReduce[2] = (end[2] - start[2]) * 1e-6;
+
+                            start[0] += boundReduce[0];
+                            start[1] += boundReduce[1];
+                            start[2] += boundReduce[2];
+                            end[0] -= boundReduce[0];
+                            end[1] -= boundReduce[1];
+                            end[2] -= boundReduce[2];
+
                             mui::geometry::box3d region_3d(start, end);
 
                             //- Using iteration based coupling
@@ -521,6 +533,18 @@
                             end[0] = (end[0] * threeDInterfaces.refLength);
                             end[1] = (end[1] * threeDInterfaces.refLength);
                             end[2] = (end[2] * threeDInterfaces.refLength);
+
+                            vector boundReduce;
+                            boundReduce[0] = (end[0] - start[0]) * 1e-6;
+                            boundReduce[1] = (end[1] - start[1]) * 1e-6;
+                            boundReduce[2] = (end[2] - start[2]) * 1e-6;
+
+                            start[0] += boundReduce[0];
+                            start[1] += boundReduce[1];
+                            start[2] += boundReduce[2];
+                            end[0] -= boundReduce[0];
+                            end[1] -= boundReduce[1];
+                            end[2] -= boundReduce[2];
 
                             mui::geometry::box3d region_3d(start, end);
 

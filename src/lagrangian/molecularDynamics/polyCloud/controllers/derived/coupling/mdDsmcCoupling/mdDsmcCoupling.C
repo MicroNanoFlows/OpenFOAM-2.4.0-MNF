@@ -952,7 +952,7 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
                 for (size_t pts = 0; pts < rcvPoints_[ifacepts].size(); pts++)
                 {
                     point checkedPosition((rcvPoints_[ifacepts][pts][0] / rU_.refLength()), (rcvPoints_[ifacepts][pts][1] / rU_.refLength()), (rcvPoints_[ifacepts][pts][2] / rU_.refLength()));
-
+/*
                     if(couplingRegion_)
                     {
                         if(checkedPosition[0] < couplingRegionMin_[0])
@@ -982,7 +982,7 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
                             checkedPosition[2] = couplingRegionMax_[2];
                         }
                     }
-
+*/
                     const label molId = findIndex(molNames_, rcvMolType_[ifacepts][pts]);
 
                     vector velocity;
