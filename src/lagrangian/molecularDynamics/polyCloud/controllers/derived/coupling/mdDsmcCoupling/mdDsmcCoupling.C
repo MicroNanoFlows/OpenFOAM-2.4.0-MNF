@@ -229,6 +229,8 @@ mdDsmcCoupling::mdDsmcCoupling
         regionMaxFound = true;
     }
 
+    const cellList& cells = mesh_.cells();
+
     if((regionMinFound && !regionMaxFound) || (regionMaxFound && !regionMinFound))
     {
         FatalErrorIn("mdDsmcCoupling::mdDsmcCoupling()")
@@ -259,6 +261,88 @@ mdDsmcCoupling::mdDsmcCoupling
         {
             sendingRegion_ = false;
             receivingRegion_ = false;
+        }
+        else //- Overlap between mesh bounds found, so check at cell level
+        {
+            const cellList& cells = mesh_.cells();
+
+            point cellMin;
+            point cellMax;
+            bool intersectCell = false;
+
+            //- Determine which cells the coupling region intersects
+            forAll(cells, cell)
+            {
+                const labelList& pointList = mesh_.cellPoints(cell);
+
+                cellMin[0] = VGREAT;
+                cellMin[1] = VGREAT;
+                cellMin[2] = VGREAT;
+                cellMax[0] = -VSMALL;
+                cellMax[1] = -VSMALL;
+                cellMax[2] = -VSMALL;
+
+                forAll(pointList, cellPoint)
+                {
+                    if(meshPoints[pointList[cellPoint]][0] < cellMin[0])
+                    {
+                        cellMin[0] = meshPoints[pointList[cellPoint]][0];
+                    }
+
+                    if(meshPoints[pointList[cellPoint]][0] > cellMax[0])
+                    {
+                        cellMax[0] = meshPoints[pointList[cellPoint]][0];
+                    }
+
+                    if(meshPoints[pointList[cellPoint]][1] < cellMin[1])
+                    {
+                        cellMin[1] = meshPoints[pointList[cellPoint]][1];
+                    }
+
+                    if(meshPoints[pointList[cellPoint]][1] > cellMax[1])
+                    {
+                        cellMax[1] = meshPoints[pointList[cellPoint]][1];
+                    }
+
+                    if(meshPoints[pointList[cellPoint]][2] < cellMin[2])
+                    {
+                        cellMin[2] = meshPoints[pointList[cellPoint]][2];
+                    }
+
+                    if(meshPoints[pointList[cellPoint]][2] > cellMax[2])
+                    {
+                        cellMax[2] = meshPoints[pointList[cellPoint]][2];
+                    }
+                }
+
+                vector cellHalfWidth(((cellMax[0] - cellMin[0]) * 0.5),
+                                     ((cellMax[1] - cellMin[1]) * 0.5),
+                                     ((cellMax[2] - cellMin[2]) * 0.5));
+                point cellCentre(cellMin[0] + cellHalfWidth[0],
+                                 cellMin[1] + cellHalfWidth[1],
+                                 cellMin[2] + cellHalfWidth[2]);
+
+                bool overlap = true;
+
+                //- Check if cell overlaps boundary
+                if ((std::fabs(cellCentre[0] - couplingRegionCentre[0]) > (cellHalfWidth[0] + couplingRegionHalfWidth[0])) ||
+                    (std::fabs(cellCentre[1] - couplingRegionCentre[1]) > (cellHalfWidth[1] + couplingRegionHalfWidth[1])) ||
+                    (std::fabs(cellCentre[2] - couplingRegionCentre[2]) > (cellHalfWidth[2] + couplingRegionHalfWidth[2])))
+                {
+                    overlap = false;
+                }
+
+                if(overlap)
+                {
+                    intersectCell = true;
+                }
+            }
+
+            if(!intersectCell)
+            {
+                sendingRegion_ = false;
+                receivingRegion_ = false;
+            }
         }
     }
 
@@ -309,8 +393,6 @@ mdDsmcCoupling::mdDsmcCoupling
         boundNormFound = true;
     }
 
-    const cellList& cells = mesh_.cells();
-
     if((boundMinFound && !boundMaxFound && !boundNormFound) ||
        (boundMaxFound && !boundMinFound && !boundNormFound) ||
        (boundNormFound && !boundMinFound && !boundMaxFound))
@@ -342,7 +424,7 @@ mdDsmcCoupling::mdDsmcCoupling
         point cellMin;
         point cellMax;
 
-        //- Determine which cells the coupling region intersects
+        //- Determine which cells the coupling boundary intersects
         forAll(cells, cell)
         {
             const labelList& pointList = mesh_.cellPoints(cell);

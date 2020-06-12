@@ -61,8 +61,6 @@ dsmcMdCoupling::dsmcMdCoupling
 #endif
     sendingRegion_(false),
     receivingRegion_(false),
-    sendingBound_(false),
-    receivingBound_(false),
     couplingBounds_(false),
     couplingRegion_(false),
     couplingRegionMin_(vector::zero),
@@ -137,13 +135,11 @@ dsmcMdCoupling::dsmcMdCoupling
     if((sendInterfaces_.size() != 0))
     {
         sendingRegion_ = true;
-        sendingBound_ = true;
     }
 
     if((recvInterfaces_.size() != 0))
     {
         receivingRegion_ = true;
-        receivingBound_ = true;
     }
 #else
     FatalErrorIn("dsmcMdCoupling::dsmcMdCoupling()")
@@ -393,99 +389,6 @@ dsmcMdCoupling::dsmcMdCoupling
     else
     {
         couplingBounds_ = true;
-
-        const cellList& cells = mesh_.cells();
-
-        vector meshHalfWidth(((meshMax_[0] - meshMin_[0]) * 0.5),
-                             ((meshMax_[1] - meshMin_[1]) * 0.5),
-                             ((meshMax_[2] - meshMin_[2]) * 0.5));
-        vector couplingRegionHalfWidth(((couplingRegionMax_[0] - couplingRegionMin_[0]) * 0.5),
-                                   ((couplingRegionMax_[1] - couplingRegionMin_[1]) * 0.5),
-                                   ((couplingRegionMax_[2] - couplingRegionMin_[2]) * 0.5));
-        point meshCentre(meshMin_[0] + meshHalfWidth[0],
-                         meshMin_[1] + meshHalfWidth[1],
-                         meshMin_[2] + meshHalfWidth[2]);
-        point couplingRegionCentre(couplingRegionMin_[0] + couplingRegionHalfWidth[0],
-                                   couplingRegionMin_[1] + couplingRegionHalfWidth[1],
-                                   couplingRegionMin_[2] + couplingRegionHalfWidth[2]);
-
-        point cellMin;
-        point cellMax;
-        bool intersectCell = false;
-
-        //- Determine which cells the coupling region intersects
-        forAll(cells, cell)
-        {
-            const labelList& pointList = mesh_.cellPoints(cell);
-
-            cellMin[0] = VGREAT;
-            cellMin[1] = VGREAT;
-            cellMin[2] = VGREAT;
-            cellMax[0] = -VSMALL;
-            cellMax[1] = -VSMALL;
-            cellMax[2] = -VSMALL;
-
-            forAll(pointList, cellPoint)
-            {
-                if(meshPoints[pointList[cellPoint]][0] < cellMin[0])
-                {
-                    cellMin[0] = meshPoints[pointList[cellPoint]][0];
-                }
-
-                if(meshPoints[pointList[cellPoint]][0] > cellMax[0])
-                {
-                    cellMax[0] = meshPoints[pointList[cellPoint]][0];
-                }
-
-                if(meshPoints[pointList[cellPoint]][1] < cellMin[1])
-                {
-                    cellMin[1] = meshPoints[pointList[cellPoint]][1];
-                }
-
-                if(meshPoints[pointList[cellPoint]][1] > cellMax[1])
-                {
-                    cellMax[1] = meshPoints[pointList[cellPoint]][1];
-                }
-
-                if(meshPoints[pointList[cellPoint]][2] < cellMin[2])
-                {
-                    cellMin[2] = meshPoints[pointList[cellPoint]][2];
-                }
-
-                if(meshPoints[pointList[cellPoint]][2] > cellMax[2])
-                {
-                    cellMax[2] = meshPoints[pointList[cellPoint]][2];
-                }
-            }
-
-            vector cellHalfWidth(((cellMax[0] - cellMin[0]) * 0.5),
-                                 ((cellMax[1] - cellMin[1]) * 0.5),
-                                 ((cellMax[2] - cellMin[2]) * 0.5));
-            point cellCentre(cellMin[0] + cellHalfWidth[0],
-                             cellMin[1] + cellHalfWidth[1],
-                             cellMin[2] + cellHalfWidth[2]);
-
-            bool overlap = true;
-
-            //- Check if cell overlaps boundary
-            if ((std::fabs(cellCentre[0] - couplingRegionCentre[0]) > (cellHalfWidth[0] + couplingRegionHalfWidth[0])) ||
-                (std::fabs(cellCentre[1] - couplingRegionCentre[1]) > (cellHalfWidth[1] + couplingRegionHalfWidth[1])) ||
-                (std::fabs(cellCentre[2] - couplingRegionCentre[2]) > (cellHalfWidth[2] + couplingRegionHalfWidth[2])))
-            {
-                overlap = false;
-            }
-
-            if(overlap)
-            {
-                intersectCell = true;
-            }
-        }
-
-        if(!intersectCell)
-        {
-            sendingBound_ = false;
-            receivingBound_ = false;
-        }
     }
 #ifdef USE_MUI
     //Initialise exact time sampler for MUI
@@ -804,52 +707,46 @@ void dsmcMdCoupling::receiveCoupledRegionForce()
 void dsmcMdCoupling::sendCoupledParcels()
 {
 #ifdef USE_MUI
-    if(sendingBound_)
-    {
-        dsmcParcel* parc = NULL;
-
-        forAll(sendInterfaces_, iface)
-        {
-            label pushed = 0;
-            const DynamicList<dsmcCloud::coupledParc>& parcsToSend = cloud_.coupledParcels();
-
-            if(parcsToSend.size() > 0)
-            {
-                forAll(parcsToSend, parcs)
-                {
-                    //- Only send the parcel if the sending interface defined in the boundary matches current interface
-                    if(findIndex(parcsToSend[parcs].sendingInterfaces, sendInterfaceNames_[iface]) != -1)
-                    {
-                        parc = parcsToSend[parcs].parcel;
-
-                        // Get the parcel centre
-                        mui::point3d parcCentre;
-                        parcCentre[0] = parc->position()[0];
-                        parcCentre[1] = parc->position()[1];
-                        parcCentre[2] = parc->position()[2];
-
-                        // Push parcel type
-                        sendInterfaces_[iface]->push("type_bound", parcCentre, static_cast<std::string>(cloud_.typeIdList()[parc->typeId()]));
-
-                        // Push parcel velocity
-                        sendInterfaces_[iface]->push("vel_x_bound", parcCentre, parc->U()[0]);
-                        sendInterfaces_[iface]->push("vel_y_bound", parcCentre, parc->U()[1]);
-                        sendInterfaces_[iface]->push("vel_z_bound", parcCentre, parc->U()[2]);
-
-                        pushed++;
-                    }
-                }
-            }
-
-            if(pushed > 0)
-            {
-                std::cout << "    Coupling parcels pushed         = " << pushed << std::endl;
-            }
-        }
-	}
+    dsmcParcel* parc = NULL;
 
     forAll(sendInterfaces_, iface)
     {
+        label pushed = 0;
+        const DynamicList<dsmcCloud::coupledParc>& parcsToSend = cloud_.coupledParcels();
+
+        if(parcsToSend.size() > 0)
+        {
+            forAll(parcsToSend, parcs)
+            {
+                //- Only send the parcel if the sending interface defined in the boundary matches current interface
+                if(findIndex(parcsToSend[parcs].sendingInterfaces, sendInterfaceNames_[iface]) != -1)
+                {
+                    parc = parcsToSend[parcs].parcel;
+
+                    // Get the parcel centre
+                    mui::point3d parcCentre;
+                    parcCentre[0] = parc->position()[0];
+                    parcCentre[1] = parc->position()[1];
+                    parcCentre[2] = parc->position()[2];
+
+                    // Push parcel type
+                    sendInterfaces_[iface]->push("type_bound", parcCentre, static_cast<std::string>(cloud_.typeIdList()[parc->typeId()]));
+
+                    // Push parcel velocity
+                    sendInterfaces_[iface]->push("vel_x_bound", parcCentre, parc->U()[0]);
+                    sendInterfaces_[iface]->push("vel_y_bound", parcCentre, parc->U()[1]);
+                    sendInterfaces_[iface]->push("vel_z_bound", parcCentre, parc->U()[2]);
+
+                    pushed++;
+                }
+            }
+        }
+
+        if(pushed > 0)
+        {
+            std::cout << "    Coupling parcels pushed         = " << pushed << std::endl;
+        }
+
         // Commit (transmit) values to the MUI interface
         sendInterfaces_[iface]->commit(currIteration_);
     }
@@ -885,68 +782,65 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
         }
     }
 
-    if(receivingBound_)
+    //- Go through received values and find any that are not of the type set to be received
+    forAll(rcvParcType, ifacepts)
     {
-        //- Go through received values and find any that are not of the type set to be received
-        forAll(rcvParcType, ifacepts)
+        if(rcvParcType[ifacepts].size() > 0)
         {
-            if(rcvParcType[ifacepts].size() > 0)
-            {
-                std::vector<std::string>::iterator rcvParcTypeIt;
-                std::vector<mui::point3d>::iterator rcvPointsIt = rcvPoints[ifacepts].begin();
-                std::vector<scalar>::iterator rcvVelXIt = rcvVelX[ifacepts].begin();
-                std::vector<scalar>::iterator rcvVelYIt = rcvVelY[ifacepts].begin();
-                std::vector<scalar>::iterator rcvVelZIt = rcvVelZ[ifacepts].begin();
+            std::vector<std::string>::iterator rcvParcTypeIt;
+            std::vector<mui::point3d>::iterator rcvPointsIt = rcvPoints[ifacepts].begin();
+            std::vector<scalar>::iterator rcvVelXIt = rcvVelX[ifacepts].begin();
+            std::vector<scalar>::iterator rcvVelYIt = rcvVelY[ifacepts].begin();
+            std::vector<scalar>::iterator rcvVelZIt = rcvVelZ[ifacepts].begin();
 
-                for (rcvParcTypeIt = rcvParcType[ifacepts].begin(); rcvParcTypeIt != rcvParcType[ifacepts].end(); rcvParcTypeIt++) {
-                    const label parcId = findIndex(typeNames_, *rcvParcTypeIt);
+            for (rcvParcTypeIt = rcvParcType[ifacepts].begin(); rcvParcTypeIt != rcvParcType[ifacepts].end(); rcvParcTypeIt++) {
+                const label parcId = findIndex(typeNames_, *rcvParcTypeIt);
 
-                    if(parcId == -1) //- parcId not found in local list as one to receive so store it as one to remove from lists
-                    {
-                        rcvParcType[ifacepts].erase(rcvParcTypeIt--);
-                        rcvPoints[ifacepts].erase(rcvPointsIt--);
-                        rcvVelX[ifacepts].erase(rcvVelXIt--);
-                        rcvVelY[ifacepts].erase(rcvVelYIt--);
-                        rcvVelZ[ifacepts].erase(rcvVelZIt--);
-                    }
-
-                    rcvPointsIt++;
-                    rcvVelXIt++;
-                    rcvVelYIt++;
-                    rcvVelZIt++;
-                }
-            }
-        }
-
-        label inserted = 0;
-
-        // Iterate through all received points
-        forAll(rcvPoints, ifacepts)
-        {
-            if(rcvPoints[ifacepts].size() > 0)
-            {
-                for (size_t pts = 0; pts < rcvPoints[ifacepts].size(); pts++)
+                if(parcId == -1) //- parcId not found in local list as one to receive so store it as one to remove from lists
                 {
-                    point position(rcvPoints[ifacepts][pts][0], rcvPoints[ifacepts][pts][1], rcvPoints[ifacepts][pts][2]);
-
-                    vector velocity;
-                    velocity[0] = rcvVelX[ifacepts][pts];
-                    velocity[1] = rcvVelY[ifacepts][pts];
-                    velocity[2] = rcvVelZ[ifacepts][pts];
-
-                    const label typeIndex = findIndex(typeNames_, rcvParcType[ifacepts][pts]);
-
-                    insertParcel(position, velocity, typeIndex);
-                    parcelAdded = true;
-                    inserted++;
+                    rcvParcType[ifacepts].erase(rcvParcTypeIt--);
+                    rcvPoints[ifacepts].erase(rcvPointsIt--);
+                    rcvVelX[ifacepts].erase(rcvVelXIt--);
+                    rcvVelY[ifacepts].erase(rcvVelYIt--);
+                    rcvVelZ[ifacepts].erase(rcvVelZIt--);
                 }
+
+                rcvPointsIt++;
+                rcvVelXIt++;
+                rcvVelYIt++;
+                rcvVelZIt++;
             }
         }
+    }
 
-        if(inserted > 0)
+    label inserted = 0;
+
+    // Iterate through all received points
+    forAll(rcvPoints, ifacepts)
+    {
+        if(rcvPoints[ifacepts].size() > 0)
         {
-            std::cout << "    Coupling parcels inserted       = " << inserted << std::endl;
+            for (size_t pts = 0; pts < rcvPoints[ifacepts].size(); pts++)
+            {
+                point position(rcvPoints[ifacepts][pts][0], rcvPoints[ifacepts][pts][1], rcvPoints[ifacepts][pts][2]);
+
+                vector velocity;
+                velocity[0] = rcvVelX[ifacepts][pts];
+                velocity[1] = rcvVelY[ifacepts][pts];
+                velocity[2] = rcvVelZ[ifacepts][pts];
+
+                const label typeIndex = findIndex(typeNames_, rcvParcType[ifacepts][pts]);
+
+                insertParcel(position, velocity, typeIndex);
+                parcelAdded = true;
+                inserted++;
+            }
         }
+    }
+
+    if(inserted > 0)
+    {
+        std::cout << "    Coupling parcels inserted       = " << inserted << std::endl;
     }
 #endif
 	return parcelAdded;

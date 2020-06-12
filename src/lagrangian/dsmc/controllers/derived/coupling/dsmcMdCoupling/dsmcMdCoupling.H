@@ -83,7 +83,6 @@ private:
         DynamicList<mui::uniface<mui::config_3d>* > sendInterfaces_; //- 3D MUI interfaces to send through
 #endif
         bool sendingRegion_;          //- Determine whether this controller will send for the fixed region
-        bool sendingBound_;           //- Determine whether this controller will send for the fixed boundary
         DynamicList<word> sendInterfaceNames_;
 
         //- Receiving properties
@@ -91,7 +90,6 @@ private:
         DynamicList<mui::uniface<mui::config_3d>* > recvInterfaces_; //- 3D MUI interfaces to receive from
 #endif
         bool receivingRegion_;          //- Determine whether this controller will receive for the fixed region
-        bool receivingBound_;           //- Determine whether this controller will receive for the fixed boundary
         DynamicList<word> recvInterfaceNames_;
 
         DynamicList<List<label> > parcelsInCellHistory_;
