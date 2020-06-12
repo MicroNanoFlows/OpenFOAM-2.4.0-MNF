@@ -332,7 +332,7 @@ dsmcMdCoupling::dsmcMdCoupling
 
             if(regionCells_.size() > 0)
             {
-                std::cout << "Region intersecting cell count: " << regionCells_.size() << std::endl;
+                std::cout << "[dsmcFoamPlus]: Coupling region intersecting cells: " << regionCells_.size() << std::endl;
             }
         }
     }
@@ -513,14 +513,14 @@ void dsmcMdCoupling::initialConfiguration()
     {
         if(Pstream::master())
         {
-            std::cout << "Initial temperature: " << initTemperature_ << std::endl;
-            std::cout << "Initial average linear KE per parcel: " << initKe_ << std::endl;
+            std::cout << "[dsmcFoamPlus]: Initial temperature: " << initTemperature_ << std::endl;
+            std::cout << "[dsmcFoamPlus]: Initial average linear KE per parcel: " << initKe_ << std::endl;
         }
     }
     else
     {
-        std::cout << "Initial temperature: " << initTemperature_ << std::endl;
-        std::cout << "Initial average linear KE per parcel: " << initKe_ << std::endl;
+        std::cout << "[dsmcFoamPlus]: Initial temperature: " << initTemperature_ << std::endl;
+        std::cout << "[dsmcFoamPlus]: Initial average linear KE per parcel: " << initKe_ << std::endl;
     }
 
     sendCoupledRegion(true); // Send ghost parcels in coupled regions at time = startTime
@@ -532,13 +532,11 @@ void dsmcMdCoupling::controlParcelsBeforeCollisions(label stage)
     {
         currIteration_++; //- Increment current iteration
 
-        /*
         if(receiveCoupledMolecules()) // Receive any molecules from MD coupling boundary (blocking)
         {
             // Update cell occupancy if parcels were received and inserted
             cloud_.reBuildCellOccupancy();
         }
-        */
     }
     else if (stage == 2) //- Send parcels that were deleted by coupling boundary during evolve() in dsmcCloud
     {
@@ -929,24 +927,18 @@ bool dsmcMdCoupling::receiveCoupledMolecules()
             {
                 for (size_t pts = 0; pts < rcvPoints[ifacepts].size(); pts++)
                 {
-                    point checkedPosition(rcvPoints[ifacepts][pts][0], rcvPoints[ifacepts][pts][1], rcvPoints[ifacepts][pts][2]);
+                    point position(rcvPoints[ifacepts][pts][0], rcvPoints[ifacepts][pts][1], rcvPoints[ifacepts][pts][2]);
 
-                    label cell = mesh_.findCell(checkedPosition);
+                    vector velocity;
+                    velocity[0] = rcvVelX[ifacepts][pts];
+                    velocity[1] = rcvVelY[ifacepts][pts];
+                    velocity[2] = rcvVelZ[ifacepts][pts];
 
-                    // Attempt insertion/update only if received molecule falls within local mesh extents
-                    if(cell != -1)
-                    {
-                        vector velocity;
-                        velocity[0] = rcvVelX[ifacepts][pts];
-                        velocity[1] = rcvVelY[ifacepts][pts];
-                        velocity[2] = rcvVelZ[ifacepts][pts];
+                    const label typeIndex = findIndex(typeNames_, rcvParcType[ifacepts][pts]);
 
-                        const label typeIndex = findIndex(typeNames_, rcvParcType[ifacepts][pts]);
-
-                        insertParcel(checkedPosition, velocity, typeIndex);
-                        parcelAdded = true;
-                        inserted++;
-                    }
+                    insertParcel(position, velocity, typeIndex);
+                    parcelAdded = true;
+                    inserted++;
                 }
             }
         }
@@ -1100,6 +1092,10 @@ void dsmcMdCoupling::insertParcel
             wallVectors,
             vibLevel 
         );
+    }
+    else
+    {
+        std::cout << "[dsmcFoamPlus]: Warning - parcel not inserted as position outside of local mesh" << std::endl;
     }
 }
 

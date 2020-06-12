@@ -336,7 +336,7 @@ mdDsmcCoupling::mdDsmcCoupling
                                    couplingRegionMin_[1] + couplingRegionHalfWidth[1],
                                    couplingRegionMin_[2] + couplingRegionHalfWidth[2]);
 
-        // Small (1e-15 for double) correction for boundary particles used during insertion perturbation)
+        // Small correction for boundary particles used during insertion perturbation algorithm
         boundCorr_ = SMALL;
 
         point cellMin;
@@ -412,7 +412,7 @@ mdDsmcCoupling::mdDsmcCoupling
 
         if(intersectingCells_.size() > 0)
         {
-            std::cout << "Coupling boundary intersecting cell count: " << intersectingCells_.size() << std::endl;
+            std::cout << "[mdFoamPlus]: Coupling boundary intersecting cells: " << intersectingCells_.size() << std::endl;
         }
         else //- No cells found that overlap boundary so disable
         {
@@ -495,14 +495,14 @@ bool mdDsmcCoupling::initialConfiguration()
     {
         if(Pstream::master())
         {
-            std::cout << "Initial MD temperature: " << initTemperature_ << std::endl;
-            std::cout << "Initial MD average linear KE per molecule: " << initKe_ << std::endl;
+            std::cout << "[mdFoamPlus]: Initial MD temperature: " << initTemperature_ << std::endl;
+            std::cout << "[mdFoamPlus]: Initial MD average linear KE per molecule: " << initKe_ << std::endl;
         }
     }
     else
     {
-        std::cout << "Initial MD temperature: " << initTemperature_ << std::endl;
-        std::cout << "Initial MD average linear KE per molecule: " << initKe_ << std::endl;
+        std::cout << "[mdFoamPlus]: Initial MD temperature: " << initTemperature_ << std::endl;
+        std::cout << "[mdFoamPlus]: Initial MD average linear KE per molecule: " << initKe_ << std::endl;
     }
 
     // Distribute received temperature from DSMC side to all MPI ranks
@@ -518,14 +518,14 @@ bool mdDsmcCoupling::initialConfiguration()
         {
             if(Pstream::master())
             {
-                std::cout << "Initial DSMC temperature: " << initTemperatureDSMC_ << std::endl;
-                std::cout << "Initial DSMC average linear KE per parcel: " << initKeDSMC_ << std::endl;
+                std::cout << "[mdFoamPlus]: Initial DSMC temperature: " << initTemperatureDSMC_ << std::endl;
+                std::cout << "[mdFoamPlus]: Initial DSMC average linear KE per parcel: " << initKeDSMC_ << std::endl;
             }
         }
         else
         {
-            std::cout << "Initial DSMC temperature: " << initTemperatureDSMC_ << std::endl;
-            std::cout << "Initial DSMC average linear KE per parcel: " << initKeDSMC_ << std::endl;
+            std::cout << "[mdFoamPlus]: Initial DSMC temperature: " << initTemperatureDSMC_ << std::endl;
+            std::cout << "[mdFoamPlus]: Initial DSMC average linear KE per parcel: " << initKeDSMC_ << std::endl;
         }
 
         scalar scaleValue = 0;
@@ -558,14 +558,14 @@ bool mdDsmcCoupling::initialConfiguration()
         {
             if(Pstream::master())
             {
-                std::cout << "Scaled MD temperature: " << newInitTemperature << std::endl;
-                std::cout << "Scaled MD average linear KE per molecule: " << newLinearKE << std::endl;
+                std::cout << "[mdFoamPlus]: Scaled MD temperature: " << newInitTemperature << std::endl;
+                std::cout << "[mdFoamPlus]: Scaled MD average linear KE per molecule: " << newLinearKE << std::endl;
             }
         }
         else
         {
-            std::cout << "Scaled MD temperature: " << newInitTemperature << std::endl;
-            std::cout << "Scaled MD average linear KE per molecule: " << newLinearKE << std::endl;
+            std::cout << "[mdFoamPlus]: Scaled MD temperature: " << newInitTemperature << std::endl;
+            std::cout << "[mdFoamPlus]: Scaled MD average linear KE per molecule: " << newLinearKE << std::endl;
         }
     }
 
@@ -637,7 +637,7 @@ bool mdDsmcCoupling::controlAfterMove(label stage)
 
                         if(nparcsRcv_ != nmolsInserted.nmolsInserted)
                         {
-                            std::cout << "Warning: Number of boundary parcels inserted (" << nmolsInserted.nmolsInserted << ") not equal to number received (" << nparcsRcv_ << ")" << std::endl;
+                            std::cout << "[mdFoamPlus]: Warning - number of boundary parcels inserted (" << nmolsInserted.nmolsInserted << ") not equal to number received (" << nparcsRcv_ << ")" << std::endl;
                         }
                     }
                     else
@@ -666,7 +666,7 @@ bool mdDsmcCoupling::controlAfterMove(label stage)
 
                     if(nparcsRcv_ != nmolsInserted.nmolsInserted)
                     {
-                        std::cout << "Warning: Number of boundary parcels inserted (" << nmolsInserted.nmolsInserted << ") not equal to number received (" << nparcsRcv_ << ")" << std::endl;
+                        std::cout << "[mdFoamPlus]: Warning - number of boundary parcels inserted (" << nmolsInserted.nmolsInserted << ") not equal to number received (" << nparcsRcv_ << ")" << std::endl;
                     }
                 }
 	        }
@@ -871,42 +871,40 @@ bool mdDsmcCoupling::receiveCoupledRegion(bool init)
                 {
                     point checkedPosition((rcvPoints_[ifacepts][pts][0] / rU_.refLength()), (rcvPoints_[ifacepts][pts][1] / rU_.refLength()), (rcvPoints_[ifacepts][pts][2] / rU_.refLength()));
 
-                    label cell = mesh_.findCell(checkedPosition);
+                    const label molId = findIndex(molNames_, rcvMolType_[ifacepts][pts]);
 
-                    // Attempt insertion/update only if received molecule falls within local mesh extents
-                    if(cell != -1)
+                    vector velocity;
+                    velocity[0] = rcvVelX_[ifacepts][pts] / rU_.refVelocity();
+                    velocity[1] = rcvVelY_[ifacepts][pts] / rU_.refVelocity();
+                    velocity[2] = rcvVelZ_[ifacepts][pts] / rU_.refVelocity();
+
+                    if(molHistory_[ifacepts][pts] == NULL) //- This molecule is new so insert it
                     {
-                        const label molId = findIndex(molNames_, rcvMolType_[ifacepts][pts]);
+                        newMol = insertMolecule(checkedPosition, molIds_[molId], true, velocity);
+                        molHistory_[ifacepts][pts] = newMol.mol;
 
-                        vector velocity;
-                        velocity[0] = rcvVelX_[ifacepts][pts] / rU_.refVelocity();
-                        velocity[1] = rcvVelY_[ifacepts][pts] / rU_.refVelocity();
-                        velocity[2] = rcvVelZ_[ifacepts][pts] / rU_.refVelocity();
-
-                        if(molHistory_[ifacepts][pts] == NULL) //- This molecule is new so insert it
+                        if(newMol.mol != NULL)
                         {
-                            newMol = insertMolecule(checkedPosition, molIds_[molId], true, velocity);
-                            molHistory_[ifacepts][pts] = newMol.mol;
                             molChanged = true;
                         }
-                        else //- This molecule already exists, so just update its values
-                        {
-                            molHistory_[ifacepts][pts]->position()[0] = checkedPosition[0];
-                            molHistory_[ifacepts][pts]->position()[1] = checkedPosition[1];
-                            molHistory_[ifacepts][pts]->position()[2] = checkedPosition[2];
-                            molHistory_[ifacepts][pts]->specialPosition()[0] = checkedPosition[0];
-                            molHistory_[ifacepts][pts]->specialPosition()[1] = checkedPosition[1];
-                            molHistory_[ifacepts][pts]->specialPosition()[2] = checkedPosition[2];
-
-                            molHistory_[ifacepts][pts]->v()[0] = velocity[0];
-                            molHistory_[ifacepts][pts]->v()[1] = velocity[1];
-                            molHistory_[ifacepts][pts]->v()[2] = velocity[2];
-
-                            molHistory_[ifacepts][pts]->updateAfterMove(cP, trackTime);
-                        }
-
-                        molCount++;
                     }
+                    else //- This molecule already exists, so just update its values
+                    {
+                        molHistory_[ifacepts][pts]->position()[0] = checkedPosition[0];
+                        molHistory_[ifacepts][pts]->position()[1] = checkedPosition[1];
+                        molHistory_[ifacepts][pts]->position()[2] = checkedPosition[2];
+                        molHistory_[ifacepts][pts]->specialPosition()[0] = checkedPosition[0];
+                        molHistory_[ifacepts][pts]->specialPosition()[1] = checkedPosition[1];
+                        molHistory_[ifacepts][pts]->specialPosition()[2] = checkedPosition[2];
+
+                        molHistory_[ifacepts][pts]->v()[0] = velocity[0];
+                        molHistory_[ifacepts][pts]->v()[1] = velocity[1];
+                        molHistory_[ifacepts][pts]->v()[2] = velocity[2];
+
+                        molHistory_[ifacepts][pts]->updateAfterMove(cP, trackTime);
+                    }
+
+                    molCount++;
                 }
             }
         }
@@ -1987,6 +1985,7 @@ mdDsmcCoupling::moleculeInsert mdDsmcCoupling::insertMolecule
     }
     else //Failed to find the cell in the mesh to insert (shouldn't happen), return null
     {
+        std::cout << "[mdFoamPlus]: Warning - molecule not inserted as position outside of local mesh" << std::endl;
         return newInsert;
     }
 }
