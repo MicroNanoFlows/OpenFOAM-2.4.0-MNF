@@ -296,6 +296,15 @@
                             end[0] = (end[0] * twoDInterfaces.refLength);
                             end[1] = (end[1] * twoDInterfaces.refLength);
 
+                            vector boundReduce;
+                            boundReduce[0] = (end[0] - start[0]) * 1e-6;
+                            boundReduce[1] = (end[1] - start[1]) * 1e-6;
+
+                            start[0] += boundReduce[0];
+                            start[1] += boundReduce[1];
+                            end[0] -= boundReduce[0];
+                            end[1] -= boundReduce[1];
+
                             mui::geometry::box2d region_2d(start, end);
 
                             //- Using iteration based coupling
@@ -388,6 +397,15 @@
                             start[1] = (start[1] * twoDInterfaces.refLength);
                             end[0] = (end[0] * twoDInterfaces.refLength);
                             end[1] = (end[1] * twoDInterfaces.refLength);
+
+                            vector boundReduce;
+                            boundReduce[0] = (end[0] - start[0]) * 1e-6;
+                            boundReduce[1] = (end[1] - start[1]) * 1e-6;
+
+                            start[0] += boundReduce[0];
+                            start[1] += boundReduce[1];
+                            end[0] -= boundReduce[0];
+                            end[1] -= boundReduce[1];
 
                             mui::geometry::box2d region_2d(start, end);
 
