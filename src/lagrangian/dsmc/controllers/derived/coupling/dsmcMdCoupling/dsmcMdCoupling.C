@@ -532,11 +532,13 @@ void dsmcMdCoupling::controlParcelsBeforeCollisions(label stage)
     {
         currIteration_++; //- Increment current iteration
 
+        /*
         if(receiveCoupledMolecules()) // Receive any molecules from MD coupling boundary (blocking)
         {
             // Update cell occupancy if parcels were received and inserted
             cloud_.reBuildCellOccupancy();
         }
+        */
     }
     else if (stage == 2) //- Send parcels that were deleted by coupling boundary during evolve() in dsmcCloud
     {

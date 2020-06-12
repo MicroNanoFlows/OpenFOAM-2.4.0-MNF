@@ -608,7 +608,7 @@ bool mdDsmcCoupling::controlAfterMove(label stage)
 	}
 	else if (stage == 2) // Receive any molecules coupling boundary (blocking)
 	{
-	    //nparcsRcv_ = receiveCoupledParcels();
+	    nparcsRcv_ = receiveCoupledParcels();
 	}
 	else if (stage == 3) // Receive ghost molecules in coupled region (blocking)
 	{
