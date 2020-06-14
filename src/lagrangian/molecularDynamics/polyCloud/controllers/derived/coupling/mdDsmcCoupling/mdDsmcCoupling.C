@@ -408,15 +408,15 @@ mdDsmcCoupling::mdDsmcCoupling
         vector meshHalfWidth(((meshMax_[0] - meshMin_[0]) * 0.5),
                              ((meshMax_[1] - meshMin_[1]) * 0.5),
                              ((meshMax_[2] - meshMin_[2]) * 0.5));
-        vector couplingRegionHalfWidth(((couplingRegionMax_[0] - couplingRegionMin_[0]) * 0.5),
-                                   ((couplingRegionMax_[1] - couplingRegionMin_[1]) * 0.5),
-                                   ((couplingRegionMax_[2] - couplingRegionMin_[2]) * 0.5));
+        vector couplingBoundHalfWidth(((couplingBoundMax_[0] - couplingBoundMin_[0]) * 0.5),
+                                   ((couplingBoundMax_[1] - couplingBoundMin_[1]) * 0.5),
+                                   ((couplingBoundMax_[2] - couplingBoundMin_[2]) * 0.5));
         point meshCentre(meshMin_[0] + meshHalfWidth[0],
                          meshMin_[1] + meshHalfWidth[1],
                          meshMin_[2] + meshHalfWidth[2]);
-        point couplingRegionCentre(couplingRegionMin_[0] + couplingRegionHalfWidth[0],
-                                   couplingRegionMin_[1] + couplingRegionHalfWidth[1],
-                                   couplingRegionMin_[2] + couplingRegionHalfWidth[2]);
+        point couplingBoundCentre(couplingBoundMin_[0] + couplingBoundHalfWidth[0],
+                                   couplingBoundMin_[1] + couplingBoundHalfWidth[1],
+                                   couplingBoundMin_[2] + couplingBoundHalfWidth[2]);
 
         // Small correction for boundary particles used during insertion perturbation algorithm
         boundCorr_ = SMALL;
@@ -479,9 +479,9 @@ mdDsmcCoupling::mdDsmcCoupling
             bool overlap = true;
 
             //- Check if cell overlaps boundary
-            if ((std::fabs(cellCentre[0] - couplingRegionCentre[0]) > (cellHalfWidth[0] + couplingRegionHalfWidth[0])) ||
-                (std::fabs(cellCentre[1] - couplingRegionCentre[1]) > (cellHalfWidth[1] + couplingRegionHalfWidth[1])) ||
-                (std::fabs(cellCentre[2] - couplingRegionCentre[2]) > (cellHalfWidth[2] + couplingRegionHalfWidth[2])))
+            if ((std::fabs(cellCentre[0] - couplingBoundCentre[0]) > (cellHalfWidth[0] + couplingBoundHalfWidth[0])) ||
+                (std::fabs(cellCentre[1] - couplingBoundCentre[1]) > (cellHalfWidth[1] + couplingBoundHalfWidth[1])) ||
+                (std::fabs(cellCentre[2] - couplingBoundCentre[2]) > (cellHalfWidth[2] + couplingBoundHalfWidth[2])))
             {
                 overlap = false;
             }
