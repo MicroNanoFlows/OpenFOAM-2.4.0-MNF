@@ -1,0 +1,47 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.4.0-MNF                             |
+|   \\  /    A nd           | Web:      http://www.OpenFOAM.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fieldPropertiesDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+polyFields
+(
+    field
+    {
+        fieldModel	polyOutputProperties;     
+    }
+    
+    field
+    {
+        fieldModel	polyPropertiesZoneBounded;
+      
+        polyPropertiesZoneBoundedProperties
+        {
+            fieldName		Ar;
+            molIds		(Ar);
+            resetAtOutput	on;
+        
+            boxes
+            (
+                box
+                {
+                    startPoint	(294.117647058824 0 0);
+                    endPoint	(441.176470588235 147.058823529412 147.058823529412);
+                }
+            );
+        }
+    }    
+);
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

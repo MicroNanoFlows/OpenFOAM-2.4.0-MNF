@@ -1,0 +1,82 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.4.0-MNF                             |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controllersDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dsmcStateControllers
+(
+);
+
+dsmcFluxControllers
+(
+);
+
+dsmcCouplingControllers
+(
+    controller
+    {
+        couplingControllerModel     dsmcMdCoupling;
+
+        dsmcMdCouplingProperties
+        {
+            typeIds		(Ar);  
+	    couplingRegionMin	(7.966e-7 0 0);
+	    couplingRegionMax	(8e-7 4e-7 4e-7);
+	    couplingBoundMin	(8e-7 0 0); 
+	    couplingBoundMax	(8e-7 4e-7 4e-7);
+	    couplingBoundNorm	(-1 0 0);
+	    output		no;
+        }
+
+	dsmcMdCouplingSending
+	{
+	    sendingInterfaces	(ifs_1);
+	}
+
+	dsmcMdCouplingReceiving
+	{
+	    receivingInterfaces	(ifs_1);
+	}
+    }
+
+    controller
+    {
+        couplingControllerModel     dsmcMdCoupling;
+
+        dsmcMdCouplingProperties
+        {
+            typeIds		(Ar);
+	    couplingRegionMin	(1.2e-6 0 0);
+	    couplingRegionMax	(1.2034e-6 4e-7 4e-7);
+	    couplingBoundMin	(1.2e-6 0 0); 
+	    couplingBoundMax	(1.2e-6 4e-7 4e-7);
+	    couplingBoundNorm	(1 0 0);
+	    output		no;          
+        }
+
+	dsmcMdCouplingSending
+	{
+	    sendingInterfaces	(ifs_2);
+	}
+
+	dsmcMdCouplingReceiving
+	{
+	    receivingInterfaces	(ifs_2);
+	}
+    }
+);    
+
+// ************************************************************************* //

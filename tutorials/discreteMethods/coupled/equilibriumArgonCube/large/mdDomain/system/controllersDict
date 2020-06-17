@@ -1,0 +1,91 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.4.0-MNF                             |
+|   \\  /    A nd           | Web:      http://www.OpenFOAM.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controllersDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+polyStateControllers
+( 
+);
+
+polyFluxControllers
+(
+);
+
+polyCouplingControllers
+(
+    controller
+    {	
+        couplingControllerModel     mdDsmcCoupling;
+
+        mdDsmcCouplingProperties
+        {	   
+            molIds			(Ar);
+	    couplingRegionMin		(9.966e-7 0 0);
+	    couplingRegionMax		(1e-6 5e-7 5e-7);
+	    couplingBoundMin		(1e-6 0 0); 
+	    couplingBoundMax		(1e-6 5e-7 5e-7); 
+	    couplingBoundNorm		(1 0 0);
+	    potentialEnergyInsertLimit	1e-21;
+	    insertIterations		1000;
+	    output			no;
+	    initialVelScaling		yes;
+	    scalingType			linearKE; //temperature or linearKE
+        }
+
+	mdDsmcCouplingSending
+	{
+	    sendingInterfaces	(ifs_1);
+	}
+
+	mdDsmcCouplingReceiving
+	{
+	    receivingInterfaces	(ifs_1);
+	}
+    }
+
+    controller
+    {	
+        couplingControllerModel     mdDsmcCoupling;
+
+        mdDsmcCouplingProperties
+        {	   
+            molIds			(Ar); 
+	    couplingRegionMin		(1.5e-6 0 0);
+	    couplingRegionMax		(1.5034e-6 5e-7 5e-7);
+	    couplingBoundMin		(1.5e-6 0 0); 
+	    couplingBoundMax		(1.5e-6 5e-7 5e-7);
+	    couplingBoundNorm		(-1 0 0);
+	    potentialEnergyInsertLimit	1e-21;
+	    insertIterations		1000;
+	    output			no;
+	    initialVelScaling           yes;
+            scalingType                 linearKE;  //temperature or linearKE
+        }
+
+	mdDsmcCouplingSending
+	{
+	    sendingInterfaces	(ifs_2);
+	}
+
+	mdDsmcCouplingReceiving
+	{
+	    receivingInterfaces	(ifs_2);
+	}
+    }
+);    
+
+
+// ************************************************************************* //

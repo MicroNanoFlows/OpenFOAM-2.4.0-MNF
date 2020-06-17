@@ -1,0 +1,61 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.4.0-MNF                             |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      boundariesDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dsmcPatchBoundaries
+(
+    boundary
+    {
+        boundaryModel dsmcCouplingPatch;
+        
+        dsmcCouplingPatchProperties
+        {
+            typeIds (Ar);
+	    sendingInterfaces (ifs_1); 
+        }
+
+        patchBoundaryProperties
+        {
+            patchName	coupling_left;
+	}
+    }
+
+    boundary
+    {
+        boundaryModel dsmcCouplingPatch;
+        
+        dsmcCouplingPatchProperties
+        {
+            typeIds (Ar); 
+            sendingInterfaces (ifs_2);
+        }
+
+        patchBoundaryProperties
+        {
+            patchName	coupling_right;
+	}
+    } 
+);
+
+dsmcCyclicBoundaries
+(
+);
+
+dsmcGeneralBoundaries
+(
+);
+
+// ************************************************************************* //

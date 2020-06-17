@@ -1,0 +1,88 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.4.0-MNF                             |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      blockMeshDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+convertToMeters 1;
+
+// MD domain size in nm (50 50 50) - total channel size (250 50 50) including DSMC domain
+
+vertices
+(
+    (279.411764705882 0 0) //0
+    (455.882352941177 0 0) //1
+    (455.882352941177 147.058823529412 0) //2
+    (279.411764705882 147.058823529412 0) //3
+    (279.411764705882 0 147.058823529412) //4
+    (455.882352941177 0 147.058823529412) //5
+    (455.882352941177 147.058823529412 147.058823529412) //6
+    (279.411764705882 147.058823529412 147.058823529412) //7
+);
+
+blocks
+(
+    hex (0 1 2 3 4 5 6 7) mdZoneComplete (8 4 4) simpleGrading (1 1 1)  
+);
+
+boundary
+(    
+    left
+    {
+        type patch;
+        faces ((0 3 7 4));
+    }
+
+    right
+    {
+        type patch;
+        faces ((1 2 6 5));
+    }
+
+    periodicY_top
+    {
+        type cyclic;
+        faces ((3 2 6 7));
+        neighbourPatch periodicY_bottom;
+    }    
+
+    periodicY_bottom
+    {
+        type cyclic;
+        faces ((0 1 5 4));
+        neighbourPatch periodicY_top;
+    }
+
+    periodicZ_front
+    {
+        type cyclic;
+        faces ((0 1 2 3));
+        neighbourPatch periodicZ_back;
+    }    
+
+    periodicZ_back
+    {
+        type cyclic;
+        faces ((4 5 6 7));
+        neighbourPatch periodicZ_front;
+    }   
+);
+
+mergePatchPairs
+(  
+);
+
+// ************************************************************************* //

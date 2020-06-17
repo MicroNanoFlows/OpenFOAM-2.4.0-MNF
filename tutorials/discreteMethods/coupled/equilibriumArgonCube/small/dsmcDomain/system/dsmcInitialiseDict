@@ -1,0 +1,55 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.4.0-MNF                             |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      dsmcInitialiseDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+configurations
+(
+    configuration
+    {
+        type		dsmcZoneFill;
+        zoneName	dsmcZoneLeft;
+
+	numberDensities
+	{
+		Ar	2.416e25;
+	};
+
+	translationalTemperature	300;
+	rotationalTemperature		0;
+	vibrationalTemperature		0;
+	electronicTemperature		0;
+	velocity			(0 0 0);
+    }
+
+    configuration
+    {
+        type		dsmcZoneFill;
+        zoneName	dsmcZoneRight;
+
+	numberDensities
+	{
+		Ar	2.416e25;
+	};
+
+	translationalTemperature	300;
+	rotationalTemperature		0;
+	vibrationalTemperature		0;
+	electronicTemperature		0;
+	velocity			(0 0 0);
+    }
+);
+
+// ************************************************************************* //

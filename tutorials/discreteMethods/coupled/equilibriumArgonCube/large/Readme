@@ -1,0 +1,13 @@
+This produces a small coupled canonical NVT ensemble of Argon gas consisting of around 15 million atoms.
+
+It couples mdFoamPlus and dsmcFoamPlus together using the Multiscale Universal Interface (MUI) coupling library.
+
+You can run this example in serial (1 process per solver, 2 in total) or in parallel. The default is to use 216 
+processes per solver in parallel (432 in total).
+
+This example simulates 1 ns in total, with a time-step of 5 fs, resulting in 200,000 time-steps. 
+
+Note: If you make any changes to the running conditions of one solver then please ensure you also make the appropriate change
+in the other.
+
+WARNING: Generating the initial MD state can take a very long time (60+ minutes) and requires significant amounts of RAM (15GB+)

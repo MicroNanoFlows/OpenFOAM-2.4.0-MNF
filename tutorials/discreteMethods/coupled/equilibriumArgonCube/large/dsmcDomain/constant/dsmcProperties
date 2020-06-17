@@ -1,0 +1,75 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.4.0-MNF                             |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      dsmcProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+// General Properties
+// ~~~~~~~~~~~~~~~~~~
+
+nEquivalentParticles            1;
+chargedParticles                false;
+adsorption                      false;
+chemicalReactions		false;
+
+//Collision Partner Selection Model
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+collisionPartnerSelectionModel	noTimeCounter;
+axisymmetricSimulation	no;
+
+// Binary Collision Model
+// ~~~~~~~~~~~~~~~~~~~~~~
+
+BinaryCollisionModel	LarsenBorgnakkeVariableHardSphere;
+
+LarsenBorgnakkeVariableHardSphereCoeffs
+{
+  Tref					300;
+  rotationalRelaxationCollisionNumber   1.0;
+  electronicRelaxationCollisionNumber   1.0;
+}
+
+
+// Molecular species
+// ~~~~~~~~~~~~~~~~~
+
+typeIdList	(Ar);
+
+moleculeProperties
+{
+    Ar
+    {
+        mass						6.6335209e-26;
+        diameter					4.17e-10;
+	rotationalDegreesOfFreedom			0;
+        vibrationalModes				0;
+        omega						0.81;
+	alpha						1.0;
+	characteristicVibrationalTemperature		();
+        dissociationTemperature				();
+        ionisationTemperature				0;
+	charDissQuantumLevel				();
+	Zref						();
+	referenceTempForZref				();
+        charge						0;     
+	numberOfElectronicLevels			1;
+	degeneracyList					(1);
+	electronicEnergyList				(0);
+    }
+}
+
+
+// ************************************************************************* //

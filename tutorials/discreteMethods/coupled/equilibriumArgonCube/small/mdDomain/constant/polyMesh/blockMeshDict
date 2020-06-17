@@ -1,0 +1,90 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.4.0-MNF                             |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      blockMeshDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// 1/refLength
+
+convertToMeters 2941176470.58823529411764705882352941176471;
+
+// MD domain size in nm (50 50 50) - total channel size (250 50 50) including DSMC domain
+
+vertices
+(
+    (9.66e-8 0 0) //0
+    (1.534e-7 0 0) //1
+    (1.534e-7 5e-8 0) //2
+    (9.66e-8 5e-8 0) //3
+    (9.66e-8 0 5e-8) //4
+    (1.534e-7 0 5e-8) //5
+    (1.534e-7 5e-8 5e-8) //6
+    (9.66e-8 5e-8 5e-8) //7
+);
+
+blocks
+(
+    hex (0 1 2 3 4 5 6 7) mdZoneComplete (8 4 4) simpleGrading (1 1 1)  
+);
+
+boundary
+(    
+    left
+    {
+        type patch;
+        faces ((0 3 7 4));
+    }
+
+    right
+    {
+        type patch;
+        faces ((1 2 6 5));
+    }
+
+    periodicY_top
+    {
+        type cyclic;
+        faces ((3 2 6 7));
+        neighbourPatch periodicY_bottom;
+    }    
+
+    periodicY_bottom
+    {
+        type cyclic;
+        faces ((0 1 5 4));
+        neighbourPatch periodicY_top;
+    }
+
+    periodicZ_front
+    {
+        type cyclic;
+        faces ((0 1 2 3));
+        neighbourPatch periodicZ_back;
+    }    
+
+    periodicZ_back
+    {
+        type cyclic;
+        faces ((4 5 6 7));
+        neighbourPatch periodicZ_front;
+    }   
+);
+
+mergePatchPairs
+(  
+);
+
+// ************************************************************************* //
